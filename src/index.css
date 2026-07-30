@@ -10,6 +10,16 @@ button { cursor: pointer; }
 .workflow-item { width: 100%; text-align: left; background: #1f2937; color: inherit; border: 0; }
 .workflow-item small { display: block; color: #9ca3af; }
 .graph { height: 680px; margin-top: 1rem; border: 1px solid #374151; }
+.workflow-node { min-width: 160px; border: 1px solid #475569; border-radius: .6rem; overflow: hidden; background: #1f2937; color: #f8fafc; box-shadow: 0 4px 12px #0004; }
+.workflow-node strong { display: block; padding: .75rem; font-size: .85rem; }
+.workflow-node-type { display: flex; gap: .4rem; align-items: center; padding: .4rem .75rem; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.workflow-node.trigger .workflow-node-type { background: #7c2d12; }
+.workflow-node.condition .workflow-node-type { background: #713f12; }
+.workflow-node.action .workflow-node-type { background: #1e3a8a; }
+.workflow-node.event .workflow-node-type { background: #4c1d95; }
+.workflow-node.selected { outline: 2px solid #93c5fd; }
+.workflow-node .react-flow__handle { width: 9px; height: 9px; border: 2px solid #e5e7eb; background: #0f172a; }
+.workflow-edge-label { position: absolute; padding: .2rem .4rem; border: 1px solid #475569; border-radius: .3rem; background: #111827; color: #cbd5e1; font-size: .65rem; pointer-events: all; }
 .toolbar { display: flex; align-items: center; gap: .5rem; margin-top: 1rem; }
 .validation-errors { margin-top: 1rem; padding: .75rem 1rem; border: 1px solid #ef4444; border-radius: .5rem; background: #450a0a; color: #fecaca; }
 .validation-errors h3 { margin: 0; }
