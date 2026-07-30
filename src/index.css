@@ -29,6 +29,14 @@ button { cursor: pointer; }
 .inline-form { display: flex; gap: .5rem; flex-wrap: wrap; }
 .inline-form input, .inline-form button { margin-top: 0; }
 .studio textarea { width: 100%; font-family: ui-monospace, monospace; }
+.data-table { overflow-x: auto; }
+.data-table table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+.data-table th, .data-table td { padding: .55rem; border-bottom: 1px solid #374151; text-align: left; vertical-align: top; }
+.data-table th button { display: inline; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; }
+.data-table-controls, .data-table footer { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.data-table-controls input { margin: 0; }
+.data-table details label { display: block; }
+.data-table details input { display: inline; }
 .studio label { display: block; margin-top: .75rem; }
 .studio label input { display: inline-block; margin-right: .5rem; }
 @media (max-width: 800px) { .studio-grid { grid-template-columns: 1fr; } }
