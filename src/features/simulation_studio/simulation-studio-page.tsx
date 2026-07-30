@@ -7,7 +7,7 @@ import {
   Save, Undo2, Redo2, CircleDot, ChevronLeft, ChevronRight, Sliders, History, 
   FolderKanban, Layers, X, AlertTriangle, Edit3, Trash2, MapPin
 } from 'lucide-react'
-import { useEffect, useMemo, useState, type DragEvent, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../shared/api/client'
 import { getExecutions, getTimeline } from '../../shared/api/executions'
@@ -70,6 +70,14 @@ export function SimulationStudioPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
 
+  // Cache node positions locally so React Query refetches don't reset user-arranged layout
+  const localPositions = useRef<Map<string, { x: number; y: number }>>(new Map())
+
+  // Stable refs for persistNode.mutate and version status — kept in sync after mutations are declared below.
+  // Using refs avoids adding them as useEffect dependencies (which would cause infinite loops).
+  const persistNodeRef = useRef<(args: { id: string; payload: Omit<ApiNode, 'node_id'> }) => void>(() => {})
+  const selectedVersionStatusRef = useRef<string | undefined>(undefined)
+
   // API Queries & Mutations
   const workflows = useQuery({ queryKey: ['workflows'], queryFn: getWorkflows })
   const graph = useQuery({ queryKey: ['graph', versionId], queryFn: () => getGraph(versionId!), enabled: Boolean(versionId) })
@@ -101,6 +109,10 @@ export function SimulationStudioPage() {
   const invalidNodeIds = useMemo(() => new Set(validationErrors.flatMap((error) => [...error.matchAll(/Node '([^']+)'/g)].map((match) => match[1]))), [validationErrors])
   const invalidEdgeIds = useMemo(() => new Set(validationErrors.flatMap((error) => [...error.matchAll(/Edge '([^']+)'/g)].map((match) => match[1]))), [validationErrors])
 
+  // Keep stable refs in sync with latest values
+  persistNodeRef.current = persistNode.mutate
+  selectedVersionStatusRef.current = selectedVersion?.status
+
   // Select first available workflow automatically if none selected
   useEffect(() => {
     if (!selectedWorkflow && workflows.data && workflows.data.length > 0) {
@@ -124,47 +136,91 @@ export function SimulationStudioPage() {
     }
   }, [selectedNodeId, selectedEdgeId])
 
+  // Sync React Flow nodes when graph data loads or changes.
+  // Positions are cached in localPositions ref; only new nodes get auto-layout.
   useEffect(() => {
-    const positionCounts = new Map<string, number>()
-    const distinctRows = new Set<number>()
-    apiNodes.forEach((node) => {
-      const key = `${node.position_x ?? 'missing'}:${node.position_y ?? 'missing'}`
-      positionCounts.set(key, (positionCounts.get(key) ?? 0) + 1)
-      if (node.position_y !== null) distinctRows.add(node.position_y)
-    })
-    const nodeIds = new Set(apiNodes.map((node) => node.node_id))
-    const incoming = new Map(apiNodes.map((node) => [node.node_id, 0]))
-    const outgoing = new Map(apiNodes.map((node) => [node.node_id, [] as string[]]))
-    apiEdges.forEach((edge) => {
-      if (!nodeIds.has(edge.source_node_id) || !nodeIds.has(edge.target_node_id)) return
-      incoming.set(edge.target_node_id, (incoming.get(edge.target_node_id) ?? 0) + 1)
-      outgoing.get(edge.source_node_id)?.push(edge.target_node_id)
-    })
-    const levels = new Map<string, number>()
-    const pending = apiNodes.filter((node) => (incoming.get(node.node_id) ?? 0) === 0).map((node) => node.node_id)
-    pending.forEach((nodeId) => levels.set(nodeId, 0))
-    while (pending.length) {
-      const nodeId = pending.shift()!
-      const level = levels.get(nodeId) ?? 0
-      outgoing.get(nodeId)?.forEach((targetId) => {
-        levels.set(targetId, Math.max(levels.get(targetId) ?? 0, level + 1))
-        incoming.set(targetId, (incoming.get(targetId) ?? 1) - 1)
-        if (incoming.get(targetId) === 0) pending.push(targetId)
-      })
+    if (apiNodes.length === 0) {
+      setNodes([])
+      setEdges(apiEdges.map(edgeToFlow))
+      return
     }
-    const nodesByLevel = new Map<number, string[]>()
+
+    // Detect nodes that genuinely lack a position in the API response
+    const nodesNeedingLayout: string[] = []
     apiNodes.forEach((node) => {
-      const level = levels.get(node.node_id) ?? 0
-      nodesByLevel.set(level, [...(nodesByLevel.get(level) ?? []), node.node_id])
+      if (node.position_x === null || node.position_y === null) {
+        nodesNeedingLayout.push(node.node_id)
+      } else {
+        // Update cache with latest API position (API is source of truth for saved positions)
+        localPositions.current.set(node.node_id, { x: node.position_x, y: node.position_y })
+      }
     })
-    setNodes(apiNodes.map((node, index) => {
-      const flowNode = nodeToFlow(node)
-      const key = `${node.position_x ?? 'missing'}:${node.position_y ?? 'missing'}`
-      const needsFallbackPosition = node.position_x === null || node.position_y === null || (positionCounts.get(key) ?? 0) > 1 || distinctRows.size <= 1
-      if (!needsFallbackPosition) return flowNode
-      const level = levels.get(node.node_id) ?? index
-      const row = nodesByLevel.get(level)?.indexOf(node.node_id) ?? 0
-      return { ...flowNode, position: { x: 100 + level * 360, y: 100 + row * 280 } }
+
+    // Build a DAG layout only for nodes that truly have no position
+    if (nodesNeedingLayout.length > 0) {
+      const nodeIds = new Set(apiNodes.map((n) => n.node_id))
+      const incoming = new Map(apiNodes.map((n) => [n.node_id, 0]))
+      const outgoing = new Map(apiNodes.map((n) => [n.node_id, [] as string[]]))
+      apiEdges.forEach((edge) => {
+        if (!nodeIds.has(edge.source_node_id) || !nodeIds.has(edge.target_node_id)) return
+        incoming.set(edge.target_node_id, (incoming.get(edge.target_node_id) ?? 0) + 1)
+        outgoing.get(edge.source_node_id)?.push(edge.target_node_id)
+      })
+      const levels = new Map<string, number>()
+      const pending = apiNodes.filter((n) => (incoming.get(n.node_id) ?? 0) === 0).map((n) => n.node_id)
+      pending.forEach((id) => levels.set(id, 0))
+      while (pending.length) {
+        const id = pending.shift()!
+        const level = levels.get(id) ?? 0
+        outgoing.get(id)?.forEach((targetId) => {
+          levels.set(targetId, Math.max(levels.get(targetId) ?? 0, level + 1))
+          incoming.set(targetId, (incoming.get(targetId) ?? 1) - 1)
+          if (incoming.get(targetId) === 0) pending.push(targetId)
+        })
+      }
+      const nodesByLevel = new Map<number, string[]>()
+      apiNodes.forEach((n) => {
+        const level = levels.get(n.node_id) ?? 0
+        nodesByLevel.set(level, [...(nodesByLevel.get(level) ?? []), n.node_id])
+      })
+
+      // Assign auto-layout positions and cache them
+      nodesNeedingLayout.forEach((nodeId) => {
+        const level = levels.get(nodeId) ?? 0
+        const row = nodesByLevel.get(level)?.indexOf(nodeId) ?? 0
+        const pos = { x: 100 + level * 360, y: 100 + row * 280 }
+        localPositions.current.set(nodeId, pos)
+      })
+
+      // Persist auto-layout positions to DB so they are saved for next session.
+      // Deferred with setTimeout to avoid calling mutate during the render phase.
+      // Runs for all version statuses — if the API rejects (e.g. immutable version), it fails silently.
+      const nodesToSave = apiNodes.filter((n) => nodesNeedingLayout.includes(n.node_id))
+      setTimeout(() => {
+        nodesToSave.forEach((node) => {
+          const pos = localPositions.current.get(node.node_id)
+          if (!pos || !persistNodeRef.current) return
+          persistNodeRef.current({
+            id: node.node_id,
+            payload: {
+              node_name: node.node_name,
+              node_type: node.node_type,
+              configuration: node.configuration,
+              position_x: pos.x,
+              position_y: pos.y,
+            },
+          })
+        })
+      }, 0)
+    }
+
+    // Build React Flow nodes using cached positions
+    setNodes(apiNodes.map((node) => {
+      const cached = localPositions.current.get(node.node_id)
+      return {
+        ...nodeToFlow(node),
+        position: cached ?? { x: node.position_x ?? 100, y: node.position_y ?? 100 },
+      }
     }))
     setEdges(apiEdges.map(edgeToFlow))
   }, [apiNodes, apiEdges, setNodes, setEdges])
@@ -175,7 +231,7 @@ export function SimulationStudioPage() {
     return () => cancelAnimationFrame(frame)
   }, [apiEdges.length, apiNodes.length, flowInstance])
 
-  useEffect(() => { setSelectedExecutionId(null) }, [versionId])
+  useEffect(() => { setSelectedExecutionId(null); localPositions.current.clear() }, [versionId])
 
   useEffect(() => {
     const miniMap = document.querySelector<HTMLElement>('.graph .react-flow__minimap')
@@ -520,6 +576,8 @@ export function SimulationStudioPage() {
               onNodeClick={(_, node) => { setSelectedNodeId(node.id); setSelectedEdgeId(null) }} 
               onEdgeClick={(_, edge) => { setSelectedEdgeId(edge.id); setSelectedNodeId(null) }} 
               onNodeDragStop={(_, node) => { 
+                // Immediately update local cache so refetch doesn't undo the drag
+                localPositions.current.set(node.id, { x: Math.round(node.position.x), y: Math.round(node.position.y) })
                 if (selectedVersion?.status !== 'draft') return
                 const current = apiNodes.find((item) => item.node_id === node.id)
                 if (current) persistNode.mutate({ id: node.id, payload: { ...current, position_x: Math.round(node.position.x), position_y: Math.round(node.position.y) } }) 
