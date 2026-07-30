@@ -1,138 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState, type ComponentType, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { completeExecution, getNodeResults, getTimeline, startExecution, submitExecutionAction, type ExecutionEvent, type NodeResult } from '../../shared/api/executions'
-import { getSession, type SessionChannelEvent, type SimulationSession } from '../../shared/api/sessions'
-import { getPublishedVersions, getWorkflowVersion } from '../../shared/api/workflows'
+import { startExecution, submitExecutionAction } from '../../shared/api/executions'
+import { getMasterData } from '../../shared/api/master-data'
+import { getSession, type SessionChannelEvent } from '../../shared/api/sessions'
+import { getPublishedVersions } from '../../shared/api/workflows'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import type { Execution } from '../../shared/types/workflow'
 
 type Channel = 'chat' | 'email' | 'call' | 'document'
-type ChannelPanelProps = { events: SessionChannelEvent[] }
-
-const sessionEvents: Record<Channel, (session: SimulationSession) => SessionChannelEvent[]> = {
-  email: (session) => session.email_inbox,
-  chat: (session) => session.chat_inbox,
-  call: (session) => session.call_state,
-  document: (session) => session.document_state,
-}
-
-const channelPanelRenderers: Record<Channel, ComponentType<ChannelPanelProps>> = {
-  email: EmailPanel,
-  chat: ChatPanel,
-  call: CallPanel,
-  document: DocumentPanel,
-}
+const channels: Channel[] = ['chat', 'email', 'call', 'document']
+const eventLists: Record<Channel, keyof Pick<Awaited<ReturnType<typeof getSession>>, 'chat_inbox' | 'email_inbox' | 'call_state' | 'document_state'>> = { chat: 'chat_inbox', email: 'email_inbox', call: 'call_state', document: 'document_state' }
 
 export function SimulationRunnerPage() {
-  const queryClient = useQueryClient()
-  const [participantId, setParticipantId] = useState('')
-  const [versionId, setVersionId] = useState('')
-  const [channel, setChannel] = useState<Channel>('chat')
-  const [execution, setExecution] = useState<Execution | null>(null)
-  const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
-  const workflowVersion = useQuery({ queryKey: ['workflow-version', execution?.workflow_version_id], queryFn: () => getWorkflowVersion(execution!.workflow_version_id), enabled: Boolean(execution) })
-  const timeline = useQuery({ queryKey: ['timeline', execution?.execution_id], queryFn: () => getTimeline(execution!.execution_id), enabled: Boolean(execution) })
-  const nodeResults = useQuery({ queryKey: ['node-results', execution?.execution_id], queryFn: () => getNodeResults(execution!.execution_id), enabled: Boolean(execution) })
-  const session = useQuery({ queryKey: ['session', execution?.session_id], queryFn: () => getSession(execution!.session_id!), enabled: Boolean(execution?.session_id), refetchInterval: execution?.status === 'running' || execution?.status === 'waiting' ? 3000 : false })
-  const start = useMutation({ mutationFn: startExecution, onSuccess: (result) => { setExecution(result); queryClient.invalidateQueries({ queryKey: ['timeline', result.execution_id] }); queryClient.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
-  const action = useMutation({ mutationFn: ({ actionType, content }: { actionType: string; content: string }) => submitExecutionAction(execution!.execution_id, { action_type: actionType, payload: { content, channel } }), onSuccess: (result) => { setExecution(result); queryClient.invalidateQueries({ queryKey: ['timeline', result.execution_id] }); queryClient.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
-  const complete = useMutation({ mutationFn: () => completeExecution(execution!.execution_id), onSuccess: (result) => { setExecution(result); queryClient.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
-  const fallbackEvents = (execution?.context.channel_events as SessionChannelEvent[] | undefined)?.filter((event) => event.channel === channel) ?? []
-  const events = session.data ? sessionEvents[channel](session.data) : fallbackEvents
-  const aiResult = execution?.context.last_ai_result as { content?: string; label?: string; score?: number } | undefined
-  const Panel = channelPanelRenderers[channel]
-  const workflowGroups = useMemo(() => {
-    const groups = new Map<string, typeof versions.data>()
-    for (const version of versions.data ?? []) groups.set(version.workflow_name, [...(groups.get(version.workflow_name) ?? []), version])
-    return [...groups.entries()]
-  }, [versions.data])
-
-  function startSimulation(event: FormEvent<HTMLFormElement>) { event.preventDefault(); start.mutate({ workflow_version_id: versionId, participant_id: participantId, context: { channel } }) }
-  function sendAction(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const content = String(new FormData(event.currentTarget).get('content')); action.mutate({ actionType: 'message', content }); event.currentTarget.reset() }
-  function restart() { setExecution(null); setParticipantId(''); setVersionId('') }
-
-  return <main><header><div><h1>Simulation Runner</h1><p>Run a published workflow for one participant.</p></div><Link to="/studio">Open Simulation Studio</Link></header>
-    {!execution && <form className="runner-start" onSubmit={startSimulation}><label htmlFor="participant-id">Participant ID</label><input id="participant-id" required value={participantId} onChange={(event) => setParticipantId(event.target.value)} /><label htmlFor="workflow-version">Published workflow version</label><select id="workflow-version" required value={versionId} onChange={(event) => setVersionId(event.target.value)}><option value="">Select workflow and version</option>{workflowGroups.map(([workflowName, workflowVersions]) => <optgroup key={workflowName} label={workflowName}>{workflowVersions?.map((version) => <option key={version.workflow_version_id} value={version.workflow_version_id}>{version.is_active ? '★ Current · ' : ''}v{version.version_number} · {version.workflow_version_id}</option>)}</optgroup>)}</select><label htmlFor="channel">Channel</label><select id="channel" value={channel} onChange={(event) => setChannel(event.target.value as Channel)}>{(['chat', 'email', 'call', 'document'] as Channel[]).map((item) => <option key={item}>{item}</option>)}</select><button disabled={start.isPending || !versionId}>Start simulation</button>{versions.isPending && <LoadingState />}{start.isError && <ErrorState message="Unable to start the selected published workflow." />}</form>}
-    {execution && <section className="runner"><div><div className="channel-tabs">{(['chat', 'email', 'call', 'document'] as Channel[]).map((item) => <button className={channel === item ? 'active' : ''} key={item} onClick={() => setChannel(item)}>{item}</button>)}</div>{session.isPending && <LoadingState />}<Panel events={events} /><form onSubmit={sendAction}><label htmlFor="content">Your action</label><input id="content" name="content" required placeholder={channel === 'chat' ? 'Write a message' : 'Describe your action'} /><button disabled={action.isPending || execution.status === 'completed'}>Send action</button></form></div><aside><h2>Execution</h2><p>Status: {execution.status}</p><p>Session: {execution.session_id}</p><p>Current node: {execution.current_node_id ?? 'completed'}</p>{aiResult && <div className="dummy-ai"><strong>Dummy AI</strong><p>{aiResult.content ?? `${aiResult.label} (${aiResult.score ?? 0})`}</p></div>}<button onClick={() => complete.mutate()} disabled={!['running', 'waiting'].includes(execution.status)}>Complete simulation</button>{execution.status === 'completed' && <><SimulationSummary execution={execution} session={session.data} workflowName={workflowVersion.data?.workflow_name} versionNumber={workflowVersion.data?.version_number} events={timeline.data ?? []} nodeResults={nodeResults.data ?? []} /><button onClick={restart}>Restart</button></>}<EnrichedTimeline events={timeline.data ?? []} nodeResults={nodeResults.data ?? []} loading={timeline.isPending || nodeResults.isPending} /></aside></section>}</main>
+  const client = useQueryClient(); const [participantId, setParticipantId] = useState('demo-participant'); const [versionId, setVersionId] = useState(''); const [execution, setExecution] = useState<Execution | null>(null)
+  const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions }); const actors = useQuery({ queryKey: ['master', 'actors'], queryFn: () => getMasterData('actors') }); const documents = useQuery({ queryKey: ['master', 'documents'], queryFn: () => getMasterData('documents') })
+  const session = useQuery({ queryKey: ['session', execution?.session_id], queryFn: () => getSession(execution!.session_id!), enabled: Boolean(execution?.session_id), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
+  const start = useMutation({ mutationFn: startExecution, onSuccess: (result) => { setExecution(result); client.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
+  const action = useMutation({ mutationFn: ({ channel, target, content, actionType }: { channel: Channel; target: string; content: string; actionType: string }) => submitExecutionAction(execution!.execution_id, { action_type: actionType, actor_id: participantId, payload: { channel, content, to: target, document_id: channel === 'document' ? target : undefined } }), onSuccess: (result) => { setExecution(result); client.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
+  const groups = useMemo(() => { const map = new Map<string, typeof versions.data>(); for (const item of versions.data ?? []) map.set(item.workflow_name, [...(map.get(item.workflow_name) ?? []), item]); return [...map] }, [versions.data])
+  function begin(event: FormEvent) { event.preventDefault(); start.mutate({ workflow_version_id: versionId, participant_id: participantId, context: {} }) }
+  function send(channel: Channel, event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); action.mutate({ channel, target: String(data.get('target') ?? ''), content: String(data.get('content') ?? ''), actionType: channel === 'chat' ? 'reply_chat' : channel === 'email' ? 'reply_email' : channel === 'call' ? 'finish_call' : 'close_document' }); event.currentTarget.reset() }
+  return <main className="runner-page"><header><div><h1>Simulation Runner</h1><p>Choose a channel and interact as the participant.</p></div><Link to="/studio">Open Studio</Link></header>{!execution ? <form className="runner-start" onSubmit={begin}><label>Participant / actor<select value={participantId} onChange={(event) => setParticipantId(event.target.value)}>{actors.data?.map((actor) => <option key={String(actor.actor_id)} value={String(actor.actor_id)}>{String(actor.actor_name)} · {String(actor.actor_id)}</option>)}</select></label><label>Published workflow<select required value={versionId} onChange={(event) => setVersionId(event.target.value)}><option value="">Select workflow</option>{groups.map(([name, items]) => <optgroup key={name} label={name}>{items?.map((item) => <option key={item.workflow_version_id} value={item.workflow_version_id}>v{item.version_number} · {item.workflow_version_id}</option>)}</optgroup>)}</select></label><button disabled={!versionId || start.isPending}>Start simulation</button>{start.isError && <ErrorState message="Unable to start simulation." />}</form> : <><section className="runner-status"><strong>{execution.status === 'waiting' ? 'Waiting for your action' : execution.status}</strong><span>Actor: {participantId}</span><span>Session: {execution.session_id}</span></section><section className="channel-workspace">{channels.map((channel) => <ChannelCard key={channel} channel={channel} events={(session.data?.[eventLists[channel]] ?? []) as SessionChannelEvent[]} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || execution.status === 'completed'} onSubmit={(event) => send(channel, event)} />)}</section></>}{versions.isPending && <LoadingState />}</main>
 }
 
-function EmailPanel({ events }: ChannelPanelProps) {
-  return <div className="channel-panel"><h2>Email inbox</h2>{events.length ? events.map((event, index) => <article className="email" key={index}><strong>{String(event.subject ?? event.action_type ?? 'Email')}</strong><dl><dt>From</dt><dd>{String(event.from ?? event.actor ?? '—')}</dd><dt>To</dt><dd>{String(event.to ?? '—')}</dd><dt>Status</dt><dd>{String(event.action_type ?? '—')}</dd><dt>Time</dt><dd>{formatTime(event.timestamp)}</dd></dl><p>{String(event.content ?? '')}</p></article>) : <p>No email messages yet.</p>}</div>
+function ChannelCard({ channel, events, actors, documents, disabled, onSubmit }: { channel: Channel; events: SessionChannelEvent[]; actors: Record<string, unknown>[]; documents: Record<string, unknown>[]; disabled: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+  const targetItems = channel === 'document' ? documents.map((item) => [String(item.document_id), String(item.document_name)]) : actors.map((item) => [String(item.actor_id), String(item.actor_name)])
+  return <section className={`channel-card ${channel}`}><h2>{channel}</h2><div className="channel-feed">{events.length ? events.map((item, index) => <article key={index}><small>{String(item.actor ?? item.from ?? 'system')} · {formatTime(item.timestamp)}</small><strong>{String(item.subject ?? item.document_name ?? item.call_id ?? item.chat_id ?? '')}</strong><p>{String(item.content ?? item.action_type ?? '')}</p></article>) : <p>No activity yet.</p>}</div><form onSubmit={onSubmit}><label>{channel === 'document' ? 'Document' : 'Actor'}<select name="target" required>{targetItems.map(([id, name]) => <option key={id} value={id}>{name} · {id}</option>)}</select></label>{channel !== 'document' && <label>{channel === 'email' ? 'Email reply' : channel === 'chat' ? 'Message' : 'Call note'}<textarea name="content" required /></label>}<button disabled={disabled}>{channel === 'document' ? 'Close document' : channel === 'call' ? 'Finish call' : channel === 'email' ? 'Send email action' : 'Send chat action'}</button></form></section>
 }
-
-function ChatPanel({ events }: ChannelPanelProps) {
-  return <div className="channel-panel"><h2>Chat conversation</h2>{events.length ? events.map((event, index) => <article className={`message ${String(event.actor ?? 'system')}`} key={index}><small>{String(event.chat_id ?? 'chat')} · {String(event.from ?? event.actor ?? '—')} · {formatTime(event.timestamp)}</small><p>{String(event.content ?? '')}</p></article>) : <p>Start by sending a message, or wait for the workflow response.</p>}</div>
-}
-
-function CallPanel({ events }: ChannelPanelProps) {
-  const calls = useMemo(() => groupCalls(events), [events])
-  return <div className="channel-panel"><h2>Call sessions</h2>{calls.length ? calls.map((call) => <article className="call-card" key={call.callId}><strong>{call.callId}</strong><dl><dt>Start</dt><dd>{formatTime(call.startTime)}</dd><dt>Finish</dt><dd>{formatTime(call.finishTime)}</dd><dt>Duration</dt><dd>{formatDuration(call.startTime, call.finishTime)}</dd></dl></article>) : <p>Waiting for call events.</p>}</div>
-}
-
-function DocumentPanel({ events }: ChannelPanelProps) {
-  return <div className="channel-panel"><h2>Shared documents</h2>{events.length ? events.map((event, index) => <article className="document-card" key={index}><strong>{String(event.document_name ?? event.document_id ?? 'Document')}</strong><dl><dt>Read only</dt><dd>{event.read_only ? 'Yes' : 'No'}</dd><dt>State</dt><dd>{String(event.state ?? event.action_type ?? '—')}</dd><dt>Time</dt><dd>{formatTime(event.timestamp)}</dd></dl></article>) : <p>No document events yet.</p>}</div>
-}
-
-function groupCalls(events: SessionChannelEvent[]) {
-  const calls = new Map<string, { callId: string; startTime?: string; finishTime?: string }>()
-  for (const event of events) {
-    const callId = String(event.call_id ?? 'Unknown call')
-    const call = calls.get(callId) ?? { callId }
-    if (event.action_type === 'start_call') call.startTime = String(event.started_at ?? event.timestamp ?? '')
-    if (event.action_type === 'finish_call') call.finishTime = String(event.finished_at ?? event.timestamp ?? '')
-    calls.set(callId, call)
-  }
-  return [...calls.values()]
-}
-
-function formatTime(value: unknown) {
-  if (typeof value !== 'string' || !value) return '—'
-  const date = new Date(value)
-  return Number.isNaN(date.valueOf()) ? value : date.toLocaleString()
-}
-
-function formatDuration(start?: string, finish?: string) {
-  if (!start || !finish) return 'In progress'
-  const milliseconds = new Date(finish).valueOf() - new Date(start).valueOf()
-  if (!Number.isFinite(milliseconds) || milliseconds < 0) return '—'
-  return `${Math.floor(milliseconds / 60000)}m ${Math.floor((milliseconds % 60000) / 1000)}s`
-}
-
-function SimulationSummary({ execution, session, workflowName, versionNumber, events, nodeResults }: { execution: Execution; session: SimulationSession | undefined; workflowName: string | undefined; versionNumber: number | undefined; events: ExecutionEvent[]; nodeResults: NodeResult[] }) {
-  const counts = { email: session?.email_inbox.length ?? 0, chat: session?.chat_inbox.length ?? 0, call: session?.call_state.length ?? 0, document: session?.document_state.length ?? 0 }
-  const classifications = nodeResults.flatMap((nodeResult) => {
-    const ai = nodeResult.result.ai as { operation?: string; label?: string; score?: number; metadata?: Record<string, unknown> } | undefined
-    return ai?.operation === 'classification' ? [ai] : []
-  })
-  const dummyResults = nodeResults.flatMap((nodeResult) => {
-    const ai = nodeResult.result.ai as { operation?: string; content?: string; metadata?: Record<string, unknown> } | undefined
-    return ai?.operation === 'response' ? [ai] : []
-  })
-  const failures = events.filter((event) => event.event_type === 'execution_failed').map((event) => String(event.payload.error ?? 'Unknown execution failure'))
-  return <section className="simulation-summary"><h2>Simulation summary</h2><dl><dt>Session ID</dt><dd>{execution.session_id ?? '—'}</dd><dt>Workflow</dt><dd>{workflowName ?? 'Loading workflow…'}{versionNumber ? ` · Version ${versionNumber}` : ''}</dd><dt>Participant</dt><dd>{session?.participant_id ?? execution.participant_id ?? '—'}</dd><dt>Duration</dt><dd>{formatDuration(session?.created_at, session?.completed_at ?? undefined)}</dd><dt>Final status</dt><dd>{session?.status ?? execution.status}</dd></dl><h3>Channel events</h3><div className="summary-counts">{Object.entries(counts).map(([name, count]) => <span key={name}>{name}: {count}</span>)}</div>{classifications.length > 0 && <><h3>Classifications</h3>{classifications.map((item, index) => <p key={index}>{item.label ?? '—'} · score {item.score ?? '—'} · {JSON.stringify(item.metadata ?? {})}</p>)}</>}{dummyResults.length > 0 && <><h3>Dummy AI results</h3>{dummyResults.map((item, index) => <p key={index}>{item.content ?? '—'}</p>)}</>}{failures.length > 0 && <><h3>Failure reasons</h3>{failures.map((failure, index) => <p className="summary-failure" key={index}>{failure}</p>)}</>}</section>
-}
-
-function EnrichedTimeline({ events, nodeResults, loading }: { events: ExecutionEvent[]; nodeResults: NodeResult[]; loading: boolean }) {
-  return <section className="enriched-timeline"><h2>Timeline</h2>{loading && <LoadingState />}{events.map((event) => <details className={`timeline-entry ${timelineKind(event.event_type)}`} key={event.event_id}><summary><span>{timelineIndicator(event.event_type)}</span> {event.event_type}<small>{formatTime(event.created_at)}</small></summary><p>Node: {event.node_id ?? '—'}</p><pre>{JSON.stringify(event.payload, null, 2)}</pre></details>)}{nodeResults.map((nodeResult) => <details className="timeline-entry node-result" key={nodeResult.node_result_id}><summary>✓ Node result <small>{formatTime(nodeResult.created_at)}</small></summary><p>Node: {nodeResult.node_id} · {nodeResult.status}</p><ClassificationResult result={nodeResult.result} /><pre>{JSON.stringify(nodeResult.result, null, 2)}</pre></details>)}</section>
-}
-
-function ClassificationResult({ result }: { result: Record<string, unknown> }) {
-  const ai = result.ai as { operation?: string; label?: string; score?: number; metadata?: Record<string, unknown> } | undefined
-  if (!ai || ai.operation !== 'classification') return null
-  return <div className="classification-result"><strong>Classification: {ai.label ?? '—'}</strong><span>Score: {ai.score ?? '—'}</span>{ai.metadata && <pre>{JSON.stringify(ai.metadata, null, 2)}</pre>}</div>
-}
-
-function timelineKind(eventType: string) {
-  if (eventType === 'execution_failed') return 'failure'
-  if (eventType === 'participant_action_requested') return 'waiting'
-  if (eventType.startsWith('timer_')) return 'timer'
-  return 'normal'
-}
-
-function timelineIndicator(eventType: string) {
-  if (eventType === 'execution_failed') return '✕'
-  if (eventType === 'participant_action_requested') return '⌛'
-  if (eventType.startsWith('timer_')) return '◷'
-  return '•'
-}
+function formatTime(value: unknown) { return typeof value === 'string' ? new Date(value).toLocaleString() : '—' }

@@ -20,6 +20,13 @@ Aplikasi ini digunakan untuk mengelola workflow, node, edge, actor, persona, eve
 - shadcn/ui
 - React Hook Form
 - Zod
+- Tailwind CSS v4 dengan `@tailwindcss/vite`
+- Lucide React
+- Radix UI primitives
+- Sonner
+- Framer Motion
+- date-fns
+- Recharts
 
 ---
 
@@ -196,6 +203,10 @@ Gunakan React Flow sebagai komponen utama untuk workflow builder.
 - skeleton component;
 - optimistic update.
 
+Gunakan Lucide React sebagai icon default. Jangan gunakan emoji sebagai icon UI
+produksi. Gunakan Sonner untuk umpan balik sukses/gagal, dan gunakan dialog,
+dropdown, select, tabs, serta tooltip dari shadcn/ui atau Radix UI.
+
 ---
 
 ### Avoid
@@ -360,12 +371,18 @@ Gunakan:
 - utility classes;
 - design tokens.
 
+Gunakan `clsx` dan `tailwind-merge` untuk menyusun conditional class. Gunakan
+Framer Motion hanya untuk transisi yang membantu pemahaman state. Untuk tanggal,
+durasi, dan timestamp gunakan date-fns; gunakan Recharts untuk grafik data.
+
 Hindari:
 
 - Bootstrap;
 - jQuery;
 - inline CSS;
 - penggunaan `!important`.
+- emoji sebagai icon UI;
+- library UI tambahan yang menduplikasi Radix/shadcn.
 
 ---
 

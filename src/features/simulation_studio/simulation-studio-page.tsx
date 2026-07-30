@@ -4,12 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState, type DragEvent, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../shared/api/client'
-import { createMasterData, deleteMasterData, getMasterData, updateMasterData } from '../../shared/api/master-data'
 import { getExecutions, getTimeline } from '../../shared/api/executions'
 import { addNode, addWorkflowEdge, createVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import type { Execution, Workflow } from '../../shared/types/workflow'
-import { MasterDataForm, masterResources, type MasterResource } from './master-data-form'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { WorkflowGraphEdge } from './workflow-graph-edge'
 import { WorkflowGraphNode } from './workflow-graph-node'
@@ -41,13 +39,10 @@ export function SimulationStudioPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null)
-  const [resource, setResource] = useState<MasterResource>(masterResources[0])
-  const [selectedRecord, setSelectedRecord] = useState<Record<string, unknown> | null>(null)
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const workflows = useQuery({ queryKey: ['workflows'], queryFn: getWorkflows })
-  const masterData = useQuery({ queryKey: ['master', resource], queryFn: () => getMasterData(resource) })
   const graph = useQuery({ queryKey: ['graph', versionId], queryFn: () => getGraph(versionId!), enabled: Boolean(versionId) })
   const versions = useQuery({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id], queryFn: () => getWorkflowVersions(selectedWorkflow!.workflow_id), enabled: Boolean(selectedWorkflow) })
   const executions = useQuery({ queryKey: ['executions', versionId], queryFn: () => getExecutions(versionId!), enabled: Boolean(versionId) })
@@ -63,9 +58,6 @@ export function SimulationStudioPage() {
   const removeNode = useMutation({ mutationFn: deleteNode, onSuccess: () => { setSelectedNodeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
   const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
   const removeEdge = useMutation({ mutationFn: deleteWorkflowEdge, onSuccess: () => { setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
-  const createRecord = useMutation({ mutationFn: (values: Record<string, unknown>) => createMasterData(resource, values), onSuccess: () => { setSelectedRecord(null); queryClient.invalidateQueries({ queryKey: ['master', resource] }) } })
-  const updateRecord = useMutation({ mutationFn: ({ id, values }: { id: string; values: Record<string, unknown> }) => updateMasterData(resource, id, values), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master', resource] }) })
-  const removeRecord = useMutation({ mutationFn: (id: string) => deleteMasterData(resource, id), onSuccess: () => { setSelectedRecord(null); queryClient.invalidateQueries({ queryKey: ['master', resource] }) } })
   const apiNodes = graph.data?.[0] ?? emptyNodes
   const apiEdges = graph.data?.[1] ?? emptyEdges
   const selectedNode = useMemo(() => apiNodes.find((node) => node.node_id === selectedNodeId) ?? null, [apiNodes, selectedNodeId])
@@ -77,8 +69,22 @@ export function SimulationStudioPage() {
   const invalidEdgeIds = useMemo(() => new Set(validationErrors.flatMap((error) => [...error.matchAll(/Edge '([^']+)'/g)].map((match) => match[1]))), [validationErrors])
 
   useEffect(() => { setNodes(apiNodes.map(nodeToFlow)); setEdges(apiEdges.map(edgeToFlow)) }, [apiNodes, apiEdges, setNodes, setEdges])
-  useEffect(() => { setSelectedRecord(null) }, [resource])
   useEffect(() => { setSelectedExecutionId(null) }, [versionId])
+  useEffect(() => {
+    function acceptPaletteDrop(event: globalThis.DragEvent) {
+      if (!(event.target instanceof Element) || !event.target.closest('.graph') || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
+      const nodeType = event.dataTransfer?.getData('application/simflow-node-type') as typeof nodeTypes[number]
+      if (!nodeTypes.includes(nodeType)) return
+      event.preventDefault(); event.stopPropagation()
+      addGraphNode.mutate({ nodeType, position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }) })
+    }
+    function allowPaletteDrop(event: globalThis.DragEvent) {
+      if (event.target instanceof Element && event.target.closest('.graph') && event.dataTransfer?.types.includes('application/simflow-node-type')) event.preventDefault()
+    }
+    document.addEventListener('dragover', allowPaletteDrop, true)
+    document.addEventListener('drop', acceptPaletteDrop, true)
+    return () => { document.removeEventListener('dragover', allowPaletteDrop, true); document.removeEventListener('drop', acceptPaletteDrop, true) }
+  }, [addGraphNode, flowInstance, selectedVersion?.status, versionId])
 
   function submitWorkflow(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -99,6 +105,7 @@ export function SimulationStudioPage() {
   }
   function startPaletteDrag(event: DragEvent<HTMLButtonElement>, nodeType: typeof nodeTypes[number]) {
     event.dataTransfer.setData('application/simflow-node-type', nodeType)
+    event.dataTransfer.setData('text/plain', nodeType)
     event.dataTransfer.effectAllowed = 'move'
   }
   function allowCanvasDrop(event: DragEvent<HTMLDivElement>) {
@@ -120,7 +127,7 @@ export function SimulationStudioPage() {
     persistEdge.mutate({ id: selectedEdge.edge_id, payload: { source_node_id: selectedEdge.source_node_id, target_node_id: selectedEdge.target_node_id, priority, condition_configuration: condition } })
   }
   return <main className="studio"><header><div><h1>Simulation Studio</h1><p>Configure master data, workflow versions, nodes, and transitions.</p></div><Link to="/simulation">Open Simulation Runner</Link></header>
-    <section className="studio-grid"><aside><h2>Master data</h2><select value={resource} onChange={(event) => setResource(event.target.value as MasterResource)}>{masterResources.map((item) => <option key={item}>{item}</option>)}</select><button onClick={() => setSelectedRecord(null)}>Create {resource.slice(0, -1)}</button>{masterData.isPending && <LoadingState />}{masterData.data?.map((record, index) => <button className="workflow-item" key={index} onClick={() => setSelectedRecord(record)}>{String(record[Object.keys(record)[0]])}</button>)}<MasterDataForm resource={resource} record={selectedRecord} isSaving={createRecord.isPending || updateRecord.isPending || removeRecord.isPending} onSave={(id, values) => id ? updateRecord.mutate({ id, values }) : createRecord.mutate(values)} onDelete={(id) => removeRecord.mutate(id)} /><h2>Workflows</h2><button onClick={() => { setSelectedWorkflow(null); setVersionId(null) }}>Create workflow</button>{workflows.isPending && <LoadingState />}{workflows.data?.map((workflow) => <button className="workflow-item" key={workflow.workflow_id} onClick={() => { setSelectedWorkflow(workflow); setVersionId(null) }}>{workflow.workflow_name}<small>{workflow.status}</small></button>)}</aside>
+    <section className="studio-grid"><aside><h2>Workflows</h2><button onClick={() => { setSelectedWorkflow(null); setVersionId(null) }}>Create workflow</button>{workflows.isPending && <LoadingState />}{workflows.data?.map((workflow) => <button className="workflow-item" key={workflow.workflow_id} onClick={() => { setSelectedWorkflow(workflow); setVersionId(null) }}>{workflow.workflow_name}<small>{workflow.status}</small></button>)}</aside>
     <section><h2>{selectedWorkflow ? `Edit ${selectedWorkflow.workflow_name}` : 'Create workflow'}</h2><form className="inline-form" key={selectedWorkflow?.workflow_id ?? 'new'} onSubmit={submitWorkflow}><input name="name" required defaultValue={selectedWorkflow?.workflow_name ?? ''} placeholder="Workflow name" /><input name="description" defaultValue={selectedWorkflow?.workflow_desc ?? ''} placeholder="Description" /><button disabled={create.isPending || update.isPending}>{selectedWorkflow ? 'Save workflow' : 'Create workflow'}</button>{selectedWorkflow && <button className="danger" type="button" disabled={removeWorkflow.isPending} onClick={() => removeWorkflow.mutate(selectedWorkflow.workflow_id)}>Delete workflow</button>}</form>{selectedWorkflow && <div className="toolbar"><button onClick={() => createDraft.mutate(selectedWorkflow.workflow_id)}>Create draft version</button><label>Version<select value={versionId ?? ''} onChange={(event) => { setVersionId(event.target.value || null); setSelectedNodeId(null); setSelectedEdgeId(null) }}><option value="">Select a version</option>{versions.data?.map((version) => <option key={version.workflow_version_id} value={version.workflow_version_id}>v{version.version_number} — {version.status}</option>)}</select></label>{selectedVersion && <span className={`version-status ${selectedVersion.status}`}>{selectedVersion.status}</span>}{selectedVersion?.status === 'draft' && <button onClick={() => publish.mutate(selectedVersion.workflow_version_id)}>Publish</button>}</div>}{validationErrors.length > 0 && <section className="validation-errors" aria-live="polite"><h3>Graph validation errors</h3><ul>{validationErrors.map((error) => <li key={error}>{error}</li>)}</ul></section>}{publish.isError && validationErrors.length === 0 && <p className="validation-errors">Unable to validate the graph. Please try again.</p>}<div className="graph" onDragOver={allowCanvasDrop} onDrop={dropPaletteNode}><ReactFlow nodeTypes={workflowNodeRenderers} edgeTypes={workflowEdgeRenderers} onInit={setFlowInstance} nodes={nodes.map((node) => ({ ...node, className: invalidNodeIds.has(node.id) ? 'invalid-node' : '', draggable: selectedVersion?.status === 'draft', connectable: selectedVersion?.status === 'draft' }))} edges={edges.map((edge) => ({ ...edge, className: invalidEdgeIds.has(edge.id) ? 'invalid-edge' : '' }))} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={connect} onNodeClick={(_, node) => { setSelectedNodeId(node.id); setSelectedEdgeId(null) }} onEdgeClick={(_, edge) => { setSelectedEdgeId(edge.id); setSelectedNodeId(null) }} onNodeDragStop={(_, node) => { if (selectedVersion?.status !== 'draft') return; const current = apiNodes.find((item) => item.node_id === node.id); if (current) persistNode.mutate({ id: node.id, payload: { ...current, position_x: Math.round(node.position.x), position_y: Math.round(node.position.y) } }) }} fitView><Background /><Controls /><MiniMap /></ReactFlow></div></section>
     <aside><h2>Version history</h2>{selectedWorkflow && (versions.isPending ? <LoadingState /> : versions.data?.map((version) => <button className={`workflow-item version-item ${version.workflow_version_id === versionId ? 'selected' : ''}`} key={version.workflow_version_id} onClick={() => setVersionId(version.workflow_version_id)}>Version {version.version_number}<small>{version.status}</small></button>))}<ExecutionHistoryPanel executions={executions.data ?? []} selectedExecution={selectedExecution} timeline={executionTimeline.data ?? []} isLoading={executions.isPending || executionTimeline.isPending} onSelect={setSelectedExecutionId} /><h2>Node palette</h2><p className="palette-hint">Drag a node onto the canvas, or click to add it.</p>{nodeTypes.map((nodeType) => <button key={nodeType} draggable={Boolean(versionId && selectedVersion?.status === 'draft')} disabled={!versionId || selectedVersion?.status !== 'draft'} onDragStart={(event) => startPaletteDrag(event, nodeType)} onClick={() => addGraphNode.mutate({ nodeType })}>Add {nodeType}</button>)}{selectedNode && <NodeConfigurationForm node={selectedNode} onSave={saveStructuredNode} onDuplicate={() => duplicateGraphNode.mutate(selectedNode)} onDelete={() => removeNode.mutate(selectedNode.node_id)} />}{selectedEdge && <EdgeConfigurationForm priority={selectedEdge.priority} condition={selectedEdge.condition_configuration} onSave={saveStructuredEdge} onDelete={() => removeEdge.mutate(selectedEdge.edge_id)} />}<p>Drag nodes and connect handles to create transitions. Published versions remain immutable.</p></aside></section></main>
 }

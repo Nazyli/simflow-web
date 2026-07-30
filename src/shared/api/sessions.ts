@@ -24,3 +24,4 @@ export interface SimulationSession {
 }
 
 export const getSession = (sessionId: string) => apiClient<SimulationSession>(`/sessions/${sessionId}`)
+export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSession[]>(`/sessions?participant_id=${encodeURIComponent(participantId)}`)
