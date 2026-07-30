@@ -1,12 +1,14 @@
 import '@xyflow/react/dist/style.css'
-import { Background, Controls, MiniMap, ReactFlow, useEdgesState, useNodesState, type Connection, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react'
+import { Background, Controls, MarkerType, MiniMap, ReactFlow, useEdgesState, useNodesState, type Connection, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CheckCircle2, ClipboardCheck, Eye, Maximize, Minus, Play, Plus, Save, Undo2, Redo2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type DragEvent, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../shared/api/client'
 import { getExecutions, getTimeline } from '../../shared/api/executions'
 import { addNode, addWorkflowEdge, createVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
+import { StatusBadge } from '../../shared/components/status-badge'
 import type { Execution, Workflow } from '../../shared/types/workflow'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { WorkflowGraphEdge } from './workflow-graph-edge'
@@ -20,7 +22,7 @@ const workflowNodeRenderers = { workflow: WorkflowGraphNode }
 const workflowEdgeRenderers = { workflow: WorkflowGraphEdge }
 
 function nodeToFlow(node: ApiNode): Node { return { id: node.node_id, type: 'workflow', position: { x: node.position_x ?? 80, y: node.position_y ?? 80 }, data: { label: node.node_name, nodeType: node.node_type } } }
-function edgeToFlow(edge: ApiEdge): Edge { return { id: edge.edge_id, type: 'workflow', source: edge.source_node_id, target: edge.target_node_id, data: { priority: edge.priority, condition: edge.condition_configuration } } }
+function edgeToFlow(edge: ApiEdge): Edge { return { id: edge.edge_id, type: 'workflow', source: edge.source_node_id, target: edge.target_node_id, markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8' }, data: { priority: edge.priority, condition: edge.condition_configuration } } }
 
 function publishErrors(error: Error | null): string[] {
   if (!(error instanceof ApiError)) return []
@@ -34,12 +36,15 @@ function publishErrors(error: Error | null): string[] {
 
 export function SimulationStudioPage() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null)
   const [versionId, setVersionId] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null)
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
+  const [showMiniMap, setShowMiniMap] = useState(true)
+  const [validationRequested, setValidationRequested] = useState(false)
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const workflows = useQuery({ queryKey: ['workflows'], queryFn: getWorkflows })
@@ -70,6 +75,10 @@ export function SimulationStudioPage() {
 
   useEffect(() => { setNodes(apiNodes.map(nodeToFlow)); setEdges(apiEdges.map(edgeToFlow)) }, [apiNodes, apiEdges, setNodes, setEdges])
   useEffect(() => { setSelectedExecutionId(null) }, [versionId])
+  useEffect(() => {
+    const miniMap = document.querySelector<HTMLElement>('.graph .react-flow__minimap')
+    if (miniMap) miniMap.style.display = showMiniMap ? '' : 'none'
+  }, [showMiniMap])
   useEffect(() => {
     function acceptPaletteDrop(event: globalThis.DragEvent) {
       if (!(event.target instanceof Element) || !event.target.closest('.graph') || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
@@ -126,8 +135,10 @@ export function SimulationStudioPage() {
     if (!selectedEdge) return
     persistEdge.mutate({ id: selectedEdge.edge_id, payload: { source_node_id: selectedEdge.source_node_id, target_node_id: selectedEdge.target_node_id, priority, condition_configuration: condition } })
   }
-  return <main className="studio"><header><div><h1>Simulation Studio</h1><p>Configure master data, workflow versions, nodes, and transitions.</p></div><Link to="/simulation">Open Simulation Runner</Link></header>
-    <section className="studio-grid"><aside><h2>Workflows</h2><button onClick={() => { setSelectedWorkflow(null); setVersionId(null) }}>Create workflow</button>{workflows.isPending && <LoadingState />}{workflows.data?.map((workflow) => <button className="workflow-item" key={workflow.workflow_id} onClick={() => { setSelectedWorkflow(workflow); setVersionId(null) }}>{workflow.workflow_name}<small>{workflow.status}</small></button>)}</aside>
+  function validateGraph() { setValidationRequested(true) }
+  return <main className="studio"><header className="studio-header"><div><p className="eyebrow">Workflow builder</p><h1>{selectedWorkflow?.workflow_name ?? 'Untitled workflow'}</h1><div className="studio-meta">{selectedVersion ? <StatusBadge status={selectedVersion.status} /> : <span className="status-badge status-draft">No version selected</span>}<span className="autosave-indicator"><Save size={14} /> Autosaved locally</span></div></div><div className="studio-header-actions"><button type="button" onClick={() => navigate('/simulation')}><Play size={15} /> Preview / run</button><button className="publish-button" type="button" disabled={!selectedVersion || selectedVersion.status !== 'draft' || publish.isPending} onClick={() => selectedVersion && publish.mutate(selectedVersion.workflow_version_id)}><CheckCircle2 size={15} /> Publish</button></div></header>
+    <div className="canvas-toolbar" aria-label="Canvas controls"><div className="toolbar-group"><button type="button" aria-label="Undo" disabled><Undo2 size={16} /></button><button type="button" aria-label="Redo" disabled><Redo2 size={16} /></button></div><div className="toolbar-group"><button type="button" aria-label="Zoom out" onClick={() => flowInstance?.zoomOut()}><Minus size={16} /></button><button type="button" aria-label="Zoom in" onClick={() => flowInstance?.zoomIn()}><Plus size={16} /></button><button type="button" aria-label="Fit canvas" onClick={() => flowInstance?.fitView()}><Maximize size={16} /></button></div><div className="toolbar-group"><button type="button" className={showMiniMap ? 'is-active' : ''} onClick={() => setShowMiniMap((current) => !current)}>Minimap</button><button type="button" className={validationRequested ? 'is-active' : ''} onClick={validateGraph}><ClipboardCheck size={16} /> Validate</button><button type="button" onClick={() => navigate('/simulation')}><Eye size={16} /> Preview</button></div></div>
+    <section className="studio-grid"><aside><h2>Workflows</h2><button onClick={() => { setSelectedWorkflow(null); setVersionId(null) }}>Create workflow</button>{workflows.isPending && <LoadingState />}{workflows.data?.map((workflow) => <button className="workflow-item" key={workflow.workflow_id} onClick={() => { setSelectedWorkflow(workflow); setVersionId(null) }}>{workflow.workflow_name}<small><StatusBadge status={workflow.status} /></small></button>)}</aside>
     <section><h2>{selectedWorkflow ? `Edit ${selectedWorkflow.workflow_name}` : 'Create workflow'}</h2><form className="inline-form" key={selectedWorkflow?.workflow_id ?? 'new'} onSubmit={submitWorkflow}><input name="name" required defaultValue={selectedWorkflow?.workflow_name ?? ''} placeholder="Workflow name" /><input name="description" defaultValue={selectedWorkflow?.workflow_desc ?? ''} placeholder="Description" /><button disabled={create.isPending || update.isPending}>{selectedWorkflow ? 'Save workflow' : 'Create workflow'}</button>{selectedWorkflow && <button className="danger" type="button" disabled={removeWorkflow.isPending} onClick={() => removeWorkflow.mutate(selectedWorkflow.workflow_id)}>Delete workflow</button>}</form>{selectedWorkflow && <div className="toolbar"><button onClick={() => createDraft.mutate(selectedWorkflow.workflow_id)}>Create draft version</button><label>Version<select value={versionId ?? ''} onChange={(event) => { setVersionId(event.target.value || null); setSelectedNodeId(null); setSelectedEdgeId(null) }}><option value="">Select a version</option>{versions.data?.map((version) => <option key={version.workflow_version_id} value={version.workflow_version_id}>v{version.version_number} — {version.status}</option>)}</select></label>{selectedVersion && <span className={`version-status ${selectedVersion.status}`}>{selectedVersion.status}</span>}{selectedVersion?.status === 'draft' && <button onClick={() => publish.mutate(selectedVersion.workflow_version_id)}>Publish</button>}</div>}{validationErrors.length > 0 && <section className="validation-errors" aria-live="polite"><h3>Graph validation errors</h3><ul>{validationErrors.map((error) => <li key={error}>{error}</li>)}</ul></section>}{publish.isError && validationErrors.length === 0 && <p className="validation-errors">Unable to validate the graph. Please try again.</p>}<div className="graph" onDragOver={allowCanvasDrop} onDrop={dropPaletteNode}><ReactFlow nodeTypes={workflowNodeRenderers} edgeTypes={workflowEdgeRenderers} onInit={setFlowInstance} nodes={nodes.map((node) => ({ ...node, className: invalidNodeIds.has(node.id) ? 'invalid-node' : '', draggable: selectedVersion?.status === 'draft', connectable: selectedVersion?.status === 'draft' }))} edges={edges.map((edge) => ({ ...edge, className: invalidEdgeIds.has(edge.id) ? 'invalid-edge' : '' }))} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={connect} onNodeClick={(_, node) => { setSelectedNodeId(node.id); setSelectedEdgeId(null) }} onEdgeClick={(_, edge) => { setSelectedEdgeId(edge.id); setSelectedNodeId(null) }} onNodeDragStop={(_, node) => { if (selectedVersion?.status !== 'draft') return; const current = apiNodes.find((item) => item.node_id === node.id); if (current) persistNode.mutate({ id: node.id, payload: { ...current, position_x: Math.round(node.position.x), position_y: Math.round(node.position.y) } }) }} fitView><Background /><Controls /><MiniMap /></ReactFlow></div></section>
     <aside><h2>Version history</h2>{selectedWorkflow && (versions.isPending ? <LoadingState /> : versions.data?.map((version) => <button className={`workflow-item version-item ${version.workflow_version_id === versionId ? 'selected' : ''}`} key={version.workflow_version_id} onClick={() => setVersionId(version.workflow_version_id)}>Version {version.version_number}<small>{version.status}</small></button>))}<ExecutionHistoryPanel executions={executions.data ?? []} selectedExecution={selectedExecution} timeline={executionTimeline.data ?? []} isLoading={executions.isPending || executionTimeline.isPending} onSelect={setSelectedExecutionId} /><h2>Node palette</h2><p className="palette-hint">Drag a node onto the canvas, or click to add it.</p>{nodeTypes.map((nodeType) => <button key={nodeType} draggable={Boolean(versionId && selectedVersion?.status === 'draft')} disabled={!versionId || selectedVersion?.status !== 'draft'} onDragStart={(event) => startPaletteDrag(event, nodeType)} onClick={() => addGraphNode.mutate({ nodeType })}>Add {nodeType}</button>)}{selectedNode && <NodeConfigurationForm node={selectedNode} onSave={saveStructuredNode} onDuplicate={() => duplicateGraphNode.mutate(selectedNode)} onDelete={() => removeNode.mutate(selectedNode.node_id)} />}{selectedEdge && <EdgeConfigurationForm priority={selectedEdge.priority} condition={selectedEdge.condition_configuration} onSave={saveStructuredEdge} onDelete={() => removeEdge.mutate(selectedEdge.edge_id)} />}<p>Drag nodes and connect handles to create transitions. Published versions remain immutable.</p></aside></section></main>
 }
