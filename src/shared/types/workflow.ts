@@ -9,6 +9,7 @@ export interface Workflow {
 
 export interface Execution {
   execution_id: string
+  session_id: string | null
   workflow_version_id: string
   participant_id: string | null
   status: string
