@@ -80,6 +80,23 @@ export function SimulationStudioPage() {
     if (miniMap) miniMap.style.display = showMiniMap ? '' : 'none'
   }, [showMiniMap])
   useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.matches('input, textarea, select, [contenteditable="true"]')) return
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        if (selectedNodeId && selectedVersion?.status === 'draft') { event.preventDefault(); removeNode.mutate(selectedNodeId); return }
+        if (selectedEdgeId && selectedVersion?.status === 'draft') { event.preventDefault(); removeEdge.mutate(selectedEdgeId) }
+      }
+      if (event.key === ' ' && target?.closest('.graph')) {
+        document.documentElement.classList.add('canvas-pan-active')
+      }
+    }
+    const onKeyUp = (event: KeyboardEvent) => { if (event.key === ' ') document.documentElement.classList.remove('canvas-pan-active') }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
+  }, [removeEdge, removeNode, selectedEdgeId, selectedNodeId, selectedVersion?.status])
+  useEffect(() => {
     function acceptPaletteDrop(event: globalThis.DragEvent) {
       if (!(event.target instanceof Element) || !event.target.closest('.graph') || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
       const nodeType = event.dataTransfer?.getData('application/simflow-node-type') as typeof nodeTypes[number]
