@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { validateActionPayload } from './action-composers'
 
 type Configuration = Record<string, unknown>
 type ConditionLeaf = { path: string; operator: string; value: unknown }
@@ -25,7 +26,7 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
   const isTimer = nodeType === 'trigger' && configuration.trigger_type === 'timer'
 
   function change(values: Configuration) { setConfiguration((current) => ({ ...current, ...values })) }
-  function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); onSave(name, availableActions.length && !configuration.action_type ? { ...configuration, action_type: availableActions[0] } : configuration) }
+  function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const payload = availableActions.length && !configuration.action_type ? { ...configuration, action_type: availableActions[0] } : configuration; const errors = payload.action_type ? validateActionPayload(String(payload.action_type), payload) : []; if (errors.length) { window.alert(errors.join('\n')); return }; onSave(name, payload) }
   function selectChannel(value: string) {
     const nextActions = actionTypes[`${nodeType}:${value}`] ?? []
     setConfiguration((current) => ({ ...current, channel: value, action_type: nextActions[0] ?? undefined }))
