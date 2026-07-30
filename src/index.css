@@ -44,4 +44,12 @@ select { display: block; margin-top: .5rem; padding: .65rem; }
 .email { border-bottom: 1px solid #374151; padding: .5rem 0; }
 .runner details { margin: .5rem 0; }
 .runner pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .75rem; }
+.timeline-entry { padding: .45rem; border-left: 3px solid #475569; background: #1f2937; }
+.timeline-entry summary { cursor: pointer; }
+.timeline-entry summary small { display: block; margin-left: 1.25rem; color: #9ca3af; }
+.timeline-entry.failure { border-left-color: #ef4444; }
+.timeline-entry.waiting { border-left-color: #f59e0b; }
+.timeline-entry.timer { border-left-color: #38bdf8; }
+.timeline-entry.node-result { border-left-color: #22c55e; }
+.classification-result { display: grid; gap: .25rem; margin: .5rem 0; padding: .5rem; border-radius: .3rem; background: #312e81; }
 @media (max-width: 800px) { .runner { grid-template-columns: 1fr; } }

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState, type ComponentType, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { completeExecution, getTimeline, startExecution, submitExecutionAction } from '../../shared/api/executions'
+import { completeExecution, getNodeResults, getTimeline, startExecution, submitExecutionAction, type ExecutionEvent, type NodeResult } from '../../shared/api/executions'
 import { getSession, type SessionChannelEvent, type SimulationSession } from '../../shared/api/sessions'
 import { getPublishedVersions } from '../../shared/api/workflows'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
@@ -32,6 +32,7 @@ export function SimulationRunnerPage() {
   const [execution, setExecution] = useState<Execution | null>(null)
   const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
   const timeline = useQuery({ queryKey: ['timeline', execution?.execution_id], queryFn: () => getTimeline(execution!.execution_id), enabled: Boolean(execution) })
+  const nodeResults = useQuery({ queryKey: ['node-results', execution?.execution_id], queryFn: () => getNodeResults(execution!.execution_id), enabled: Boolean(execution) })
   const session = useQuery({ queryKey: ['session', execution?.session_id], queryFn: () => getSession(execution!.session_id!), enabled: Boolean(execution?.session_id), refetchInterval: execution?.status === 'running' || execution?.status === 'waiting' ? 3000 : false })
   const start = useMutation({ mutationFn: startExecution, onSuccess: (result) => { setExecution(result); queryClient.invalidateQueries({ queryKey: ['timeline', result.execution_id] }); queryClient.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
   const action = useMutation({ mutationFn: ({ actionType, content }: { actionType: string; content: string }) => submitExecutionAction(execution!.execution_id, { action_type: actionType, payload: { content, channel } }), onSuccess: (result) => { setExecution(result); queryClient.invalidateQueries({ queryKey: ['timeline', result.execution_id] }); queryClient.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
@@ -47,7 +48,7 @@ export function SimulationRunnerPage() {
 
   return <main><header><div><h1>Simulation Runner</h1><p>Run a published workflow for one participant.</p></div><Link to="/studio">Open Simulation Studio</Link></header>
     {!execution && <form className="runner-start" onSubmit={startSimulation}><label htmlFor="participant-id">Participant ID</label><input id="participant-id" required value={participantId} onChange={(event) => setParticipantId(event.target.value)} /><label htmlFor="workflow-version">Published workflow version</label><select id="workflow-version" required value={versionId} onChange={(event) => setVersionId(event.target.value)}><option value="">Select version</option>{versions.data?.map((version) => <option key={version.workflow_version_id} value={version.workflow_version_id}>Version {version.version_number} — {version.workflow_version_id}</option>)}</select><label htmlFor="channel">Channel</label><select id="channel" value={channel} onChange={(event) => setChannel(event.target.value as Channel)}>{(['chat', 'email', 'call', 'document'] as Channel[]).map((item) => <option key={item}>{item}</option>)}</select><button disabled={start.isPending || !versionId}>Start simulation</button>{versions.isPending && <LoadingState />}{start.isError && <ErrorState message="Unable to start the selected published workflow." />}</form>}
-    {execution && <section className="runner"><div><div className="channel-tabs">{(['chat', 'email', 'call', 'document'] as Channel[]).map((item) => <button className={channel === item ? 'active' : ''} key={item} onClick={() => setChannel(item)}>{item}</button>)}</div>{session.isPending && <LoadingState />}<Panel events={events} /><form onSubmit={sendAction}><label htmlFor="content">Your action</label><input id="content" name="content" required placeholder={channel === 'chat' ? 'Write a message' : 'Describe your action'} /><button disabled={action.isPending || execution.status === 'completed'}>Send action</button></form></div><aside><h2>Execution</h2><p>Status: {execution.status}</p><p>Session: {execution.session_id}</p><p>Current node: {execution.current_node_id ?? 'completed'}</p>{aiResult && <div className="dummy-ai"><strong>Dummy AI</strong><p>{aiResult.content ?? `${aiResult.label} (${aiResult.score ?? 0})`}</p></div>}<button onClick={() => complete.mutate()} disabled={!['running', 'waiting'].includes(execution.status)}>Complete simulation</button>{execution.status === 'completed' && <><h2>Completion summary</h2><p>Simulation completed for {execution.participant_id}. {events.length} {channel} event(s) recorded.</p><button onClick={restart}>Restart</button></>}<h2>Timeline</h2>{timeline.isPending && <LoadingState />}{timeline.data?.map((event) => <details key={event.event_id}><summary>{event.event_type}</summary><pre>{JSON.stringify(event.payload, null, 2)}</pre></details>)}</aside></section>}</main>
+    {execution && <section className="runner"><div><div className="channel-tabs">{(['chat', 'email', 'call', 'document'] as Channel[]).map((item) => <button className={channel === item ? 'active' : ''} key={item} onClick={() => setChannel(item)}>{item}</button>)}</div>{session.isPending && <LoadingState />}<Panel events={events} /><form onSubmit={sendAction}><label htmlFor="content">Your action</label><input id="content" name="content" required placeholder={channel === 'chat' ? 'Write a message' : 'Describe your action'} /><button disabled={action.isPending || execution.status === 'completed'}>Send action</button></form></div><aside><h2>Execution</h2><p>Status: {execution.status}</p><p>Session: {execution.session_id}</p><p>Current node: {execution.current_node_id ?? 'completed'}</p>{aiResult && <div className="dummy-ai"><strong>Dummy AI</strong><p>{aiResult.content ?? `${aiResult.label} (${aiResult.score ?? 0})`}</p></div>}<button onClick={() => complete.mutate()} disabled={!['running', 'waiting'].includes(execution.status)}>Complete simulation</button>{execution.status === 'completed' && <><h2>Completion summary</h2><p>Simulation completed for {execution.participant_id}. {events.length} {channel} event(s) recorded.</p><button onClick={restart}>Restart</button></>}<EnrichedTimeline events={timeline.data ?? []} nodeResults={nodeResults.data ?? []} loading={timeline.isPending || nodeResults.isPending} /></aside></section>}</main>
 }
 
 function EmailPanel({ events }: ChannelPanelProps) {
@@ -90,4 +91,28 @@ function formatDuration(start?: string, finish?: string) {
   const milliseconds = new Date(finish).valueOf() - new Date(start).valueOf()
   if (!Number.isFinite(milliseconds) || milliseconds < 0) return '—'
   return `${Math.floor(milliseconds / 60000)}m ${Math.floor((milliseconds % 60000) / 1000)}s`
+}
+
+function EnrichedTimeline({ events, nodeResults, loading }: { events: ExecutionEvent[]; nodeResults: NodeResult[]; loading: boolean }) {
+  return <section className="enriched-timeline"><h2>Timeline</h2>{loading && <LoadingState />}{events.map((event) => <details className={`timeline-entry ${timelineKind(event.event_type)}`} key={event.event_id}><summary><span>{timelineIndicator(event.event_type)}</span> {event.event_type}<small>{formatTime(event.created_at)}</small></summary><p>Node: {event.node_id ?? '—'}</p><pre>{JSON.stringify(event.payload, null, 2)}</pre></details>)}{nodeResults.map((nodeResult) => <details className="timeline-entry node-result" key={nodeResult.node_result_id}><summary>✓ Node result <small>{formatTime(nodeResult.created_at)}</small></summary><p>Node: {nodeResult.node_id} · {nodeResult.status}</p><ClassificationResult result={nodeResult.result} /><pre>{JSON.stringify(nodeResult.result, null, 2)}</pre></details>)}</section>
+}
+
+function ClassificationResult({ result }: { result: Record<string, unknown> }) {
+  const ai = result.ai as { operation?: string; label?: string; score?: number; metadata?: Record<string, unknown> } | undefined
+  if (!ai || ai.operation !== 'classification') return null
+  return <div className="classification-result"><strong>Classification: {ai.label ?? '—'}</strong><span>Score: {ai.score ?? '—'}</span>{ai.metadata && <pre>{JSON.stringify(ai.metadata, null, 2)}</pre>}</div>
+}
+
+function timelineKind(eventType: string) {
+  if (eventType === 'execution_failed') return 'failure'
+  if (eventType === 'participant_action_requested') return 'waiting'
+  if (eventType.startsWith('timer_')) return 'timer'
+  return 'normal'
+}
+
+function timelineIndicator(eventType: string) {
+  if (eventType === 'execution_failed') return '✕'
+  if (eventType === 'participant_action_requested') return '⌛'
+  if (eventType.startsWith('timer_')) return '◷'
+  return '•'
 }
