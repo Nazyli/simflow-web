@@ -7,6 +7,7 @@ export const createWorkflow = (payload: Pick<Workflow, 'workflow_name' | 'workfl
 export const updateWorkflow = (workflowId: string, payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'>) => apiClient<Workflow>(`/workflows/${workflowId}`, { method: 'PUT', body: JSON.stringify(payload) })
 export const deleteWorkflow = (workflowId: string) => apiClient<void>(`/workflows/${workflowId}`, { method: 'DELETE' })
 export const createVersion = (workflowId: string) => apiClient<WorkflowVersion>(`/workflows/${workflowId}/versions`, { method: 'POST' })
+export const createDraftFromVersion = (versionId: string) => apiClient<WorkflowVersion>(`/workflows/versions/${versionId}/draft`, { method: 'POST' })
 export const getWorkflowVersions = (workflowId: string) => apiClient<WorkflowVersion[]>(`/workflows/${workflowId}/versions`)
 export interface PublishedWorkflowVersion extends WorkflowVersion { workflow_name: string; is_active: boolean }
 export const getPublishedVersions = () => apiClient<PublishedWorkflowVersion[]>('/workflows/versions/published')
