@@ -8,7 +8,8 @@ export const updateWorkflow = (workflowId: string, payload: Pick<Workflow, 'work
 export const deleteWorkflow = (workflowId: string) => apiClient<void>(`/workflows/${workflowId}`, { method: 'DELETE' })
 export const createVersion = (workflowId: string) => apiClient<WorkflowVersion>(`/workflows/${workflowId}/versions`, { method: 'POST' })
 export const getWorkflowVersions = (workflowId: string) => apiClient<WorkflowVersion[]>(`/workflows/${workflowId}/versions`)
-export const getPublishedVersions = () => apiClient<WorkflowVersion[]>('/workflows/versions/published')
+export interface PublishedWorkflowVersion extends WorkflowVersion { workflow_name: string; is_active: boolean }
+export const getPublishedVersions = () => apiClient<PublishedWorkflowVersion[]>('/workflows/versions/published')
 export const getWorkflowVersion = (versionId: string) => apiClient<WorkflowVersion & { workflow_name: string }>(`/workflows/versions/${versionId}`)
 export const publishVersion = (versionId: string) => apiClient<WorkflowVersion>(`/workflows/versions/${versionId}/publish`, { method: 'POST' })
 export interface ApiNode { node_id: string; node_name: string; node_type: string; configuration: Record<string, unknown>; position_x: number | null; position_y: number | null }
