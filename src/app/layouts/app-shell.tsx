@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
-import { Activity, Bot, ChevronDown, Clock3, Database, History, PanelLeftClose, Play, Search, Settings, Sparkles, Workflow } from 'lucide-react'
+import { Activity, Bot, ChevronDown, Clock3, Database, History, Menu, PanelLeftClose, Play, Search, Settings, Sparkles, Workflow, X } from 'lucide-react'
 import { type KeyboardEvent, type PropsWithChildren, useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { getWorkflows } from '../../shared/api/workflows'
@@ -76,18 +76,19 @@ function Breadcrumb() {
 
 export function AppShell({ children }: PropsWithChildren) {
   const apiStatus = useQuery({ queryKey: ['workflows', 'api-status'], queryFn: getWorkflows, retry: 0, refetchInterval: 30_000 })
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const apiLabel = apiStatus.isPending ? 'Checking API' : apiStatus.isError ? 'API offline' : 'API online'
   const apiClassName = apiStatus.isPending ? 'checking' : apiStatus.isError ? 'offline' : 'online'
   return (
     <div className="app-shell">
-      <aside className="app-sidebar">
-        <div className="brand"><span className="brand-mark"><Bot size={19} /></span><span>SimFlow</span><button type="button" className="sidebar-collapse" aria-label="Collapse sidebar"><PanelLeftClose size={17} /></button></div>
+      <aside className={`app-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`}>
+        <div className="brand"><span className="brand-mark"><Bot size={19} /></span><span>SimFlow</span><button type="button" className="sidebar-collapse" aria-label="Collapse sidebar" onClick={() => setMobileNavOpen(false)}><PanelLeftClose size={17} /></button></div>
         <div className="workspace-summary"><span className="workspace-icon">A</span><div><strong>Acme Simulation</strong><small>Production workspace</small></div><ChevronDown size={15} /></div>
-        <nav className="primary-nav" aria-label="Primary navigation">{navigation.map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} className={({ isActive }) => isActive ? 'active' : ''}><Icon size={18} /><span>{label}</span></NavLink>)}</nav>
+        <nav className="primary-nav" aria-label="Primary navigation">{navigation.map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} onClick={() => setMobileNavOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}><Icon size={18} /><span>{label}</span></NavLink>)}</nav>
         <div className="sidebar-bottom"><div className="upgrade-card"><Sparkles size={16} /><strong>Scale your simulations</strong><span>Coordinate complex AI workflows with confidence.</span><button type="button">View usage</button></div><div className="sidebar-profile"><span className="avatar">JD</span><div><strong>Jordan Davis</strong><small>Workspace admin</small></div><ChevronDown size={15} /></div></div>
       </aside>
       <section className="app-main">
-        <header className="app-header"><Breadcrumb /><div className="header-actions"><span className={`api-status ${apiClassName}`}><Activity size={14} />{apiLabel}</span><CommandPalette /><button type="button" className="header-avatar" aria-label="Open profile">JD</button></div></header>
+        <header className="app-header"><button type="button" className="mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen((current) => !current)}>{mobileNavOpen ? <X size={18} /> : <Menu size={18} />}</button><Breadcrumb /><div className="header-actions"><span className={`api-status ${apiClassName}`}><Activity size={14} />{apiLabel}</span><CommandPalette /><button type="button" className="header-avatar" aria-label="Open profile">JD</button></div></header>
         <main className="app-content">{children}</main>
       </section>
     </div>
