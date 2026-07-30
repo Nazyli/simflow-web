@@ -9,13 +9,11 @@ import { getExecutions, getTimeline } from '../../shared/api/executions'
 import { addNode, addWorkflowEdge, createVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import type { Execution, Workflow } from '../../shared/types/workflow'
-import { MasterDataForm } from './master-data-form'
+import { MasterDataForm, masterResources, type MasterResource } from './master-data-form'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { WorkflowGraphEdge } from './workflow-graph-edge'
 import { WorkflowGraphNode } from './workflow-graph-node'
 
-const masterResources = ['actors', 'simulations', 'activities', 'documents', 'emails', 'chats', 'calls', 'prompts', 'scenarios'] as const
-type MasterResource = typeof masterResources[number]
 const nodeTypes = ['trigger', 'condition', 'action', 'event'] as const
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
