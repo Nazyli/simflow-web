@@ -4,6 +4,8 @@ import type { WorkflowVersion } from '../types/workflow'
 
 export const getWorkflows = () => apiClient<Workflow[]>('/workflows')
 export const createWorkflow = (payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'>) => apiClient<Workflow>('/workflows', { method: 'POST', body: JSON.stringify(payload) })
+export const updateWorkflow = (workflowId: string, payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'>) => apiClient<Workflow>(`/workflows/${workflowId}`, { method: 'PUT', body: JSON.stringify(payload) })
+export const deleteWorkflow = (workflowId: string) => apiClient<void>(`/workflows/${workflowId}`, { method: 'DELETE' })
 export const createVersion = (workflowId: string) => apiClient<WorkflowVersion>(`/workflows/${workflowId}/versions`, { method: 'POST' })
 export const getPublishedVersions = () => apiClient<WorkflowVersion[]>('/workflows/versions/published')
 export const publishVersion = (versionId: string) => apiClient<WorkflowVersion>(`/workflows/versions/${versionId}/publish`, { method: 'POST' })
