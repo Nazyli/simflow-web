@@ -1,0 +1,27 @@
+import { useEffect, useState, type FormEvent } from 'react'
+
+type MasterResource = 'actors' | 'simulations' | 'activities' | 'documents' | 'emails' | 'chats' | 'calls' | 'prompts' | 'scenarios'
+
+type Field = { name: string; label: string; required?: boolean; type?: 'text' | 'textarea' | 'number' | 'boolean' }
+type Definition = { id: string; fields: Field[] }
+
+const definitions: Record<MasterResource, Definition> = {
+  actors: { id: 'actor_id', fields: [{ name: 'actor_id', label: 'Actor ID', required: true }, { name: 'actor_name', label: 'Name', required: true }, { name: 'actor_email', label: 'Email' }, { name: 'actor_position', label: 'Position' }, { name: 'actor_group_position', label: 'Group position' }, { name: 'persona_desc', label: 'Persona description', type: 'textarea' }, { name: 'is_participant', label: 'Is participant', type: 'boolean' }] },
+  simulations: { id: 'simulation_id', fields: [{ name: 'simulation_id', label: 'Simulation ID', required: true }, { name: 'simulation_name', label: 'Name', required: true }, { name: 'simulation_desc', label: 'Description', type: 'textarea' }, { name: 'channel_name', label: 'Channel', required: true }, { name: 'duration', label: 'Duration (minutes)', required: true, type: 'number' }] },
+  activities: { id: 'activity_id', fields: [{ name: 'activity_id', label: 'Activity ID', required: true }, { name: 'activity_name', label: 'Name' }, { name: 'activity_desc', label: 'Description', type: 'textarea' }, { name: 'simulation_id', label: 'Simulation ID' }, { name: 'state_name', label: 'State' }, { name: 'is_first', label: 'First activity', type: 'boolean' }] },
+  documents: { id: 'document_id', fields: [{ name: 'document_id', label: 'Document ID', required: true }, { name: 'document_name', label: 'Name', required: true }, { name: 'folder_id', label: 'Folder ID' }, { name: 'activity_id', label: 'Activity ID' }, { name: 'owner', label: 'Owner actor ID' }, { name: 'read_only', label: 'Read only' }] },
+  emails: { id: 'email_id', fields: [{ name: 'email_id', label: 'Email ID', required: true }, { name: 'email_name', label: 'Name', required: true }, { name: 'activity_id', label: 'Activity ID', required: true }, { name: 'actor_from', label: 'From actor ID', required: true }, { name: 'actor_to', label: 'To actor ID', required: true }, { name: 'subject', label: 'Subject', required: true }, { name: 'content', label: 'Content', type: 'textarea' }] },
+  chats: { id: 'chat_id', fields: [{ name: 'chat_id', label: 'Chat ID', required: true }, { name: 'chat_name', label: 'Name', required: true }, { name: 'activity_id', label: 'Activity ID' }, { name: 'actor_id', label: 'Actor ID' }, { name: 'content', label: 'Content', type: 'textarea' }] },
+  calls: { id: 'call_id', fields: [{ name: 'call_id', label: 'Call ID', required: true }, { name: 'call_name', label: 'Name', required: true }, { name: 'activity_id', label: 'Activity ID' }, { name: 'actor_id', label: 'Actor ID' }, { name: 'content', label: 'Content', type: 'textarea' }] },
+  prompts: { id: 'prompt_id', fields: [{ name: 'prompt_id', label: 'Prompt ID', required: true }, { name: 'activity_type_id', label: 'Activity type ID' }, { name: 'simulation_id', label: 'Simulation ID' }, { name: 'content', label: 'Content', type: 'textarea' }, { name: 'desc', label: 'Description', type: 'textarea' }] },
+  scenarios: { id: 'scenario_id', fields: [{ name: 'scenario_id', label: 'Scenario ID', required: true }, { name: 'scenario_name', label: 'Name', required: true }, { name: 'scenario_desc', label: 'Description', type: 'textarea' }, { name: 'level_id', label: 'Level ID' }, { name: 'design_id', label: 'Design ID' }] },
+}
+
+export function MasterDataForm({ resource, record, onSave, onDelete, isSaving }: { resource: MasterResource; record: Record<string, unknown> | null; onSave: (id: string | null, values: Record<string, unknown>) => void; onDelete: (id: string) => void; isSaving: boolean }) {
+  const definition = definitions[resource]
+  const [values, setValues] = useState<Record<string, unknown>>({})
+  useEffect(() => { setValues(record ?? {}) }, [record, resource])
+  const isEditing = Boolean(record)
+  function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const id = isEditing ? String(record?.[definition.id]) : null; onSave(id, values) }
+  return <form className="master-form" onSubmit={submit}><h2>{isEditing ? `Edit ${resource.slice(0, -1)}` : `Create ${resource.slice(0, -1)}`}</h2>{definition.fields.map((field) => <label key={field.name}>{field.type === 'boolean' ? <><input type="checkbox" checked={Boolean(values[field.name])} onChange={(event) => setValues({ ...values, [field.name]: event.target.checked })} /> {field.label}</> : <>{field.label}{field.type === 'textarea' ? <textarea required={field.required} value={String(values[field.name] ?? '')} onChange={(event) => setValues({ ...values, [field.name]: event.target.value })} /> : <input type={field.type ?? 'text'} required={field.required} disabled={isEditing && field.name === definition.id} value={String(values[field.name] ?? '')} onChange={(event) => setValues({ ...values, [field.name]: field.type === 'number' ? Number(event.target.value) : event.target.value })} />}</>}</label>)}<button disabled={isSaving}>{isEditing ? 'Save changes' : 'Create record'}</button>{isEditing && <button type="button" className="danger" disabled={isSaving} onClick={() => onDelete(String(record?.[definition.id]))}>Delete record</button>}</form>
+}
