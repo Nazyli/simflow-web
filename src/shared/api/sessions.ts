@@ -19,6 +19,8 @@ export interface SimulationSession {
   chat_inbox: SessionChannelEvent[]
   document_state: SessionChannelEvent[]
   call_state: SessionChannelEvent[]
+  created_at: string
+  completed_at: string | null
 }
 
 export const getSession = (sessionId: string) => apiClient<SimulationSession>(`/sessions/${sessionId}`)

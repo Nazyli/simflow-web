@@ -9,6 +9,7 @@ export const deleteWorkflow = (workflowId: string) => apiClient<void>(`/workflow
 export const createVersion = (workflowId: string) => apiClient<WorkflowVersion>(`/workflows/${workflowId}/versions`, { method: 'POST' })
 export const getWorkflowVersions = (workflowId: string) => apiClient<WorkflowVersion[]>(`/workflows/${workflowId}/versions`)
 export const getPublishedVersions = () => apiClient<WorkflowVersion[]>('/workflows/versions/published')
+export const getWorkflowVersion = (versionId: string) => apiClient<WorkflowVersion & { workflow_name: string }>(`/workflows/versions/${versionId}`)
 export const publishVersion = (versionId: string) => apiClient<WorkflowVersion>(`/workflows/versions/${versionId}/publish`, { method: 'POST' })
 export interface ApiNode { node_id: string; node_name: string; node_type: string; configuration: Record<string, unknown>; position_x: number | null; position_y: number | null }
 export interface ApiEdge { edge_id: string; source_node_id: string; target_node_id: string; condition_configuration: Record<string, unknown> | null; priority: number }
