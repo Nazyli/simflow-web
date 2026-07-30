@@ -47,17 +47,37 @@ function CommandPalette() {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button className="command-trigger" type="button" aria-label="Open command palette"><Search size={16} /><span>Search or jump to…</span><kbd>Ctrl K</kbd></button>
+        <button className="command-trigger" type="button" aria-label="Open command palette">
+          <Search size={16} /><span>Search or jump to…</span><kbd>Ctrl K</kbd>
+        </button>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="command-overlay" />
         <Dialog.Content className="command-dialog" aria-describedby={undefined}>
           <Dialog.Title className="sr-only">Command palette</Dialog.Title>
-          <div className="command-input"><Search size={18} /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={onInputKeyDown} placeholder="Search pages and workflows…" /></div>
+          <div className="command-input">
+            <Search size={18} />
+            <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={onInputKeyDown} placeholder="Search pages and workflows…" />
+          </div>
           <div className="command-results">
             <p>Navigate</p>
-            {pages.map(({ label, path, icon: Icon, description }) => <button key={path} type="button" onClick={() => select(path)}><Icon size={17} /><span><strong>{label}</strong><small>{description}</small></span></button>)}
-            {matchingWorkflows.length > 0 && <><p>Workflows</p>{matchingWorkflows.map((workflow) => <button key={workflow.workflow_id} type="button" onClick={() => select('/studio')}><Sparkles size={17} /><span><strong>{workflow.workflow_name}</strong><small>Open in Studio</small></span></button>)}</>}
+            {pages.map(({ label, path, icon: Icon, description }) => (
+              <button key={path} type="button" onClick={() => select(path)}>
+                <Icon size={17} />
+                <span><strong>{label}</strong><small>{description}</small></span>
+              </button>
+            ))}
+            {matchingWorkflows.length > 0 && (
+              <>
+                <p>Workflows</p>
+                {matchingWorkflows.map((wf) => (
+                  <button key={wf.workflow_id} type="button" onClick={() => select('/studio')}>
+                    <Sparkles size={17} />
+                    <span><strong>{wf.workflow_name}</strong><small>Open in Studio</small></span>
+                  </button>
+                ))}
+              </>
+            )}
             {workflows.isError && <p className="command-empty">Workflow search is temporarily unavailable.</p>}
           </div>
         </Dialog.Content>
@@ -71,7 +91,14 @@ function Breadcrumb() {
   const segments = location.pathname.split('/').filter(Boolean)
   const basePath = `/${segments[0] ?? 'studio'}`
   const title = pageNames[basePath] ?? 'Workspace'
-  return <nav className="breadcrumb" aria-label="Breadcrumb"><span>Workspace</span><span>/</span><strong>{title}</strong>{segments.length > 1 && <><span>/</span><strong>{segments.at(-1)}</strong></>}</nav>
+  return (
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <span>SimFlow</span>
+      <span>/</span>
+      <strong>{title}</strong>
+      {segments.length > 1 && <><span>/</span><strong>{segments.at(-1)}</strong></>}
+    </nav>
+  )
 }
 
 export function AppShell({ children }: PropsWithChildren) {
@@ -80,16 +107,68 @@ export function AppShell({ children }: PropsWithChildren) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const apiLabel = apiStatus.isPending ? 'Checking API' : apiStatus.isError ? 'API offline' : 'API online'
   const apiClassName = apiStatus.isPending ? 'checking' : apiStatus.isError ? 'offline' : 'online'
+
   return (
     <div className={`app-shell ${sidebarCollapsed ? 'sidebar-is-collapsed' : ''}`}>
+
+      {/* ─── Sidebar ─────────────────────────────────────────── */}
       <aside className={`app-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`}>
-        <div className="brand"><span className="brand-mark"><Bot size={19} /></span><span>SimFlow</span><button type="button" className="sidebar-collapse" aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => { setSidebarCollapsed((current) => !current); setMobileNavOpen(false) }}><PanelLeftClose size={17} /></button></div>
-        <div className="workspace-summary"><span className="workspace-icon">A</span><div><strong>Acme Simulation</strong><small>Production workspace</small></div><ChevronDown size={15} /></div>
-        <nav className="primary-nav" aria-label="Primary navigation">{navigation.map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} onClick={() => setMobileNavOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}><Icon size={18} /><span>{label}</span></NavLink>)}</nav>
-        <div className="sidebar-bottom"><div className="upgrade-card"><Sparkles size={16} /><strong>Scale your simulations</strong><span>Coordinate complex AI workflows with confidence.</span><button type="button">View usage</button></div><div className="sidebar-profile"><span className="avatar">JD</span><div><strong>Jordan Davis</strong><small>Workspace admin</small></div><ChevronDown size={15} /></div></div>
+
+        {/* Brand */}
+        <div className="brand">
+          <span className="brand-mark"><Bot size={16} /></span>
+          <span>SimFlow</span>
+          <button
+            type="button"
+            className="sidebar-collapse"
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            onClick={() => { setSidebarCollapsed((c) => !c); setMobileNavOpen(false) }}
+          >
+            <PanelLeftClose size={16} />
+          </button>
+        </div>
+
+        {/* Navigation links */}
+        <nav className="primary-nav" aria-label="Primary navigation">
+          {navigation.map(({ label, path, icon: Icon }) => (
+            <NavLink
+              key={path}
+              to={path}
+              onClick={() => setMobileNavOpen(false)}
+              className={({ isActive }) => isActive ? 'active' : ''}
+            >
+              <Icon size={17} />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* User profile */}
+        <div className="sidebar-bottom">
+          <div className="sidebar-profile">
+            <span className="avatar">JD</span>
+            <div>
+              <strong>Jordan Davis</strong>
+              <small style={{ display: 'block', color: '#94a3b8', fontSize: '.67rem', marginTop: '1px' }}>Admin</small>
+            </div>
+            <ChevronDown size={14} />
+          </div>
+        </div>
       </aside>
+
+      {/* ─── Main content ────────────────────────────────────── */}
       <section className="app-main">
-        <header className="app-header"><button type="button" className="mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen((current) => !current)}>{mobileNavOpen ? <X size={18} /> : <Menu size={18} />}</button><Breadcrumb /><div className="header-actions"><span className={`api-status ${apiClassName}`}><Activity size={14} />{apiLabel}</span><CommandPalette /><button type="button" className="header-avatar" aria-label="Open profile">JD</button></div></header>
+        <header className="app-header">
+          <button type="button" className="mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen((c) => !c)}>
+            {mobileNavOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+          <Breadcrumb />
+          <div className="header-actions">
+            <span className={`api-status ${apiClassName}`}><Activity size={14} />{apiLabel}</span>
+            <CommandPalette />
+            <button type="button" className="header-avatar" aria-label="Open profile">JD</button>
+          </div>
+        </header>
         <main className="app-content">{children}</main>
       </section>
     </div>

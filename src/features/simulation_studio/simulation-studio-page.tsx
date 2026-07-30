@@ -2,7 +2,11 @@ import '@xyflow/react/dist/style.css'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Background, Controls, MarkerType, MiniMap, ReactFlow, useEdgesState, useNodesState, type Connection, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, ClipboardCheck, Eye, Maximize, Minus, Play, Plus, Save, Undo2, Redo2 } from 'lucide-react'
+import { 
+  BellRing, CheckCircle2, ClipboardCheck, GitBranch, Maximize, Minus, Play, Plus, 
+  Save, Undo2, Redo2, CircleDot, ChevronLeft, ChevronRight, Sliders, History, 
+  FolderKanban, Layers, X, AlertTriangle, Edit3, Trash2, MapPin
+} from 'lucide-react'
 import { useEffect, useMemo, useState, type DragEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../shared/api/client'
@@ -18,6 +22,13 @@ import { WorkflowGraphNode } from './workflow-graph-node'
 const nodeTypes = ['trigger', 'condition', 'action', 'event'] as const
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
+
+const nodePaletteMeta: Record<typeof nodeTypes[number], { title: string; description: string; icon: typeof BellRing; colorClass: string }> = {
+  trigger: { title: 'Trigger Node', description: 'Initiates simulation flow based on manual event or timer', icon: BellRing, colorClass: 'palette-trigger' },
+  condition: { title: 'Condition Node', description: 'Branches execution based on payload evaluation', icon: GitBranch, colorClass: 'palette-condition' },
+  action: { title: 'Action Node', description: 'Executes automated channel tasks or AI operations', icon: Play, colorClass: 'palette-action' },
+  event: { title: 'Event Node', description: 'Captures and handles incoming external activities', icon: CircleDot, colorClass: 'palette-event' },
+}
 
 const workflowNodeRenderers = { workflow: WorkflowGraphNode }
 const workflowEdgeRenderers = { workflow: WorkflowGraphEdge }
@@ -38,6 +49,8 @@ function publishErrors(error: Error | null): string[] {
 export function SimulationStudioPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+
+  // State management
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null)
   const [versionId, setVersionId] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
@@ -47,24 +60,37 @@ export function SimulationStudioPage() {
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [validationRequested, setValidationRequested] = useState(false)
   const [workflowPickerOpen, setWorkflowPickerOpen] = useState(false)
+  const [editWorkflowOpen, setEditWorkflowOpen] = useState(false)
+  
+  // UI Sidebars & Tabs
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(true)
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(true)
+  const [activeRightTab, setActiveRightTab] = useState<'inspector' | 'versions' | 'executions'>('inspector')
+
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
+
+  // API Queries & Mutations
   const workflows = useQuery({ queryKey: ['workflows'], queryFn: getWorkflows })
   const graph = useQuery({ queryKey: ['graph', versionId], queryFn: () => getGraph(versionId!), enabled: Boolean(versionId) })
   const versions = useQuery({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id], queryFn: () => getWorkflowVersions(selectedWorkflow!.workflow_id), enabled: Boolean(selectedWorkflow) })
   const executions = useQuery({ queryKey: ['executions', versionId], queryFn: () => getExecutions(versionId!), enabled: Boolean(versionId) })
   const executionTimeline = useQuery({ queryKey: ['execution-timeline', selectedExecutionId], queryFn: () => getTimeline(selectedExecutionId!), enabled: Boolean(selectedExecutionId) })
-  const create = useMutation({ mutationFn: createWorkflow, onSuccess: (workflow) => { setSelectedWorkflow(workflow); queryClient.invalidateQueries({ queryKey: ['workflows'] }) } })
-  const update = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'> }) => updateWorkflow(id, payload), onSuccess: (workflow) => { setSelectedWorkflow(workflow); queryClient.invalidateQueries({ queryKey: ['workflows'] }) } })
-  const removeWorkflow = useMutation({ mutationFn: deleteWorkflow, onSuccess: () => { setSelectedWorkflow(null); setVersionId(null); setSelectedNodeId(null); setSelectedEdgeId(null); setNodes([]); setEdges([]); queryClient.invalidateQueries({ queryKey: ['workflows'] }) } })
-  const createDraft = useMutation({ mutationFn: async (_workflowId: string) => { const sourceVersion = selectedVersion ?? versions.data?.find((version) => version.status === 'published'); if (!sourceVersion) throw new Error('Select a published version before creating a draft.'); return createDraftFromVersion(sourceVersion.workflow_version_id) }, onSuccess: (version) => { setVersionId(version.workflow_version_id); setSelectedNodeId(null); setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }) } })
+
+  const create = useMutation({ mutationFn: createWorkflow, onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) } })
+  const update = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'> }) => updateWorkflow(id, payload), onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) } })
+  const removeWorkflow = useMutation({ mutationFn: deleteWorkflow, onSuccess: () => { setSelectedWorkflow(null); setVersionId(null); setSelectedNodeId(null); setSelectedEdgeId(null); setNodes([]); setEdges([]); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) } })
+  
+  const createDraft = useMutation({ mutationFn: async (_workflowId: string) => { const sourceVersion = selectedVersion ?? versions.data?.find((v) => v.status === 'published'); if (!sourceVersion) throw new Error('Select a published version before creating a draft.'); return createDraftFromVersion(sourceVersion.workflow_version_id) }, onSuccess: (version) => { setVersionId(version.workflow_version_id); setSelectedNodeId(null); setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }) } })
   const publish = useMutation({ mutationFn: publishVersion, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['workflows'] }); queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }) } })
-  const addGraphNode = useMutation({ mutationFn: ({ nodeType, position }: { nodeType: typeof nodeTypes[number]; position?: { x: number; y: number } }) => addNode(versionId!, { node_name: `${nodeType} node`, node_type: nodeType, configuration: nodeType === 'action' ? { channel: 'chat', await_participant: false } : {}, position_x: Math.round(position?.x ?? 180), position_y: Math.round(position?.y ?? 180) }), onSuccess: (node) => { setSelectedNodeId(node.node_id); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
-  const duplicateGraphNode = useMutation({ mutationFn: (node: ApiNode) => addNode(versionId!, { node_name: `${node.node_name} copy`, node_type: node.node_type, configuration: { ...node.configuration }, position_x: (node.position_x ?? 80) + 60, position_y: (node.position_y ?? 80) + 60 }), onSuccess: (node) => { setSelectedNodeId(node.node_id); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
+  
+  const addGraphNode = useMutation({ mutationFn: ({ nodeType, position }: { nodeType: typeof nodeTypes[number]; position?: { x: number; y: number } }) => addNode(versionId!, { node_name: `${nodeType} node`, node_type: nodeType, configuration: nodeType === 'action' ? { channel: 'chat', await_participant: false } : {}, position_x: Math.round(position?.x ?? 180), position_y: Math.round(position?.y ?? 180) }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
+  const duplicateGraphNode = useMutation({ mutationFn: (node: ApiNode) => addNode(versionId!, { node_name: `${node.node_name} copy`, node_type: node.node_type, configuration: { ...node.configuration }, position_x: (node.position_x ?? 80) + 60, position_y: (node.position_y ?? 80) + 60 }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
   const persistNode = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiNode, 'node_id'> }) => updateNode(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
   const removeNode = useMutation({ mutationFn: deleteNode, onSuccess: () => { setSelectedNodeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
   const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
   const removeEdge = useMutation({ mutationFn: deleteWorkflowEdge, onSuccess: () => { setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
+
   const apiNodes = graph.data?.[0] ?? emptyNodes
   const apiEdges = graph.data?.[1] ?? emptyEdges
   const selectedNode = useMemo(() => apiNodes.find((node) => node.node_id === selectedNodeId) ?? null, [apiNodes, selectedNodeId])
@@ -74,6 +100,29 @@ export function SimulationStudioPage() {
   const validationErrors = useMemo(() => publishErrors(publish.error), [publish.error])
   const invalidNodeIds = useMemo(() => new Set(validationErrors.flatMap((error) => [...error.matchAll(/Node '([^']+)'/g)].map((match) => match[1]))), [validationErrors])
   const invalidEdgeIds = useMemo(() => new Set(validationErrors.flatMap((error) => [...error.matchAll(/Edge '([^']+)'/g)].map((match) => match[1]))), [validationErrors])
+
+  // Select first available workflow automatically if none selected
+  useEffect(() => {
+    if (!selectedWorkflow && workflows.data && workflows.data.length > 0) {
+      setSelectedWorkflow(workflows.data[0])
+    }
+  }, [workflows.data, selectedWorkflow])
+
+  // Select first version automatically when workflow versions load
+  useEffect(() => {
+    if (versions.data && versions.data.length > 0 && !versionId) {
+      const draft = versions.data.find(v => v.status === 'draft')
+      setVersionId(draft ? draft.workflow_version_id : versions.data[0].workflow_version_id)
+    }
+  }, [versions.data, versionId])
+
+  // Automatically focus Inspector tab when node or edge is selected
+  useEffect(() => {
+    if (selectedNodeId || selectedEdgeId) {
+      setActiveRightTab('inspector')
+      setRightSidebarOpen(true)
+    }
+  }, [selectedNodeId, selectedEdgeId])
 
   useEffect(() => {
     const positionCounts = new Map<string, number>()
@@ -119,22 +168,20 @@ export function SimulationStudioPage() {
     }))
     setEdges(apiEdges.map(edgeToFlow))
   }, [apiNodes, apiEdges, setNodes, setEdges])
+
   useEffect(() => {
     if (!flowInstance || apiNodes.length === 0) return
     const frame = requestAnimationFrame(() => flowInstance.fitView({ padding: 0.2, duration: 240 }))
     return () => cancelAnimationFrame(frame)
   }, [apiEdges.length, apiNodes.length, flowInstance])
+
   useEffect(() => { setSelectedExecutionId(null) }, [versionId])
+
   useEffect(() => {
     const miniMap = document.querySelector<HTMLElement>('.graph .react-flow__minimap')
     if (miniMap) miniMap.style.display = showMiniMap ? '' : 'none'
   }, [showMiniMap])
-  useEffect(() => {
-    document.querySelectorAll<HTMLButtonElement>('.palette-hint ~ button[draggable]').forEach((button) => {
-      const type = nodeTypes.find((item) => button.textContent?.toLowerCase().includes(item))
-      if (type) button.dataset.nodeType = type
-    })
-  }, [selectedVersion?.status, versionId])
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
@@ -152,6 +199,7 @@ export function SimulationStudioPage() {
     window.addEventListener('keyup', onKeyUp)
     return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp) }
   }, [removeEdge, removeNode, selectedEdgeId, selectedNodeId, selectedVersion?.status])
+
   useEffect(() => {
     function acceptPaletteDrop(event: globalThis.DragEvent) {
       if (!(event.target instanceof Element) || !event.target.closest('.graph') || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
@@ -175,6 +223,7 @@ export function SimulationStudioPage() {
     if (selectedWorkflow) update.mutate({ id: selectedWorkflow.workflow_id, payload })
     else create.mutate(payload)
   }
+
   function connect(connection: Connection) {
     if (!versionId || selectedVersion?.status !== 'draft' || !connection.source || !connection.target) return
     if (connection.source === connection.target) { window.alert('A node cannot connect to itself.'); return }
@@ -185,37 +234,573 @@ export function SimulationStudioPage() {
     while (pending.length) { const nodeId = pending.pop()!; if (nodeId === connection.source) { window.alert('That connection would create a cycle.'); return }; if (!visited.has(nodeId)) { visited.add(nodeId); pending.push(...(adjacency.get(nodeId) ?? [])) } }
     addWorkflowEdge(versionId, { source_node_id: connection.source, target_node_id: connection.target, condition_configuration: null, priority: 0 }).then(() => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }))
   }
-  function startPaletteDrag(event: DragEvent<HTMLButtonElement>, nodeType: typeof nodeTypes[number]) {
+
+  function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: typeof nodeTypes[number]) {
     event.dataTransfer.setData('application/simflow-node-type', nodeType)
     event.dataTransfer.setData('text/plain', nodeType)
     event.dataTransfer.effectAllowed = 'move'
   }
+
   function allowCanvasDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
   }
+
   function dropPaletteNode(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
     const nodeType = event.dataTransfer.getData('application/simflow-node-type') as typeof nodeTypes[number]
     if (!nodeTypes.includes(nodeType) || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
     addGraphNode.mutate({ nodeType, position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }) })
   }
+
   function saveStructuredNode(name: string, configuration: Record<string, unknown>) {
     if (!selectedNode) return
     persistNode.mutate({ id: selectedNode.node_id, payload: { node_name: name, node_type: selectedNode.node_type, configuration, position_x: selectedNode.position_x, position_y: selectedNode.position_y } })
   }
+
   function saveStructuredEdge(priority: number, condition: Record<string, unknown> | null) {
     if (!selectedEdge) return
     persistEdge.mutate({ id: selectedEdge.edge_id, payload: { source_node_id: selectedEdge.source_node_id, target_node_id: selectedEdge.target_node_id, priority, condition_configuration: condition } })
   }
+
   function validateGraph() { setValidationRequested(true) }
-  return <main className="studio"><header className="studio-header"><div><p className="eyebrow">Workflow builder</p><h1><button className="workflow-picker-trigger" type="button" onClick={() => setWorkflowPickerOpen(true)}>{selectedWorkflow?.workflow_name ?? 'Create workflow'}</button></h1><div className="studio-meta">{selectedVersion ? <StatusBadge status={selectedVersion.status} /> : <span className="status-badge status-draft">No version selected</span>}<span className="autosave-indicator"><Save size={14} /> Autosaved locally</span></div></div><div className="studio-header-actions"><button type="button" onClick={() => navigate('/simulation')}><Play size={15} /> Preview / run</button><button className="publish-button" type="button" disabled={!selectedVersion || selectedVersion.status !== 'draft' || publish.isPending} onClick={() => selectedVersion && publish.mutate(selectedVersion.workflow_version_id)}><CheckCircle2 size={15} /> Publish</button></div></header><Dialog.Root open={workflowPickerOpen} onOpenChange={setWorkflowPickerOpen}><Dialog.Portal><Dialog.Overlay className="command-overlay" /><Dialog.Content className="workflow-picker-dialog"><Dialog.Title>Select workflow</Dialog.Title><Dialog.Description>Choose an existing workflow or create a new one.</Dialog.Description><button className="workflow-picker-create" type="button" onClick={() => { setSelectedWorkflow(null); setVersionId(null); setWorkflowPickerOpen(false) }}>Create workflow</button><div>{workflows.data?.map((item) => <button className="workflow-picker-item" type="button" key={item.workflow_id} onClick={() => { setSelectedWorkflow(item); setVersionId(null); setWorkflowPickerOpen(false) }}><span><strong>{item.workflow_name}</strong><small>{item.workflow_desc ?? 'No description'}</small></span><StatusBadge status={item.status} /></button>)}</div></Dialog.Content></Dialog.Portal></Dialog.Root>
-    <div className="canvas-toolbar" aria-label="Canvas controls"><div className="toolbar-group"><button type="button" aria-label="Undo" disabled><Undo2 size={16} /></button><button type="button" aria-label="Redo" disabled><Redo2 size={16} /></button></div><div className="toolbar-group"><button type="button" aria-label="Zoom out" onClick={() => flowInstance?.zoomOut()}><Minus size={16} /></button><button type="button" aria-label="Zoom in" onClick={() => flowInstance?.zoomIn()}><Plus size={16} /></button><button type="button" aria-label="Fit canvas" onClick={() => flowInstance?.fitView()}><Maximize size={16} /></button></div><div className="toolbar-group"><button type="button" className={showMiniMap ? 'is-active' : ''} onClick={() => setShowMiniMap((current) => !current)}>Minimap</button><button type="button" className={validationRequested ? 'is-active' : ''} onClick={validateGraph}><ClipboardCheck size={16} /> Validate</button><button type="button" onClick={() => navigate('/simulation')}><Eye size={16} /> Preview</button></div></div>
-    <section className="studio-grid"><aside><h2>Workflows</h2><button onClick={() => { setSelectedWorkflow(null); setVersionId(null) }}>Create workflow</button>{workflows.isPending && <LoadingState />}{workflows.data?.map((workflow) => <button className="workflow-item" key={workflow.workflow_id} onClick={() => { setSelectedWorkflow(workflow); setVersionId(null) }}>{workflow.workflow_name}<small><StatusBadge status={workflow.status} /></small></button>)}</aside>
-    <section><h2>{selectedWorkflow ? `Edit ${selectedWorkflow.workflow_name}` : 'Create workflow'}</h2><form className="inline-form" key={selectedWorkflow?.workflow_id ?? 'new'} onSubmit={submitWorkflow}><input name="name" required defaultValue={selectedWorkflow?.workflow_name ?? ''} placeholder="Workflow name" /><input name="description" defaultValue={selectedWorkflow?.workflow_desc ?? ''} placeholder="Description" /><button disabled={create.isPending || update.isPending}>{selectedWorkflow ? 'Save workflow' : 'Create workflow'}</button>{selectedWorkflow && <button className="danger" type="button" disabled={removeWorkflow.isPending} onClick={() => removeWorkflow.mutate(selectedWorkflow.workflow_id)}>Delete workflow</button>}</form>{selectedWorkflow && <div className="toolbar"><button onClick={() => createDraft.mutate(selectedWorkflow.workflow_id)}>Create draft version</button><label>Version<select value={versionId ?? ''} onChange={(event) => { setVersionId(event.target.value || null); setSelectedNodeId(null); setSelectedEdgeId(null) }}><option value="">Select a version</option>{versions.data?.map((version) => <option key={version.workflow_version_id} value={version.workflow_version_id}>v{version.version_number} — {version.status}</option>)}</select></label>{selectedVersion && <span className={`version-status ${selectedVersion.status}`}>{selectedVersion.status}</span>}{selectedVersion?.status === 'draft' && <button onClick={() => publish.mutate(selectedVersion.workflow_version_id)}>Publish</button>}</div>}{validationErrors.length > 0 && <section className="validation-errors" aria-live="polite"><h3>Graph validation errors</h3><ul>{validationErrors.map((error) => <li key={error}>{error}</li>)}</ul></section>}{publish.isError && validationErrors.length === 0 && <p className="validation-errors">Unable to validate the graph. Please try again.</p>}<div className="graph" onDragOver={allowCanvasDrop} onDrop={dropPaletteNode}><ReactFlow nodeTypes={workflowNodeRenderers} edgeTypes={workflowEdgeRenderers} onInit={setFlowInstance} nodes={nodes.map((node) => ({ ...node, className: invalidNodeIds.has(node.id) ? 'invalid-node' : '', draggable: selectedVersion?.status === 'draft', connectable: selectedVersion?.status === 'draft' }))} edges={edges.map((edge) => ({ ...edge, className: invalidEdgeIds.has(edge.id) ? 'invalid-edge' : '' }))} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={connect} onNodeClick={(_, node) => { setSelectedNodeId(node.id); setSelectedEdgeId(null) }} onEdgeClick={(_, edge) => { setSelectedEdgeId(edge.id); setSelectedNodeId(null) }} onNodeDragStop={(_, node) => { if (selectedVersion?.status !== 'draft') return; const current = apiNodes.find((item) => item.node_id === node.id); if (current) persistNode.mutate({ id: node.id, payload: { ...current, position_x: Math.round(node.position.x), position_y: Math.round(node.position.y) } }) }} fitView><Background /><Controls /><MiniMap /></ReactFlow></div></section>
-    <aside><h2>Version history</h2>{selectedWorkflow && (versions.isPending ? <LoadingState /> : versions.data?.map((version) => <button className={`workflow-item version-item ${version.workflow_version_id === versionId ? 'selected' : ''}`} key={version.workflow_version_id} onClick={() => setVersionId(version.workflow_version_id)}>Version {version.version_number}<small>{version.status}</small></button>))}<ExecutionHistoryPanel executions={executions.data ?? []} selectedExecution={selectedExecution} timeline={executionTimeline.data ?? []} isLoading={executions.isPending || executionTimeline.isPending} onSelect={setSelectedExecutionId} /><h2>Node palette</h2><p className="palette-hint">Drag a node onto the canvas, or click to add it.</p>{nodeTypes.map((nodeType) => <button key={nodeType} draggable={Boolean(versionId && selectedVersion?.status === 'draft')} disabled={!versionId || selectedVersion?.status !== 'draft'} onDragStart={(event) => startPaletteDrag(event, nodeType)} onClick={() => addGraphNode.mutate({ nodeType })}>Add {nodeType}</button>)}{selectedNode && <NodeConfigurationForm node={selectedNode} onSave={saveStructuredNode} onDuplicate={() => duplicateGraphNode.mutate(selectedNode)} onDelete={() => removeNode.mutate(selectedNode.node_id)} />}{selectedEdge && <EdgeConfigurationForm priority={selectedEdge.priority} condition={selectedEdge.condition_configuration} onSave={saveStructuredEdge} onDelete={() => removeEdge.mutate(selectedEdge.edge_id)} />}<p>Drag nodes and connect handles to create transitions. Published versions remain immutable.</p></aside></section></main>
+
+  return (
+    <div className="studio-app-container flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-slate-50 text-slate-800">
+      {/* Studio Header Bar */}
+      <header className="studio-top-header flex items-center justify-between px-4 py-2.5 bg-white border-b border-slate-200 shadow-sm z-20">
+        <div className="flex items-center gap-3">
+          <button 
+            type="button" 
+            className="sidebar-toggle-btn p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            onClick={() => setLeftSidebarOpen(prev => !prev)}
+            title={leftSidebarOpen ? "Collapse left sidebar" : "Expand left sidebar"}
+          >
+            {leftSidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase tracking-wider text-purple-700 font-bold px-2 py-0.5 rounded bg-purple-50 border border-purple-200">Studio</span>
+            <button 
+              className="workflow-picker-trigger flex items-center gap-2 hover:bg-slate-100 px-2.5 py-1 rounded-lg transition-colors"
+              type="button" 
+              onClick={() => setWorkflowPickerOpen(true)}
+            >
+              <h1 className="text-base font-bold text-slate-900">{selectedWorkflow?.workflow_name ?? 'Select Workflow'}</h1>
+              <ChevronRight className="w-4 h-4 text-slate-400 rotate-90" />
+            </button>
+            {selectedWorkflow && (
+              <button 
+                type="button"
+                className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
+                onClick={() => setEditWorkflowOpen(true)}
+                title="Edit workflow details"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="hidden sm:flex items-center gap-2.5 pl-3 border-l border-slate-200">
+            {selectedVersion ? <StatusBadge status={selectedVersion.status} /> : <span className="status-badge status-draft">No Version</span>}
+            <span className="autosave-indicator text-xs text-slate-500 flex items-center gap-1">
+              <Save size={13} className="text-emerald-600" /> Autosaved
+            </span>
+          </div>
+        </div>
+
+        {/* Right Header Actions */}
+        <div className="flex items-center gap-2">
+          {selectedWorkflow && (
+            <div className="hidden md:flex items-center gap-1.5 mr-2 bg-slate-100 border border-slate-200 rounded-lg p-1">
+              <select 
+                className="bg-transparent text-xs text-slate-700 font-medium px-2 py-1 focus:outline-none cursor-pointer"
+                value={versionId ?? ''} 
+                onChange={(event) => { setVersionId(event.target.value || null); setSelectedNodeId(null); setSelectedEdgeId(null) }}
+              >
+                <option value="" className="bg-white">Select version...</option>
+                {versions.data?.map((v) => (
+                  <option key={v.workflow_version_id} value={v.workflow_version_id} className="bg-white">
+                    v{v.version_number} — {v.status}
+                  </option>
+                ))}
+              </select>
+              {selectedVersion?.status !== 'draft' && (
+                <button 
+                  type="button" 
+                  className="btn-xs-primary flex items-center gap-1 px-2 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors"
+                  onClick={() => createDraft.mutate(selectedWorkflow.workflow_id)}
+                >
+                  <Plus className="w-3 h-3" /> New Draft
+                </button>
+              )}
+            </div>
+          )}
+
+          <button 
+            className="publish-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white shadow-xs transition-all" 
+            type="button" 
+            disabled={!selectedVersion || selectedVersion.status !== 'draft' || publish.isPending} 
+            onClick={() => selectedVersion && publish.mutate(selectedVersion.workflow_version_id)}
+          >
+            <CheckCircle2 size={14} /> Publish
+          </button>
+
+          <button 
+            type="button" 
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition-colors shadow-xs"
+            onClick={() => navigate('/simulation')}
+          >
+            <Play size={14} className="fill-purple-600 text-purple-600" /> Run Simulation
+          </button>
+
+          <button 
+            type="button" 
+            className="sidebar-toggle-btn p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors ml-1"
+            onClick={() => setRightSidebarOpen(prev => !prev)}
+            title={rightSidebarOpen ? "Collapse inspector sidebar" : "Expand inspector sidebar"}
+          >
+            {rightSidebarOpen ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          </button>
+        </div>
+      </header>
+
+      {/* Main Studio Workspace Grid */}
+      <div className="studio-main-workspace flex flex-1 relative overflow-hidden">
+        {/* Left Sidebar: Node Palette & Workflow List */}
+        <aside className={`studio-left-sidebar flex flex-col bg-white border-r border-slate-200 transition-all duration-200 z-10 ${leftSidebarOpen ? 'w-72 min-w-[280px]' : 'w-0 min-w-0 opacity-0 overflow-hidden'}`}>
+          <div className="p-3 border-b border-slate-200 flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+              <Layers className="w-4 h-4 text-purple-600" /> Node Palette
+            </h2>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">Drag & Drop</span>
+          </div>
+
+          <div className="p-3 flex-1 overflow-y-auto space-y-2.5">
+            <p className="text-xs text-slate-500 mb-2">Drag a component card onto the canvas or click to append.</p>
+            
+            {nodeTypes.map((type) => {
+              const meta = nodePaletteMeta[type]
+              const IconComp = meta.icon
+              const isDraft = Boolean(versionId && selectedVersion?.status === 'draft')
+              
+              return (
+                <div 
+                  key={type}
+                  draggable={isDraft}
+                  onDragStart={(event) => startPaletteDrag(event, type)}
+                  onClick={() => isDraft && addGraphNode.mutate({ nodeType: type })}
+                  className={`palette-card-item p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${
+                    isDraft ? 'hover:scale-[1.02] hover:shadow-md border-slate-200 opacity-100' : 'opacity-50 cursor-not-allowed'
+                  } ${meta.colorClass}`}
+                >
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div className="p-1.5 rounded-lg bg-white shadow-xs text-slate-800">
+                      <IconComp className="w-4 h-4" />
+                    </div>
+                    <strong className="text-sm font-semibold text-slate-800">{meta.title}</strong>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-snug">{meta.description}</p>
+                </div>
+              )
+            })}
+
+            {!selectedVersion && (
+              <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                Select or create a version to start editing nodes.
+              </div>
+            )}
+
+            {/* Quick Workflows List */}
+            <div className="mt-6 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <FolderKanban className="w-3.5 h-3.5 text-purple-600" /> Workflows
+                </h3>
+                <button 
+                  className="text-xs text-purple-600 hover:text-purple-700 font-semibold"
+                  onClick={() => { setSelectedWorkflow(null); setVersionId(null); setEditWorkflowOpen(true) }}
+                >
+                  + New
+                </button>
+              </div>
+
+              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                {workflows.isPending && <LoadingState />}
+                {workflows.data?.map((wf) => (
+                  <button 
+                    key={wf.workflow_id}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                      selectedWorkflow?.workflow_id === wf.workflow_id ? 'bg-purple-50 text-purple-900 border border-purple-200 font-semibold' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                    onClick={() => { setSelectedWorkflow(wf); setVersionId(null) }}
+                  >
+                    <span className="truncate">{wf.workflow_name}</span>
+                    <StatusBadge status={wf.status} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Center Canvas Area */}
+        <section className="studio-canvas-area flex-1 relative flex flex-col bg-slate-100/70">
+          {/* Floating Canvas Glassmorphism Toolbar */}
+          <div className="floating-canvas-toolbar absolute top-4 left-4 z-10 flex items-center gap-1.5 p-1.5 rounded-xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-md">
+            <div className="flex items-center gap-1 pr-1.5 border-r border-slate-200">
+              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Undo" disabled title="Undo (Ctrl+Z)"><Undo2 size={15} /></button>
+              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Redo" disabled title="Redo (Ctrl+Y)"><Redo2 size={15} /></button>
+            </div>
+
+            <div className="flex items-center gap-1 px-1 border-r border-slate-200">
+              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Zoom Out" onClick={() => flowInstance?.zoomOut()} title="Zoom Out"><Minus size={15} /></button>
+              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Zoom In" onClick={() => flowInstance?.zoomIn()} title="Zoom In"><Plus size={15} /></button>
+              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Fit View" onClick={() => flowInstance?.fitView()} title="Fit Canvas View"><Maximize size={15} /></button>
+            </div>
+
+            <div className="flex items-center gap-1 pl-1">
+              <button 
+                type="button" 
+                className={`toolbar-btn ${showMiniMap ? 'is-active text-purple-700 bg-purple-50' : 'text-slate-600 hover:bg-slate-100'}`} 
+                onClick={() => setShowMiniMap(curr => !curr)} 
+                title="Toggle Minimap"
+              >
+                <MapPin size={15} />
+              </button>
+              
+              <button 
+                type="button" 
+                className={`toolbar-btn px-2 flex items-center gap-1 font-medium text-xs ${validationRequested ? 'is-active text-emerald-700 bg-emerald-50' : 'text-slate-600 hover:bg-slate-100'}`} 
+                onClick={validateGraph}
+                title="Validate Graph Structure"
+              >
+                <ClipboardCheck size={15} /> Validate
+              </button>
+            </div>
+          </div>
+
+          {/* Graph Validation Floating Error Drawer */}
+          {validationErrors.length > 0 && (
+            <div className="absolute bottom-4 left-4 right-4 md:right-auto md:max-w-md z-20 p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 shadow-xl backdrop-blur-md animate-slide-up">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-bold flex items-center gap-2 text-red-700">
+                  <AlertTriangle className="w-4 h-4 text-red-600" /> Graph Validation Errors
+                </h3>
+                <button className="text-red-500 hover:text-red-800" onClick={() => publish.reset()}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <ul className="text-xs space-y-1 max-h-36 overflow-y-auto pl-4 list-disc text-red-700">
+                {validationErrors.map((err, i) => <li key={i}>{err}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {/* React Flow Canvas Container */}
+          <div className="graph flex-1 w-full h-full border-none bg-slate-50" onDragOver={allowCanvasDrop} onDrop={dropPaletteNode}>
+            <ReactFlow 
+              nodeTypes={workflowNodeRenderers} 
+              edgeTypes={workflowEdgeRenderers} 
+              onInit={setFlowInstance} 
+              nodes={nodes.map((node) => ({ 
+                ...node, 
+                className: invalidNodeIds.has(node.id) ? 'invalid-node' : '', 
+                draggable: selectedVersion?.status === 'draft', 
+                connectable: selectedVersion?.status === 'draft' 
+              }))} 
+              edges={edges.map((edge) => ({ 
+                ...edge, 
+                className: invalidEdgeIds.has(edge.id) ? 'invalid-edge' : '' 
+              }))} 
+              onNodesChange={onNodesChange} 
+              onEdgesChange={onEdgesChange} 
+              onConnect={connect} 
+              onNodeClick={(_, node) => { setSelectedNodeId(node.id); setSelectedEdgeId(null) }} 
+              onEdgeClick={(_, edge) => { setSelectedEdgeId(edge.id); setSelectedNodeId(null) }} 
+              onNodeDragStop={(_, node) => { 
+                if (selectedVersion?.status !== 'draft') return
+                const current = apiNodes.find((item) => item.node_id === node.id)
+                if (current) persistNode.mutate({ id: node.id, payload: { ...current, position_x: Math.round(node.position.x), position_y: Math.round(node.position.y) } }) 
+              }} 
+              fitView
+            >
+              <Background color="#cbd5e1" gap={20} size={1} />
+              <Controls className="bg-white border-slate-200 text-slate-700 fill-current shadow-md" />
+              <MiniMap className="bg-white border-slate-200 shadow-md" maskColor="rgba(241, 245, 249, 0.7)" />
+            </ReactFlow>
+          </div>
+        </section>
+
+        {/* Right Sidebar: Tabbed Inspector, Versions, Executions */}
+        <aside className={`studio-right-sidebar flex flex-col bg-white border-l border-slate-200 transition-all duration-200 z-10 ${rightSidebarOpen ? 'w-80 min-w-[320px]' : 'w-0 min-w-0 opacity-0 overflow-hidden'}`}>
+          {/* Tab Navigation */}
+          <div className="right-sidebar-tabs flex border-b border-slate-200 bg-slate-50 p-1 gap-1">
+            <button 
+              type="button" 
+              className={`tab-btn flex-1 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
+                activeRightTab === 'inspector' ? 'bg-white text-purple-700 border border-slate-200 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+              }`}
+              onClick={() => setActiveRightTab('inspector')}
+            >
+              <Sliders className="w-3.5 h-3.5" /> Inspector
+            </button>
+
+            <button 
+              type="button" 
+              className={`tab-btn flex-1 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
+                activeRightTab === 'versions' ? 'bg-white text-purple-700 border border-slate-200 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+              }`}
+              onClick={() => setActiveRightTab('versions')}
+            >
+              <History className="w-3.5 h-3.5" /> Versions
+            </button>
+
+            <button 
+              type="button" 
+              className={`tab-btn flex-1 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
+                activeRightTab === 'executions' ? 'bg-white text-purple-700 border border-slate-200 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+              }`}
+              onClick={() => setActiveRightTab('executions')}
+            >
+              <Play className="w-3.5 h-3.5" /> Log
+            </button>
+          </div>
+
+          {/* Tab Contents */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Inspector Tab */}
+            {activeRightTab === 'inspector' && (
+              <div className="space-y-4">
+                {selectedNode && (
+                  <NodeConfigurationForm 
+                    node={selectedNode} 
+                    onSave={saveStructuredNode} 
+                    onDuplicate={() => duplicateGraphNode.mutate(selectedNode)} 
+                    onDelete={() => removeNode.mutate(selectedNode.node_id)} 
+                  />
+                )}
+
+                {selectedEdge && (
+                  <EdgeConfigurationForm 
+                    priority={selectedEdge.priority} 
+                    condition={selectedEdge.condition_configuration} 
+                    onSave={saveStructuredEdge} 
+                    onDelete={() => removeEdge.mutate(selectedEdge.edge_id)} 
+                  />
+                )}
+
+                {!selectedNode && !selectedEdge && (
+                  <div className="empty-inspector text-center py-10 px-4 text-slate-400">
+                    <Sliders className="w-10 h-10 mx-auto mb-3 text-slate-300 stroke-[1.5]" />
+                    <p className="text-sm font-semibold text-slate-700">Nothing Selected</p>
+                    <p className="text-xs text-slate-500 mt-1 leading-normal">Click any node or connection line on the canvas to configure parameters and conditions.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Versions Tab */}
+            {activeRightTab === 'versions' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Workflow Versions</h3>
+                  {selectedWorkflow && (
+                    <button 
+                      type="button" 
+                      className="text-xs px-2.5 py-1 rounded bg-purple-600 hover:bg-purple-700 text-white font-medium flex items-center gap-1 shadow-xs"
+                      onClick={() => createDraft.mutate(selectedWorkflow.workflow_id)}
+                    >
+                      <Plus className="w-3 h-3" /> Create Draft
+                    </button>
+                  )}
+                </div>
+
+                {selectedWorkflow && (
+                  versions.isPending ? <LoadingState /> : (
+                    <div className="space-y-2">
+                      {versions.data?.map((version) => (
+                        <div 
+                          key={version.workflow_version_id}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                            version.workflow_version_id === versionId ? 'bg-purple-50 border-purple-300 shadow-xs' : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                          onClick={() => setVersionId(version.workflow_version_id)}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-semibold text-sm text-slate-800">Version {version.version_number}</span>
+                            <StatusBadge status={version.status} />
+                          </div>
+                          <p className="text-xs text-slate-500">Created: {new Date().toLocaleDateString()}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+
+            {/* Executions Tab */}
+            {activeRightTab === 'executions' && (
+              <ExecutionHistoryPanel 
+                executions={executions.data ?? []} 
+                selectedExecution={selectedExecution} 
+                timeline={executionTimeline.data ?? []} 
+                isLoading={executions.isPending || executionTimeline.isPending} 
+                onSelect={setSelectedExecutionId} 
+              />
+            )}
+          </div>
+        </aside>
+      </div>
+
+      {/* Select / Create Workflow Dialog */}
+      <Dialog.Root open={workflowPickerOpen} onOpenChange={setWorkflowPickerOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="command-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50" />
+          <Dialog.Content className="workflow-picker-dialog fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50">
+            <Dialog.Title className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <FolderKanban className="w-5 h-5 text-purple-600" /> Select Workflow
+            </Dialog.Title>
+            <Dialog.Description className="text-xs text-slate-500 mt-1 mb-4">
+              Choose an existing workflow to edit or create a new simulation workflow.
+            </Dialog.Description>
+
+            <button 
+              className="workflow-picker-create w-full py-2.5 mb-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-colors" 
+              type="button" 
+              onClick={() => { setSelectedWorkflow(null); setVersionId(null); setWorkflowPickerOpen(false); setEditWorkflowOpen(true) }}
+            >
+              <Plus className="w-4 h-4" /> Create New Workflow
+            </button>
+
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {workflows.data?.map((item) => (
+                <button 
+                  className={`workflow-picker-item w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
+                    selectedWorkflow?.workflow_id === item.workflow_id ? 'bg-purple-50 border-purple-300' : 'bg-white border-slate-200 hover:border-slate-300'
+                  }`} 
+                  type="button" 
+                  key={item.workflow_id} 
+                  onClick={() => { setSelectedWorkflow(item); setVersionId(null); setWorkflowPickerOpen(false) }}
+                >
+                  <div>
+                    <strong className="block text-sm font-semibold text-slate-800">{item.workflow_name}</strong>
+                    <small className="text-xs text-slate-500 leading-normal">{item.workflow_desc ?? 'No description provided'}</small>
+                  </div>
+                  <StatusBadge status={item.status} />
+                </button>
+              ))}
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* Edit / Create Workflow Modal */}
+      <Dialog.Root open={editWorkflowOpen} onOpenChange={setEditWorkflowOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="command-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50">
+            <Dialog.Title className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+              <Edit3 className="w-5 h-5 text-purple-600" /> {selectedWorkflow ? 'Edit Workflow' : 'Create Workflow'}
+            </Dialog.Title>
+            
+            <form className="flex flex-col gap-4" key={selectedWorkflow?.workflow_id ?? 'new'} onSubmit={submitWorkflow}>
+              <div className="form-group">
+                <label className="form-label text-slate-700">Workflow Name</label>
+                <input className="form-input" name="name" required defaultValue={selectedWorkflow?.workflow_name ?? ''} placeholder="e.g. Customer Onboarding Engine" />
+              </div>
+              <div className="form-group">
+                <label className="form-label text-slate-700">Description</label>
+                <textarea className="form-textarea" rows={3} name="description" defaultValue={selectedWorkflow?.workflow_desc ?? ''} placeholder="Describe the purpose of this simulation..." />
+              </div>
+
+              <div className="flex gap-2 justify-end mt-2">
+                <button type="button" className="btn-secondary" onClick={() => setEditWorkflowOpen(false)}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={create.isPending || update.isPending}>
+                  <Save className="w-4 h-4 inline mr-1" /> {selectedWorkflow ? 'Save Changes' : 'Create Workflow'}
+                </button>
+              </div>
+
+              {selectedWorkflow && (
+                <div className="pt-4 border-t border-slate-200 mt-2">
+                  <button 
+                    className="btn-danger w-full flex items-center justify-center gap-2" 
+                    type="button" 
+                    disabled={removeWorkflow.isPending} 
+                    onClick={() => removeWorkflow.mutate(selectedWorkflow.workflow_id)}
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete Workflow
+                  </button>
+                </div>
+              )}
+            </form>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </div>
+  )
 }
 
 function ExecutionHistoryPanel({ executions, selectedExecution, timeline, isLoading, onSelect }: { executions: Execution[]; selectedExecution: Execution | null; timeline: { event_id: string; event_type: string; node_id: string | null; payload: Record<string, unknown> }[]; isLoading: boolean; onSelect: (executionId: string) => void }) {
-  return <section className="execution-history"><h2>Execution history</h2>{isLoading && <LoadingState />}{executions.length === 0 && <p>Select a version to inspect its executions.</p>}{executions.map((execution) => <button className={`workflow-item ${selectedExecution?.execution_id === execution.execution_id ? 'selected' : ''}`} key={execution.execution_id} onClick={() => onSelect(execution.execution_id)}>{execution.participant_id ?? 'No participant'}<small>{execution.status} · {execution.execution_id}</small></button>)}{selectedExecution && <div className="execution-detail"><h3>{selectedExecution.status}</h3><p>Current node: {selectedExecution.current_node_id ?? 'completed'}</p>{timeline.map((event) => <details className={event.event_type === 'execution_failed' ? 'failure-event' : ''} key={event.event_id}><summary>{event.event_type}{event.node_id ? ` · ${event.node_id}` : ''}</summary><pre>{JSON.stringify(event.payload, null, 2)}</pre></details>)}</div>}</section>
+  return (
+    <div className="execution-history-panel space-y-4">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+        <History className="w-4 h-4 text-purple-600" /> Execution Logs
+      </h3>
+
+      {isLoading && <LoadingState />}
+      {executions.length === 0 && !isLoading && (
+        <p className="text-xs text-slate-400 text-center py-4">No execution logs for this version.</p>
+      )}
+
+      <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+        {executions.map((execution) => (
+          <button 
+            className={`w-full text-left p-2.5 rounded-xl border text-xs transition-all ${
+              selectedExecution?.execution_id === execution.execution_id ? 'bg-purple-50 border-purple-300' : 'bg-white border-slate-200 hover:border-slate-300'
+            }`} 
+            key={execution.execution_id} 
+            onClick={() => onSelect(execution.execution_id)}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-semibold text-slate-800">{execution.participant_id ?? 'Anonymous Participant'}</span>
+              <StatusBadge status={execution.status} />
+            </div>
+            <small className="block text-slate-500 font-mono text-[10px]">{execution.execution_id}</small>
+          </button>
+        ))}
+      </div>
+
+      {selectedExecution && (
+        <div className="execution-detail pt-3 border-t border-slate-200 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-purple-700">Timeline Events</span>
+            <span className="text-[10px] text-slate-500">Node: {selectedExecution.current_node_id ?? 'Completed'}</span>
+          </div>
+
+          <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+            {timeline.map((event) => (
+              <details 
+                className={`p-2 rounded-lg border text-xs bg-slate-50 ${
+                  event.event_type === 'execution_failed' ? 'border-red-300 text-red-700 bg-red-50' : 'border-slate-200 text-slate-700'
+                }`} 
+                key={event.event_id}
+              >
+                <summary className="cursor-pointer font-medium hover:text-purple-700 flex items-center justify-between">
+                  <span>{event.event_type}</span>
+                  {event.node_id && <span className="text-[10px] text-slate-500 font-mono">{event.node_id}</span>}
+                </summary>
+                <pre className="mt-2 p-2 rounded bg-slate-900 text-[10px] font-mono text-slate-100 overflow-x-auto">
+                  {JSON.stringify(event.payload, null, 2)}
+                </pre>
+              </details>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
+
