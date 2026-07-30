@@ -3,7 +3,7 @@ import { BellRing, CircleDot, GitBranch, Play } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-type WorkflowNodeData = { label: string; nodeType: 'trigger' | 'condition' | 'action' | 'event' }
+type WorkflowNodeData = { label: string; nodeType: 'trigger' | 'condition' | 'action' | 'event'; triggerType?: string }
 
 const nodeAppearance: Record<WorkflowNodeData['nodeType'], { icon: LucideIcon; label: string }> = {
   trigger: { icon: BellRing, label: 'Trigger' },
@@ -16,5 +16,5 @@ export function WorkflowGraphNode({ data, selected }: NodeProps) {
   const nodeData = data as WorkflowNodeData
   const appearance = nodeAppearance[nodeData.nodeType]
   const NodeIcon = appearance.icon
-  return <><NodeResizer isVisible={selected} minWidth={150} minHeight={72} /><NodeToolbar isVisible={selected} position={Position.Top}><span>{appearance.label}</span></NodeToolbar><motion.div className={`workflow-node ${nodeData.nodeType} ${selected ? 'selected' : ''}`} animate={{ scale: selected ? 1.025 : 1, y: selected ? -2 : 0 }} transition={{ type: 'spring', stiffness: 420, damping: 26 }}><Handle type="target" position={Position.Left} /><div className="workflow-node-type"><NodeIcon size={14} aria-hidden="true" />{appearance.label}</div><strong>{nodeData.label}</strong><Handle type="source" position={Position.Right} /></motion.div></>
+  return <><NodeResizer isVisible={selected} minWidth={150} minHeight={72} /><NodeToolbar isVisible={selected} position={Position.Top}><span>{appearance.label}</span></NodeToolbar><motion.div className={`workflow-node ${nodeData.nodeType} ${selected ? 'selected' : ''}`} animate={{ scale: selected ? 1.025 : 1, y: selected ? -2 : 0 }} transition={{ type: 'spring', stiffness: 420, damping: 26 }}><Handle type="target" position={Position.Left} /><div className="workflow-node-type"><NodeIcon size={14} aria-hidden="true" />{appearance.label}</div><strong>{nodeData.label}</strong>{nodeData.nodeType === 'trigger' && <span className="node-configuration-summary">Trigger type: {nodeData.triggerType ?? 'manual'}</span>}<Handle type="source" position={Position.Right} /></motion.div></>
 }

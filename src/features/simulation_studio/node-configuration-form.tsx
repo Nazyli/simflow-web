@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { validateActionPayload } from './action-composers'
 
 type Configuration = Record<string, unknown>
@@ -18,6 +18,10 @@ const actionTypes: Record<string, string[]> = {
 export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: { node: { node_name: string; node_type: string; configuration: Configuration }; onSave: (name: string, configuration: Configuration) => void; onDuplicate: () => void; onDelete: () => void }) {
   const [name, setName] = useState(node.node_name)
   const [configuration, setConfiguration] = useState<Configuration>(node.configuration)
+  useEffect(() => {
+    setName(node.node_name)
+    setConfiguration(node.configuration)
+  }, [node])
   const nodeType: string = node.node_type
   const channel = String(configuration.channel ?? 'chat')
   const availableActions = actionTypes[`${nodeType}:${channel}`] ?? []
@@ -38,6 +42,10 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
 export function EdgeConfigurationForm({ priority, condition, onSave, onDelete }: { priority: number; condition: Configuration | null; onSave: (priority: number, condition: Configuration | null) => void; onDelete: () => void }) {
   const [nextPriority, setPriority] = useState(priority)
   const [nextCondition, setCondition] = useState<ConditionGroup>(asConditionGroup(condition ?? {}))
+  useEffect(() => {
+    setPriority(priority)
+    setCondition(asConditionGroup(condition ?? {}))
+  }, [condition, priority])
   return <form className="node-configuration-form" onSubmit={(event) => { event.preventDefault(); onSave(nextPriority, nextCondition.conditions.length ? nextCondition as Configuration : null) }}><h2>Edge inspector</h2><label>Priority<input type="number" value={nextPriority} onChange={(event) => setPriority(Number(event.target.value))} /></label><ConditionEditor value={nextCondition} onChange={setCondition} /><button>Save edge</button><button type="button" className="danger" onClick={onDelete}>Delete edge</button></form>
 }
 

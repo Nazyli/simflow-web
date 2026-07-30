@@ -5,8 +5,13 @@ type WorkflowEdgeData = { priority: number; condition: Record<string, unknown> |
 export function WorkflowGraphEdge({ id, sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, markerEnd, data, selected }: EdgeProps) {
   const [path, labelX, labelY] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition })
   const edgeData = data as WorkflowEdgeData
+  const priority = edgeData?.priority ?? 0
   const condition = edgeData?.condition
-  const label = condition?.field ? `${String(condition.field)} = ${String(condition.equals)}` : 'default'
+  const field = condition?.path ?? condition?.field
+  const operator = condition?.operator ?? (condition?.equals !== undefined ? 'equals' : undefined)
+  const value = condition?.value ?? condition?.equals
+  const label = field && operator ? `${String(field)} ${operator === 'equals' ? '=' : operator} ${String(value)}` : 'default path'
   const stroke = selected ? '#5b46c5' : '#94a3b8'
-  return <><BaseEdge id={id} path={path} markerEnd={markerEnd} style={{ stroke, strokeWidth: selected ? 2.5 : 1.5 }} /><EdgeLabelRenderer><div className={`workflow-edge-label ${selected ? 'selected' : ''}`} style={{ transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)` }}><b>P{edgeData?.priority ?? 0}</b><span>{label}</span></div></EdgeLabelRenderer></>
+  const labelOffset = priority % 2 === 0 ? -18 : 18
+  return <><BaseEdge id={id} path={path} markerEnd={markerEnd} style={{ stroke, strokeWidth: selected ? 2.5 : 1.5 }} /><EdgeLabelRenderer><div className={`workflow-edge-label ${selected ? 'selected' : ''}`} style={{ transform: `translate(-50%, -50%) translate(${labelX}px,${labelY + labelOffset}px)` }}><b>P{priority}</b><span>{label}</span></div></EdgeLabelRenderer></>
 }

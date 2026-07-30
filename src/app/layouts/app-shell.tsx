@@ -8,7 +8,7 @@ import { getWorkflows } from '../../shared/api/workflows'
 const navigation = [
   { label: 'Studio', path: '/studio', icon: Workflow, description: 'Build and manage workflows' },
   { label: 'Runner', path: '/simulation', icon: Play, description: 'Run live simulations' },
-  { label: 'History', path: '/history', icon: History, description: 'Inspect execution activity' },
+  { label: 'History', path: '/workflow-history', icon: History, description: 'Inspect versions and executions' },
   { label: 'Master Data', path: '/master-data', icon: Database, description: 'Manage shared entities' },
   { label: 'Timers', path: '/timers', icon: Clock3, description: 'Schedule workflow runs' },
   { label: 'Settings', path: '/settings', icon: Settings, description: 'Configure your workspace' },
@@ -77,12 +77,13 @@ function Breadcrumb() {
 export function AppShell({ children }: PropsWithChildren) {
   const apiStatus = useQuery({ queryKey: ['workflows', 'api-status'], queryFn: getWorkflows, retry: 0, refetchInterval: 30_000 })
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const apiLabel = apiStatus.isPending ? 'Checking API' : apiStatus.isError ? 'API offline' : 'API online'
   const apiClassName = apiStatus.isPending ? 'checking' : apiStatus.isError ? 'offline' : 'online'
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${sidebarCollapsed ? 'sidebar-is-collapsed' : ''}`}>
       <aside className={`app-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`}>
-        <div className="brand"><span className="brand-mark"><Bot size={19} /></span><span>SimFlow</span><button type="button" className="sidebar-collapse" aria-label="Collapse sidebar" onClick={() => setMobileNavOpen(false)}><PanelLeftClose size={17} /></button></div>
+        <div className="brand"><span className="brand-mark"><Bot size={19} /></span><span>SimFlow</span><button type="button" className="sidebar-collapse" aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => { setSidebarCollapsed((current) => !current); setMobileNavOpen(false) }}><PanelLeftClose size={17} /></button></div>
         <div className="workspace-summary"><span className="workspace-icon">A</span><div><strong>Acme Simulation</strong><small>Production workspace</small></div><ChevronDown size={15} /></div>
         <nav className="primary-nav" aria-label="Primary navigation">{navigation.map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} onClick={() => setMobileNavOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}><Icon size={18} /><span>{label}</span></NavLink>)}</nav>
         <div className="sidebar-bottom"><div className="upgrade-card"><Sparkles size={16} /><strong>Scale your simulations</strong><span>Coordinate complex AI workflows with confidence.</span><button type="button">View usage</button></div><div className="sidebar-profile"><span className="avatar">JD</span><div><strong>Jordan Davis</strong><small>Workspace admin</small></div><ChevronDown size={15} /></div></div>
