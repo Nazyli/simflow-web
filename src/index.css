@@ -5,3 +5,10 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 a { color: #93c5fd; }
 input, button { display: block; margin-top: .5rem; padding: .65rem; }
 button { cursor: pointer; }
+.studio-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr) 220px; gap: 1rem; }
+.studio-grid aside, .studio-grid section { border: 1px solid #374151; border-radius: .5rem; padding: 1rem; }
+.workflow-item { width: 100%; text-align: left; background: #1f2937; color: inherit; border: 0; }
+.workflow-item small { display: block; color: #9ca3af; }
+.graph { height: 380px; margin-top: 1rem; border: 1px solid #374151; }
+.toolbar { display: flex; align-items: center; gap: .5rem; margin-top: 1rem; }
+@media (max-width: 800px) { .studio-grid { grid-template-columns: 1fr; } }

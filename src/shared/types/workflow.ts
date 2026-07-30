@@ -15,3 +15,5 @@ export interface Execution {
   current_node_id: string | null
   context: Record<string, unknown>
 }
+
+export interface WorkflowVersion { workflow_version_id: string; workflow_id: string; version_number: number; status: string }
