@@ -89,6 +89,12 @@ export function SimulationStudioPage() {
   }
   function connect(connection: Connection) {
     if (!versionId || selectedVersion?.status !== 'draft' || !connection.source || !connection.target) return
+    if (connection.source === connection.target) { window.alert('A node cannot connect to itself.'); return }
+    if (apiEdges.some((edge) => edge.source_node_id === connection.source && edge.target_node_id === connection.target)) { window.alert('That connection already exists.'); return }
+    const adjacency = new Map<string, string[]>()
+    apiEdges.forEach((edge) => adjacency.set(edge.source_node_id, [...(adjacency.get(edge.source_node_id) ?? []), edge.target_node_id]))
+    const pending = [connection.target]; const visited = new Set<string>()
+    while (pending.length) { const nodeId = pending.pop()!; if (nodeId === connection.source) { window.alert('That connection would create a cycle.'); return }; if (!visited.has(nodeId)) { visited.add(nodeId); pending.push(...(adjacency.get(nodeId) ?? [])) } }
     addWorkflowEdge(versionId, { source_node_id: connection.source, target_node_id: connection.target, condition_configuration: null, priority: 0 }).then(() => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }))
   }
   function startPaletteDrag(event: DragEvent<HTMLButtonElement>, nodeType: typeof nodeTypes[number]) {
