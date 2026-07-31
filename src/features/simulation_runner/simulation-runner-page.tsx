@@ -19,7 +19,7 @@ const eventLists: Record<Channel, keyof Pick<Awaited<ReturnType<typeof getSessio
 export function SimulationRunnerPage() {
   const client = useQueryClient()
   const [participantId, setParticipantId] = useState('')
-  const [actorId, setActorId] = useState('')
+  const [actorId, setActorId] = useState('participant-001-ambj-01-platform')
   const [versionId, setVersionId] = useState('')
   const [execution, setExecution] = useState<Execution | null>(null)
   const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
@@ -39,15 +39,12 @@ export function SimulationRunnerPage() {
     <main className="mx-auto max-w-[1500px] p-0">
       <header className="mb-6 items-start justify-start">
         <span className="text-xs font-bold uppercase tracking-wider text-purple-700 px-2 py-0.5 rounded bg-purple-50 border border-purple-200">Simulation cockpit</span>
-        <p className="mt-1 text-sm text-slate-500">Select a participant actor and workflow, then enter the participant ID to start or resume a simulation.</p>
+        <p className="mt-1 text-sm text-slate-500">Enter the participant persona, select a workflow, then enter the participant ID to start or resume a simulation.</p>
       </header>
       <form className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-4" onSubmit={begin}>
         <div className="form-group">
           <label className="form-label" htmlFor="runner-actor">Participant actor</label>
-          <select id="runner-actor" className="form-select !m-0 !w-full !py-2 text-sm" required value={actorId} onChange={(event) => setActorId(event.target.value)}>
-            <option value="">Select actor</option>
-            {actors.data?.map((actor) => <option key={String(actor.actor_id)} value={String(actor.actor_id)}>{String(actor.actor_name)}</option>)}
-          </select>
+          <input id="runner-actor" className="form-input !m-0 !w-full !py-2 text-sm" required value={actorId} onChange={(event) => setActorId(event.target.value)} />
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="runner-participant">Participant ID</label>
