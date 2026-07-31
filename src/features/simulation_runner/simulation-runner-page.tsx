@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Clock3, Play, UserRound } from 'lucide-react'
-import { useEffect, useState, type FormEvent } from 'react'
+import { Clock3, Play, RefreshCw, UserRound } from 'lucide-react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { getExecution, getExecutions, markExecutionMessageRead, startExecution, submitExecutionAction } from '../../shared/api/executions'
 import { getMasterData } from '../../shared/api/master-data'
@@ -22,6 +22,8 @@ export function SimulationRunnerPage() {
   const [actorId, setActorId] = useState('participant-001-ambj-01-platform')
   const [versionId, setVersionId] = useState('')
   const [checked, setChecked] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  const autoStartResolved = useRef(false)
   const [execution, setExecution] = useState<Execution | null>(null)
   const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
   const actors = useQuery({ queryKey: ['master', 'actors'], queryFn: () => getMasterData('actors') })
@@ -40,6 +42,13 @@ export function SimulationRunnerPage() {
     }
   }, [existingExecution])
   const start = useMutation({ mutationFn: startExecution, onSuccess: (result) => { setExecution(result); setVersionId(result.workflow_version_id); client.invalidateQueries({ queryKey: ['session', result.session_id] }); toast.success(result.status === 'waiting' ? 'Active simulation resumed.' : 'Simulation started.') }, onError: () => toast.error('Unable to start or resume the simulation.') })
+  const lookupSettled = checked && !existingSessions.isPending && (!latestSession || !latestSessionExecutions.isPending)
+  useEffect(() => {
+    if (!lookupSettled || autoStartResolved.current) return
+    autoStartResolved.current = true
+    if (existingExecution) return
+    start.mutate({ workflow_version_id: versionId, participant_id: participantId.trim(), context: { actor_id: actorId } })
+  }, [attempt, lookupSettled, existingExecution, versionId, participantId, actorId, start])
   const action = useMutation({ mutationFn: ({ channel, target, content, actionType, waitInstanceId, conversationId }: { channel: Channel; target: string; content: string; actionType: string; waitInstanceId: string; conversationId: string }) => submitExecutionAction(execution!.execution_id, { action_type: actionType, actor_id: actorId, wait_instance_id: waitInstanceId, conversation_id: conversationId, payload: { channel, content, to: target, document_id: channel === 'document' ? target : undefined } }), onSuccess: (result) => { setExecution(result); client.invalidateQueries({ queryKey: ['session', result.session_id] }); toast.success('Workflow action submitted.') }, onError: () => toast.error('Action was rejected. Check the requested channel and target.') })
   const messageRead = useMutation({ mutationFn: ({ waitInstanceId, messageId }: { waitInstanceId: string; messageId: string }) => markExecutionMessageRead(execution!.execution_id, { wait_instance_id: waitInstanceId, message_id: messageId }), onSuccess: (result) => { setExecution(result); client.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
@@ -48,7 +57,7 @@ export function SimulationRunnerPage() {
     ? { waitInstanceId: (activeWait as Record<string, string>).wait_instance_id, messageId: (activeWait as Record<string, string>).message_id }
     : null
   const elapsed = execution ? new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(new Date()) : '—'
-  function begin(event: FormEvent) { event.preventDefault(); setChecked(true); start.mutate({ workflow_version_id: versionId, participant_id: participantId.trim(), context: { actor_id: actorId } }) }
+  function begin(event: FormEvent) { event.preventDefault(); autoStartResolved.current = false; setChecked(true); setAttempt((n) => n + 1) }
   function send(channel: Channel, event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const wait = execution?.context.active_wait; if (!wait || typeof wait !== 'object' || typeof (wait as Record<string, unknown>).wait_instance_id !== 'string' || typeof (wait as Record<string, unknown>).conversation_id !== 'string') { toast.error('No active Wait for Reply is available.'); return }; const actionType = channel === 'chat' || channel === 'email' ? 'message' : channel === 'call' ? 'finish_call' : 'close_document'; action.mutate({ channel, target: String(data.get('target') ?? ''), content: String(data.get('content') ?? ''), actionType, waitInstanceId: (wait as Record<string, string>).wait_instance_id, conversationId: (wait as Record<string, string>).conversation_id }); event.currentTarget.reset() }
 
   if (!execution) return (
@@ -59,7 +68,7 @@ export function SimulationRunnerPage() {
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-wider text-purple-700">Simulation cockpit</p>
             <h1 className="truncate text-lg font-bold text-slate-900">Run a simulation</h1>
-            <p className="truncate text-xs text-slate-500">Enter the participant persona, select a workflow, then enter the participant ID to start or resume a simulation.</p>
+            <p className="truncate text-xs text-slate-500">Enter the participant persona, select a workflow, then enter the participant ID to start, resume, or review a simulation.</p>
           </div>
         </div>
       </header>
@@ -134,6 +143,19 @@ export function SimulationRunnerPage() {
             <p className="mt-0.5 text-xs text-amber-700">Reply on the requested channel with the selected target. Previous actions that do not match the workflow transition will be rejected.</p>
           </div>
           <StatusBadge status="waiting" />
+        </section>
+      )}
+
+      {(execution.status === 'completed' || execution.status === 'failed') && (
+        <section className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky-100 text-sky-600"><RefreshCw size={18} /></span>
+          <div className="min-w-0 flex-1">
+            <strong className="text-sm text-sky-900">Previous simulation finished</strong>
+            <p className="mt-0.5 text-xs text-sky-700">This participant already completed this simulation. Review the result above or start a new run.</p>
+          </div>
+          <button type="button" disabled={start.isPending} onClick={() => start.mutate({ workflow_version_id: versionId, participant_id: participantId.trim(), context: { actor_id: actorId } })} className="!m-0 inline-flex items-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-xs font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50">
+            <RefreshCw size={14} /> {start.isPending ? 'Starting…' : 'Start new simulation'}
+          </button>
         </section>
       )}
 
