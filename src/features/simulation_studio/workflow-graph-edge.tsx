@@ -1,14 +1,52 @@
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from '@xyflow/react'
+import { X } from 'lucide-react'
+import type { EdgeProps } from '@xyflow/react'
+import { ButtonEdge } from '@/components/button-edge'
+import { Button } from '@/components/ui/button'
 
-type WorkflowEdgeData = { priority: number; label: string; style: { color: string; line_style: string; animated: boolean } }
+type WorkflowEdgeData = {
+  priority: number
+  label: string
+  style: { color: string; line_style: string; animated: boolean }
+  onDelete?: (edgeId: string) => void
+}
 
-export function WorkflowGraphEdge({ id, sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, markerEnd, data, selected }: EdgeProps) {
-  const [path, labelX, labelY] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition })
+export function WorkflowGraphEdge({ id, source, target, sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, markerEnd, data, selected }: EdgeProps) {
   const edgeData = data as WorkflowEdgeData
   const priority = edgeData?.priority ?? 0
   const label = edgeData?.label ?? ''
   const style = edgeData?.style ?? { color: '#94a3b8', line_style: 'solid', animated: false }
+  const onDelete = edgeData?.onDelete
   const stroke = selected ? '#5b46c5' : style.color
   const labelOffset = priority % 2 === 0 ? -18 : 18
-  return <><BaseEdge id={id} path={path} markerEnd={markerEnd} style={{ stroke, strokeWidth: selected ? 2.5 : 1.5, strokeDasharray: style.line_style === 'dashed' ? '6 4' : style.line_style === 'dotted' ? '2 3' : undefined }} /><EdgeLabelRenderer><div className={`workflow-edge-label ${selected ? 'selected' : ''}`} style={{ transform: `translate(-50%, -50%) translate(${labelX}px,${labelY + labelOffset}px)` }}><b>P{priority}</b><span>{label}</span></div></EdgeLabelRenderer></>
+  return (
+    <ButtonEdge
+      id={id}
+      source={source}
+      target={target}
+      sourceX={sourceX}
+      sourceY={sourceY}
+      sourcePosition={sourcePosition}
+      targetX={targetX}
+      targetY={targetY}
+      targetPosition={targetPosition}
+      markerEnd={markerEnd}
+      style={{
+        stroke,
+        strokeWidth: selected ? 2.5 : 1.5,
+        strokeDasharray: style.line_style === 'dashed' ? '6 4' : style.line_style === 'dotted' ? '2 3' : undefined,
+      }}
+    >
+      <div className="flex items-center gap-1 rounded-full bg-background p-1 shadow-sm ring-1 ring-border" style={{ transform: `translateY(${labelOffset}px)` }}>
+        <Button type="button" variant="outline" size="xs" className="h-auto gap-1 rounded-full px-2 py-0.5 text-[0.65rem] text-muted-foreground">
+          <span className="rounded-full bg-muted px-1.5 py-px text-[0.6rem] font-bold text-muted-foreground">P{priority}</span>
+          <span className="max-w-[180px] truncate">{label}</span>
+        </Button>
+        {onDelete && (
+          <Button type="button" variant="ghost" size="icon-xs" className="nodrag size-5 rounded-full text-muted-foreground" onClick={() => onDelete(id)} aria-label={`Delete edge ${label}`}>
+            <X />
+          </Button>
+        )}
+      </div>
+    </ButtonEdge>
+  )
 }

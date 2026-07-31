@@ -1,4 +1,3 @@
-import '@xyflow/react/dist/style.css'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Background, Controls, MarkerType, MiniMap, ReactFlow, useEdgesState, useNodesState, type Connection, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -7,7 +6,7 @@ import {
   Save, Undo2, Redo2, CircleDot, ChevronRight, Sliders, History, 
   FolderKanban, Layers, X, AlertTriangle, Edit3, Trash2, MapPin
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../shared/api/client'
 import { getExecutions, getTimeline } from '../../shared/api/executions'
@@ -27,7 +26,7 @@ const workflowNodeRenderers = { workflow: WorkflowGraphNode }
 const workflowEdgeRenderers = { workflow: WorkflowGraphEdge }
 
 function nodeToFlow(node: ApiNode, definition: NodeDefinition | undefined): Node { return { id: node.node_id, type: 'workflow', position: { x: node.position_x ?? 80, y: node.position_y ?? 80 }, data: { label: node.node_name, nodeType: node.node_type, color: definition?.color ?? '#64748b', inputPorts: node.input_ports, outputPorts: node.output_ports } } }
-function edgeToFlow(edge: ApiEdge, sourcePort: OutputPort | undefined): Edge { const style = sourcePort?.edge_style ?? { color: '#94a3b8', line_style: 'solid', animated: false }; return { id: edge.edge_id, type: 'workflow', source: edge.source_node_id, sourceHandle: edge.source_port_id, target: edge.target_node_id, targetHandle: edge.target_port_id, markerEnd: { type: MarkerType.ArrowClosed, color: style.color }, animated: style.animated, data: { priority: edge.priority, label: sourcePort?.label ?? edge.source_port_id, style } } }
+function edgeToFlow(edge: ApiEdge, sourcePort: OutputPort | undefined, onDelete: (edgeId: string) => void): Edge { const style = sourcePort?.edge_style ?? { color: '#94a3b8', line_style: 'solid', animated: false }; return { id: edge.edge_id, type: 'workflow', source: edge.source_node_id, sourceHandle: edge.source_port_id, target: edge.target_node_id, targetHandle: edge.target_port_id, markerEnd: { type: MarkerType.ArrowClosed, color: style.color }, animated: style.animated, data: { priority: edge.priority, label: sourcePort?.label ?? edge.source_port_id, style, onDelete } } }
 
 function publishErrors(error: Error | null): string[] {
   if (!(error instanceof ApiError)) return []
@@ -92,6 +91,9 @@ export function SimulationStudioPage() {
   const removeNode = useMutation({ mutationFn: deleteNode, onSuccess: () => { setSelectedNodeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
   const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id' | 'is_valid'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
   const removeEdge = useMutation({ mutationFn: deleteWorkflowEdge, onSuccess: () => { setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
+  const removeEdgeRef = useRef(removeEdge)
+  removeEdgeRef.current = removeEdge
+  const deleteEdge = useCallback((edgeId: string) => { removeEdgeRef.current.mutate(edgeId) }, [])
 
   const apiNodes = graph.data?.[0] ?? emptyNodes
   const apiEdges = graph.data?.[1] ?? emptyEdges
@@ -136,7 +138,7 @@ export function SimulationStudioPage() {
   useEffect(() => {
     if (apiNodes.length === 0) {
       setNodes([])
-      setEdges(apiEdges.map((edge) => edgeToFlow(edge, apiNodes.find((node) => node.node_id === edge.source_node_id)?.output_ports.find((port) => port.id === edge.source_port_id))))
+      setEdges(apiEdges.map((edge) => edgeToFlow(edge, apiNodes.find((node) => node.node_id === edge.source_node_id)?.output_ports.find((port) => port.id === edge.source_port_id), deleteEdge)))
       return
     }
 
@@ -217,8 +219,8 @@ export function SimulationStudioPage() {
         position: cached ?? { x: node.position_x ?? 100, y: node.position_y ?? 100 },
       }
     }))
-    setEdges(apiEdges.map((edge) => edgeToFlow(edge, apiNodes.find((node) => node.node_id === edge.source_node_id)?.output_ports.find((port) => port.id === edge.source_port_id))))
-  }, [apiNodes, apiEdges, definitions, setNodes, setEdges])
+    setEdges(apiEdges.map((edge) => edgeToFlow(edge, apiNodes.find((node) => node.node_id === edge.source_node_id)?.output_ports.find((port) => port.id === edge.source_port_id), deleteEdge)))
+  }, [apiNodes, apiEdges, definitions, setNodes, setEdges, deleteEdge])
 
   useEffect(() => {
     if (!flowInstance || apiNodes.length === 0) return
