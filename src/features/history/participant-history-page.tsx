@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
-import { BellRing, CheckCircle2, CircleAlert, Clock3, FileText, Mail, MessageSquare, Phone, Search, Timer, Workflow } from 'lucide-react'
+import { BellRing, CheckCircle2, CircleAlert, Clock3, FileText, Mail, MessageSquare, Phone, Route, Search, Timer, Workflow } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getExecutions, getTimeline, type ExecutionEvent } from '../../shared/api/executions'
@@ -8,6 +8,7 @@ import { getSessionsForParticipant, type SimulationSession } from '../../shared/
 import { getWorkflowVersion } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
+import { ParticipantFlowView } from './participant-flow-view'
 
 const eventAppearance = (type: string) => {
   const value = type.toLowerCase()
@@ -41,6 +42,7 @@ export function ParticipantHistoryPage() {
   const [date, setDate] = useState('')
   const [session, setSession] = useState<SimulationSession | null>(null)
   const [event, setEvent] = useState<ExecutionEvent | null>(null)
+  const [flowOpen, setFlowOpen] = useState(false)
   const sessions = useQuery({ queryKey: ['participant-sessions', searchId], queryFn: () => getSessionsForParticipant(searchId), enabled: Boolean(searchId) })
   const [searchParams] = useSearchParams()
   const [preselectedSessionId, setPreselectedSessionId] = useState<string | null>(null)
@@ -111,7 +113,12 @@ export function ParticipantHistoryPage() {
                   <strong className="block truncate text-xs font-bold text-slate-800">{workflow.data?.workflow_name ?? 'Loading workflow…'} · v{workflow.data?.version_number ?? '—'}</strong>
                 </div>
               </div>
-              <StatusBadge status={session.status} />
+              <div className="flex items-center gap-2">
+                <StatusBadge status={session.status} />
+                <button type="button" disabled={!execution} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-600 shadow-none transition hover:border-[#5b46c5] hover:text-[#5b46c5] disabled:opacity-50" onClick={() => setFlowOpen(true)}>
+                  <Route size={14} /> View flow
+                </button>
+              </div>
             </div>
 
             <div className="grid gap-4 border-b border-slate-100 px-5 py-4 sm:grid-cols-2">
@@ -129,6 +136,7 @@ export function ParticipantHistoryPage() {
       </section>
 
       <EventDialog event={event} onClose={() => setEvent(null)} />
+      <ParticipantFlowView open={flowOpen} onClose={() => setFlowOpen(false)} versionId={session?.workflow_version_id ?? ''} executionId={execution?.execution_id ?? ''} title={workflow.data ? `${workflow.data.workflow_name} · v${workflow.data.version_number}` : 'Participant flow'} currentState={execution?.current_node_id ?? null} />
     </main>
   )
 }
