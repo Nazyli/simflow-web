@@ -7,7 +7,9 @@ React/Vite interface for configuring and running SimFlow workflows.
 - `/studio` manages master data, draft workflow graphs, node configuration,
   transitions, validation, and publication.
 - `/simulation` starts a published version for a `participant_id` and renders
-  chat, email, call, or document events.
+  chat, email, call, or document events. Entering a participant ID with an
+  unfinished simulation resumes that run. Participant actor and workflow
+  version remain required.
 
 ## Development
 
