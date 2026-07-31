@@ -28,5 +28,71 @@ export function MasterDataPage() {
   const relations = relationFields[resource] ?? []
   function openCreate() { setRecord(null); setDialogOpen(true) }
   function openEdit(row: Record<string, unknown>) { setRecord(row); setDialogOpen(true) }
-  return <main className="master-data-page"><header><div><p className="eyebrow">Reference library</p><h1>Master Data</h1><p>Manage the entities and relationships that power every simulation.</p></div></header><section className="master-data-layout modern-master"><aside><h2>Resources</h2>{masterResources.map((item) => <button className={`workflow-item ${resource === item ? 'selected' : ''}`} key={item} onClick={() => { setResource(item); setSelected([]) }}>{item.replaceAll('_', ' ')}</button>)}</aside><section className="master-table-panel"><div className="table-title"><div><span className="table-icon"><TableProperties size={18} /></span><div><h2>{resource.replaceAll('_', ' ')}</h2><p>{rows.length} records available</p></div></div><button onClick={openCreate}><Plus size={15} /> Create record</button></div>{selected.length > 0 && <div className="bulk-toolbar">{selected.length} selected · Bulk actions are ready for the next operation.</div>}{records.isPending ? <LoadingState /> : records.isError ? <ErrorState message="Unable to load this resource." /> : rows.length === 0 ? <div className="master-empty"><Database size={26} /><strong>No records yet</strong><span>Create the first {resource.slice(0, -1)} to start building your simulation reference data.</span><button onClick={openCreate}>Create record</button></div> : <DataTable rows={rows} columns={[...columns, { id: 'edit', header: 'Actions', cell: (row) => <button onClick={() => openEdit(row)}>Edit</button> }]} onSelectionChange={setSelected} />}</section><aside className="relationship-preview"><h2><Link2 size={16} /> Relationship preview</h2>{relations.length ? <>{relations.map((field) => <div key={field}><small>{field.replaceAll('_', ' ')}</small><strong>{record?.[field] ? String(record[field]) : 'Select a record to inspect'}</strong></div>)}<p>Relations update as you select or edit a record.</p></> : <p>This resource has no direct relationship preview.</p>}</aside></section><Dialog.Root open={dialogOpen} onOpenChange={(open) => !open && close()}><Dialog.Portal><Dialog.Overlay className="command-overlay" /><Dialog.Content className="master-dialog"><Dialog.Title>{record ? 'Edit record' : 'Create record'}</Dialog.Title><Dialog.Description>Update structured simulation reference data.</Dialog.Description><MasterDataForm resource={resource} record={record} isSaving={create.isPending || update.isPending || remove.isPending} onSave={(id, values) => id ? update.mutate({ id, values }) : create.mutate(values)} onDelete={(id) => remove.mutate(id)} /></Dialog.Content></Dialog.Portal></Dialog.Root></main>
+  return (
+    <main className="master-data-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm"><Database size={18} /></span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-purple-700">Reference library</p>
+            <h1 className="truncate text-lg font-bold text-slate-900">Master Data</h1>
+            <p className="truncate text-xs text-slate-500">Manage the entities and relationships that power every simulation.</p>
+          </div>
+        </div>
+      </header>
+
+      <section className="mt-4 grid items-start gap-4 xl:grid-cols-[210px_minmax(0,1fr)_270px]">
+        <aside className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Resources</h2>
+          <div className="grid gap-1.5">
+            {masterResources.map((item) => (
+              <button key={item} className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition ${resource === item ? 'border-purple-200 bg-purple-50 text-purple-700' : 'border-transparent text-slate-600 hover:bg-slate-50'}`} onClick={() => { setResource(item); setSelected([]) }}>
+                <span className="truncate text-xs font-semibold capitalize">{item.replaceAll('_', ' ')}</span>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        <section className="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 text-[#5b46c5]"><TableProperties size={18} /></span>
+              <div>
+                <h2 className="text-sm font-bold capitalize text-slate-900">{resource.replaceAll('_', ' ')}</h2>
+                <p className="text-xs text-slate-500">{rows.length} records available</p>
+              </div>
+            </div>
+            <button onClick={openCreate} className="inline-flex items-center gap-1.5 rounded-lg bg-[#5b46c5] px-3.5 py-2 text-xs font-semibold text-white shadow-none transition hover:bg-[#4b38ac]"><Plus size={15} /> Create record</button>
+          </div>
+          <div className="border-t border-slate-100 px-5 py-4">
+            {selected.length > 0 && <div className="mb-3 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-xs font-semibold text-[#5b46c5]">{selected.length} selected · Bulk actions are ready for the next operation.</div>}
+            {records.isPending ? <LoadingState /> : records.isError ? <ErrorState message="Unable to load this resource." /> : rows.length === 0 ? (
+              <div className="grid justify-items-center gap-2.5 py-14 text-center">
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-purple-50 text-[#5b46c5]"><Database size={26} /></span>
+                <strong className="text-sm font-bold text-slate-900">No records yet</strong>
+                <span className="max-w-[320px] text-xs leading-relaxed text-slate-500">Create the first {resource.slice(0, -1)} to start building your simulation reference data.</span>
+                <button onClick={openCreate} className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-[#5b46c5] px-3.5 py-2 text-xs font-semibold text-white shadow-none transition hover:bg-[#4b38ac]"><Plus size={14} /> Create record</button>
+              </div>
+            ) : <DataTable rows={rows} columns={[...columns, { id: 'edit', header: 'Actions', cell: (row) => <button onClick={() => openEdit(row)} className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50">Edit</button> }]} onSelectionChange={setSelected} />}
+          </div>
+        </section>
+
+        <aside className="self-start rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900"><Link2 size={16} className="text-[#5b46c5]" /> Relationship preview</h2>
+          {relations.length ? <><div className="mt-3 grid gap-2.5">{relations.map((field) => <div key={field} className="rounded-r-lg border-l-2 border-[#c4b5fd] bg-[#faf9ff] px-3 py-2.5"><small className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{field.replaceAll('_', ' ')}</small><strong className="block truncate text-xs text-[#4c3e9d]">{record?.[field] ? String(record[field]) : 'Select a record to inspect'}</strong></div>)}</div><p className="mt-3 text-xs leading-relaxed text-slate-500">Relations update as you select or edit a record.</p></> : <p className="mt-3 text-xs leading-relaxed text-slate-500">This resource has no direct relationship preview.</p>}
+        </aside>
+      </section>
+
+      <Dialog.Root open={dialogOpen} onOpenChange={(open) => !open && close()}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="command-overlay" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] max-h-[min(760px,calc(100vh-32px))] w-[min(620px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <Dialog.Title className="text-base font-bold text-slate-900">{record ? 'Edit record' : 'Create record'}</Dialog.Title>
+            <Dialog.Description className="mt-1 text-xs leading-relaxed text-slate-500">Update structured simulation reference data.</Dialog.Description>
+            <div className="mt-4"><MasterDataForm resource={resource} record={record} isSaving={create.isPending || update.isPending || remove.isPending} onSave={(id, values) => id ? update.mutate({ id, values }) : create.mutate(values)} onDelete={(id) => remove.mutate(id)} /></div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </main>
+  )
 }

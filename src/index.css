@@ -2,12 +2,12 @@
 
 :root { color: #e5e7eb; background: #111827; font-family: Inter, system-ui, sans-serif; }
 body { margin: 0; }
-main { max-width: 1600px; margin: 0 auto; padding: 2rem 3rem; }
-.app-content:has(.studio-app-container) { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+
+.app-content:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page) { padding: 0 !important; margin: 0 !important; max-width: none !important; }
 header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 a { color: #93c5fd; }
-body:not(:has(.studio-app-container)) input, body:not(:has(.studio-app-container)) textarea { display: block; margin-top: .5rem; padding: .65rem; box-sizing: border-box; }
-body:not(:has(.studio-app-container)) button { margin-top: .5rem; padding: .65rem .9rem; box-sizing: border-box; }
+body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) input, body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) textarea { display: block; margin-top: .5rem; padding: .65rem; box-sizing: border-box; }
+body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) button { margin-top: .5rem; padding: .65rem .9rem; box-sizing: border-box; }
 button { cursor: pointer; }
 
 
@@ -32,13 +32,30 @@ button { cursor: pointer; }
 .inline-form input, .inline-form button { margin-top: 0; }
 .studio textarea { width: 100%; font-family: ui-monospace, monospace; }
 .data-table { overflow-x: auto; }
-.data-table table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-.data-table th, .data-table td { padding: .55rem; border-bottom: 1px solid #374151; text-align: left; vertical-align: top; }
-.data-table th button { display: inline; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; }
+.data-table table { width: 100%; border-collapse: collapse; margin-top: 0; }
+.data-table th, .data-table td { padding: .7rem .85rem; border-bottom: 1px solid #eef2f7; text-align: left; vertical-align: middle; }
+.data-table thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: .66rem; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.data-table td { color: #334155; font-size: .78rem; }
+.data-table thead th:first-child { width: 38px; }
+.data-table th button { display: inline-flex; align-items: center; gap: 4px; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+.data-table th button:hover { color: #5b46c5; }
 .data-table-controls, .data-table footer { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-.data-table-controls input { margin: 0; }
-.data-table details label { display: block; }
-.data-table details input { display: inline; }
+.data-table-controls { padding: .75rem .85rem; border-bottom: 1px solid #eef2f7; background: #fff; }
+.data-table-controls input { display: inline-block; width: 180px; margin: 0 !important; padding: 6px 10px !important; border: 1px solid #dbe3ec; border-radius: .5rem; background: #f8fafc; box-shadow: none; color: #334155; font-size: .72rem; }
+.data-table-controls input::placeholder { color: #94a3b8; }
+.data-table-controls input:focus { border-color: #8b7df2; background: #fff; outline: 3px solid #ede9fe; }
+.data-table-controls details { position: relative; margin-left: auto; }
+.data-table-controls summary { margin: 0; cursor: pointer; color: #64748b; font-size: .72rem; font-weight: 600; }
+.data-table-controls details[open] summary { color: #5b46c5; }
+.data-table-controls details > div { position: absolute; z-index: 20; right: 0; top: calc(100% + 6px); display: grid; gap: 2px; min-width: 150px; padding: 6px; border: 1px solid #e2e8f0; border-radius: .5rem; background: #fff; box-shadow: 0 12px 30px #0f172a14; }
+.data-table details label { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: .4rem; font-size: .72rem; color: #475569; cursor: pointer; }
+.data-table details label:hover { background: #f8fafc; }
+.data-table details input { display: inline; width: auto; margin: 0 !important; padding: 0 !important; box-shadow: none; }
+.data-table input[type="checkbox"] { display: inline-block; width: auto; margin: 0 !important; padding: 0 !important; accent-color: #5b46c5; box-shadow: none; }
+.data-table footer { justify-content: space-between; padding: .65rem .85rem; border-top: 1px solid #eef2f7; color: #64748b; font-size: .72rem; background: #fff; }
+.data-table footer button { margin: 0; padding: 5px 9px; font-size: .7rem; }
+.data-table tbody tr { transition: background-color .14s ease; }
+.data-table tbody tr:hover { background: #f8f7ff; }
 .studio label { display: block; margin-top: .75rem; }
 .studio label input { display: inline-block; margin-right: .5rem; }
 @media (max-width: 800px) { .studio-grid { grid-template-columns: 1fr; } }
@@ -118,9 +135,9 @@ select { display: block; margin-top: .5rem; padding: .65rem; }
 }
 body { background: #f8fafc; }
 body { color: var(--color-text); background: var(--color-canvas); font-family: var(--font-sans); }
-:not(.studio-app-container, .studio-app-container *) > button, :not(.studio-app-container, .studio-app-container *) > input, :not(.studio-app-container, .studio-app-container *) > select, :not(.studio-app-container, .studio-app-container *) > textarea { border-color: var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
-body:not(:has(.studio-app-container)) button { color: #312e81; background: #f5f3ff; }
-body:not(:has(.studio-app-container)) button:hover:not(:disabled) { border-color: #c4b5fd; background: #ede9fe; }
+:not(.studio-app-container, .studio-app-container *, .timer-management-page, .timer-management-page *, .master-data-page, .master-data-page *, .workflow-history-page, .workflow-history-page *, .history-page, .history-page *) > button, :not(.studio-app-container, .studio-app-container *, .timer-management-page, .timer-management-page *, .master-data-page, .master-data-page *, .workflow-history-page, .workflow-history-page *, .history-page, .history-page *) > input, :not(.studio-app-container, .studio-app-container *, .timer-management-page, .timer-management-page *, .master-data-page, .master-data-page *, .workflow-history-page, .workflow-history-page *, .history-page, .history-page *) > select, :not(.studio-app-container, .studio-app-container *, .timer-management-page, .timer-management-page *, .master-data-page, .master-data-page *, .workflow-history-page, .workflow-history-page *, .history-page, .history-page *) > textarea { border-color: var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) button { color: #312e81; background: #f5f3ff; }
+body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) button:hover:not(:disabled) { border-color: #c4b5fd; background: #ede9fe; }
 
 button:disabled { cursor: not-allowed; opacity: .56; }
 .studio-grid aside, .studio-grid section, .runner > div, .runner aside, .channel-panel, .history-layout aside, .history-layout > section, .master-data-layout > aside, .master-data-layout > section, .channel-card, .runner-start, .runner-status { border-color: var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
@@ -172,8 +189,8 @@ body { min-width: 320px; }
 @media (max-width: 900px) { .app-sidebar { width: 64px; padding: 15px 9px; }.brand { justify-content: center; padding-bottom: 22px; }.brand > span:not(.brand-mark), .sidebar-collapse, .primary-nav span { display: none; }.primary-nav a { justify-content: center; padding: 11px; }.app-main { width: calc(100% - 64px); margin-left: 64px; }.app-header { padding: 0 18px; }.app-content { padding: 22px 18px; }.api-status { display: none; } }
 @media (max-width: 620px) { .app-header { min-height: 54px; }.breadcrumb { max-width: 180px; overflow: hidden; white-space: nowrap; }.settings-grid article { align-items: flex-start; flex-wrap: wrap; }.settings-grid button { margin-left: 34px; } }
 a { color: #2563eb; }
-body:not(:has(.studio-app-container)) input, body:not(:has(.studio-app-container)) select, body:not(:has(.studio-app-container)) textarea, body:not(:has(.studio-app-container)) button { border: 1px solid #cbd5e1; border-radius: .4rem; background: #fff; color: #1e293b; }
-body:not(:has(.studio-app-container)) button { background: #eff6ff; }
+body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) input, body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) select, body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) textarea, body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) button { border: 1px solid #cbd5e1; border-radius: .4rem; background: #fff; color: #1e293b; }
+body:not(:has(.studio-app-container, .timer-management-page, .master-data-page, .workflow-history-page, .history-page)) button { background: #eff6ff; }
 
 .studio-grid aside, .studio-grid section, .runner > div, .runner aside, .channel-panel { border-color: #cbd5e1; background: #fff; }
 .workflow-item, .timeline-entry { background: #f8fafc; color: #1e293b; }

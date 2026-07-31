@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarClock, CheckCircle2, Clock, RefreshCw, Timer, XCircle } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { cancelTimer, getTimers, rescheduleTimer, type WorkflowTimer } from '../../shared/api/timers'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
@@ -20,18 +20,45 @@ function canManage(timer: WorkflowTimer) { return timer.status === 'scheduled' |
 function isPending(timer: WorkflowTimer) { return timer.status === 'scheduled' || timer.status === 'retry' }
 function countdown(value: string, now: number) { const total = Math.max(0, Math.floor((parseServerTime(value).getTime() - now) / 1000)); return { total, hours: Math.floor(total / 3600), minutes: Math.floor((total % 3600) / 60), seconds: total % 60 } }
 function countdownLabel(parts: { total: number }) { return `${parts.total}s` }
-function urgency(total: number) { return total <= 60 ? 'due-soon' : total <= 300 ? 'due-warn' : '' }
+function durationSeconds(from: string, to: string) { return Math.round((parseServerTime(to).getTime() - parseServerTime(from).getTime()) / 1000) }
+function formatCancelDelta(dueAt: string, cancelledAt: string) { const seconds = durationSeconds(cancelledAt, dueAt); return seconds > 0 ? `${seconds}s before due` : seconds < 0 ? `${Math.abs(seconds)}s after due` : 'at due' }
 function progress(timer: WorkflowTimer, now: number) { const start = parseServerTime(timer.created_at).getTime(); const due = parseServerTime(timer.due_at).getTime(); return Math.min(100, Math.max(0, ((now - start) / Math.max(1, due - start)) * 100)) }
+
+const STATUS_TONES: Record<string, string> = {
+  scheduled: 'bg-blue-50 text-blue-600',
+  running: 'bg-indigo-50 text-indigo-600',
+  retry: 'bg-amber-50 text-amber-600',
+  completed: 'bg-emerald-50 text-emerald-600',
+  failed: 'bg-red-50 text-red-600',
+  total: 'bg-purple-50 text-[#5b46c5]',
+}
 
 function StatusIcon({ status }: { status: string }) { return status === 'failed' ? <XCircle size={18} /> : status === 'completed' ? <CheckCircle2 size={18} /> : status === 'retry' ? <RefreshCw size={18} /> : status === 'total' ? <Timer size={18} /> : <CalendarClock size={18} /> }
 
 function CountdownCell({ timer, now }: { timer: WorkflowTimer; now: number }) {
   const parts = countdown(timer.due_at, now)
+  const tone = parts.total <= 60 ? 'text-red-600' : parts.total <= 300 ? 'text-amber-600' : 'text-[#5b46c5]'
   return (
-    <div className={`timer-countdown-cell ${urgency(parts.total)}`}>
-      <strong className="timer-countdown">{countdownLabel(parts)}</strong>
-      <div className="timer-progress"><i style={{ width: `${progress(timer, now)}%` }} /></div>
+    <div className="min-w-[110px]">
+      <strong className={`text-sm font-bold tabular-nums ${tone}`}>{countdownLabel(parts)}</strong>
+      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+        <i className="block h-full rounded-full bg-gradient-to-r from-[#7c6ae6] to-[#4f46e5]" style={{ width: `${progress(timer, now)}%` }} />
+      </div>
     </div>
+  )
+}
+
+function StatCard({ status, count }: { status: string; count: number }) {
+  return (
+    <article className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${STATUS_TONES[status] ?? STATUS_TONES.total}`}>
+        <StatusIcon status={status} />
+      </span>
+      <div className="min-w-0">
+        <small className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">{status === 'total' ? 'All timers' : status}</small>
+        <strong className="block text-xl font-bold leading-tight text-slate-900 tabular-nums">{count}</strong>
+      </div>
+    </article>
   )
 }
 
@@ -50,16 +77,130 @@ export function TimerManagementPage() {
   const counts = useMemo(() => [...TIMER_STATUSES.map((status) => ({ status, count: rows.filter((timer) => timer.status === status).length })), { status: 'total', count: rows.length }], [rows])
   const columns: DataTableColumn<typeof rows[number]>[] = [
     { id: 'status', header: 'Status', cell: (timer) => <StatusBadge status={timer.status} />, sortValue: (timer) => timer.status },
-    { id: 'countdown', header: 'Countdown', cell: (timer) => (isPending(timer) ? <CountdownCell timer={timer} now={now} /> : '—'), sortValue: (timer) => timer.due_at },
-    { id: 'due', header: 'Due at', cell: (timer) => <time dateTime={timer.due_at}>{formatTime(timer.due_at)}</time>, sortValue: (timer) => timer.due_at },
-    { id: 'retries', header: 'Retries', cell: (timer) => `${timer.attempt_count} / ${timer.max_attempts}`, sortValue: (timer) => timer.attempt_count },
-    { id: 'delay', header: 'Retry delay', cell: (timer) => <span className="retry-delay">{timer.retry_delay_seconds}s</span>, sortValue: (timer) => timer.retry_delay_seconds },
-    { id: 'node', header: 'Node', cell: (timer) => timer.node_id, filterValue: (timer) => timer.node_id },
-    { id: 'actions', header: 'Actions', cell: (timer) => <div className="timer-actions"><button onClick={() => setDetailTarget(timer)}>Details</button>{canManage(timer) && <><button disabled={timer.status === 'cancelled'} onClick={() => setCancelTarget(timer)}>Cancel</button><button onClick={() => setRescheduleTarget(timer)}>Reschedule</button></>}</div> },
+    { id: 'countdown', header: 'Countdown', cell: (timer) => (isPending(timer) ? <CountdownCell timer={timer} now={now} /> : <span className="text-slate-300">—</span>), sortValue: (timer) => timer.due_at },
+    { id: 'due', header: 'Due at', cell: (timer) => <time className="text-xs text-slate-700 tabular-nums" dateTime={timer.due_at}>{formatTime(timer.due_at)}</time>, sortValue: (timer) => timer.due_at },
+    { id: 'timeout', header: 'Timeout', cell: (timer) => <span className="inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">{durationSeconds(timer.created_at, timer.due_at)}s</span>, sortValue: (timer) => timer.due_at },
+    { id: 'cancel', header: 'Cancel at', cell: (timer) => timer.cancelled_at ? <div className="flex flex-col gap-0.5"><time className="text-xs text-slate-700 tabular-nums" dateTime={timer.cancelled_at}>{formatTime(timer.cancelled_at)}</time><span className="text-[10px] font-semibold text-slate-400">{formatCancelDelta(timer.due_at, timer.cancelled_at)}</span></div> : <span className="text-slate-300">—</span>, sortValue: (timer) => timer.cancelled_at ?? '' },
+    { id: 'retries', header: 'Retries', cell: (timer) => <span className="text-xs text-slate-600 tabular-nums">{timer.attempt_count} / {timer.max_attempts}</span>, sortValue: (timer) => timer.attempt_count },
+    { id: 'delay', header: 'Retry delay', cell: (timer) => <span className="inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">{timer.retry_delay_seconds}s</span>, sortValue: (timer) => timer.retry_delay_seconds },
+    { id: 'node', header: 'Node', cell: (timer) => <span className="block max-w-[170px] truncate font-mono text-xs text-slate-500" title={timer.node_id}>{timer.node_id}</span>, filterValue: (timer) => timer.node_id },
+    { id: 'actions', header: 'Actions', cell: (timer) => (
+      <div className="flex items-center gap-1.5">
+        <button onClick={() => setDetailTarget(timer)} className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50">Details</button>
+        {canManage(timer) && <>
+          <button disabled={timer.status === 'cancelled'} onClick={() => setCancelTarget(timer)} className="rounded-lg border border-red-200 bg-white px-2 py-1 text-[11px] font-semibold text-red-600 shadow-none transition hover:bg-red-50 disabled:opacity-50">Cancel</button>
+          <button onClick={() => setRescheduleTarget(timer)} className="rounded-lg bg-[#5b46c5] px-2 py-1 text-[11px] font-semibold text-white shadow-none transition hover:bg-[#4b38ac]">Reschedule</button>
+        </>}
+      </div>
+    ) },
   ]
-  return <main className="timer-management"><header className="timer-header"><div><p className="eyebrow">Scheduler observability</p><h1>Timer management</h1><p>Timers refresh automatically while countdowns update in real time.</p></div><div className="current-time"><span className="current-time-icon"><Clock size={16} /></span><div><small>Current time</small><strong>{formatClock(now)}</strong></div></div></header><section className="timer-summary">{counts.map(({ status, count }) => <article key={status}><span className={`timer-summary-icon ${status}`}><StatusIcon status={status} /></span><div><small>{status}</small><strong>{count}</strong></div></article>)}</section>{timers.isPending ? <LoadingState /> : timers.isError ? <ErrorState message="Unable to load timers." /> : <DataTable rows={rows} columns={columns} />}<RescheduleDialog timer={rescheduleTarget} isSaving={reschedule.isPending} onClose={() => setRescheduleTarget(null)} onSave={(dueAt) => rescheduleTarget && reschedule.mutate({ id: rescheduleTarget.timer_id, dueAt })} /><CancelDialog timer={cancelTarget} isSaving={cancel.isPending} onClose={() => setCancelTarget(null)} onConfirm={() => cancelTarget && cancel.mutate(cancelTarget.timer_id)} /><TimerDetail timer={detailTarget} onClose={() => setDetailTarget(null)} /></main>
+  return (
+    <main className="timer-management-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
+            <Clock size={18} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-purple-700">Scheduler observability</p>
+            <h1 className="truncate text-lg font-bold text-slate-900">Timer management</h1>
+            <p className="truncate text-xs text-slate-500">Timers refresh automatically while countdowns update in real time.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-white text-[#5b46c5] shadow-sm"><Clock size={15} /></span>
+          <div>
+            <small className="block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Current time (WIB)</small>
+            <strong className="block text-sm text-slate-800 tabular-nums">{formatClock(now)}</strong>
+          </div>
+        </div>
+      </header>
+
+      <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        {counts.map(({ status, count }) => <StatCard key={status} status={status} count={count} />)}
+      </section>
+
+      <section className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        {timers.isPending ? <LoadingState /> : timers.isError ? <ErrorState message="Unable to load timers." /> : <DataTable rows={rows} columns={columns} selectable={false} />}
+      </section>
+
+      <RescheduleDialog timer={rescheduleTarget} isSaving={reschedule.isPending} onClose={() => setRescheduleTarget(null)} onSave={(dueAt) => rescheduleTarget && reschedule.mutate({ id: rescheduleTarget.timer_id, dueAt })} />
+      <CancelDialog timer={cancelTarget} isSaving={cancel.isPending} onClose={() => setCancelTarget(null)} onConfirm={() => cancelTarget && cancel.mutate(cancelTarget.timer_id)} />
+      <TimerDetail timer={detailTarget} onClose={() => setDetailTarget(null)} />
+    </main>
+  )
 }
 
-function RescheduleDialog({ timer, isSaving, onClose, onSave }: { timer: WorkflowTimer | null; isSaving: boolean; onClose: () => void; onSave: (dueAt: string) => void }) { const [dueAt, setDueAt] = useState(''); useEffect(() => setDueAt(timer ? toJakartaInput(timer.due_at) : ''), [timer]); return <Dialog.Root open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}><Dialog.Portal><Dialog.Overlay className="command-overlay" /><Dialog.Content className="timer-dialog"><Dialog.Title>Reschedule timer</Dialog.Title><Dialog.Description>Choose a new date and time for this workflow action.</Dialog.Description><label>New execution time<input type="datetime-local" value={dueAt} onChange={(event) => setDueAt(event.target.value)} /></label><div><button onClick={() => onSave(fromJakartaInput(dueAt))} disabled={!dueAt || isSaving}>Save schedule</button><Dialog.Close asChild><button>Cancel</button></Dialog.Close></div></Dialog.Content></Dialog.Portal></Dialog.Root> }
-function CancelDialog({ timer, isSaving, onClose, onConfirm }: { timer: WorkflowTimer | null; isSaving: boolean; onClose: () => void; onConfirm: () => void }) { return <Dialog.Root open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}><Dialog.Portal><Dialog.Overlay className="command-overlay" /><Dialog.Content className="timer-dialog"><Dialog.Title>Cancel scheduled timer?</Dialog.Title><Dialog.Description>This prevents the workflow action from running at {timer ? formatTime(timer.due_at) : 'the scheduled time'}.</Dialog.Description><div><button className="danger" onClick={onConfirm} disabled={isSaving}>Cancel timer</button><Dialog.Close asChild><button>Keep timer</button></Dialog.Close></div></Dialog.Content></Dialog.Portal></Dialog.Root> }
-function TimerDetail({ timer, onClose }: { timer: WorkflowTimer | null; onClose: () => void }) { return <Dialog.Root open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}><Dialog.Portal><Dialog.Overlay className="command-overlay" /><Dialog.Content className="timer-sheet"><Dialog.Title>Timer details</Dialog.Title><Dialog.Description>Retry and error context for this scheduled action.</Dialog.Description><div><small>Status</small><StatusBadge status={timer?.status ?? 'default'} /></div><div><small>Retry policy</small><strong>{timer?.attempt_count ?? 0} of {timer?.max_attempts ?? 0} attempts · {timer?.retry_delay_seconds ?? 0}s delay</strong></div><div><small>Last error</small><p>{timer?.last_error ?? 'No error recorded.'}</p></div><div><small>Execution / node</small><strong>{timer?.execution_id} · {timer?.node_id}</strong></div><Dialog.Close asChild><button>Close details</button></Dialog.Close></Dialog.Content></Dialog.Portal></Dialog.Root> }
+function DialogFooter({ children }: { children: ReactNode }) {
+  return <div className="mt-6 flex justify-end gap-2">{children}</div>
+}
+
+function DialogButton({ children, onClick, disabled, variant = 'ghost' }: { children: ReactNode; onClick?: () => void; disabled?: boolean; variant?: 'ghost' | 'danger' | 'primary' }) {
+  const styles = variant === 'primary' ? 'border-transparent bg-[#5b46c5] text-white hover:bg-[#4b38ac]' : variant === 'danger' ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+  return <button onClick={onClick} disabled={disabled} className={`rounded-lg border px-3.5 py-2 text-xs font-semibold shadow-none transition disabled:opacity-50 ${styles}`}>{children}</button>
+}
+
+function RescheduleDialog({ timer, isSaving, onClose, onSave }: { timer: WorkflowTimer | null; isSaving: boolean; onClose: () => void; onSave: (dueAt: string) => void }) {
+  const [dueAt, setDueAt] = useState('')
+  useEffect(() => setDueAt(timer ? toJakartaInput(timer.due_at) : ''), [timer])
+  return (
+    <Dialog.Root open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="command-overlay" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] w-[min(430px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
+          <Dialog.Title className="text-base font-bold text-slate-900">Reschedule timer</Dialog.Title>
+          <Dialog.Description className="mt-1 text-xs leading-relaxed text-slate-500">Choose a new date and time for this workflow action. Shown in Jakarta time (GMT+7).</Dialog.Description>
+          <label className="mt-4 grid gap-1.5 text-xs font-semibold text-slate-700">
+            New execution time
+            <input type="datetime-local" value={dueAt} onChange={(event) => setDueAt(event.target.value)} className="form-input !m-0 !w-full !py-2" />
+          </label>
+          <DialogFooter>
+            <DialogButton onClick={onClose}>Cancel</DialogButton>
+            <DialogButton variant="primary" onClick={() => onSave(fromJakartaInput(dueAt))} disabled={!dueAt || isSaving}>Save schedule</DialogButton>
+          </DialogFooter>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
+
+function CancelDialog({ timer, isSaving, onClose, onConfirm }: { timer: WorkflowTimer | null; isSaving: boolean; onClose: () => void; onConfirm: () => void }) {
+  return (
+    <Dialog.Root open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="command-overlay" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] w-[min(430px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
+          <Dialog.Title className="text-base font-bold text-slate-900">Cancel scheduled timer?</Dialog.Title>
+          <Dialog.Description className="mt-1 text-xs leading-relaxed text-slate-500">This prevents the workflow action from running at {timer ? formatTime(timer.due_at) : 'the scheduled time'}.</Dialog.Description>
+          <DialogFooter>
+            <DialogButton onClick={onClose}>Keep timer</DialogButton>
+            <DialogButton variant="danger" onClick={onConfirm} disabled={isSaving}>Cancel timer</DialogButton>
+          </DialogFooter>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
+
+function TimerDetail({ timer, onClose }: { timer: WorkflowTimer | null; onClose: () => void }) {
+  return (
+    <Dialog.Root open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="command-overlay" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] w-[min(480px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
+          <Dialog.Title className="text-base font-bold text-slate-900">Timer details</Dialog.Title>
+          <Dialog.Description className="mt-1 text-xs leading-relaxed text-slate-500">Retry and error context for this scheduled action.</Dialog.Description>
+          <dl className="mt-4 grid gap-3">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-2.5"><dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Status</dt><dd><StatusBadge status={timer?.status ?? 'default'} /></dd></div>
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-2.5"><dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Retry policy</dt><dd className="text-xs font-semibold text-slate-700 tabular-nums">{timer?.attempt_count ?? 0} of {timer?.max_attempts ?? 0} attempts · {timer?.retry_delay_seconds ?? 0}s delay</dd></div>
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-2.5"><dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Last error</dt><dd className="max-w-[260px] text-right text-xs text-slate-600">{timer?.last_error ?? 'No error recorded.'}</dd></div>
+            <div className="grid gap-1"><dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Execution / node</dt><dd className="truncate font-mono text-xs text-slate-600">{timer?.execution_id} · {timer?.node_id}</dd></div>
+          </dl>
+          <DialogFooter>
+            <DialogButton onClick={onClose}>Close details</DialogButton>
+          </DialogFooter>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
