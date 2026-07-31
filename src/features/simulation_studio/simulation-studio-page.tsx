@@ -3,8 +3,8 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { Background, Controls, MarkerType, MiniMap, ReactFlow, useEdgesState, useNodesState, type Connection, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { 
-  CheckCircle2, ClipboardCheck, Maximize, Minus, Play, Plus, 
-  Save, Undo2, Redo2, CircleDot, ChevronLeft, ChevronRight, Sliders, History, 
+  CheckCircle2, ClipboardCheck, Maximize, Minus, PanelLeftClose, Play, Plus, 
+  Save, Undo2, Redo2, CircleDot, ChevronRight, Sliders, History, 
   FolderKanban, Layers, X, AlertTriangle, Edit3, Trash2, MapPin
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
@@ -332,11 +332,11 @@ export function SimulationStudioPage() {
         <div className="flex items-center gap-3">
           <button 
             type="button" 
-            className="sidebar-toggle-btn p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             onClick={() => setLeftSidebarOpen(prev => !prev)}
             title={leftSidebarOpen ? "Collapse left sidebar" : "Expand left sidebar"}
           >
-            {leftSidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            <PanelLeftClose size={16} />
           </button>
 
           <div className="flex items-center gap-2">
@@ -416,11 +416,11 @@ export function SimulationStudioPage() {
 
           <button 
             type="button" 
-            className="sidebar-toggle-btn p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors ml-1"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors ml-1"
             onClick={() => setRightSidebarOpen(prev => !prev)}
             title={rightSidebarOpen ? "Collapse inspector sidebar" : "Expand inspector sidebar"}
           >
-            {rightSidebarOpen ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            <PanelLeftClose size={16} />
           </button>
         </div>
       </header>

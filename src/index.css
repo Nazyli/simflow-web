@@ -402,3 +402,6 @@ body:not(:has(.studio-app-container)) button { background: #eff6ff; }
   to { transform: translateY(0); opacity: 1; }
 }
 .animate-slide-up { animation: slide-up 0.2s ease-out forwards; }
+.execution-actions { display: flex; align-items: center; gap: 8px; }
+.execution-detail-btn { display: inline-flex !important; align-items: center; gap: 4px; margin: 0 !important; padding: 6px 10px !important; border: 1px solid #d8cfea !important; border-radius: 7px !important; color: #5b21b6 !important; background: #f5f3ff !important; box-shadow: none !important; font-size: .7rem; font-weight: 650; cursor: pointer; transition: background .14s, border-color .14s; }
+.execution-detail-btn:hover { background: #ede9fe !important; border-color: #c4b5fd !important; color: #4c1d95 !important; }

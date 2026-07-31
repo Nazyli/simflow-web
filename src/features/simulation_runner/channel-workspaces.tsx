@@ -63,24 +63,41 @@ function eventTitle(event: SessionChannelEvent, channel: string) {
 }
 
 function EventFeed({ channel, events, participantId }: { channel: FeedChannel; events: SessionChannelEvent[]; participantId: string }) {
-  if (!events.length) return <p className="empty-channel">No {channel.label} activity yet.</p>
+  if (!events.length) {
+    return (
+      <div className="flex flex-1 items-center justify-center bg-slate-50/70 px-4 py-10 text-center">
+        <p className="text-xs text-slate-400">No {channel.label} activity yet.</p>
+      </div>
+    )
+  }
   return (
-    <div className="channel-feed">
-      {events.map((item, index) => {
-        const sender = String(item.actor ?? item.from ?? 'system')
-        const isParticipant = sender === participantId
-        return (
-          <article className={isParticipant ? 'participant' : ''} key={index}>
-            <span className="event-avatar">{sender.slice(0, 1).toUpperCase()}</span>
-            <div>
-              <small>{sender} · {formatTime(item.timestamp)}</small>
-              <strong>{eventTitle(item, channel.label)}</strong>
-              <p>{String(item.content ?? item.action_type ?? '')}</p>
-              <em>{channel.feedNote}</em>
-            </div>
-          </article>
-        )
-      })}
+    <div className="flex-1 overflow-y-auto bg-slate-50/70 px-4 py-4">
+      <div className="mx-auto flex max-w-3xl flex-col gap-3">
+        {events.map((item, index) => {
+          const sender = String(item.actor ?? item.from ?? 'system')
+          const isParticipant = sender === participantId
+          return (
+            <article key={index} className={`flex gap-2 ${isParticipant ? 'justify-end' : 'justify-start'}`}>
+              {!isParticipant && (
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
+                  {sender.slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <div className="max-w-[75%] min-w-0">
+                <div className={`flex items-baseline gap-2 px-1 ${isParticipant ? 'justify-end' : 'justify-start'}`}>
+                  <span className="text-[10px] font-semibold text-slate-500">{sender}</span>
+                  <time className="text-[10px] text-slate-400">{formatTime(item.timestamp)}</time>
+                </div>
+                <div className={`mt-0.5 whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${isParticipant ? 'rounded-br-md bg-[#5b46c5] text-white' : 'rounded-bl-md border border-slate-200 bg-white text-slate-800'}`}>
+                  <strong className="block text-xs font-semibold">{eventTitle(item, channel.label)}</strong>
+                  {Boolean(item.content ?? item.action_type) && <span className="block">{String(item.content ?? item.action_type)}</span>}
+                  <em className="mt-0.5 block text-[10px] not-italic text-slate-400">{channel.feedNote}</em>
+                </div>
+              </div>
+            </article>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -91,23 +108,39 @@ function ChannelComposer({ channel, actors, documents, disabled, onSubmit }: { c
     ? documents.map((item) => [String(item.document_id), String(item.document_name)] as const)
     : actors.map((item) => [String(item.actor_id), String(item.actor_name)] as const)
   return (
-    <form className="action-composer" onSubmit={onSubmit}>
-      <label>{channel.composerLabel}<select name="target" required>{targets.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>
-      {!isDocument && <label>{channel.textareaLabel}<textarea name="content" required placeholder={channel.placeholder} /></label>}
-      {isDocument && <label className="read-only"><input type="checkbox" name="read-only" /> Open as read-only</label>}
-      <button disabled={disabled}><Send size={15} />{channel.submitLabel}</button>
+    <form className="border-t border-slate-200 bg-white p-3" onSubmit={onSubmit}>
+      <label className="mb-2 block">
+        <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">{channel.composerLabel}</span>
+        <select name="target" required className="!m-0 w-full rounded-lg !border-slate-300 bg-white !px-3 !py-2 text-sm text-slate-900 !shadow-none focus:!border-[#5b46c5] focus:!ring-2 focus:!ring-violet-200 focus:outline-none">
+          {targets.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+        </select>
+      </label>
+      {!isDocument && (
+        <label className="mb-2 block">
+          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">{channel.textareaLabel}</span>
+          <textarea name="content" required placeholder={channel.placeholder} className="min-h-[52px] w-full resize-y rounded-lg !m-0 !border-slate-300 bg-white !px-3 !py-2 text-sm text-slate-900 !shadow-none focus:!border-[#5b46c5] focus:!ring-2 focus:!ring-violet-200 focus:outline-none" />
+        </label>
+      )}
+      {isDocument && (
+        <label className="mb-2 flex items-center gap-2 text-xs text-slate-600">
+          <input type="checkbox" name="read-only" className="!m-0 h-4 w-4 accent-[#5b46c5]" /> Open as read-only
+        </label>
+      )}
+      <button type="submit" disabled={disabled} className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50">
+        <Send size={15} /> {channel.submitLabel}
+      </button>
     </form>
   )
 }
 
 function ChannelCardShell({ channel, events, children }: { channel: FeedChannel; events: SessionChannelEvent[]; children: ReactNode }) {
   return (
-    <section className={`channel-card cockpit-card ${channel.label}`}>
-      <header>
-        <span className="channel-icon"><channel.icon size={17} /></span>
-        <div>
-          <h2>{channel.label}</h2>
-          <small>{events.length} event{events.length === 1 ? '' : 's'}</small>
+    <section className="flex h-[480px] min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <header className="flex items-center justify-start gap-3 border-b border-slate-200 bg-white px-4 py-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-violet-50 text-[#5b46c5]"><channel.icon size={17} /></span>
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold capitalize text-slate-900">{channel.label}</h2>
+          <small className="text-[11px] text-slate-500">{events.length} event{events.length === 1 ? '' : 's'}</small>
         </div>
       </header>
       {children}

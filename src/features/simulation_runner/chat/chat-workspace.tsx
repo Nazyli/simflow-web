@@ -48,7 +48,7 @@ export function ChatWorkspace({ participantId, events, actors, disabled, onSubmi
     : conversations[0] ?? null
 
   return (
-    <section className="channel-card cockpit-card chat col-span-full h-[540px]">
+    <section className="col-span-full flex h-[540px] min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <ChatLayout
         conversations={conversations}
         selectedActor={activeConversation?.actor ?? null}

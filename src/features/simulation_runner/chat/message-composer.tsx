@@ -22,7 +22,7 @@ export function MessageComposer({ target, disabled, onSubmit }: MessageComposerP
       <button
         type="submit"
         disabled={!canSend}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg !m-0 !border-0 !bg-[#5b46c5] !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50"
+        className="!m-0 !inline-flex shrink-0 items-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50"
       >
         <Send size={15} />
         Send

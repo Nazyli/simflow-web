@@ -1,7 +1,8 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
 import { BellRing, CheckCircle2, CircleAlert, Clock3, FileText, Mail, MessageSquare, Phone, Timer, Workflow } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { getExecutions, getTimeline, type ExecutionEvent } from '../../shared/api/executions'
 import { getSessionsForParticipant, type SimulationSession } from '../../shared/api/sessions'
 import { getWorkflowVersion } from '../../shared/api/workflows'
@@ -29,6 +30,19 @@ export function ParticipantHistoryPage() {
   const [session, setSession] = useState<SimulationSession | null>(null)
   const [event, setEvent] = useState<ExecutionEvent | null>(null)
   const sessions = useQuery({ queryKey: ['participant-sessions', searchId], queryFn: () => getSessionsForParticipant(searchId), enabled: Boolean(searchId) })
+  const [searchParams] = useSearchParams()
+  const [preselectedSessionId, setPreselectedSessionId] = useState<string | null>(null)
+  useEffect(() => {
+    const participant = searchParams.get('participant')
+    const sessionId = searchParams.get('session')
+    if (participant) { setParticipantId(participant); setSearchId(participant) }
+    if (sessionId) setPreselectedSessionId(sessionId)
+  }, [searchParams])
+  useEffect(() => {
+    if (!preselectedSessionId || !sessions.data) return
+    const match = sessions.data.find((item) => item.session_id === preselectedSessionId)
+    if (match) { setSession(match); setPreselectedSessionId(null) }
+  }, [preselectedSessionId, sessions.data])
   const workflow = useQuery({ queryKey: ['history-workflow', session?.workflow_version_id], queryFn: () => getWorkflowVersion(session!.workflow_version_id), enabled: Boolean(session) })
   const executions = useQuery({ queryKey: ['history-executions', session?.workflow_version_id], queryFn: () => getExecutions(session!.workflow_version_id), enabled: Boolean(session) })
   const execution = executions.data?.find((item) => item.session_id === session?.session_id)
