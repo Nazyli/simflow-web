@@ -3,7 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { Background, Controls, MarkerType, MiniMap, ReactFlow, useEdgesState, useNodesState, type Connection, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { 
-  BellRing, CheckCircle2, ClipboardCheck, GitBranch, Maximize, Minus, Play, Plus, 
+  CheckCircle2, ClipboardCheck, Maximize, Minus, Play, Plus, 
   Save, Undo2, Redo2, CircleDot, ChevronLeft, ChevronRight, Sliders, History, 
   FolderKanban, Layers, X, AlertTriangle, Edit3, Trash2, MapPin
 } from 'lucide-react'
@@ -11,30 +11,23 @@ import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } 
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../shared/api/client'
 import { getExecutions, getTimeline } from '../../shared/api/executions'
+import { getNodeCatalog } from '../../shared/api/node-catalog'
 import { addNode, addWorkflowEdge, createDraftFromVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
-import type { Execution, Workflow } from '../../shared/types/workflow'
+import type { Execution, NodeDefinition, OutputPort, Workflow } from '../../shared/types/workflow'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { WorkflowGraphEdge } from './workflow-graph-edge'
 import { WorkflowGraphNode } from './workflow-graph-node'
 
-const nodeTypes = ['trigger', 'condition', 'action', 'event'] as const
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
-
-const nodePaletteMeta: Record<typeof nodeTypes[number], { title: string; description: string; icon: typeof BellRing; colorClass: string }> = {
-  trigger: { title: 'Trigger Node', description: 'Initiates simulation flow based on manual event or timer', icon: BellRing, colorClass: 'palette-trigger' },
-  condition: { title: 'Condition Node', description: 'Branches execution based on payload evaluation', icon: GitBranch, colorClass: 'palette-condition' },
-  action: { title: 'Action Node', description: 'Executes automated channel tasks or AI operations', icon: Play, colorClass: 'palette-action' },
-  event: { title: 'Event Node', description: 'Captures and handles incoming external activities', icon: CircleDot, colorClass: 'palette-event' },
-}
 
 const workflowNodeRenderers = { workflow: WorkflowGraphNode }
 const workflowEdgeRenderers = { workflow: WorkflowGraphEdge }
 
-function nodeToFlow(node: ApiNode): Node { return { id: node.node_id, type: 'workflow', position: { x: node.position_x ?? 80, y: node.position_y ?? 80 }, data: { label: node.node_name, nodeType: node.node_type, triggerType: node.node_type === 'trigger' ? String(node.configuration.trigger_type ?? 'manual') : undefined } } }
-function edgeToFlow(edge: ApiEdge): Edge { return { id: edge.edge_id, type: 'workflow', source: edge.source_node_id, target: edge.target_node_id, markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8' }, data: { priority: edge.priority, condition: edge.condition_configuration } } }
+function nodeToFlow(node: ApiNode, definition: NodeDefinition | undefined): Node { return { id: node.node_id, type: 'workflow', position: { x: node.position_x ?? 80, y: node.position_y ?? 80 }, data: { label: node.node_name, nodeType: node.node_type, category: definition?.category ?? node.category, inputPorts: node.input_ports, outputPorts: node.output_ports } } }
+function edgeToFlow(edge: ApiEdge, sourcePort: OutputPort | undefined): Edge { const style = sourcePort?.edge_style ?? { color: '#94a3b8', line_style: 'solid', animated: false }; return { id: edge.edge_id, type: 'workflow', source: edge.source_node_id, sourceHandle: edge.source_port_id, target: edge.target_node_id, targetHandle: edge.target_port_id, markerEnd: { type: MarkerType.ArrowClosed, color: style.color }, animated: style.animated, data: { priority: edge.priority, label: sourcePort?.label ?? edge.source_port_id, style } } }
 
 function publishErrors(error: Error | null): string[] {
   if (!(error instanceof ApiError)) return []
@@ -75,12 +68,13 @@ export function SimulationStudioPage() {
 
   // Stable refs for persistNode.mutate and version status — kept in sync after mutations are declared below.
   // Using refs avoids adding them as useEffect dependencies (which would cause infinite loops).
-  const persistNodeRef = useRef<(args: { id: string; payload: Omit<ApiNode, 'node_id'> }) => void>(() => {})
+  const persistNodeRef = useRef<(args: { id: string; payload: Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'> }) => void>(() => {})
   const selectedVersionStatusRef = useRef<string | undefined>(undefined)
 
   // API Queries & Mutations
   const workflows = useQuery({ queryKey: ['workflows'], queryFn: getWorkflows })
   const graph = useQuery({ queryKey: ['graph', versionId], queryFn: () => getGraph(versionId!), enabled: Boolean(versionId) })
+  const nodeCatalog = useQuery({ queryKey: ['node-catalog'], queryFn: getNodeCatalog })
   const versions = useQuery({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id], queryFn: () => getWorkflowVersions(selectedWorkflow!.workflow_id), enabled: Boolean(selectedWorkflow) })
   const executions = useQuery({ queryKey: ['executions', versionId], queryFn: () => getExecutions(versionId!), enabled: Boolean(versionId) })
   const executionTimeline = useQuery({ queryKey: ['execution-timeline', selectedExecutionId], queryFn: () => getTimeline(selectedExecutionId!), enabled: Boolean(selectedExecutionId) })
@@ -92,15 +86,16 @@ export function SimulationStudioPage() {
   const createDraft = useMutation({ mutationFn: async (_workflowId: string) => { const sourceVersion = selectedVersion ?? versions.data?.find((v) => v.status === 'published'); if (!sourceVersion) throw new Error('Select a published version before creating a draft.'); return createDraftFromVersion(sourceVersion.workflow_version_id) }, onSuccess: (version) => { setVersionId(version.workflow_version_id); setSelectedNodeId(null); setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }) } })
   const publish = useMutation({ mutationFn: publishVersion, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['workflows'] }); queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }) } })
   
-  const addGraphNode = useMutation({ mutationFn: ({ nodeType, position }: { nodeType: typeof nodeTypes[number]; position?: { x: number; y: number } }) => addNode(versionId!, { node_name: `${nodeType} node`, node_type: nodeType, configuration: nodeType === 'action' ? { channel: 'chat', await_participant: false } : {}, position_x: Math.round(position?.x ?? 180), position_y: Math.round(position?.y ?? 180) }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
-  const duplicateGraphNode = useMutation({ mutationFn: (node: ApiNode) => addNode(versionId!, { node_name: `${node.node_name} copy`, node_type: node.node_type, configuration: { ...node.configuration }, position_x: (node.position_x ?? 80) + 60, position_y: (node.position_y ?? 80) + 60 }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
-  const persistNode = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiNode, 'node_id'> }) => updateNode(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
+  const addGraphNode = useMutation({ mutationFn: ({ definition, position }: { definition: NodeDefinition; position?: { x: number; y: number } }) => addNode(versionId!, { node_name: `${definition.label} node`, node_type: definition.node_type, parameters: { ...definition.parameters }, position_x: Math.round(position?.x ?? 180), position_y: Math.round(position?.y ?? 180) }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
+  const duplicateGraphNode = useMutation({ mutationFn: (node: ApiNode) => addNode(versionId!, { node_name: `${node.node_name} copy`, node_type: node.node_type, parameters: { ...node.parameters }, position_x: (node.position_x ?? 80) + 60, position_y: (node.position_y ?? 80) + 60 }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
+  const persistNode = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'> }) => updateNode(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
   const removeNode = useMutation({ mutationFn: deleteNode, onSuccess: () => { setSelectedNodeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
   const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
   const removeEdge = useMutation({ mutationFn: deleteWorkflowEdge, onSuccess: () => { setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
 
   const apiNodes = graph.data?.[0] ?? emptyNodes
   const apiEdges = graph.data?.[1] ?? emptyEdges
+  const definitions = useMemo(() => new Map((nodeCatalog.data?.nodes ?? []).map((definition) => [definition.node_type, definition])), [nodeCatalog.data])
   const selectedNode = useMemo(() => apiNodes.find((node) => node.node_id === selectedNodeId) ?? null, [apiNodes, selectedNodeId])
   const selectedEdge = useMemo(() => apiEdges.find((edge) => edge.edge_id === selectedEdgeId) ?? null, [apiEdges, selectedEdgeId])
   const selectedVersion = versions.data?.find((version) => version.workflow_version_id === versionId)
@@ -141,7 +136,7 @@ export function SimulationStudioPage() {
   useEffect(() => {
     if (apiNodes.length === 0) {
       setNodes([])
-      setEdges(apiEdges.map(edgeToFlow))
+      setEdges(apiEdges.map((edge) => edgeToFlow(edge, apiNodes.find((node) => node.node_id === edge.source_node_id)?.output_ports.find((port) => port.id === edge.source_port_id))))
       return
     }
 
@@ -205,7 +200,7 @@ export function SimulationStudioPage() {
             payload: {
               node_name: node.node_name,
               node_type: node.node_type,
-              configuration: node.configuration,
+              parameters: node.parameters,
               position_x: pos.x,
               position_y: pos.y,
             },
@@ -218,12 +213,12 @@ export function SimulationStudioPage() {
     setNodes(apiNodes.map((node) => {
       const cached = localPositions.current.get(node.node_id)
       return {
-        ...nodeToFlow(node),
+        ...nodeToFlow(node, definitions.get(node.node_type)),
         position: cached ?? { x: node.position_x ?? 100, y: node.position_y ?? 100 },
       }
     }))
-    setEdges(apiEdges.map(edgeToFlow))
-  }, [apiNodes, apiEdges, setNodes, setEdges])
+    setEdges(apiEdges.map((edge) => edgeToFlow(edge, apiNodes.find((node) => node.node_id === edge.source_node_id)?.output_ports.find((port) => port.id === edge.source_port_id))))
+  }, [apiNodes, apiEdges, definitions, setNodes, setEdges])
 
   useEffect(() => {
     if (!flowInstance || apiNodes.length === 0) return
@@ -259,10 +254,11 @@ export function SimulationStudioPage() {
   useEffect(() => {
     function acceptPaletteDrop(event: globalThis.DragEvent) {
       if (!(event.target instanceof Element) || !event.target.closest('.graph') || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
-      const nodeType = event.dataTransfer?.getData('application/simflow-node-type') as typeof nodeTypes[number]
-      if (!nodeTypes.includes(nodeType)) return
+      const nodeType = event.dataTransfer?.getData('application/simflow-node-type')
+      const definition = definitions.get(nodeType ?? '')
+      if (!definition) return
       event.preventDefault(); event.stopPropagation()
-      addGraphNode.mutate({ nodeType, position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }) })
+      addGraphNode.mutate({ definition, position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }) })
     }
     function allowPaletteDrop(event: globalThis.DragEvent) {
       if (event.target instanceof Element && event.target.closest('.graph') && event.dataTransfer?.types.includes('application/simflow-node-type')) event.preventDefault()
@@ -270,7 +266,7 @@ export function SimulationStudioPage() {
     document.addEventListener('dragover', allowPaletteDrop, true)
     document.addEventListener('drop', acceptPaletteDrop, true)
     return () => { document.removeEventListener('dragover', allowPaletteDrop, true); document.removeEventListener('drop', acceptPaletteDrop, true) }
-  }, [addGraphNode, flowInstance, selectedVersion?.status, versionId])
+  }, [addGraphNode, definitions, flowInstance, selectedVersion?.status, versionId])
 
   function submitWorkflow(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -281,17 +277,25 @@ export function SimulationStudioPage() {
   }
 
   function connect(connection: Connection) {
-    if (!versionId || selectedVersion?.status !== 'draft' || !connection.source || !connection.target) return
+    if (!versionId || selectedVersion?.status !== 'draft' || !connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return
     if (connection.source === connection.target) { window.alert('A node cannot connect to itself.'); return }
-    if (apiEdges.some((edge) => edge.source_node_id === connection.source && edge.target_node_id === connection.target)) { window.alert('That connection already exists.'); return }
+    if (apiEdges.some((edge) => edge.source_node_id === connection.source && edge.source_port_id === connection.sourceHandle && edge.target_node_id === connection.target && edge.target_port_id === connection.targetHandle)) { window.alert('That port connection already exists.'); return }
+    const sourceNode = apiNodes.find((node) => node.node_id === connection.source)
+    const targetNode = apiNodes.find((node) => node.node_id === connection.target)
+    const sourcePort = sourceNode?.output_ports.find((port) => port.id === connection.sourceHandle)
+    const targetPort = targetNode?.input_ports.find((port) => port.id === connection.targetHandle)
+    if (!sourcePort || !targetPort) { window.alert('Select a catalog-defined output port and input port.'); return }
+    if (sourcePort.data_type !== 'any' && !targetPort.accepted_data_types.includes('any') && !targetPort.accepted_data_types.includes(sourcePort.data_type)) { window.alert('The selected ports have incompatible data types.'); return }
+    if (apiEdges.filter((edge) => edge.source_node_id === connection.source && edge.source_port_id === connection.sourceHandle).length >= sourcePort.max_connections) { window.alert('The source output port has reached its connection limit.'); return }
+    if (apiEdges.filter((edge) => edge.target_node_id === connection.target && edge.target_port_id === connection.targetHandle).length >= targetPort.max_connections) { window.alert('The target input port has reached its connection limit.'); return }
     const adjacency = new Map<string, string[]>()
     apiEdges.forEach((edge) => adjacency.set(edge.source_node_id, [...(adjacency.get(edge.source_node_id) ?? []), edge.target_node_id]))
     const pending = [connection.target]; const visited = new Set<string>()
     while (pending.length) { const nodeId = pending.pop()!; if (nodeId === connection.source) { window.alert('That connection would create a cycle.'); return }; if (!visited.has(nodeId)) { visited.add(nodeId); pending.push(...(adjacency.get(nodeId) ?? [])) } }
-    addWorkflowEdge(versionId, { source_node_id: connection.source, target_node_id: connection.target, condition_configuration: null, priority: 0 }).then(() => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }))
+    addWorkflowEdge(versionId, { source_node_id: connection.source, source_port_id: connection.sourceHandle, target_node_id: connection.target, target_port_id: connection.targetHandle, priority: 0 }).then(() => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }))
   }
 
-  function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: typeof nodeTypes[number]) {
+  function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: string) {
     event.dataTransfer.setData('application/simflow-node-type', nodeType)
     event.dataTransfer.setData('text/plain', nodeType)
     event.dataTransfer.effectAllowed = 'move'
@@ -304,19 +308,19 @@ export function SimulationStudioPage() {
 
   function dropPaletteNode(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
-    const nodeType = event.dataTransfer.getData('application/simflow-node-type') as typeof nodeTypes[number]
-    if (!nodeTypes.includes(nodeType) || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
-    addGraphNode.mutate({ nodeType, position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }) })
+    const definition = definitions.get(event.dataTransfer.getData('application/simflow-node-type'))
+    if (!definition || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
+    addGraphNode.mutate({ definition, position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }) })
   }
 
-  function saveStructuredNode(name: string, configuration: Record<string, unknown>) {
+  function saveStructuredNode(name: string, parameters: Record<string, unknown>) {
     if (!selectedNode) return
-    persistNode.mutate({ id: selectedNode.node_id, payload: { node_name: name, node_type: selectedNode.node_type, configuration, position_x: selectedNode.position_x, position_y: selectedNode.position_y } })
+    persistNode.mutate({ id: selectedNode.node_id, payload: { node_name: name, node_type: selectedNode.node_type, parameters, position_x: selectedNode.position_x, position_y: selectedNode.position_y } })
   }
 
-  function saveStructuredEdge(priority: number, condition: Record<string, unknown> | null) {
+  function saveStructuredEdge(priority: number) {
     if (!selectedEdge) return
-    persistEdge.mutate({ id: selectedEdge.edge_id, payload: { source_node_id: selectedEdge.source_node_id, target_node_id: selectedEdge.target_node_id, priority, condition_configuration: condition } })
+    persistEdge.mutate({ id: selectedEdge.edge_id, payload: { source_node_id: selectedEdge.source_node_id, source_port_id: selectedEdge.source_port_id, target_node_id: selectedEdge.target_node_id, target_port_id: selectedEdge.target_port_id, priority } })
   }
 
   function validateGraph() { setValidationRequested(true) }
@@ -435,28 +439,26 @@ export function SimulationStudioPage() {
           <div className="p-3 flex-1 overflow-y-auto space-y-2.5">
             <p className="text-xs text-slate-500 mb-2">Drag a component card onto the canvas or click to append.</p>
             
-            {nodeTypes.map((type) => {
-              const meta = nodePaletteMeta[type]
-              const IconComp = meta.icon
+            {(nodeCatalog.data?.nodes ?? []).map((definition) => {
               const isDraft = Boolean(versionId && selectedVersion?.status === 'draft')
               
               return (
                 <div 
-                  key={type}
+                  key={definition.node_type}
                   draggable={isDraft}
-                  onDragStart={(event) => startPaletteDrag(event, type)}
-                  onClick={() => isDraft && addGraphNode.mutate({ nodeType: type })}
+                  onDragStart={(event) => startPaletteDrag(event, definition.node_type)}
+                  onClick={() => isDraft && addGraphNode.mutate({ definition })}
                   className={`palette-card-item p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${
                     isDraft ? 'hover:scale-[1.02] hover:shadow-md border-slate-200 opacity-100' : 'opacity-50 cursor-not-allowed'
-                  } ${meta.colorClass}`}
+                  }`}
                 >
                   <div className="flex items-center gap-2.5 mb-1">
                     <div className="p-1.5 rounded-lg bg-white shadow-xs text-slate-800">
-                      <IconComp className="w-4 h-4" />
+                      <CircleDot className="w-4 h-4" />
                     </div>
-                    <strong className="text-sm font-semibold text-slate-800">{meta.title}</strong>
+                    <strong className="text-sm font-semibold text-slate-800">{definition.label}</strong>
                   </div>
-                  <p className="text-xs text-slate-500 leading-snug">{meta.description}</p>
+                  <p className="text-xs text-slate-500 leading-snug">{definition.description}</p>
                 </div>
               )
             })}
@@ -633,7 +635,7 @@ export function SimulationStudioPage() {
               <div className="space-y-4">
                 {selectedNode && (
                   <NodeConfigurationForm 
-                    node={selectedNode} 
+                    node={{ ...selectedNode, configuration: selectedNode.parameters }} 
                     onSave={saveStructuredNode} 
                     onDuplicate={() => duplicateGraphNode.mutate(selectedNode)} 
                     onDelete={() => removeNode.mutate(selectedNode.node_id)} 
@@ -643,7 +645,6 @@ export function SimulationStudioPage() {
                 {selectedEdge && (
                   <EdgeConfigurationForm 
                     priority={selectedEdge.priority} 
-                    condition={selectedEdge.condition_configuration} 
                     onSave={saveStructuredEdge} 
                     onDelete={() => removeEdge.mutate(selectedEdge.edge_id)} 
                   />
@@ -861,4 +862,3 @@ function ExecutionHistoryPanel({ executions, selectedExecution, timeline, isLoad
     </div>
   )
 }
-

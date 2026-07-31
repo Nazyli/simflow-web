@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { Workflow } from '../types/workflow'
+import type { InputPort, OutputPort, Workflow } from '../types/workflow'
 import type { WorkflowVersion } from '../types/workflow'
 
 export const getWorkflows = () => apiClient<Workflow[]>('/workflows')
@@ -13,12 +13,14 @@ export interface PublishedWorkflowVersion extends WorkflowVersion { workflow_nam
 export const getPublishedVersions = () => apiClient<PublishedWorkflowVersion[]>('/workflows/versions/published')
 export const getWorkflowVersion = (versionId: string) => apiClient<WorkflowVersion & { workflow_name: string }>(`/workflows/versions/${versionId}`)
 export const publishVersion = (versionId: string) => apiClient<WorkflowVersion>(`/workflows/versions/${versionId}/publish`, { method: 'POST' })
-export interface ApiNode { node_id: string; node_name: string; node_type: string; configuration: Record<string, unknown>; position_x: number | null; position_y: number | null }
-export interface ApiEdge { edge_id: string; source_node_id: string; target_node_id: string; condition_configuration: Record<string, unknown> | null; priority: number }
+export interface ApiNode { node_id: string; node_name: string; node_type: string; parameters: Record<string, unknown>; position_x: number | null; position_y: number | null; category: string; input_ports: InputPort[]; output_ports: OutputPort[] }
+export interface ApiEdge { edge_id: string; source_node_id: string; source_port_id: string; target_node_id: string; target_port_id: string; priority: number }
+export type ApiNodePayload = Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'>
+export type ApiEdgePayload = Omit<ApiEdge, 'edge_id'>
 export const getGraph = (versionId: string) => apiClient<[ApiNode[], ApiEdge[]]>(`/workflows/versions/${versionId}/graph`)
-export const addNode = (versionId: string, payload: Omit<ApiNode, 'node_id'>) => apiClient<ApiNode>(`/workflows/versions/${versionId}/nodes`, { method: 'POST', body: JSON.stringify(payload) })
-export const updateNode = (nodeId: string, payload: Omit<ApiNode, 'node_id'>) => apiClient<ApiNode>(`/workflows/nodes/${nodeId}`, { method: 'PUT', body: JSON.stringify(payload) })
+export const addNode = (versionId: string, payload: ApiNodePayload) => apiClient<ApiNode>(`/workflows/versions/${versionId}/nodes`, { method: 'POST', body: JSON.stringify(payload) })
+export const updateNode = (nodeId: string, payload: ApiNodePayload) => apiClient<ApiNode>(`/workflows/nodes/${nodeId}`, { method: 'PUT', body: JSON.stringify(payload) })
 export const deleteNode = (nodeId: string) => apiClient<void>(`/workflows/nodes/${nodeId}`, { method: 'DELETE' })
-export const addWorkflowEdge = (versionId: string, payload: Omit<ApiEdge, 'edge_id'>) => apiClient<ApiEdge>(`/workflows/versions/${versionId}/edges`, { method: 'POST', body: JSON.stringify(payload) })
-export const updateWorkflowEdge = (edgeId: string, payload: Omit<ApiEdge, 'edge_id'>) => apiClient<ApiEdge>(`/workflows/edges/${edgeId}`, { method: 'PUT', body: JSON.stringify(payload) })
+export const addWorkflowEdge = (versionId: string, payload: ApiEdgePayload) => apiClient<ApiEdge>(`/workflows/versions/${versionId}/edges`, { method: 'POST', body: JSON.stringify(payload) })
+export const updateWorkflowEdge = (edgeId: string, payload: ApiEdgePayload) => apiClient<ApiEdge>(`/workflows/edges/${edgeId}`, { method: 'PUT', body: JSON.stringify(payload) })
 export const deleteWorkflowEdge = (edgeId: string) => apiClient<void>(`/workflows/edges/${edgeId}`, { method: 'DELETE' })

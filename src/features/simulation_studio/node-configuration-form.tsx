@@ -286,17 +286,15 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
   )
 }
 
-export function EdgeConfigurationForm({ priority, condition, onSave, onDelete }: { priority: number; condition: Configuration | null; onSave: (priority: number, condition: Configuration | null) => void; onDelete: () => void }) {
+export function EdgeConfigurationForm({ priority, onSave, onDelete }: { priority: number; onSave: (priority: number) => void; onDelete: () => void }) {
   const [nextPriority, setPriority] = useState(priority)
-  const [nextCondition, setCondition] = useState<ConditionGroup>(asConditionGroup(condition ?? {}))
 
   useEffect(() => {
     setPriority(priority)
-    setCondition(asConditionGroup(condition ?? {}))
-  }, [condition, priority])
+  }, [priority])
 
   return (
-    <form className="node-configuration-form flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); onSave(nextPriority, nextCondition.conditions.length ? nextCondition as Configuration : null) }}>
+    <form className="node-configuration-form flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); onSave(nextPriority) }}>
       <div className="inspector-section-header">
         <div className="flex items-center gap-2">
           <GitBranch className="w-4 h-4 text-purple-600" />
@@ -309,8 +307,6 @@ export function EdgeConfigurationForm({ priority, condition, onSave, onDelete }:
         <input className="form-input" type="number" value={nextPriority} onChange={(event) => setPriority(Number(event.target.value))} />
         <small className="text-xs text-slate-400 mt-0.5 block">Lower numbers execute first</small>
       </div>
-
-      <ConditionEditor value={nextCondition} onChange={setCondition} />
 
       <div className="inspector-actions">
         <button type="submit" className="btn-primary">
