@@ -90,7 +90,7 @@ export function SimulationStudioPage() {
   const duplicateGraphNode = useMutation({ mutationFn: (node: ApiNode) => addNode(versionId!, { node_name: `${node.node_name} copy`, node_type: node.node_type, parameters: { ...node.parameters }, position_x: (node.position_x ?? 80) + 60, position_y: (node.position_y ?? 80) + 60 }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
   const persistNode = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'> }) => updateNode(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
   const removeNode = useMutation({ mutationFn: deleteNode, onSuccess: () => { setSelectedNodeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
-  const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
+  const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id' | 'is_valid'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
   const removeEdge = useMutation({ mutationFn: deleteWorkflowEdge, onSuccess: () => { setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
 
   const apiNodes = graph.data?.[0] ?? emptyNodes
@@ -570,7 +570,7 @@ export function SimulationStudioPage() {
               }))} 
               edges={edges.map((edge) => ({ 
                 ...edge, 
-                className: invalidEdgeIds.has(edge.id) ? 'invalid-edge' : '' 
+                className: invalidEdgeIds.has(edge.id) || apiEdges.find((apiEdge) => apiEdge.edge_id === edge.id)?.is_valid === false ? 'invalid-edge' : '' 
               }))} 
               onNodesChange={onNodesChange} 
               onEdgesChange={onEdgesChange} 
