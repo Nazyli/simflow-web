@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import dagre from 'dagre'
 import { ApiError } from '../../shared/api/client'
-import { getExecutions, getTimeline } from '../../shared/api/executions'
+import { deleteExecution, getExecutions, getTimeline } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
 import { addNode, addWorkflowEdge, createDraftFromVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
@@ -64,6 +64,7 @@ export function SimulationStudioPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null)
+  const [deleteExecutionTarget, setDeleteExecutionTarget] = useState<string | null>(null)
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [validationRequested, setValidationRequested] = useState(false)
@@ -107,6 +108,7 @@ export function SimulationStudioPage() {
   const removeNode = useMutation({ mutationFn: deleteNode, onSuccess: () => { setSelectedNodeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
   const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id' | 'is_valid'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }), onError: (error) => toast.error(apiErrorMessage(error)) })
   const removeEdge = useMutation({ mutationFn: deleteWorkflowEdge, onSuccess: () => { setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
+  const removeExecution = useMutation({ mutationFn: deleteExecution, onSuccess: (_result, executionId) => { if (selectedExecutionId === executionId) setSelectedExecutionId(null); queryClient.invalidateQueries({ queryKey: ['executions', versionId] }); toast.success('Execution log deleted.') }, onError: (error) => toast.error(apiErrorMessage(error)) })
   const removeEdgeRef = useRef(removeEdge)
   removeEdgeRef.current = removeEdge
   const deleteEdge = useCallback((edgeId: string) => { removeEdgeRef.current.mutate(edgeId) }, [])
@@ -713,6 +715,7 @@ export function SimulationStudioPage() {
                 timeline={executionTimeline.data ?? []} 
                 isLoading={executions.isLoading || executionTimeline.isLoading} 
                 onSelect={setSelectedExecutionId} 
+                onRequestDelete={setDeleteExecutionTarget}
               />
             )}
           </div>
@@ -803,11 +806,40 @@ export function SimulationStudioPage() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
+
+      {/* Delete Execution Log Confirmation */}
+      <Dialog.Root open={Boolean(deleteExecutionTarget)} onOpenChange={(open) => { if (!open) setDeleteExecutionTarget(null) }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="command-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50" />
+          <Dialog.Content className="workflow-picker-dialog fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50">
+            <Dialog.Title className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" /> Delete execution log?
+            </Dialog.Title>
+            <Dialog.Description className="text-xs text-slate-500 mt-1 mb-4">
+              This permanently deletes the execution, its timeline events, node results, waits, timers, and the simulation session when no other execution uses it. This cannot be undone.
+            </Dialog.Description>
+
+            <div className="flex items-center justify-end gap-2">
+              <button type="button" onClick={() => setDeleteExecutionTarget(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                disabled={removeExecution.isPending} 
+                onClick={() => { if (deleteExecutionTarget) removeExecution.mutate(deleteExecutionTarget); setDeleteExecutionTarget(null) }} 
+                className="inline-flex items-center gap-1.5 rounded-lg border-0 bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> {removeExecution.isPending ? 'Deleting…' : 'Delete log'}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   )
 }
 
-function ExecutionHistoryPanel({ executions, selectedExecution, timeline, isLoading, onSelect }: { executions: Execution[]; selectedExecution: Execution | null; timeline: { event_id: string; event_type: string; node_id: string | null; payload: Record<string, unknown> }[]; isLoading: boolean; onSelect: (executionId: string) => void }) {
+function ExecutionHistoryPanel({ executions, selectedExecution, timeline, isLoading, onSelect, onRequestDelete }: { executions: Execution[]; selectedExecution: Execution | null; timeline: { event_id: string; event_type: string; node_id: string | null; payload: Record<string, unknown> }[]; isLoading: boolean; onSelect: (executionId: string) => void; onRequestDelete: (executionId: string) => void }) {
   return (
     <div className="execution-history-panel space-y-4">
       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
@@ -821,19 +853,27 @@ function ExecutionHistoryPanel({ executions, selectedExecution, timeline, isLoad
 
       <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
         {executions.map((execution) => (
-          <button 
-            className={`w-full text-left p-2.5 rounded-xl border text-xs transition-all ${
+          <div
+            className={`w-full cursor-pointer text-left p-2.5 rounded-xl border text-xs transition-all ${
               selectedExecution?.execution_id === execution.execution_id ? 'bg-purple-50 border-purple-300' : 'bg-white border-slate-200 hover:border-slate-300'
             }`} 
             key={execution.execution_id} 
-            onClick={() => onSelect(execution.execution_id)}
+            role="button" 
+            tabIndex={0} 
+            onClick={() => onSelect(execution.execution_id)} 
+            onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(execution.execution_id) } }}
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="font-semibold text-slate-800">{execution.participant_id ?? 'Anonymous Participant'}</span>
-              <StatusBadge status={execution.status} />
+              <span className="font-semibold text-slate-800 truncate mr-2">{execution.participant_id ?? 'Anonymous Participant'}</span>
+              <span className="flex items-center gap-1.5 shrink-0">
+                <StatusBadge status={execution.status} />
+                <button type="button" aria-label="Delete log" title="Delete log" onClick={(event) => { event.stopPropagation(); onRequestDelete(execution.execution_id) }} className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </span>
             </div>
             <small className="block text-slate-500 font-mono text-[10px]">{execution.execution_id}</small>
-          </button>
+          </div>
         ))}
       </div>
 
