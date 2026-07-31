@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock3, Play, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
-import { getExecution, startExecution, submitExecutionAction } from '../../shared/api/executions'
+import { getExecution, getExecutions, startExecution, submitExecutionAction } from '../../shared/api/executions'
 import { getMasterData } from '../../shared/api/master-data'
-import { getSession, type SessionChannelEvent } from '../../shared/api/sessions'
+import { getSession, getSessionsForParticipant, type SessionChannelEvent } from '../../shared/api/sessions'
 import { getPublishedVersions } from '../../shared/api/workflows'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
@@ -25,9 +25,19 @@ export function SimulationRunnerPage() {
   const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
   const actors = useQuery({ queryKey: ['master', 'actors'], queryFn: () => getMasterData('actors') })
   const documents = useQuery({ queryKey: ['master', 'documents'], queryFn: () => getMasterData('documents') })
+  const existingSessions = useQuery({ queryKey: ['participant-sessions', participantId.trim()], queryFn: () => getSessionsForParticipant(participantId.trim()), enabled: Boolean(participantId.trim()) })
+  const latestSession = existingSessions.data?.[0]
+  const latestSessionExecutions = useQuery({ queryKey: ['participant-session-executions', latestSession?.session_id, latestSession?.workflow_version_id], queryFn: () => getExecutions(latestSession!.workflow_version_id), enabled: Boolean(latestSession) })
+  const existingExecution = latestSessionExecutions.data?.find((item) => item.session_id === latestSession?.session_id)
   const executionState = useQuery({ queryKey: ['execution', execution?.execution_id], queryFn: () => getExecution(execution!.execution_id), enabled: Boolean(execution), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
   const session = useQuery({ queryKey: ['session', execution?.session_id], queryFn: () => getSession(execution!.session_id!), enabled: Boolean(execution?.session_id), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
   useEffect(() => { if (executionState.data) setExecution(executionState.data) }, [executionState.data])
+  useEffect(() => {
+    if (existingExecution) {
+      setExecution(existingExecution)
+      setVersionId(existingExecution.workflow_version_id)
+    }
+  }, [existingExecution])
   const start = useMutation({ mutationFn: startExecution, onSuccess: (result) => { setExecution(result); setVersionId(result.workflow_version_id); client.invalidateQueries({ queryKey: ['session', result.session_id] }); toast.success(result.status === 'waiting' ? 'Active simulation resumed.' : 'Simulation started.') }, onError: () => toast.error('Unable to start or resume the simulation.') })
   const action = useMutation({ mutationFn: ({ channel, target, content, actionType, waitInstanceId, conversationId }: { channel: Channel; target: string; content: string; actionType: string; waitInstanceId: string; conversationId: string }) => submitExecutionAction(execution!.execution_id, { action_type: actionType, actor_id: actorId, wait_instance_id: waitInstanceId, conversation_id: conversationId, payload: { channel, content, to: target, document_id: channel === 'document' ? target : undefined } }), onSuccess: (result) => { setExecution(result); client.invalidateQueries({ queryKey: ['session', result.session_id] }); toast.success('Workflow action submitted.') }, onError: () => toast.error('Action was rejected. Check the requested channel and target.') })
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
@@ -64,6 +74,7 @@ export function SimulationRunnerPage() {
         </div>
         {start.isError && <div className="sm:col-span-2 lg:col-span-4"><ErrorState message="Unable to start or resume the simulation." /></div>}
       </form>
+      {existingSessions.isPending && participantId.trim() && <p className="mt-3 text-sm text-slate-500">Checking existing simulations…</p>}
       {versions.isPending && <LoadingState />}
     </main>
   )
