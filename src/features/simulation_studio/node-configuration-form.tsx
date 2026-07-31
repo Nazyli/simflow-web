@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Copy, Plus, Save, Sliders, Trash2, X, Sparkles, Tag, GitBranch } from 'lucide-react'
+import { Copy, Plus, Save, Sliders, Trash2, X, Sparkles, Tag, GitBranch, User, Clock, MessageSquare } from 'lucide-react'
 import { validateActionPayload } from './action-composers'
 
 type Configuration = Record<string, unknown>
@@ -31,6 +31,7 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
   const operation = String(configuration.action_type ?? availableActions[0] ?? '')
   const isCondition = nodeType === 'condition'
   const isTimer = nodeType === 'trigger' && configuration.trigger_type === 'timer'
+  const isDummyAI = configuration.provider === 'dummy'
 
   function change(values: Configuration) { setConfiguration((current) => ({ ...current, ...values })) }
   
@@ -54,12 +55,13 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
     <form className="node-configuration-form flex flex-col gap-4" onSubmit={submit}>
       <div className="inspector-section-header">
         <div className="flex items-center gap-2">
-          <Sliders className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          <Sliders className="w-4 h-4 text-purple-600" />
           <h3 className="font-semibold text-sm">Node Configuration</h3>
         </div>
         <span className={`node-type-badge ${nodeType}`}>{nodeType}</span>
       </div>
 
+      {/* Node Name */}
       <div className="form-group">
         <label className="form-label">Node Name</label>
         <input 
@@ -71,11 +73,32 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
         />
       </div>
 
+      {/* ── CONDITION NODE ── */}
       {isCondition ? (
-        <ConditionEditor value={asConditionGroup(configuration)} onChange={(condition) => setConfiguration(condition as Configuration)} />
+        <>
+          {/* Support flat-style condition (path / operator / value) from API */}
+          <ConditionEditor value={asConditionGroup(configuration)} onChange={(condition) => setConfiguration(condition as Configuration)} />
+        </>
       ) : (
         <>
-          {nodeType !== 'condition' && (
+          {/* ── TRIGGER NODE ── */}
+          {nodeType === 'trigger' && (
+            <div className="form-group card-group">
+              <label className="checkbox-label">
+                <input type="checkbox" checked={isTimer} onChange={(event) => change({ trigger_type: event.target.checked ? 'timer' : 'manual' })} />
+                <span className="font-medium flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-orange-500" /> Timer Trigger</span>
+              </label>
+              {isTimer && (
+                <div className="mt-2">
+                  <label className="form-label">Delay (seconds)</label>
+                  <input className="form-input" type="number" min="0" value={Number(configuration.delay_seconds ?? 0)} onChange={(event) => change({ delay_seconds: Number(event.target.value) })} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── CHANNEL & ACTION TYPE (for action/event nodes) ── */}
+          {nodeType !== 'trigger' && !isDummyAI && (
             <div className="form-group">
               <label className="form-label">Channel</label>
               <select className="form-select" value={channel} onChange={(event) => selectChannel(event.target.value)}>
@@ -87,7 +110,7 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
             </div>
           )}
 
-          {availableActions.length > 0 && (
+          {!isDummyAI && availableActions.length > 0 && (
             <div className="form-group">
               <label className="form-label">Action Type</label>
               <select className="form-select" value={operation} onChange={(event) => change({ action_type: event.target.value })}>
@@ -96,25 +119,36 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
             </div>
           )}
 
+          {/* ── FROM (actor ID sender) — action:chat / action:email ── */}
+          {['send_chat', 'send_email'].includes(operation) && (
+            <div className="form-group">
+              <label className="form-label flex items-center gap-1"><User className="w-3.5 h-3.5 text-purple-500" /> From (Actor ID)</label>
+              <input className="form-input" value={String(configuration.from ?? '')} onChange={(e) => change({ from: e.target.value })} placeholder="e.g. alexa-pmwm-ambj-01" />
+            </div>
+          )}
+
+          {/* ── TO ── */}
+          {['send_email'].includes(operation) && (
+            <TextField label="To" value={configuration.to} onChange={(to) => change({ to })} required placeholder="recipient@example.com" />
+          )}
+          {['send_chat'].includes(operation) && (
+            <TextField label="To (Participant ID)" value={configuration.to} onChange={(to) => change({ to })} required placeholder="demo-participant" />
+          )}
+
+          {/* ── EMAIL FIELDS ── */}
           {operation === 'send_email' && (
-            <>
-              <TextField label="To" value={configuration.to} onChange={(to) => change({ to })} required placeholder="recipient@example.com" />
-              <TextField label="Subject" value={configuration.subject} onChange={(subject) => change({ subject })} required placeholder="Email subject" />
-            </>
+            <TextField label="Subject" value={configuration.subject} onChange={(subject) => change({ subject })} required placeholder="Email subject" />
           )}
-
-          {operation === 'send_chat' && (
-            <TextField label="To" value={configuration.to} onChange={(to) => change({ to })} required placeholder="User or Room ID" />
-          )}
-
           {['reply_email', 'read_email'].includes(operation) && (
             <TextField label="Email ID" value={configuration.email_id} onChange={(email_id) => change({ email_id })} required />
           )}
 
+          {/* ── CHAT REPLY/READ FIELDS ── */}
           {['reply_chat', 'read_chat', 'ignore_chat'].includes(operation) && (
             <TextField label="Chat ID" value={configuration.chat_id} onChange={(chat_id) => change({ chat_id })} required />
           )}
 
+          {/* ── DOCUMENT FIELDS ── */}
           {['open_document', 'close_document'].includes(operation) && (
             <>
               <TextField label="Document ID" value={configuration.document_id} onChange={(document_id) => change({ document_id })} required />
@@ -130,13 +164,15 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
             </>
           )}
 
+          {/* ── CALL FIELDS ── */}
           {['start_call', 'finish_call'].includes(operation) && (
             <TextField label="Call ID" value={configuration.call_id} onChange={(call_id) => change({ call_id })} required />
           )}
 
+          {/* ── CONTENT (message body) ── */}
           {['send_email', 'reply_email', 'send_chat', 'reply_chat'].includes(operation) && (
             <div className="form-group">
-              <label className="form-label">Content</label>
+              <label className="form-label flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5 text-blue-500" /> Content</label>
               <textarea 
                 className="form-textarea" 
                 rows={3}
@@ -148,35 +184,82 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
             </div>
           )}
 
-          {nodeType === 'trigger' && (
+          {/* ── AWAIT PARTICIPANT (action nodes that send messages) ── */}
+          {nodeType === 'action' && ['send_chat', 'send_email'].includes(operation) && (
             <div className="form-group card-group">
               <label className="checkbox-label">
-                <input type="checkbox" checked={isTimer} onChange={(event) => change({ trigger_type: event.target.checked ? 'timer' : 'manual' })} />
-                <span className="font-medium">Timer Trigger</span>
+                <input type="checkbox" checked={Boolean(configuration.await_participant)} onChange={(event) => change({ await_participant: event.target.checked })} />
+                <span className="font-medium flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> Await Participant Reply</span>
               </label>
-              {isTimer && (
+              {Boolean(configuration.await_participant) && (
                 <div className="mt-2">
-                  <label className="form-label">Delay (seconds)</label>
-                  <input className="form-input" type="number" min="0" value={Number(configuration.delay_seconds ?? 0)} onChange={(event) => change({ delay_seconds: Number(event.target.value) })} />
+                  <label className="form-label">Timeout (seconds)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    min="1"
+                    value={Number(configuration.participant_timeout_seconds ?? 30)} 
+                    onChange={(event) => change({ participant_timeout_seconds: Number(event.target.value) })} 
+                    placeholder="e.g. 20"
+                  />
                 </div>
               )}
             </div>
           )}
 
-          {nodeType === 'action' && (
-            <div className="form-group card-group">
+          {/* ── EVENT NODE FIELDS ── */}
+          {nodeType === 'event' && (
+            <div className="form-group card-group flex flex-col gap-3">
               <label className="checkbox-label">
-                <input type="checkbox" checked={configuration.provider === 'dummy'} onChange={(event) => change({ provider: event.target.checked ? 'dummy' : undefined })} />
+                <input 
+                  type="checkbox" 
+                  checked={Boolean(configuration.consumes_participant_action)} 
+                  onChange={(event) => change({ consumes_participant_action: event.target.checked })} 
+                />
+                <span className="font-medium">Consumes Participant Action</span>
+              </label>
+
+              {Boolean(configuration.consumes_participant_action) && (
+                <div className="form-group">
+                  <label className="form-label flex items-center gap-1"><User className="w-3.5 h-3.5 text-purple-500" /> Target Actor ID</label>
+                  <input 
+                    className="form-input" 
+                    value={String(configuration.target_actor_id ?? '')} 
+                    onChange={(e) => change({ target_actor_id: e.target.value })}
+                    placeholder="e.g. alexa-pmwm-ambj-01"
+                  />
+                  <small className="text-xs text-slate-400 mt-0.5 block">Actor whose response this event captures</small>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── DUMMY AI PROVIDER ── */}
+          {nodeType === 'action' && (
+            <div className="form-group card-group flex flex-col gap-3">
+              <label className="checkbox-label">
+                <input type="checkbox" checked={isDummyAI} onChange={(event) => change({ provider: event.target.checked ? 'dummy' : undefined, operation: event.target.checked ? 'classification' : undefined })} />
                 <span className="flex items-center gap-1 font-medium"><Sparkles className="w-3.5 h-3.5 text-indigo-500" /> Dummy AI Provider</span>
               </label>
-              {configuration.provider === 'dummy' && (
-                <div className="mt-2">
-                  <label className="form-label">AI Operation</label>
-                  <select className="form-select" value={String(configuration.operation ?? 'response')} onChange={(event) => change({ operation: event.target.value })}>
-                    <option value="response">Response Generation</option>
-                    <option value="classification">Classification</option>
-                  </select>
-                </div>
+
+              {isDummyAI && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">AI Operation</label>
+                    <select className="form-select" value={String(configuration.operation ?? 'classification')} onChange={(event) => change({ operation: event.target.value })}>
+                      <option value="response">Response Generation</option>
+                      <option value="classification">Classification</option>
+                    </select>
+                  </div>
+
+                  {/* Classification fixture editor */}
+                  {String(configuration.operation ?? 'classification') === 'classification' && (
+                    <ClassificationFixtureEditor 
+                      value={configuration.fixture as ClassificationFixture | undefined} 
+                      onChange={(fixture) => change({ fixture })} 
+                    />
+                  )}
+                </>
               )}
             </div>
           )}
@@ -216,7 +299,7 @@ export function EdgeConfigurationForm({ priority, condition, onSave, onDelete }:
     <form className="node-configuration-form flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); onSave(nextPriority, nextCondition.conditions.length ? nextCondition as Configuration : null) }}>
       <div className="inspector-section-header">
         <div className="flex items-center gap-2">
-          <GitBranch className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          <GitBranch className="w-4 h-4 text-purple-600" />
           <h3 className="font-semibold text-sm">Edge Inspector</h3>
         </div>
       </div>
@@ -224,7 +307,7 @@ export function EdgeConfigurationForm({ priority, condition, onSave, onDelete }:
       <div className="form-group">
         <label className="form-label">Priority Order</label>
         <input className="form-input" type="number" value={nextPriority} onChange={(event) => setPriority(Number(event.target.value))} />
-        <small className="text-muted">Lower numbers execute first</small>
+        <small className="text-xs text-slate-400 mt-0.5 block">Lower numbers execute first</small>
       </div>
 
       <ConditionEditor value={nextCondition} onChange={setCondition} />
@@ -240,6 +323,8 @@ export function EdgeConfigurationForm({ priority, condition, onSave, onDelete }:
     </form>
   )
 }
+
+// ── Sub-components ──────────────────────────────────────────────
 
 function TextField({ label, value, onChange, required = false, placeholder }: { label: string; value: unknown; onChange: (value: string) => void; required?: boolean; placeholder?: string }) {
   return (
@@ -260,7 +345,7 @@ function KeyValueEditor({ title, icon, value, onChange }: { title: string; icon?
 
   return (
     <fieldset className="key-value-fieldset">
-      <legend className="flex items-center gap-1.5 font-medium text-xs text-slate-700 dark:text-slate-300">
+      <legend className="flex items-center gap-1.5 font-medium text-xs text-slate-700">
         {icon} {title}
       </legend>
       {entries.map(([key, entryValue], index) => (
@@ -279,6 +364,44 @@ function KeyValueEditor({ title, icon, value, onChange }: { title: string; icon?
   )
 }
 
+// ── Classification Fixture Editor ────────────────────────────────
+
+type ClassificationLabel = { label: string; score: number }
+type ClassificationFixture = { classifications: ClassificationLabel[] }
+
+function ClassificationFixtureEditor({ value, onChange }: { value: ClassificationFixture | undefined; onChange: (v: ClassificationFixture) => void }) {
+  const items: ClassificationLabel[] = value?.classifications ?? []
+
+  function updateItem(index: number, field: 'label' | 'score', raw: string) {
+    const next = items.map((item, i) => i === index ? { ...item, [field]: field === 'score' ? parseFloat(raw) || 0 : raw } : item)
+    onChange({ classifications: next })
+  }
+  function addItem() { onChange({ classifications: [...items, { label: '', score: 0.9 }] }) }
+  function removeItem(index: number) { onChange({ classifications: items.filter((_, i) => i !== index) }) }
+
+  return (
+    <fieldset className="key-value-fieldset">
+      <legend className="flex items-center gap-1.5 font-medium text-xs text-slate-700">
+        <Sparkles className="w-3.5 h-3.5 text-indigo-500" /> Classification Labels
+      </legend>
+      {items.map((item, index) => (
+        <div className="key-value-row" key={index}>
+          <input className="form-input text-xs" value={item.label} placeholder="Label (e.g. Probing)" onChange={(e) => updateItem(index, 'label', e.target.value)} />
+          <input className="form-input text-xs w-20" type="number" min="0" max="1" step="0.01" value={item.score} placeholder="Score" onChange={(e) => updateItem(index, 'score', e.target.value)} />
+          <button type="button" className="icon-btn-danger" onClick={() => removeItem(index)} title="Remove label">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+      <button type="button" className="btn-ghost-sm mt-1" onClick={addItem}>
+        <Plus className="w-3.5 h-3.5" /> Add label
+      </button>
+    </fieldset>
+  )
+}
+
+// ── Condition Editor ─────────────────────────────────────────────
+
 function ConditionEditor({ value, onChange }: { value: ConditionGroup; onChange: (value: ConditionGroup) => void }) {
   function changeChild(index: number, child: ConditionItem) { 
     const conditions = [...value.conditions]
@@ -291,7 +414,7 @@ function ConditionEditor({ value, onChange }: { value: ConditionGroup; onChange:
 
   return (
     <fieldset className="condition-editor">
-      <legend className="font-medium text-xs text-slate-700 dark:text-slate-300">Transition Conditions</legend>
+      <legend className="font-medium text-xs text-slate-700">Transition Conditions</legend>
       <div className="form-group mb-2">
         <label className="form-label">Matching Logic</label>
         <select className="form-select" value={value.operator} onChange={(event) => onChange({ ...value, operator: event.target.value as 'and' | 'or' })}>
@@ -342,12 +465,13 @@ function ConditionLeafEditor({ value, onChange, onRemove }: { value: ConditionLe
   )
 }
 
+// ── Helpers ──────────────────────────────────────────────────────
+
 function asConditionGroup(configuration: Configuration): ConditionGroup { 
   if (configuration.operator === 'and' || configuration.operator === 'or') return { operator: configuration.operator, conditions: Array.isArray(configuration.conditions) ? configuration.conditions as ConditionItem[] : [] }
-  if (configuration.field || configuration.path) return { operator: 'and', conditions: [{ path: String(configuration.path ?? configuration.field), operator: legacyOperator(configuration), value: legacyValue(configuration) }] }
+  // Flat single-condition format from API: { path, operator, value }
+  if (configuration.path || configuration.field) return { operator: 'and', conditions: [{ path: String(configuration.path ?? configuration.field ?? ''), operator: String(configuration.operator ?? 'equals'), value: configuration.value ?? '' }] }
   return { operator: 'and', conditions: [] } 
 }
-function legacyOperator(configuration: Configuration) { return ['equals', 'not_equals', 'greater_than', 'greater_than_or_equal', 'less_than', 'less_than_or_equal', 'contains', 'starts_with', 'ends_with', 'regex', 'exists'].find((op) => op in configuration) ?? 'equals' }
-function legacyValue(configuration: Configuration) { const operator = legacyOperator(configuration); return configuration[operator] ?? configuration.value ?? '' }
 function asRecord(value: unknown): Record<string, unknown> { return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {} }
 function isGroup(value: ConditionItem): value is ConditionGroup { return 'conditions' in value }
