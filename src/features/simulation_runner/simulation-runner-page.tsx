@@ -21,13 +21,14 @@ export function SimulationRunnerPage() {
   const [participantId, setParticipantId] = useState('')
   const [actorId, setActorId] = useState('participant-001-ambj-01-platform')
   const [versionId, setVersionId] = useState('')
+  const [checked, setChecked] = useState(false)
   const [execution, setExecution] = useState<Execution | null>(null)
   const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
   const actors = useQuery({ queryKey: ['master', 'actors'], queryFn: () => getMasterData('actors') })
   const documents = useQuery({ queryKey: ['master', 'documents'], queryFn: () => getMasterData('documents') })
-  const existingSessions = useQuery({ queryKey: ['participant-sessions', participantId.trim()], queryFn: () => getSessionsForParticipant(participantId.trim()), enabled: Boolean(participantId.trim()) })
+  const existingSessions = useQuery({ queryKey: ['participant-sessions', participantId.trim()], queryFn: () => getSessionsForParticipant(participantId.trim()), enabled: checked && Boolean(participantId.trim()) })
   const latestSession = existingSessions.data?.[0]
-  const latestSessionExecutions = useQuery({ queryKey: ['participant-session-executions', latestSession?.session_id, latestSession?.workflow_version_id], queryFn: () => getExecutions(latestSession!.workflow_version_id), enabled: Boolean(latestSession) })
+  const latestSessionExecutions = useQuery({ queryKey: ['participant-session-executions', latestSession?.session_id, latestSession?.workflow_version_id], queryFn: () => getExecutions(latestSession!.workflow_version_id), enabled: checked && Boolean(latestSession) })
   const existingExecution = latestSessionExecutions.data?.find((item) => item.session_id === latestSession?.session_id)
   const executionState = useQuery({ queryKey: ['execution', execution?.execution_id], queryFn: () => getExecution(execution!.execution_id), enabled: Boolean(execution), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
   const session = useQuery({ queryKey: ['session', execution?.session_id], queryFn: () => getSession(execution!.session_id!), enabled: Boolean(execution?.session_id), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
@@ -47,7 +48,7 @@ export function SimulationRunnerPage() {
     ? { waitInstanceId: (activeWait as Record<string, string>).wait_instance_id, messageId: (activeWait as Record<string, string>).message_id }
     : null
   const elapsed = execution ? new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(new Date()) : '—'
-  function begin(event: FormEvent) { event.preventDefault(); start.mutate({ workflow_version_id: versionId, participant_id: participantId.trim(), context: { actor_id: actorId } }) }
+  function begin(event: FormEvent) { event.preventDefault(); setChecked(true); start.mutate({ workflow_version_id: versionId, participant_id: participantId.trim(), context: { actor_id: actorId } }) }
   function send(channel: Channel, event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const wait = execution?.context.active_wait; if (!wait || typeof wait !== 'object' || typeof (wait as Record<string, unknown>).wait_instance_id !== 'string' || typeof (wait as Record<string, unknown>).conversation_id !== 'string') { toast.error('No active Wait for Reply is available.'); return }; const actionType = channel === 'chat' || channel === 'email' ? 'message' : channel === 'call' ? 'finish_call' : 'close_document'; action.mutate({ channel, target: String(data.get('target') ?? ''), content: String(data.get('content') ?? ''), actionType, waitInstanceId: (wait as Record<string, string>).wait_instance_id, conversationId: (wait as Record<string, string>).conversation_id }); event.currentTarget.reset() }
 
   if (!execution) return (
