@@ -12,6 +12,7 @@ export const getWorkflowVersions = (workflowId: string) => apiClient<WorkflowVer
 export interface PublishedWorkflowVersion extends WorkflowVersion { workflow_name: string; is_active: boolean }
 export const getPublishedVersions = () => apiClient<PublishedWorkflowVersion[]>('/workflows/versions/published')
 export const getWorkflowVersion = (versionId: string) => apiClient<WorkflowVersion & { workflow_name: string }>(`/workflows/versions/${versionId}`)
+export const deleteWorkflowVersion = (versionId: string) => apiClient<void>(`/workflows/versions/${versionId}`, { method: 'DELETE' })
 export const publishVersion = (versionId: string) => apiClient<WorkflowVersion>(`/workflows/versions/${versionId}/publish`, { method: 'POST' })
 export interface ApiNode { node_id: string; node_name: string; node_type: string; parameters: Record<string, unknown>; position_x: number | null; position_y: number | null; category: string; input_ports: InputPort[]; output_ports: OutputPort[] }
 export interface ApiEdge { edge_id: string; source_node_id: string; source_port_id: string; target_node_id: string; target_port_id: string; priority: number; is_valid: boolean }

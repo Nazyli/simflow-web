@@ -13,7 +13,7 @@ import dagre from 'dagre'
 import { ApiError } from '../../shared/api/client'
 import { deleteExecution, getExecutions, getTimeline } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
-import { addNode, addWorkflowEdge, createDraftFromVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
+import { addNode, addWorkflowEdge, createDraftFromVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, deleteWorkflowVersion, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
 import type { Execution, NodeDefinition, OutputPort, Workflow } from '../../shared/types/workflow'
@@ -65,6 +65,7 @@ export function SimulationStudioPage() {
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null)
   const [deleteExecutionTarget, setDeleteExecutionTarget] = useState<string | null>(null)
+  const [deleteVersionTarget, setDeleteVersionTarget] = useState<string | null>(null)
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [validationRequested, setValidationRequested] = useState(false)
@@ -109,6 +110,7 @@ export function SimulationStudioPage() {
   const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id' | 'is_valid'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }), onError: (error) => toast.error(apiErrorMessage(error)) })
   const removeEdge = useMutation({ mutationFn: deleteWorkflowEdge, onSuccess: () => { setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
   const removeExecution = useMutation({ mutationFn: deleteExecution, onSuccess: (_result, executionId) => { if (selectedExecutionId === executionId) setSelectedExecutionId(null); queryClient.invalidateQueries({ queryKey: ['executions', versionId] }); toast.success('Execution log deleted.') }, onError: (error) => toast.error(apiErrorMessage(error)) })
+  const removeVersion = useMutation({ mutationFn: deleteWorkflowVersion, onSuccess: (_result, deletedVersionId) => { if (versionId === deletedVersionId) { setVersionId(null); setSelectedNodeId(null); setSelectedEdgeId(null); setSelectedExecutionId(null); setNodes([]); setEdges([]); localPositions.current.clear() } queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }); queryClient.invalidateQueries({ queryKey: ['workflows'] }); toast.success('Workflow version deleted.') }, onError: (error) => toast.error(apiErrorMessage(error)) })
   const removeEdgeRef = useRef(removeEdge)
   removeEdgeRef.current = removeEdge
   const deleteEdge = useCallback((edgeId: string) => { removeEdgeRef.current.mutate(edgeId) }, [])
@@ -696,7 +698,12 @@ export function SimulationStudioPage() {
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-semibold text-sm text-slate-800">Version {version.version_number}</span>
-                            <StatusBadge status={version.status} />
+                            <span className="flex items-center gap-1.5 shrink-0">
+                              <StatusBadge status={version.status} />
+                              <button type="button" aria-label="Delete version" title="Delete version" onClick={(event) => { event.stopPropagation(); setDeleteVersionTarget(version.workflow_version_id) }} className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
                           </div>
                           <p className="text-xs text-slate-500">Created: {new Date().toLocaleDateString()}</p>
                         </div>
@@ -830,6 +837,35 @@ export function SimulationStudioPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border-0 bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-50"
               >
                 <Trash2 className="w-3.5 h-3.5" /> {removeExecution.isPending ? 'Deleting…' : 'Delete log'}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* Delete Workflow Version Confirmation */}
+      <Dialog.Root open={Boolean(deleteVersionTarget)} onOpenChange={(open) => { if (!open) setDeleteVersionTarget(null) }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="command-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50" />
+          <Dialog.Content className="workflow-picker-dialog fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50">
+            <Dialog.Title className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" /> Delete workflow version?
+            </Dialog.Title>
+            <Dialog.Description className="text-xs text-slate-500 mt-1 mb-4">
+              This permanently deletes the version, its nodes, and its edges. This cannot be undone. Versions that already have execution logs cannot be deleted.
+            </Dialog.Description>
+
+            <div className="flex items-center justify-end gap-2">
+              <button type="button" onClick={() => setDeleteVersionTarget(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                disabled={removeVersion.isPending} 
+                onClick={() => { if (deleteVersionTarget) removeVersion.mutate(deleteVersionTarget); setDeleteVersionTarget(null) }} 
+                className="inline-flex items-center gap-1.5 rounded-lg border-0 bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> {removeVersion.isPending ? 'Deleting…' : 'Delete version'}
               </button>
             </div>
           </Dialog.Content>
