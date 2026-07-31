@@ -637,6 +637,7 @@ export function SimulationStudioPage() {
                 {selectedNode && (
                   <NodeConfigurationForm 
                     node={{ ...selectedNode, configuration: selectedNode.parameters }} 
+                    definition={definitions.get(selectedNode.node_type)}
                     onSave={saveStructuredNode} 
                     onDuplicate={() => duplicateGraphNode.mutate(selectedNode)} 
                     onDelete={() => removeNode.mutate(selectedNode.node_id)} 
