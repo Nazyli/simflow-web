@@ -9,7 +9,7 @@ type ConditionItem = ConditionLeaf | ConditionGroup
 
 const actionTypes: Record<string, string[]> = {
   'action:email': ['send_email'],
-  'event:email': ['reply_email', 'read_email'],
+  'event:email': ['read_email'],
   'action:chat': ['send_chat'],
   'event:chat': ['read_chat', 'ignore_chat'],
   'event:document': ['open_document', 'close_document'],
@@ -139,7 +139,7 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
           {operation === 'send_email' && (
             <TextField label="Subject" value={configuration.subject} onChange={(subject) => change({ subject })} required placeholder="Email subject" />
           )}
-          {['reply_email', 'read_email'].includes(operation) && (
+          {['read_email'].includes(operation) && (
             <TextField label="Email ID" value={configuration.email_id} onChange={(email_id) => change({ email_id })} required />
           )}
 
@@ -170,15 +170,15 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
           )}
 
           {/* ── CONTENT (message body) ── */}
-          {['send_email', 'reply_email', 'send_chat'].includes(operation) && (
+          {['send_email', 'send_chat'].includes(operation) && (
             <div className="form-group">
-              <label className="form-label flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5 text-blue-500" /> Content</label>
+              <label className="form-label flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5 text-blue-500" /> {operation === 'send_email' ? 'Body' : 'Content'}</label>
               <textarea 
                 className="form-textarea" 
                 rows={3}
-                value={String(configuration.content ?? '')} 
+                value={String(operation === 'send_email' ? configuration.body ?? '' : configuration.content ?? '')} 
                 required 
-                onChange={(event) => change({ content: event.target.value })} 
+                onChange={(event) => change(operation === 'send_email' ? { body: event.target.value } : { content: event.target.value })} 
                 placeholder="Message content..."
               />
             </div>
