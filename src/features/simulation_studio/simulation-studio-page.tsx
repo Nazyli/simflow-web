@@ -26,7 +26,7 @@ const emptyEdges: ApiEdge[] = []
 const workflowNodeRenderers = { workflow: WorkflowGraphNode }
 const workflowEdgeRenderers = { workflow: WorkflowGraphEdge }
 
-function nodeToFlow(node: ApiNode, definition: NodeDefinition | undefined): Node { return { id: node.node_id, type: 'workflow', position: { x: node.position_x ?? 80, y: node.position_y ?? 80 }, data: { label: node.node_name, nodeType: node.node_type, category: definition?.category ?? node.category, inputPorts: node.input_ports, outputPorts: node.output_ports } } }
+function nodeToFlow(node: ApiNode, definition: NodeDefinition | undefined): Node { return { id: node.node_id, type: 'workflow', position: { x: node.position_x ?? 80, y: node.position_y ?? 80 }, data: { label: node.node_name, nodeType: node.node_type, color: definition?.color ?? '#64748b', inputPorts: node.input_ports, outputPorts: node.output_ports } } }
 function edgeToFlow(edge: ApiEdge, sourcePort: OutputPort | undefined): Edge { const style = sourcePort?.edge_style ?? { color: '#94a3b8', line_style: 'solid', animated: false }; return { id: edge.edge_id, type: 'workflow', source: edge.source_node_id, sourceHandle: edge.source_port_id, target: edge.target_node_id, targetHandle: edge.target_port_id, markerEnd: { type: MarkerType.ArrowClosed, color: style.color }, animated: style.animated, data: { priority: edge.priority, label: sourcePort?.label ?? edge.source_port_id, style } } }
 
 function publishErrors(error: Error | null): string[] {
@@ -448,12 +448,13 @@ export function SimulationStudioPage() {
                   draggable={isDraft}
                   onDragStart={(event) => startPaletteDrag(event, definition.node_type)}
                   onClick={() => isDraft && addGraphNode.mutate({ definition })}
+                  style={{ borderColor: `${definition.color}55`, backgroundColor: `${definition.color}0d` }}
                   className={`palette-card-item p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing ${
                     isDraft ? 'hover:scale-[1.02] hover:shadow-md border-slate-200 opacity-100' : 'opacity-50 cursor-not-allowed'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 mb-1">
-                    <div className="p-1.5 rounded-lg bg-white shadow-xs text-slate-800">
+                    <div className="p-1.5 rounded-lg bg-white shadow-xs" style={{ color: definition.color }}>
                       <CircleDot className="w-4 h-4" />
                     </div>
                     <strong className="text-sm font-semibold text-slate-800">{definition.label}</strong>

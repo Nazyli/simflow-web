@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Copy, Plus, Save, Sliders, Trash2, X, Sparkles, Tag, GitBranch, User, Clock, MessageSquare } from 'lucide-react'
+import { Copy, Plus, Save, Sliders, Trash2, X, Sparkles, GitBranch, User, Clock, MessageSquare } from 'lucide-react'
 import { validateActionPayload } from './action-composers'
 
 type Configuration = Record<string, unknown>
@@ -264,8 +264,6 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
             </div>
           )}
 
-          <KeyValueEditor title="Metadata" icon={<Tag className="w-3.5 h-3.5" />} value={asRecord(configuration.metadata)} onChange={(metadata) => change({ metadata })} />
-          <KeyValueEditor title="Variables" icon={<Sliders className="w-3.5 h-3.5" />} value={asRecord(configuration.variables)} onChange={(variables) => change({ variables })} />
         </>
       )}
 
@@ -328,35 +326,6 @@ function TextField({ label, value, onChange, required = false, placeholder }: { 
       <label className="form-label">{label}</label>
       <input className="form-input" required={required} placeholder={placeholder} value={String(value ?? '')} onChange={(event) => onChange(event.target.value)} />
     </div>
-  )
-}
-
-function KeyValueEditor({ title, icon, value, onChange }: { title: string; icon?: React.ReactNode; value: Record<string, unknown>; onChange: (value: Record<string, unknown>) => void }) {
-  const entries = Object.entries(value)
-  function update(index: number, key: string, entryValue: string) {
-    const next = entries.filter((_, itemIndex) => itemIndex !== index)
-    if (key) next.splice(index, 0, [key, entryValue])
-    onChange(Object.fromEntries(next))
-  }
-
-  return (
-    <fieldset className="key-value-fieldset">
-      <legend className="flex items-center gap-1.5 font-medium text-xs text-slate-700">
-        {icon} {title}
-      </legend>
-      {entries.map(([key, entryValue], index) => (
-        <div className="key-value-row" key={`${key}-${index}`}>
-          <input className="form-input text-xs" value={key} placeholder="Key" onChange={(event) => update(index, event.target.value, String(entryValue))} />
-          <input className="form-input text-xs" value={String(entryValue)} placeholder="Value" onChange={(event) => update(index, key, event.target.value)} />
-          <button type="button" className="icon-btn-danger" onClick={() => update(index, '', '')} title="Remove field">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      ))}
-      <button type="button" className="btn-ghost-sm mt-1" onClick={() => onChange({ ...value, '': '' })}>
-        <Plus className="w-3.5 h-3.5" /> Add {title.toLowerCase()}
-      </button>
-    </fieldset>
   )
 }
 
@@ -469,5 +438,4 @@ function asConditionGroup(configuration: Configuration): ConditionGroup {
   if (configuration.path || configuration.field) return { operator: 'and', conditions: [{ path: String(configuration.path ?? configuration.field ?? ''), operator: String(configuration.operator ?? 'equals'), value: configuration.value ?? '' }] }
   return { operator: 'and', conditions: [] } 
 }
-function asRecord(value: unknown): Record<string, unknown> { return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {} }
 function isGroup(value: ConditionItem): value is ConditionGroup { return 'conditions' in value }
