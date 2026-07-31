@@ -1,6 +1,9 @@
 import { apiClient } from './client'
 
 export interface SessionChannelEvent {
+  workflow_label?: string
+  conversation_id?: string
+  wait_instance_id?: string
   channel?: string
   action_type?: string
   actor?: string
@@ -14,7 +17,6 @@ export interface SimulationSession {
   participant_id: string
   workflow_version_id: string
   status: string
-  variables: Record<string, unknown>
   email_inbox: SessionChannelEvent[]
   chat_inbox: SessionChannelEvent[]
   document_state: SessionChannelEvent[]

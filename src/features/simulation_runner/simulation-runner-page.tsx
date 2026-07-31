@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock3, Play, RefreshCw, UserRound } from 'lucide-react'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
-import { getExecution, getExecutions, markExecutionMessageRead, startExecution, submitExecutionAction } from '../../shared/api/executions'
+import { getExecution, markExecutionMessageRead, startExecutionBatch, submitExecutionAction, type BatchExecutionRun } from '../../shared/api/executions'
 import { getMasterData } from '../../shared/api/master-data'
-import { getSession, getSessionsForParticipant, type SessionChannelEvent } from '../../shared/api/sessions'
+import { getSessionsForParticipant, type SessionChannelEvent, type SimulationSession } from '../../shared/api/sessions'
 import { getPublishedVersions } from '../../shared/api/workflows'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
@@ -14,51 +14,36 @@ import type { Channel, ChannelWorkspaceProps } from './channel-workspaces'
 import { ChatWorkspace } from './chat/chat-workspace'
 
 const channels: Channel[] = ['chat', 'email', 'call', 'document']
-const eventLists: Record<Channel, keyof Pick<Awaited<ReturnType<typeof getSession>>, 'chat_inbox' | 'email_inbox' | 'call_state' | 'document_state'>> = { chat: 'chat_inbox', email: 'email_inbox', call: 'call_state', document: 'document_state' }
+const eventLists: Record<Channel, keyof Pick<SimulationSession, 'chat_inbox' | 'email_inbox' | 'call_state' | 'document_state'>> = { chat: 'chat_inbox', email: 'email_inbox', call: 'call_state', document: 'document_state' }
 
 export function SimulationRunnerPage() {
   const client = useQueryClient()
   const [participantId, setParticipantId] = useState('')
   const [actorId, setActorId] = useState('participant-001-ambj-01-platform')
   const [versionId, setVersionId] = useState('')
+  const [versionIds, setVersionIds] = useState<string[]>([])
   const [checked, setChecked] = useState(false)
-  const [attempt, setAttempt] = useState(0)
-  const autoStartResolved = useRef(false)
   const [execution, setExecution] = useState<Execution | null>(null)
+  const [runs, setRuns] = useState<BatchExecutionRun[]>([])
   const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
   const actors = useQuery({ queryKey: ['master', 'actors'], queryFn: () => getMasterData('actors') })
   const documents = useQuery({ queryKey: ['master', 'documents'], queryFn: () => getMasterData('documents') })
   const existingSessions = useQuery({ queryKey: ['participant-sessions', participantId.trim()], queryFn: () => getSessionsForParticipant(participantId.trim()), enabled: checked && Boolean(participantId.trim()) })
-  const latestSession = existingSessions.data?.[0]
-  const latestSessionExecutions = useQuery({ queryKey: ['participant-session-executions', latestSession?.session_id, latestSession?.workflow_version_id], queryFn: () => getExecutions(latestSession!.workflow_version_id), enabled: checked && Boolean(latestSession) })
-  const existingExecution = latestSessionExecutions.data?.find((item) => item.session_id === latestSession?.session_id)
   const executionState = useQuery({ queryKey: ['execution', execution?.execution_id], queryFn: () => getExecution(execution!.execution_id), enabled: Boolean(execution), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
-  const session = useQuery({ queryKey: ['session', execution?.session_id], queryFn: () => getSession(execution!.session_id!), enabled: Boolean(execution?.session_id), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
   useEffect(() => { if (executionState.data) setExecution(executionState.data) }, [executionState.data])
-  useEffect(() => {
-    if (existingExecution) {
-      setExecution(existingExecution)
-      setVersionId(existingExecution.workflow_version_id)
-    }
-  }, [existingExecution])
-  const start = useMutation({ mutationFn: startExecution, onSuccess: (result) => { setExecution(result); setVersionId(result.workflow_version_id); client.invalidateQueries({ queryKey: ['session', result.session_id] }); toast.success(result.status === 'waiting' ? 'Active simulation resumed.' : 'Simulation started.') }, onError: () => toast.error('Unable to start or resume the simulation.') })
-  const lookupSettled = checked && !existingSessions.isPending && (!latestSession || !latestSessionExecutions.isPending)
-  useEffect(() => {
-    if (!lookupSettled || autoStartResolved.current) return
-    autoStartResolved.current = true
-    if (existingExecution) return
-    start.mutate({ workflow_version_id: versionId, participant_id: participantId.trim(), context: { actor_id: actorId } })
-  }, [attempt, lookupSettled, existingExecution, versionId, participantId, actorId, start])
-  const action = useMutation({ mutationFn: ({ channel, target, content, actionType, waitInstanceId, conversationId }: { channel: Channel; target: string; content: string; actionType: string; waitInstanceId: string; conversationId: string }) => submitExecutionAction(execution!.execution_id, { action_type: actionType, actor_id: actorId, wait_instance_id: waitInstanceId, conversation_id: conversationId, payload: { channel, content, to: target, document_id: channel === 'document' ? target : undefined } }), onSuccess: (result) => { setExecution(result); client.invalidateQueries({ queryKey: ['session', result.session_id] }); toast.success('Workflow action submitted.') }, onError: () => toast.error('Action was rejected. Check the requested channel and target.') })
+  const start = useMutation({ mutationFn: startExecutionBatch, onSuccess: (result) => { setRuns(result.runs); const selected = result.runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? result.runs[0]; setExecution(selected ?? null); setVersionId(selected?.workflow_version_id ?? ''); client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] }); toast.success(`${result.runs.length} workflow simulation(s) ready.`) }, onError: () => toast.error('Unable to start or resume the selected simulations.') })
+  const action = useMutation({ mutationFn: ({ executionId, channel, target, content, actionType, waitInstanceId, conversationId }: { executionId: string; channel: Channel; target: string; content: string; actionType: string; waitInstanceId: string; conversationId: string }) => submitExecutionAction(executionId, { action_type: actionType, actor_id: actorId, wait_instance_id: waitInstanceId, conversation_id: conversationId, payload: { channel, content, to: target, document_id: channel === 'document' ? target : undefined } }), onSuccess: (result) => { setExecution(result); setRuns((current) => current.map((run) => run.execution_id === result.execution_id ? { ...run, ...result } : run)); client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] }); toast.success('Workflow action submitted.') }, onError: () => toast.error('Action was rejected. Check the requested channel and target.') })
   const messageRead = useMutation({ mutationFn: ({ waitInstanceId, messageId }: { waitInstanceId: string; messageId: string }) => markExecutionMessageRead(execution!.execution_id, { wait_instance_id: waitInstanceId, message_id: messageId }), onSuccess: (result) => { setExecution(result); client.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
   const activeWait = execution?.context.active_wait
+  const waitingRuns = runs.filter((run) => run.status === 'waiting' && typeof run.context.active_wait === 'object')
+  const executionActorId = typeof execution?.context.actor_id === 'string' ? execution.context.actor_id : undefined
   const deferredReadWait = activeWait && typeof activeWait === 'object' && (activeWait as Record<string, unknown>).timeout_starts_after_read === true && typeof (activeWait as Record<string, unknown>).timer_id !== 'string' && typeof (activeWait as Record<string, unknown>).wait_instance_id === 'string' && typeof (activeWait as Record<string, unknown>).message_id === 'string'
     ? { waitInstanceId: (activeWait as Record<string, string>).wait_instance_id, messageId: (activeWait as Record<string, string>).message_id }
     : null
   const elapsed = execution ? new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(new Date()) : '—'
-  function begin(event: FormEvent) { event.preventDefault(); autoStartResolved.current = false; setChecked(true); setAttempt((n) => n + 1) }
-  function send(channel: Channel, event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const wait = execution?.context.active_wait; if (!wait || typeof wait !== 'object' || typeof (wait as Record<string, unknown>).wait_instance_id !== 'string' || typeof (wait as Record<string, unknown>).conversation_id !== 'string') { toast.error('No active Wait for Reply is available.'); return }; const actionType = channel === 'chat' || channel === 'email' ? 'message' : channel === 'call' ? 'finish_call' : 'close_document'; action.mutate({ channel, target: String(data.get('target') ?? ''), content: String(data.get('content') ?? ''), actionType, waitInstanceId: (wait as Record<string, string>).wait_instance_id, conversationId: (wait as Record<string, string>).conversation_id }); event.currentTarget.reset() }
+  function begin(event: FormEvent) { event.preventDefault(); setChecked(true); start.mutate({ participant_id: participantId.trim(), workflow_version_ids: versionIds, context: { actor_id: actorId } }) }
+  function send(channel: Channel, event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const run = waitingRuns.length === 1 ? waitingRuns[0] : execution; const wait = run?.context.active_wait; if (!run || !wait || typeof wait !== 'object' || typeof (wait as Record<string, unknown>).wait_instance_id !== 'string' || typeof (wait as Record<string, unknown>).conversation_id !== 'string') { toast.error('Choose the workflow that is waiting for this action.'); return }; const actionType = channel === 'chat' || channel === 'email' ? 'message' : channel === 'call' ? 'finish_call' : 'close_document'; action.mutate({ executionId: run.execution_id, channel, target: String(data.get('target') ?? ''), content: String(data.get('content') ?? ''), actionType, waitInstanceId: (wait as Record<string, string>).wait_instance_id, conversationId: (wait as Record<string, string>).conversation_id }); event.currentTarget.reset() }
 
   if (!execution) return (
     <main className="simulation-runner-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
@@ -82,15 +67,14 @@ export function SimulationRunnerPage() {
           <input id="runner-participant" className="form-input !m-0 !w-full !py-2 text-sm" required value={participantId} placeholder="e.g. participant-123" onChange={(event) => setParticipantId(event.target.value)} />
         </div>
         <div className="form-group">
-          <label className="form-label" htmlFor="runner-version">Workflow version</label>
-          <select id="runner-version" className="form-select !m-0 !w-full !py-2 text-sm" required value={versionId} onChange={(event) => setVersionId(event.target.value)}>
-            <option value="">Select workflow</option>
+          <label className="form-label" htmlFor="runner-version">Workflow versions</label>
+          <select id="runner-version" multiple className="form-select !m-0 !w-full !py-2 text-sm" required value={versionIds} onChange={(event) => setVersionIds(Array.from(event.currentTarget.selectedOptions, (option) => option.value))}>
             {versions.data?.map((item) => <option key={item.workflow_version_id} value={item.workflow_version_id}>{item.workflow_name} · v{item.version_number}</option>)}
           </select>
         </div>
         <div className="form-group justify-end">
-          <button type="submit" disabled={!actorId || !participantId.trim() || !versionId || start.isPending} className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50">
-            <Play size={15} /> {start.isPending ? 'Checking simulation…' : 'Start or resume simulation'}
+          <button type="submit" disabled={!actorId || !participantId.trim() || !versionIds.length || start.isPending} className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50">
+            <Play size={15} /> {start.isPending ? 'Checking simulations…' : 'Start selected simulations'}
           </button>
         </div>
         {start.isError && <div className="sm:col-span-2 lg:col-span-4"><ErrorState message="Unable to start or resume the simulation." /></div>}
@@ -135,6 +119,12 @@ export function SimulationRunnerPage() {
         </div>
       </header>
 
+      <section className="mt-4 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        {runs.map((run) => { const item = versions.data?.find((version) => version.workflow_version_id === run.workflow_version_id); return <button type="button" key={run.execution_id} onClick={() => setExecution(run)} className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${execution?.execution_id === run.execution_id ? 'border-violet-500 bg-violet-50 text-violet-800' : 'border-slate-200 bg-white text-slate-700'}`}><span>{item?.workflow_name ?? run.workflow_version_id} · v{item?.version_number ?? '—'}</span><StatusBadge status={run.status} /></button> })}
+      </section>
+
+      {waitingRuns.length > 1 && <section className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><label className="font-semibold">Workflow awaiting this action</label><select className="ml-3 rounded border border-amber-300 bg-white px-2 py-1" value={execution?.execution_id ?? ''} onChange={(event) => setExecution(runs.find((run) => run.execution_id === event.target.value) ?? null)}>{waitingRuns.map((run) => <option key={run.execution_id} value={run.execution_id}>{versions.data?.find((version) => version.workflow_version_id === run.workflow_version_id)?.workflow_name ?? run.workflow_version_id}</option>)}</select></section>}
+
       {execution.status === 'waiting' && (
         <section className="mt-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-600"><Clock3 size={18} /></span>
@@ -153,14 +143,12 @@ export function SimulationRunnerPage() {
             <strong className="text-sm text-sky-900">Previous simulation finished</strong>
             <p className="mt-0.5 text-xs text-sky-700">This participant already completed this simulation. Review the result above or start a new run.</p>
           </div>
-          <button type="button" disabled={start.isPending} onClick={() => start.mutate({ workflow_version_id: versionId, participant_id: participantId.trim(), context: { actor_id: actorId } })} className="!m-0 inline-flex items-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-xs font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50">
-            <RefreshCw size={14} /> {start.isPending ? 'Starting…' : 'Start new simulation'}
-          </button>
+          <StatusBadge status={execution.status} />
         </section>
       )}
 
       <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={(session.data?.variables.actor_id as string | undefined) ?? execution.participant_id ?? participantId} events={(session.data?.[eventLists[channel]] ?? []) as SessionChannelEvent[]} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || execution.status !== 'waiting'} onSubmit={(event) => send(channel, event)} readMessageId={channel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={channel === 'chat' && deferredReadWait ? (messageId) => messageRead.mutate({ waitInstanceId: deferredReadWait.waitInstanceId, messageId }) : undefined} />)}
+        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={executionActorId ?? execution.participant_id ?? participantId} events={(existingSessions.data ?? []).flatMap((item) => { const workflow = versions.data?.find((version) => version.workflow_version_id === item.workflow_version_id); return ((item[eventLists[channel]] ?? []) as SessionChannelEvent[]).map((event) => ({ ...event, workflow_label: `${workflow?.workflow_name ?? item.workflow_version_id} · v${workflow?.version_number ?? '—'}` })) })} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || !waitingRuns.length} onSubmit={(event) => send(channel, event)} readMessageId={channel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={channel === 'chat' && deferredReadWait ? (messageId) => messageRead.mutate({ waitInstanceId: deferredReadWait.waitInstanceId, messageId }) : undefined} />)}
       </section>
     </main>
   )

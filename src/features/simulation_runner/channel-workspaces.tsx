@@ -86,6 +86,7 @@ function EventFeed({ channel, events, participantId }: { channel: FeedChannel; e
               <div className="max-w-[75%] min-w-0">
                 <div className={`flex items-baseline gap-2 px-1 ${isParticipant ? 'justify-end' : 'justify-start'}`}>
                   <span className="text-[10px] font-semibold text-slate-500">{sender}</span>
+                  {item.workflow_label && <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-semibold text-violet-700">{item.workflow_label}</span>}
                   <time className="text-[10px] text-slate-400">{formatTime(item.timestamp)}</time>
                 </div>
                 <div className={`mt-0.5 whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${isParticipant ? 'rounded-br-md bg-[#5b46c5] text-white' : 'rounded-bl-md border border-slate-200 bg-white text-slate-800'}`}>
