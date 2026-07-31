@@ -11,7 +11,7 @@ const actionTypes: Record<string, string[]> = {
   'action:email': ['send_email'],
   'event:email': ['reply_email', 'read_email'],
   'action:chat': ['send_chat'],
-  'event:chat': ['reply_chat', 'read_chat', 'ignore_chat'],
+  'event:chat': ['read_chat', 'ignore_chat'],
   'event:document': ['open_document', 'close_document'],
   'event:call': ['start_call', 'finish_call'],
 }
@@ -144,7 +144,7 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
           )}
 
           {/* ── CHAT REPLY/READ FIELDS ── */}
-          {['reply_chat', 'read_chat', 'ignore_chat'].includes(operation) && (
+          {['read_chat', 'ignore_chat'].includes(operation) && (
             <TextField label="Chat ID" value={configuration.chat_id} onChange={(chat_id) => change({ chat_id })} required />
           )}
 
@@ -170,7 +170,7 @@ export function NodeConfigurationForm({ node, onSave, onDuplicate, onDelete }: {
           )}
 
           {/* ── CONTENT (message body) ── */}
-          {['send_email', 'reply_email', 'send_chat', 'reply_chat'].includes(operation) && (
+          {['send_email', 'reply_email', 'send_chat'].includes(operation) && (
             <div className="form-group">
               <label className="form-label flex items-center gap-1"><MessageSquare className="w-3.5 h-3.5 text-blue-500" /> Content</label>
               <textarea 

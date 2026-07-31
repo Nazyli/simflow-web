@@ -6,7 +6,7 @@ type Composer = (props: ComposerProps) => ReactNode
 
 const requiredByOperation: Record<string, string[]> = {
   send_email: ['to', 'subject', 'content'], reply_email: ['email_id', 'content'], read_email: ['email_id'],
-  send_chat: ['to', 'content'], reply_chat: ['chat_id', 'content'], read_chat: ['chat_id'], ignore_chat: ['chat_id'],
+  send_chat: ['to', 'content'], read_chat: ['chat_id'], ignore_chat: ['chat_id'],
   start_call: ['call_id'], finish_call: ['call_id'], open_document: ['document_id'], close_document: ['document_id'],
 }
 
