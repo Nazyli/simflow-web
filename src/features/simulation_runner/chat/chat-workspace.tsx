@@ -42,7 +42,7 @@ export function ChatLayout({
 export function ChatWorkspace({ participantId, events, actors, disabled, onSubmit }: ChannelWorkspaceProps) {
   const messages = events as unknown as ChatMessage[]
   const [selectedActor, setSelectedActor] = useState<string | null>(null)
-  const conversations = buildConversations(messages, buildActorNames(actors))
+  const conversations = buildConversations(messages, buildActorNames(actors), participantId)
   const activeConversation = selectedActor
     ? conversations.find((conversation) => conversation.actor === selectedActor) ?? conversations[0] ?? null
     : conversations[0] ?? null

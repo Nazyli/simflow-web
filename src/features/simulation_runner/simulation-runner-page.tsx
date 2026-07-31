@@ -126,7 +126,7 @@ export function SimulationRunnerPage() {
       )}
 
       <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={execution.participant_id ?? participantId} events={(session.data?.[eventLists[channel]] ?? []) as SessionChannelEvent[]} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || execution.status !== 'waiting'} onSubmit={(event) => send(channel, event)} />)}
+        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={(session.data?.variables.actor_id as string | undefined) ?? execution.participant_id ?? participantId} events={(session.data?.[eventLists[channel]] ?? []) as SessionChannelEvent[]} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || execution.status !== 'waiting'} onSubmit={(event) => send(channel, event)} />)}
       </section>
     </main>
   )

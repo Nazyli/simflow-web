@@ -19,15 +19,17 @@ export function buildActorNames(actors: Record<string, unknown>[]): Record<strin
   return names
 }
 
-export function buildConversations(messages: ChatMessage[], actorNames: Record<string, string>): ChatConversation[] {
+export function buildConversations(messages: ChatMessage[], actorNames: Record<string, string>, participantId: string): ChatConversation[] {
   const grouped = new Map<string, ChatMessage[]>()
   for (const message of messages) {
-    const actor = message.actor || message.from || 'unknown'
-    const list = grouped.get(actor) ?? []
+    const sender = message.from || message.actor
+    const counterpart = sender === participantId ? message.to : sender
+    if (!counterpart || counterpart === participantId) continue
+    const list = grouped.get(counterpart) ?? []
     list.push(message)
-    grouped.set(actor, list)
+    grouped.set(counterpart, list)
   }
-  const actorIds = new Set<string>([...grouped.keys(), ...Object.keys(actorNames)])
+  const actorIds = new Set<string>([...grouped.keys(), ...Object.keys(actorNames)].filter((id) => id && id !== participantId))
   return [...actorIds]
     .map((actor) => {
       const list = grouped.get(actor) ?? []
