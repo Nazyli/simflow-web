@@ -19,7 +19,7 @@ export function NodeConfigurationForm({ node, definition, onSave, onDuplicate, o
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const required = Object.entries(definition?.validation_rules ?? {}).filter(([, rule]) => Boolean((rule as Record<string, unknown>).required)).map(([key]) => key)
+    const required = Object.entries(definition?.validation_rules ?? {}).filter(([, rule]) => isRequired(rule as Record<string, unknown>, configuration)).map(([key]) => key)
     const missing = required.filter((key) => configuration[key] === '' || configuration[key] === null || configuration[key] === undefined)
     if (missing.length) {
       setError(`Required parameter: ${missing.join(', ')}`)
@@ -34,7 +34,7 @@ export function NodeConfigurationForm({ node, definition, onSave, onDuplicate, o
       <span className="node-type-badge">{node.node_type}</span>
     </div>
     <TextField label="Node Name" value={name} onChange={setName} required placeholder="e.g. Process Order" />
-    {definition ? Object.entries(definition.parameters).map(([key, defaultValue]) => <CatalogParameterField key={key} name={key} value={configuration[key]} defaultValue={defaultValue} required={Boolean((definition.validation_rules[key] as Record<string, unknown> | undefined)?.required)} onChange={(value) => change(key, value)} />) : <p className="text-xs text-amber-700">Node definition is unavailable from the catalog.</p>}
+    {definition ? Object.entries(definition.parameters).filter(([key]) => isVisible(definition.validation_rules[key] as Record<string, unknown> | undefined, configuration)).map(([key, defaultValue]) => <CatalogParameterField key={key} name={key} value={configuration[key]} defaultValue={defaultValue} required={isRequired(definition.validation_rules[key] as Record<string, unknown>, configuration)} onChange={(value) => change(key, value)} />) : <p className="text-xs text-amber-700">Node definition is unavailable from the catalog.</p>}
     {error && <p className="text-xs text-red-600">{error}</p>}
     <div className="inspector-actions">
       <button type="submit" className="btn-primary"><Save className="w-4 h-4" /> Save Node</button>
@@ -44,6 +44,21 @@ export function NodeConfigurationForm({ node, definition, onSave, onDuplicate, o
       </div>
     </div>
   </form>
+}
+
+function ruleMatches(rule: Record<string, unknown> | undefined, configuration: Configuration, key: 'visible_when' | 'required_when'): boolean {
+  const condition = rule?.[key]
+  if (!condition || typeof condition !== 'object') return key === 'visible_when'
+  const { field, equals } = condition as Record<string, unknown>
+  return typeof field === 'string' && configuration[field] === equals
+}
+
+function isVisible(rule: Record<string, unknown> | undefined, configuration: Configuration): boolean {
+  return ruleMatches(rule, configuration, 'visible_when')
+}
+
+function isRequired(rule: Record<string, unknown> | undefined, configuration: Configuration): boolean {
+  return Boolean(rule?.required) || ruleMatches(rule, configuration, 'required_when')
 }
 
 function CatalogParameterField({ name, value, defaultValue, required, onChange }: { name: string; value: unknown; defaultValue: unknown; required: boolean; onChange: (value: unknown) => void }) {

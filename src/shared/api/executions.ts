@@ -7,6 +7,7 @@ export const getExecutions = (workflowVersionId: string) => apiClient<Execution[
 export const getExecution = (executionId: string) => apiClient<Execution>(`/executions/${executionId}`)
 export const startExecution = (payload: { workflow_version_id: string; participant_id: string; context: Record<string, unknown> }) => apiClient<Execution>('/executions', { method: 'POST', body: JSON.stringify(payload) })
 export const submitExecutionAction = (executionId: string, payload: { action_type: string; actor_id?: string; wait_instance_id: string; conversation_id: string; payload: Record<string, unknown> }) => apiClient<Execution>(`/executions/${executionId}/actions`, { method: 'POST', body: JSON.stringify(payload) })
+export const markExecutionMessageRead = (executionId: string, payload: { wait_instance_id: string; message_id: string }) => apiClient<Execution>(`/executions/${executionId}/messages/read`, { method: 'POST', body: JSON.stringify(payload) })
 export const completeExecution = (executionId: string) => apiClient<Execution>(`/executions/${executionId}/complete`, { method: 'POST' })
 export const getTimeline = (executionId: string) => apiClient<ExecutionEvent[]>(`/executions/${executionId}/timeline`)
 export const getNodeResults = (executionId: string) => apiClient<NodeResult[]>(`/executions/${executionId}/node-results`)

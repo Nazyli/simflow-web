@@ -4,6 +4,7 @@ export interface ChatMessage {
   actor: string
   channel: 'chat'
   chat_id: string | null
+  message_id?: string
   content: string
   timestamp: string
   action_type: string

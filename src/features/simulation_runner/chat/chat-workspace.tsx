@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { ChannelWorkspaceProps } from '../channel-workspaces'
 import { ConversationBody } from './conversation-body'
@@ -39,13 +39,22 @@ export function ChatLayout({
   )
 }
 
-export function ChatWorkspace({ participantId, events, actors, disabled, onSubmit }: ChannelWorkspaceProps) {
+export function ChatWorkspace({ participantId, events, actors, disabled, onSubmit, readMessageId, onMessageRead }: ChannelWorkspaceProps & { readMessageId?: string; onMessageRead?: (messageId: string) => void }) {
   const messages = events as unknown as ChatMessage[]
   const [selectedActor, setSelectedActor] = useState<string | null>(null)
   const conversations = buildConversations(messages, buildActorNames(actors), participantId)
   const activeConversation = selectedActor
     ? conversations.find((conversation) => conversation.actor === selectedActor) ?? conversations[0] ?? null
     : conversations[0] ?? null
+  const reportedReads = useRef(new Set<string>())
+
+  useEffect(() => {
+    if (!readMessageId || !onMessageRead || reportedReads.current.has(readMessageId)) return
+    if (activeConversation?.messages.some((message) => message.message_id === readMessageId)) {
+      reportedReads.current.add(readMessageId)
+      onMessageRead(readMessageId)
+    }
+  }, [activeConversation, onMessageRead, readMessageId])
 
   return (
     <section className="col-span-full flex h-[540px] min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">

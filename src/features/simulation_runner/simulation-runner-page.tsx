@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock3, Play, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
-import { getExecution, getExecutions, startExecution, submitExecutionAction } from '../../shared/api/executions'
+import { getExecution, getExecutions, markExecutionMessageRead, startExecution, submitExecutionAction } from '../../shared/api/executions'
 import { getMasterData } from '../../shared/api/master-data'
 import { getSession, getSessionsForParticipant, type SessionChannelEvent } from '../../shared/api/sessions'
 import { getPublishedVersions } from '../../shared/api/workflows'
@@ -40,16 +40,27 @@ export function SimulationRunnerPage() {
   }, [existingExecution])
   const start = useMutation({ mutationFn: startExecution, onSuccess: (result) => { setExecution(result); setVersionId(result.workflow_version_id); client.invalidateQueries({ queryKey: ['session', result.session_id] }); toast.success(result.status === 'waiting' ? 'Active simulation resumed.' : 'Simulation started.') }, onError: () => toast.error('Unable to start or resume the simulation.') })
   const action = useMutation({ mutationFn: ({ channel, target, content, actionType, waitInstanceId, conversationId }: { channel: Channel; target: string; content: string; actionType: string; waitInstanceId: string; conversationId: string }) => submitExecutionAction(execution!.execution_id, { action_type: actionType, actor_id: actorId, wait_instance_id: waitInstanceId, conversation_id: conversationId, payload: { channel, content, to: target, document_id: channel === 'document' ? target : undefined } }), onSuccess: (result) => { setExecution(result); client.invalidateQueries({ queryKey: ['session', result.session_id] }); toast.success('Workflow action submitted.') }, onError: () => toast.error('Action was rejected. Check the requested channel and target.') })
+  const messageRead = useMutation({ mutationFn: ({ waitInstanceId, messageId }: { waitInstanceId: string; messageId: string }) => markExecutionMessageRead(execution!.execution_id, { wait_instance_id: waitInstanceId, message_id: messageId }), onSuccess: (result) => { setExecution(result); client.invalidateQueries({ queryKey: ['session', result.session_id] }) } })
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
+  const activeWait = execution?.context.active_wait
+  const deferredReadWait = activeWait && typeof activeWait === 'object' && (activeWait as Record<string, unknown>).timeout_starts_after_read === true && typeof (activeWait as Record<string, unknown>).timer_id !== 'string' && typeof (activeWait as Record<string, unknown>).wait_instance_id === 'string' && typeof (activeWait as Record<string, unknown>).message_id === 'string'
+    ? { waitInstanceId: (activeWait as Record<string, string>).wait_instance_id, messageId: (activeWait as Record<string, string>).message_id }
+    : null
   const elapsed = execution ? new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(new Date()) : '—'
   function begin(event: FormEvent) { event.preventDefault(); start.mutate({ workflow_version_id: versionId, participant_id: participantId.trim(), context: { actor_id: actorId } }) }
   function send(channel: Channel, event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const wait = execution?.context.active_wait; if (!wait || typeof wait !== 'object' || typeof (wait as Record<string, unknown>).wait_instance_id !== 'string' || typeof (wait as Record<string, unknown>).conversation_id !== 'string') { toast.error('No active Wait for Reply is available.'); return }; const actionType = channel === 'chat' || channel === 'email' ? 'message' : channel === 'call' ? 'finish_call' : 'close_document'; action.mutate({ channel, target: String(data.get('target') ?? ''), content: String(data.get('content') ?? ''), actionType, waitInstanceId: (wait as Record<string, string>).wait_instance_id, conversationId: (wait as Record<string, string>).conversation_id }); event.currentTarget.reset() }
 
   if (!execution) return (
-    <main className="mx-auto max-w-[1500px] p-0">
-      <header className="mb-6 items-start justify-start">
-        <span className="text-xs font-bold uppercase tracking-wider text-purple-700 px-2 py-0.5 rounded bg-purple-50 border border-purple-200">Simulation cockpit</span>
-        <p className="mt-1 text-sm text-slate-500">Enter the participant persona, select a workflow, then enter the participant ID to start or resume a simulation.</p>
+    <main className="simulation-runner-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm"><Play size={15} /></span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-purple-700">Simulation cockpit</p>
+            <h1 className="truncate text-lg font-bold text-slate-900">Run a simulation</h1>
+            <p className="truncate text-xs text-slate-500">Enter the participant persona, select a workflow, then enter the participant ID to start or resume a simulation.</p>
+          </div>
+        </div>
       </header>
       <form className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-4" onSubmit={begin}>
         <div className="form-group">
@@ -80,7 +91,7 @@ export function SimulationRunnerPage() {
   )
 
   return (
-    <main className="mx-auto max-w-[1500px] p-0">
+    <main className="simulation-runner-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
@@ -126,14 +137,14 @@ export function SimulationRunnerPage() {
       )}
 
       <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={(session.data?.variables.actor_id as string | undefined) ?? execution.participant_id ?? participantId} events={(session.data?.[eventLists[channel]] ?? []) as SessionChannelEvent[]} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || execution.status !== 'waiting'} onSubmit={(event) => send(channel, event)} />)}
+        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={(session.data?.variables.actor_id as string | undefined) ?? execution.participant_id ?? participantId} events={(session.data?.[eventLists[channel]] ?? []) as SessionChannelEvent[]} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || execution.status !== 'waiting'} onSubmit={(event) => send(channel, event)} readMessageId={channel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={channel === 'chat' && deferredReadWait ? (messageId) => messageRead.mutate({ waitInstanceId: deferredReadWait.waitInstanceId, messageId }) : undefined} />)}
       </section>
     </main>
   )
 }
 
-function ChannelWorkspace({ channel, ...props }: ChannelWorkspaceProps & { channel: Channel }) {
-  if (channel === 'chat') return <ChatWorkspace {...props} />
+function ChannelWorkspace({ channel, readMessageId, onMessageRead, ...props }: ChannelWorkspaceProps & { channel: Channel; readMessageId?: string; onMessageRead?: (messageId: string) => void }) {
+  if (channel === 'chat') return <ChatWorkspace {...props} readMessageId={readMessageId} onMessageRead={onMessageRead} />
   if (channel === 'email') return <EmailWorkspace {...props} />
   if (channel === 'call') return <CallWorkspace {...props} />
   return <DocumentWorkspace {...props} />
