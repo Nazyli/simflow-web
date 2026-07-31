@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { ApiError } from '../../shared/api/client'
 import { getExecutions, getTimeline } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
@@ -36,6 +37,20 @@ function publishErrors(error: Error | null): string[] {
   } catch {
     return []
   }
+}
+
+function apiErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    try {
+      const detail = JSON.parse(error.message).detail
+      if (typeof detail === 'string') return detail
+      if (Array.isArray(detail)) return detail.map((item: unknown) => (typeof item === 'object' && item !== null && 'msg' in item ? String((item as { msg: string }).msg) : String(item))).join(', ')
+    } catch {
+      // fall through to raw message
+    }
+    return error.message
+  }
+  return error instanceof Error ? error.message : 'Unknown error.'
 }
 
 export function SimulationStudioPage() {
@@ -78,19 +93,19 @@ export function SimulationStudioPage() {
   const executions = useQuery({ queryKey: ['executions', versionId], queryFn: () => getExecutions(versionId!), enabled: Boolean(versionId) })
   const executionTimeline = useQuery({ queryKey: ['execution-timeline', selectedExecutionId], queryFn: () => getTimeline(selectedExecutionId!), enabled: Boolean(selectedExecutionId) })
 
-  const create = useMutation({ mutationFn: createWorkflow, onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) } })
-  const update = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'> }) => updateWorkflow(id, payload), onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) } })
-  const removeWorkflow = useMutation({ mutationFn: deleteWorkflow, onSuccess: () => { setSelectedWorkflow(null); setVersionId(null); setSelectedNodeId(null); setSelectedEdgeId(null); setNodes([]); setEdges([]); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) } })
+  const create = useMutation({ mutationFn: createWorkflow, onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
+  const update = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'> }) => updateWorkflow(id, payload), onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
+  const removeWorkflow = useMutation({ mutationFn: deleteWorkflow, onSuccess: () => { setSelectedWorkflow(null); setVersionId(null); setSelectedNodeId(null); setSelectedEdgeId(null); setNodes([]); setEdges([]); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
   
-  const createDraft = useMutation({ mutationFn: async (_workflowId: string) => { const sourceVersion = selectedVersion ?? versions.data?.find((v) => v.status === 'published'); if (!sourceVersion) throw new Error('Select a published version before creating a draft.'); return createDraftFromVersion(sourceVersion.workflow_version_id) }, onSuccess: (version) => { setVersionId(version.workflow_version_id); setSelectedNodeId(null); setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }) } })
-  const publish = useMutation({ mutationFn: publishVersion, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['workflows'] }); queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }) } })
+  const createDraft = useMutation({ mutationFn: async (_workflowId: string) => { const sourceVersion = selectedVersion ?? versions.data?.find((v) => v.status === 'published'); if (!sourceVersion) throw new Error('Select a published version before creating a draft.'); return createDraftFromVersion(sourceVersion.workflow_version_id) }, onSuccess: (version) => { setVersionId(version.workflow_version_id); setSelectedNodeId(null); setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
+  const publish = useMutation({ mutationFn: publishVersion, onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['workflows'] }); queryClient.invalidateQueries({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
   
-  const addGraphNode = useMutation({ mutationFn: ({ definition, position }: { definition: NodeDefinition; position?: { x: number; y: number } }) => addNode(versionId!, { node_name: `${definition.label} node`, node_type: definition.node_type, parameters: { ...definition.parameters }, position_x: Math.round(position?.x ?? 180), position_y: Math.round(position?.y ?? 180) }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
-  const duplicateGraphNode = useMutation({ mutationFn: (node: ApiNode) => addNode(versionId!, { node_name: `${node.node_name} copy`, node_type: node.node_type, parameters: { ...node.parameters }, position_x: (node.position_x ?? 80) + 60, position_y: (node.position_y ?? 80) + 60 }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
-  const persistNode = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'> }) => updateNode(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
-  const removeNode = useMutation({ mutationFn: deleteNode, onSuccess: () => { setSelectedNodeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
-  const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id' | 'is_valid'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) })
-  const removeEdge = useMutation({ mutationFn: deleteWorkflowEdge, onSuccess: () => { setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) } })
+  const addGraphNode = useMutation({ mutationFn: ({ definition, position }: { definition: NodeDefinition; position?: { x: number; y: number } }) => addNode(versionId!, { node_name: `${definition.label} node`, node_type: definition.node_type, parameters: { ...definition.parameters }, position_x: Math.round(position?.x ?? 180), position_y: Math.round(position?.y ?? 180) }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
+  const duplicateGraphNode = useMutation({ mutationFn: (node: ApiNode) => addNode(versionId!, { node_name: `${node.node_name} copy`, node_type: node.node_type, parameters: { ...node.parameters }, position_x: (node.position_x ?? 80) + 60, position_y: (node.position_y ?? 80) + 60 }), onSuccess: (node) => { setSelectedNodeId(node.node_id); setActiveRightTab('inspector'); setRightSidebarOpen(true); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
+  const persistNode = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'> }) => updateNode(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }), onError: (error) => toast.error(apiErrorMessage(error)) })
+  const removeNode = useMutation({ mutationFn: deleteNode, onSuccess: () => { setSelectedNodeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
+  const persistEdge = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id' | 'is_valid'> }) => updateWorkflowEdge(id, payload), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }), onError: (error) => toast.error(apiErrorMessage(error)) })
+  const removeEdge = useMutation({ mutationFn: deleteWorkflowEdge, onSuccess: () => { setSelectedEdgeId(null); queryClient.invalidateQueries({ queryKey: ['graph', versionId] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
   const removeEdgeRef = useRef(removeEdge)
   removeEdgeRef.current = removeEdge
   const deleteEdge = useCallback((edgeId: string) => { removeEdgeRef.current.mutate(edgeId) }, [])
@@ -280,21 +295,21 @@ export function SimulationStudioPage() {
 
   function connect(connection: Connection) {
     if (!versionId || selectedVersion?.status !== 'draft' || !connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return
-    if (connection.source === connection.target) { window.alert('A node cannot connect to itself.'); return }
-    if (apiEdges.some((edge) => edge.source_node_id === connection.source && edge.source_port_id === connection.sourceHandle && edge.target_node_id === connection.target && edge.target_port_id === connection.targetHandle)) { window.alert('That port connection already exists.'); return }
+    if (connection.source === connection.target) { toast.error('A node cannot connect to itself.'); return }
+    if (apiEdges.some((edge) => edge.source_node_id === connection.source && edge.source_port_id === connection.sourceHandle && edge.target_node_id === connection.target && edge.target_port_id === connection.targetHandle)) { toast.error('That port connection already exists.'); return }
     const sourceNode = apiNodes.find((node) => node.node_id === connection.source)
     const targetNode = apiNodes.find((node) => node.node_id === connection.target)
     const sourcePort = sourceNode?.output_ports.find((port) => port.id === connection.sourceHandle)
     const targetPort = targetNode?.input_ports.find((port) => port.id === connection.targetHandle)
-    if (!sourcePort || !targetPort) { window.alert('Select a catalog-defined output port and input port.'); return }
-    if (sourcePort.data_type !== 'any' && !targetPort.accepted_data_types.includes('any') && !targetPort.accepted_data_types.includes(sourcePort.data_type)) { window.alert('The selected ports have incompatible data types.'); return }
-    if (apiEdges.filter((edge) => edge.source_node_id === connection.source && edge.source_port_id === connection.sourceHandle).length >= sourcePort.max_connections) { window.alert('The source output port has reached its connection limit.'); return }
-    if (apiEdges.filter((edge) => edge.target_node_id === connection.target && edge.target_port_id === connection.targetHandle).length >= targetPort.max_connections) { window.alert('The target input port has reached its connection limit.'); return }
+    if (!sourcePort || !targetPort) { toast.error('Select a catalog-defined output port and input port.'); return }
+    if (sourcePort.data_type !== 'any' && !targetPort.accepted_data_types.includes('any') && !targetPort.accepted_data_types.includes(sourcePort.data_type)) { toast.error('The selected ports have incompatible data types.'); return }
+    if (apiEdges.filter((edge) => edge.source_node_id === connection.source && edge.source_port_id === connection.sourceHandle).length >= sourcePort.max_connections) { toast.error('The source output port has reached its connection limit.'); return }
+    if (apiEdges.filter((edge) => edge.target_node_id === connection.target && edge.target_port_id === connection.targetHandle).length >= targetPort.max_connections) { toast.error('The target input port has reached its connection limit.'); return }
     const adjacency = new Map<string, string[]>()
     apiEdges.forEach((edge) => adjacency.set(edge.source_node_id, [...(adjacency.get(edge.source_node_id) ?? []), edge.target_node_id]))
     const pending = [connection.target]; const visited = new Set<string>()
-    while (pending.length) { const nodeId = pending.pop()!; if (nodeId === connection.source) { window.alert('That connection would create a cycle.'); return }; if (!visited.has(nodeId)) { visited.add(nodeId); pending.push(...(adjacency.get(nodeId) ?? [])) } }
-    addWorkflowEdge(versionId, { source_node_id: connection.source, source_port_id: connection.sourceHandle, target_node_id: connection.target, target_port_id: connection.targetHandle, priority: 0 }).then(() => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }))
+    while (pending.length) { const nodeId = pending.pop()!; if (nodeId === connection.source) { toast.error('That connection would create a cycle.'); return }; if (!visited.has(nodeId)) { visited.add(nodeId); pending.push(...(adjacency.get(nodeId) ?? [])) } }
+    addWorkflowEdge(versionId, { source_node_id: connection.source, source_port_id: connection.sourceHandle, target_node_id: connection.target, target_port_id: connection.targetHandle, priority: 0 }).then(() => queryClient.invalidateQueries({ queryKey: ['graph', versionId] })).catch((error: unknown) => toast.error(apiErrorMessage(error)))
   }
 
   function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: string) {
