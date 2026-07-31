@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import dagre from 'dagre'
 import { ApiError } from '../../shared/api/client'
 import { getExecutions, getTimeline } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
@@ -168,39 +169,24 @@ export function SimulationStudioPage() {
       }
     })
 
-    // Build a DAG layout only for nodes that truly have no position
+    // Build a dagre layout and use it only for nodes that truly have no position
     if (nodesNeedingLayout.length > 0) {
+      const dagreGraph = new dagre.graphlib.Graph()
+      dagreGraph.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 200, marginx: 60, marginy: 60 })
+      dagreGraph.setDefaultEdgeLabel(() => ({}))
       const nodeIds = new Set(apiNodes.map((n) => n.node_id))
-      const incoming = new Map(apiNodes.map((n) => [n.node_id, 0]))
-      const outgoing = new Map(apiNodes.map((n) => [n.node_id, [] as string[]]))
+      apiNodes.forEach((node) => dagreGraph.setNode(node.node_id, { width: 200, height: 90 }))
       apiEdges.forEach((edge) => {
         if (!nodeIds.has(edge.source_node_id) || !nodeIds.has(edge.target_node_id)) return
-        incoming.set(edge.target_node_id, (incoming.get(edge.target_node_id) ?? 0) + 1)
-        outgoing.get(edge.source_node_id)?.push(edge.target_node_id)
+        dagreGraph.setEdge(edge.source_node_id, edge.target_node_id)
       })
-      const levels = new Map<string, number>()
-      const pending = apiNodes.filter((n) => (incoming.get(n.node_id) ?? 0) === 0).map((n) => n.node_id)
-      pending.forEach((id) => levels.set(id, 0))
-      while (pending.length) {
-        const id = pending.shift()!
-        const level = levels.get(id) ?? 0
-        outgoing.get(id)?.forEach((targetId) => {
-          levels.set(targetId, Math.max(levels.get(targetId) ?? 0, level + 1))
-          incoming.set(targetId, (incoming.get(targetId) ?? 1) - 1)
-          if (incoming.get(targetId) === 0) pending.push(targetId)
-        })
-      }
-      const nodesByLevel = new Map<number, string[]>()
-      apiNodes.forEach((n) => {
-        const level = levels.get(n.node_id) ?? 0
-        nodesByLevel.set(level, [...(nodesByLevel.get(level) ?? []), n.node_id])
-      })
+      dagre.layout(dagreGraph)
 
-      // Assign auto-layout positions and cache them
+      // Assign dagre positions and cache them
       nodesNeedingLayout.forEach((nodeId) => {
-        const level = levels.get(nodeId) ?? 0
-        const row = nodesByLevel.get(level)?.indexOf(nodeId) ?? 0
-        const pos = { x: 100 + level * 360, y: 100 + row * 280 }
+        const meta = dagreGraph.node(nodeId)
+        if (!meta) return
+        const pos = { x: meta.x - meta.width / 2, y: meta.y - meta.height / 2 }
         localPositions.current.set(nodeId, pos)
       })
 
@@ -725,7 +711,7 @@ export function SimulationStudioPage() {
                 executions={executions.data ?? []} 
                 selectedExecution={selectedExecution} 
                 timeline={executionTimeline.data ?? []} 
-                isLoading={executions.isPending || executionTimeline.isPending} 
+                isLoading={executions.isLoading || executionTimeline.isLoading} 
                 onSelect={setSelectedExecutionId} 
               />
             )}
