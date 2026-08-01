@@ -327,6 +327,28 @@ export function SimulationStudioPage() {
       })
   }
 
+  function applyAutoLayout() {
+    if (!versionId || selectedVersion?.status !== 'draft' || apiNodes.length === 0) return
+    const layout = new dagre.graphlib.Graph()
+    layout.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 200, marginx: 60, marginy: 60 })
+    layout.setDefaultEdgeLabel(() => ({}))
+    apiNodes.forEach((node) => layout.setNode(node.node_id, { width: 200, height: 90 }))
+    apiEdges.forEach((edge) => layout.setEdge(edge.source_node_id, edge.target_node_id))
+    dagre.layout(layout)
+    const positions = new Map<string, { x: number; y: number }>()
+    apiNodes.forEach((node) => {
+      const meta = layout.node(node.node_id)
+      if (meta) positions.set(node.node_id, { x: meta.x - meta.width / 2, y: meta.y - meta.height / 2 })
+    })
+    positions.forEach((position, nodeId) => localPositions.current.set(nodeId, position))
+    setNodes((current) => current.map((node) => ({ ...node, position: positions.get(node.id) ?? node.position })))
+    apiNodes.forEach((node) => {
+      const position = positions.get(node.node_id)
+      if (position) persistNode.mutate({ id: node.node_id, payload: { node_name: node.node_name, node_type: node.node_type, parameters: node.parameters, position_x: position.x, position_y: position.y } })
+    })
+    requestAnimationFrame(() => flowInstance?.fitView({ padding: 0.2, duration: 240 }))
+  }
+
   function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: string) {
     event.dataTransfer.setData('application/simflow-node-type', nodeType)
     event.dataTransfer.setData('text/plain', nodeType)
@@ -549,6 +571,7 @@ export function SimulationStudioPage() {
               <button type="button" className="inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100" aria-label="Zoom Out" onClick={() => flowInstance?.zoomOut()} title="Zoom Out"><Minus size={15} /></button>
               <button type="button" className="inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100" aria-label="Zoom In" onClick={() => flowInstance?.zoomIn()} title="Zoom In"><Plus size={15} /></button>
               <button type="button" className="inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100" aria-label="Fit View" onClick={() => flowInstance?.fitView()} title="Fit Canvas View"><Maximize size={15} /></button>
+              <button type="button" className="inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100" aria-label="Auto layout" onClick={applyAutoLayout} disabled={!versionId || selectedVersion?.status !== 'draft' || !apiNodes.length} title="Arrange nodes automatically"><Layers size={15} /></button>
             </div>
 
             <div className="flex items-center gap-1 pl-1">
