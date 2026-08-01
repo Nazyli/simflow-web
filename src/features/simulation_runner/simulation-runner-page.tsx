@@ -17,6 +17,15 @@ import type { ChatMessage } from './chat/types'
 const channels: Channel[] = ['chat', 'email', 'call', 'document']
 const eventLists: Record<Channel, keyof Pick<SimulationSession, 'chat_inbox' | 'email_inbox' | 'call_state' | 'document_state'>> = { chat: 'chat_inbox', email: 'email_inbox', call: 'call_state', document: 'document_state' }
 
+function eventTime(value?: string): number {
+  const time = value ? new Date(value).getTime() : NaN
+  return Number.isNaN(time) ? 0 : time
+}
+
+function sortEventsByTime<T extends { timestamp?: string }>(events: T[]): T[] {
+  return [...events].sort((a, b) => eventTime(a.timestamp) - eventTime(b.timestamp))
+}
+
 export function SimulationRunnerPage() {
   const client = useQueryClient()
   const [participantId, setParticipantId] = useState('')
@@ -155,7 +164,7 @@ export function SimulationRunnerPage() {
       )}
 
       <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={executionActorId ?? execution.participant_id ?? participantId} events={(existingSessions.data ?? []).flatMap((item) => { const workflow = versions.data?.find((version) => version.workflow_version_id === item.workflow_version_id); return ((item[eventLists[channel]] ?? []) as SessionChannelEvent[]).map((event) => ({ ...event, workflow_label: `${workflow?.workflow_name ?? item.workflow_version_id} · v${workflow?.version_number ?? '—'}` })) })} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || !waitingRuns.length || (channel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id)} onSubmit={(event) => send(channel, event)} readMessageId={channel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={channel === 'chat' && deferredReadWait ? (messageId) => messageRead.mutate({ waitInstanceId: deferredReadWait.waitInstanceId, messageId }) : undefined} quotedMessage={channel === 'chat' ? quotedMessage : undefined} quoteRequired={channel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id} onQuote={channel === 'chat' ? setQuotedMessage : undefined} />)}
+        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={executionActorId ?? execution.participant_id ?? participantId} events={sortEventsByTime((existingSessions.data ?? []).flatMap((item) => { const workflow = versions.data?.find((version) => version.workflow_version_id === item.workflow_version_id); return ((item[eventLists[channel]] ?? []) as SessionChannelEvent[]).map((event) => ({ ...event, workflow_label: `${workflow?.workflow_name ?? item.workflow_version_id} · v${workflow?.version_number ?? '—'}` })) }))} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || !waitingRuns.length || (channel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id)} onSubmit={(event) => send(channel, event)} readMessageId={channel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={channel === 'chat' && deferredReadWait ? (messageId) => messageRead.mutate({ waitInstanceId: deferredReadWait.waitInstanceId, messageId }) : undefined} quotedMessage={channel === 'chat' ? quotedMessage : undefined} quoteRequired={channel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id} onQuote={channel === 'chat' ? setQuotedMessage : undefined} />)}
       </section>
     </main>
   )
