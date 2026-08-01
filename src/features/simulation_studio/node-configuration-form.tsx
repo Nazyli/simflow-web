@@ -9,7 +9,7 @@ import type { NodeDefinition } from '../../shared/types/workflow'
 
 type Configuration = Record<string, unknown>
 
-export function NodeConfigurationForm({ node, definition, onSave, onDuplicate, onDelete }: { node: { node_name: string; node_type: string; configuration: Configuration }; definition?: NodeDefinition; onSave: (name: string, configuration: Configuration) => void; onDuplicate: () => void; onDelete: () => void }) {
+export function NodeConfigurationForm({ node, definition, onSave, onDuplicate, onDelete }: { node: { node_name: string; node_type: string; configuration: Configuration; input_ports?: { id: string; label: string; max_connections?: number }[] }; definition?: NodeDefinition; onSave: (name: string, configuration: Configuration) => void; onDuplicate: () => void; onDelete: () => void }) {
   const [name, setName] = useState(node.node_name)
   const [configuration, setConfiguration] = useState<Configuration>({ ...definition?.parameters, ...node.configuration })
   const [error, setError] = useState<string | null>(null)
@@ -39,6 +39,7 @@ export function NodeConfigurationForm({ node, definition, onSave, onDuplicate, o
       <span className="rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wider text-slate-500">{node.node_type}</span>
     </div>
     <TextField label="Node Name" value={name} onChange={setName} required placeholder="e.g. Process Order" />
+    {node.input_ports?.length ? <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Input connections</p><div className="mt-2 space-y-1.5">{node.input_ports.map((port) => <div key={port.id} className="flex items-center justify-between gap-3 text-xs"><span className="font-medium text-slate-700">{port.label}</span><span className="rounded-full bg-white px-2 py-0.5 font-semibold text-slate-600 ring-1 ring-slate-200">Max connections: {port.max_connections ?? 1}</span></div>)}</div></div> : null}
     {definition ? Object.entries(definition.parameters).filter(([key]) => isVisible(definition.validation_rules[key] as Record<string, unknown> | undefined, configuration)).map(([key, defaultValue]) => <CatalogParameterField key={key} name={key} value={configuration[key]} defaultValue={defaultValue} required={isRequired(definition.validation_rules[key] as Record<string, unknown>, configuration)} onChange={(value) => change(key, value)} />) : <p className="text-xs text-amber-700">Node definition is unavailable from the catalog.</p>}
     {error && <p className="text-xs text-red-600">{error}</p>}
     <div className="grid gap-2">
