@@ -43,9 +43,11 @@ export function ConversationSidebar({ conversations, selectedActor, onSelect }: 
               </span>
               <span className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs text-slate-500">{conversation.lastMessage ? conversation.lastMessage.content || conversation.lastMessage.action_type || 'Message' : 'No messages yet'}</span>
-                {conversation.messages.length > 1 && (
+                {conversation.unreadCount > 0 ? (
+                  <span aria-label={`${conversation.unreadCount} unread message${conversation.unreadCount === 1 ? '' : 's'}`} className="grid size-5 shrink-0 place-items-center rounded-full bg-violet-600 text-[10px] font-bold text-white">{conversation.unreadCount}</span>
+                ) : conversation.messages.length > 1 ? (
                   <span className="shrink-0 rounded-full bg-violet-100 px-1.5 text-[10px] font-semibold text-[#5b46c5]">{conversation.messages.length}</span>
-                )}
+                ) : null}
               </span>
             </span>
           </button>

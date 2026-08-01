@@ -42,6 +42,7 @@ export function buildConversations(messages: ChatMessage[], actorNames: Record<s
         actorName: actorNames[actor] ?? actor,
         messages: list,
         lastMessage: list[list.length - 1] ?? null,
+        unreadCount: list.filter((message) => message.is_unread).length,
       }
     })
     .sort((a, b) => {

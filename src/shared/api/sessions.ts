@@ -1,6 +1,8 @@
 import { apiClient } from './client'
 
 export interface SessionChannelEvent {
+  event_id?: string
+  message_id?: string
   workflow_label?: string
   conversation_id?: string
   wait_instance_id?: string
@@ -9,6 +11,7 @@ export interface SessionChannelEvent {
   actor?: string
   content?: string
   timestamp?: string
+  is_read?: boolean
   [key: string]: unknown
 }
 
@@ -27,3 +30,4 @@ export interface SimulationSession {
 
 export const getSession = (sessionId: string) => apiClient<SimulationSession>(`/sessions/${sessionId}`)
 export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSession[]>(`/sessions?participant_id=${encodeURIComponent(participantId)}`)
+export const markSessionChannelEventsRead = (sessionId: string, channel: string, messageIds: string[]) => apiClient<SimulationSession>(`/sessions/${sessionId}/channel-events/read`, { method: 'POST', body: JSON.stringify({ channel, message_ids: messageIds }) })

@@ -11,6 +11,7 @@ export interface ChatMessage {
   conversation_id?: string
   workflow_label?: string
   workflow_version_id?: string
+  is_unread?: boolean
 }
 
 export interface ChatConversation {
@@ -18,4 +19,5 @@ export interface ChatConversation {
   actorName: string
   messages: ChatMessage[]
   lastMessage: ChatMessage | null
+  unreadCount: number
 }
