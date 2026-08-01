@@ -86,6 +86,7 @@ export function SimulationStudioPage() {
 
   // Cache node positions locally so React Query refetches don't reset user-arranged layout
   const localPositions = useRef<Map<string, { x: number; y: number }>>(new Map())
+  const pendingEdgeKeys = useRef<Set<string>>(new Set())
 
   // Stable refs for persistNode.mutate and version status — kept in sync after mutations are declared below.
   // Using refs avoids adding them as useEffect dependencies (which would cause infinite loops).
@@ -289,6 +290,8 @@ export function SimulationStudioPage() {
 
   function connect(connection: Connection) {
     if (!versionId || selectedVersion?.status !== 'draft' || !connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return
+    const connectionKey = [connection.source, connection.sourceHandle, connection.target, connection.targetHandle].join(':')
+    if (pendingEdgeKeys.current.has(connectionKey)) return
     if (connection.source === connection.target) { toast.error('A node cannot connect to itself.'); return }
     if (apiEdges.some((edge) => edge.source_node_id === connection.source && edge.source_port_id === connection.sourceHandle && edge.target_node_id === connection.target && edge.target_port_id === connection.targetHandle)) { toast.error('That port connection already exists.'); return }
     const sourceNode = apiNodes.find((node) => node.node_id === connection.source)
@@ -303,7 +306,23 @@ export function SimulationStudioPage() {
     apiEdges.forEach((edge) => adjacency.set(edge.source_node_id, [...(adjacency.get(edge.source_node_id) ?? []), edge.target_node_id]))
     const pending = [connection.target]; const visited = new Set<string>()
     while (pending.length) { const nodeId = pending.pop()!; if (nodeId === connection.source) { toast.error('That connection would create a cycle.'); return }; if (!visited.has(nodeId)) { visited.add(nodeId); pending.push(...(adjacency.get(nodeId) ?? [])) } }
-    addWorkflowEdge(versionId, { source_node_id: connection.source, source_port_id: connection.sourceHandle, target_node_id: connection.target, target_port_id: connection.targetHandle, priority: 0 }).then(() => queryClient.invalidateQueries({ queryKey: ['graph', versionId] })).catch((error: unknown) => toast.error(apiErrorMessage(error)))
+    const pendingEdgeId = `pending:${connectionKey}`
+    const pendingEdge: ApiEdge = { edge_id: pendingEdgeId, source_node_id: connection.source, source_port_id: connection.sourceHandle, target_node_id: connection.target, target_port_id: connection.targetHandle, priority: 0, is_valid: true }
+    pendingEdgeKeys.current.add(connectionKey)
+    setEdges((current) => [...current, edgeToFlow(pendingEdge, sourcePort, deleteEdge)])
+    addWorkflowEdge(versionId, { source_node_id: connection.source, source_port_id: connection.sourceHandle, target_node_id: connection.target, target_port_id: connection.targetHandle, priority: 0 })
+      .then((edge) => {
+        queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', versionId], (current) => current ? [current[0], [...current[1].filter((item) => item.edge_id !== edge.edge_id), edge]] : current)
+        setEdges((current) => current.map((item) => item.id === pendingEdgeId ? edgeToFlow(edge, sourcePort, deleteEdge) : item))
+      })
+      .catch((error: unknown) => {
+        setEdges((current) => current.filter((item) => item.id !== pendingEdgeId))
+        toast.error(apiErrorMessage(error))
+      })
+      .finally(() => {
+        pendingEdgeKeys.current.delete(connectionKey)
+        queryClient.invalidateQueries({ queryKey: ['graph', versionId] })
+      })
   }
 
   function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: string) {
