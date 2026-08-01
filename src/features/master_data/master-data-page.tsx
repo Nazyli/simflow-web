@@ -1,4 +1,4 @@
-import * as Dialog from '@radix-ui/react-dialog'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Database, Link2, Plus, TableProperties } from 'lucide-react'
 import { useState } from 'react'
@@ -83,16 +83,13 @@ export function MasterDataPage() {
         </aside>
       </section>
 
-      <Dialog.Root open={dialogOpen} onOpenChange={(open) => !open && close()}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="command-overlay" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] max-h-[min(760px,calc(100vh-32px))] w-[min(620px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <Dialog.Title className="text-base font-bold text-slate-900">{record ? 'Edit record' : 'Create record'}</Dialog.Title>
-            <Dialog.Description className="mt-1 text-xs leading-relaxed text-slate-500">Update structured simulation reference data.</Dialog.Description>
-            <div className="mt-4"><MasterDataForm resource={resource} record={record} isSaving={create.isPending || update.isPending || remove.isPending} onSave={(id, values) => id ? update.mutate({ id, values }) : create.mutate(values)} onDelete={(id) => remove.mutate(id)} /></div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <Dialog open={dialogOpen} onOpenChange={(open) => !open && close()}>
+        <DialogContent className="max-h-[min(760px,calc(100vh-32px))] overflow-auto sm:max-w-[620px] p-6">
+          <DialogTitle className="text-base font-bold text-slate-900">{record ? 'Edit record' : 'Create record'}</DialogTitle>
+          <DialogDescription>Update structured simulation reference data.</DialogDescription>
+          <MasterDataForm resource={resource} record={record} isSaving={create.isPending || update.isPending || remove.isPending} onSave={(id, values) => id ? update.mutate({ id, values }) : create.mutate(values)} onDelete={(id) => remove.mutate(id)} />
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

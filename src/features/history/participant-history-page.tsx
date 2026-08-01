@@ -1,4 +1,5 @@
-import * as Dialog from '@radix-ui/react-dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
+import { Button } from '../../components/ui/button'
 import { useQuery } from '@tanstack/react-query'
 import { BellRing, CheckCircle2, CircleAlert, Clock3, FileText, Mail, MessageSquare, Phone, Route, Search, Timer, Workflow } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
@@ -8,6 +9,7 @@ import { getSessionsForParticipant, type SimulationSession } from '../../shared/
 import { getWorkflowVersion } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
+import { inputClass, selectClass } from '../../shared/form-classes'
 import { ParticipantFlowView } from './participant-flow-view'
 
 const eventAppearance = (type: string) => {
@@ -78,10 +80,10 @@ export function ParticipantHistoryPage() {
       </header>
 
       <form className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_.8fr_.8fr_auto]" onSubmit={search}>
-        <label className="grid gap-1.5 text-xs font-semibold text-slate-700">Participant<input required placeholder="Participant ID" className="form-input !m-0 !w-full !py-2" value={participantId} onChange={(item) => setParticipantId(item.target.value)} /></label>
-        <label className="grid gap-1.5 text-xs font-semibold text-slate-700">Workflow<input placeholder="All workflows" disabled className="form-input !m-0 !w-full !py-2 opacity-60" /></label>
-        <label className="grid gap-1.5 text-xs font-semibold text-slate-700">Status<select className="form-select !m-0 !w-full !py-2" value={status} onChange={(item) => setStatus(item.target.value)}><option value="all">All statuses</option><option value="waiting">Waiting</option><option value="running">Running</option><option value="failed">Failed</option><option value="completed">Completed</option></select></label>
-        <label className="grid gap-1.5 text-xs font-semibold text-slate-700">Date<input type="date" className="form-input !m-0 !w-full !py-2" value={date} onChange={(item) => setDate(item.target.value)} /></label>
+        <label className="grid gap-1.5 text-xs font-semibold text-slate-700">Participant<input required placeholder="Participant ID" className={inputClass} value={participantId} onChange={(item) => setParticipantId(item.target.value)} /></label>
+        <label className="grid gap-1.5 text-xs font-semibold text-slate-700">Workflow<input placeholder="All workflows" disabled className={`${inputClass} opacity-60`} /></label>
+        <label className="grid gap-1.5 text-xs font-semibold text-slate-700">Status<select className={selectClass} value={status} onChange={(item) => setStatus(item.target.value)}><option value="all">All statuses</option><option value="waiting">Waiting</option><option value="running">Running</option><option value="failed">Failed</option><option value="completed">Completed</option></select></label>
+        <label className="grid gap-1.5 text-xs font-semibold text-slate-700">Date<input type="date" className={inputClass} value={date} onChange={(item) => setDate(item.target.value)} /></label>
         <button type="submit" className="inline-flex h-9 items-center justify-center gap-1.5 self-end rounded-lg bg-[#5b46c5] px-3.5 py-2 text-xs font-semibold text-white shadow-none transition hover:bg-[#4b38ac]"><Search size={14} /> Search history</button>
       </form>
 
@@ -159,28 +161,25 @@ function TimelineEvent({ event, onOpen }: { event: ExecutionEvent; onOpen: () =>
 function EventDialog({ event, onClose }: { event: ExecutionEvent | null; onClose: () => void }) {
   const [tab, setTab] = useState<'detail' | 'raw'>('detail')
   return (
-    <Dialog.Root open={Boolean(event)} onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="command-overlay" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] w-[min(520px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
-          <Dialog.Title className="text-base font-bold capitalize text-slate-900">{event?.event_type.replaceAll('_', ' ') ?? 'Event detail'}</Dialog.Title>
-          <Dialog.Description className="mt-1 text-xs leading-relaxed text-slate-500">Timeline event inspection</Dialog.Description>
-          <div className="mt-4 flex gap-1 border-b border-slate-100">
-            <button className={`border-b-2 px-3 py-2 text-xs font-semibold transition ${tab === 'detail' ? 'border-[#5b46c5] text-[#5b46c5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setTab('detail')}>Details</button>
-            <button className={`border-b-2 px-3 py-2 text-xs font-semibold transition ${tab === 'raw' ? 'border-[#5b46c5] text-[#5b46c5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setTab('raw')}>Raw payload</button>
+    <Dialog open={Boolean(event)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[520px] p-6">
+        <DialogTitle className="text-base font-bold capitalize text-slate-900">{event?.event_type.replaceAll('_', ' ') ?? 'Event detail'}</DialogTitle>
+        <DialogDescription>Timeline event inspection</DialogDescription>
+        <div className="flex gap-1 border-b border-slate-100">
+          <button className={`border-b-2 px-3 py-2 text-xs font-semibold transition ${tab === 'detail' ? 'border-[#5b46c5] text-[#5b46c5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setTab('detail')}>Details</button>
+          <button className={`border-b-2 px-3 py-2 text-xs font-semibold transition ${tab === 'raw' ? 'border-[#5b46c5] text-[#5b46c5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`} onClick={() => setTab('raw')}>Raw payload</button>
+        </div>
+        {tab === 'detail' ? (
+          <div className="grid gap-3">
+            <div><p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Node</p><p className="mt-0.5 text-xs text-slate-700">{event?.node_id ?? 'System'}</p></div>
+            <div><p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Recorded at</p><p className="mt-0.5 text-xs text-slate-700">{event ? new Date(event.created_at).toLocaleString() : '—'}</p></div>
+            <div><p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Payload fields</p><p className="mt-0.5 text-xs text-slate-700">{event ? Object.keys(event.payload).join(', ') || 'No structured fields' : '—'}</p></div>
           </div>
-          {tab === 'detail' ? (
-            <div className="mt-4 grid gap-3">
-              <div><p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Node</p><p className="mt-0.5 text-xs text-slate-700">{event?.node_id ?? 'System'}</p></div>
-              <div><p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Recorded at</p><p className="mt-0.5 text-xs text-slate-700">{event ? new Date(event.created_at).toLocaleString() : '—'}</p></div>
-              <div><p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Payload fields</p><p className="mt-0.5 text-xs text-slate-700">{event ? Object.keys(event.payload).join(', ') || 'No structured fields' : '—'}</p></div>
-            </div>
-          ) : <pre className="mt-4 max-h-[260px] overflow-auto rounded-lg bg-slate-900 p-3 font-mono text-[11px] leading-relaxed text-blue-100">{JSON.stringify(event?.payload ?? {}, null, 2)}</pre>}
-          <div className="mt-5 flex justify-end">
-            <Dialog.Close asChild><button className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-none transition hover:bg-slate-50">Close</button></Dialog.Close>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        ) : <pre className="max-h-[260px] overflow-auto rounded-lg bg-slate-900 p-3 font-mono text-[11px] leading-relaxed text-blue-100">{JSON.stringify(event?.payload ?? {}, null, 2)}</pre>}
+        <div className="mt-5 flex justify-end">
+          <DialogClose asChild><Button variant="outline" size="sm">Close</Button></DialogClose>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

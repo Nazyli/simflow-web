@@ -8,6 +8,7 @@ import { getSessionsForParticipant, type SessionChannelEvent, type SimulationSes
 import { getPublishedVersions } from '../../shared/api/workflows'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
+import { formGroupClass, formLabelClass, inputClass, selectClass } from '../../shared/form-classes'
 import type { Execution } from '../../shared/types/workflow'
 import { CallWorkspace, DocumentWorkspace, EmailWorkspace } from './channel-workspaces'
 import type { Channel, ChannelWorkspaceProps } from './channel-workspaces'
@@ -76,21 +77,21 @@ export function SimulationRunnerPage() {
         </div>
       </header>
       <form className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-4" onSubmit={begin}>
-        <div className="form-group">
-          <label className="form-label" htmlFor="runner-actor">Participant actor</label>
-          <input id="runner-actor" className="form-input !m-0 !w-full !py-2 text-sm" required value={actorId} onChange={(event) => setActorId(event.target.value)} />
+        <div className={formGroupClass}>
+          <label className={formLabelClass} htmlFor="runner-actor">Participant actor</label>
+          <input id="runner-actor" className={inputClass} required value={actorId} onChange={(event) => setActorId(event.target.value)} />
         </div>
-        <div className="form-group">
-          <label className="form-label" htmlFor="runner-participant">Participant ID</label>
-          <input id="runner-participant" className="form-input !m-0 !w-full !py-2 text-sm" required value={participantId} placeholder="e.g. participant-123" onChange={(event) => setParticipantId(event.target.value)} />
+        <div className={formGroupClass}>
+          <label className={formLabelClass} htmlFor="runner-participant">Participant ID</label>
+          <input id="runner-participant" className={inputClass} required value={participantId} placeholder="e.g. participant-123" onChange={(event) => setParticipantId(event.target.value)} />
         </div>
-        <div className="form-group">
-          <label className="form-label" htmlFor="runner-version">Workflow versions</label>
-          <select id="runner-version" multiple className="form-select !m-0 !w-full !py-2 text-sm" required value={versionIds} onChange={(event) => setVersionIds(Array.from(event.currentTarget.selectedOptions, (option) => option.value))}>
+        <div className={formGroupClass}>
+          <label className={formLabelClass} htmlFor="runner-version">Workflow versions</label>
+          <select id="runner-version" multiple className={selectClass} required value={versionIds} onChange={(event) => setVersionIds(Array.from(event.currentTarget.selectedOptions, (option) => option.value))}>
             {versions.data?.map((item) => <option key={item.workflow_version_id} value={item.workflow_version_id}>{item.workflow_name} · v{item.version_number}</option>)}
           </select>
         </div>
-        <div className="form-group justify-end">
+        <div className={`${formGroupClass} justify-end`}>
           <button type="submit" disabled={!actorId || !participantId.trim() || !versionIds.length || start.isPending} className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50">
             <Play size={15} /> {start.isPending ? 'Checking simulations…' : 'Start selected simulations'}
           </button>

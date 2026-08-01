@@ -1,13 +1,14 @@
-import * as Dialog from '@radix-ui/react-dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
+import { Button } from '../../components/ui/button'
 import { useQuery } from '@tanstack/react-query'
 import { Background, Controls, MarkerType, ReactFlow, useEdgesState, useNodesState, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react'
-import { CircleAlert, Route, Workflow } from 'lucide-react'
+import { CircleAlert, Route } from 'lucide-react'
 import dagre from 'dagre'
 import { useEffect, useMemo, useState } from 'react'
 import { getNodeResults, getTimeline } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
 import { getGraph, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
-import { LoadingState } from '../../shared/components/async-state'
+import { EmptyState, LoadingState } from '../../shared/components/async-state'
 import type { NodeDefinition } from '../../shared/types/workflow'
 import { WorkflowGraphNode } from '../simulation_studio/workflow-graph-node'
 import { WorkflowGraphEdge } from '../simulation_studio/workflow-graph-edge'
@@ -125,20 +126,18 @@ export function ParticipantFlowView({ open, onClose, versionId, executionId, tit
   const hasWarnings = view.externalStates.systemEvents > 0 || view.externalStates.nodeIds.length > 0
 
   return (
-    <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="command-overlay" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] flex max-h-[calc(100vh-48px)] w-[min(1120px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
-          <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 text-[#5b46c5]"><Route size={18} /></span>
-              <div className="min-w-0">
-                <Dialog.Title className="truncate text-base font-bold text-slate-900">{title}</Dialog.Title>
-                <Dialog.Description className="mt-0.5 text-xs text-slate-500">Participant path mapped onto the workflow definition</Dialog.Description>
-              </div>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent showCloseButton={false} className="flex max-h-[calc(100vh-48px)] w-[min(1120px,calc(100vw-32px))] flex-col gap-0 overflow-hidden p-0 sm:max-w-none">
+        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 text-[#5b46c5]"><Route size={18} /></span>
+            <div className="min-w-0">
+              <DialogTitle className="truncate text-base font-bold text-slate-900">{title}</DialogTitle>
+              <DialogDescription className="text-xs text-slate-500">Participant path mapped onto the workflow definition</DialogDescription>
             </div>
-            <Dialog.Close asChild><button className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-none transition hover:bg-slate-50">Close</button></Dialog.Close>
           </div>
+          <DialogClose asChild><Button variant="outline" size="sm">Close</Button></DialogClose>
+        </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-b border-slate-100 px-5 py-2.5 text-[11px] font-medium text-slate-500">
             <span className="flex items-center gap-1.5"><i className="history-legend-line history-legend-line--path" />Participant path ({view.takenCount})</span>
@@ -163,7 +162,7 @@ export function ParticipantFlowView({ open, onClose, versionId, executionId, tit
             )}
             <div className="p-4">
               {pending ? <LoadingState /> : view.flowNodes.length === 0 ? (
-                <div className="empty-state"><span><Workflow size={18} /></span><strong>No flow data</strong><p>No nodes were recorded for this workflow version.</p></div>
+                <EmptyState title="No flow data" description="No nodes were recorded for this workflow version." />
               ) : (
                 <div className="history-flow-canvas">
                   <ReactFlow
@@ -186,8 +185,7 @@ export function ParticipantFlowView({ open, onClose, versionId, executionId, tit
               )}
             </div>
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </DialogContent>
+    </Dialog>
   )
 }

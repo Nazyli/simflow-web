@@ -1,4 +1,4 @@
-import * as Dialog from '@radix-ui/react-dialog'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarClock, CheckCircle2, Clock, RefreshCw, Timer, XCircle } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
@@ -7,6 +7,7 @@ import { cancelTimer, getTimers, rescheduleTimer, type WorkflowTimer } from '../
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { DataTable, type DataTableColumn } from '../../shared/components/data-table'
 import { StatusBadge } from '../../shared/components/status-badge'
+import { inputClass } from '../../shared/form-classes'
 
 const TIMER_STATUSES = ['scheduled', 'running', 'retry', 'completed', 'failed']
 
@@ -144,52 +145,44 @@ function RescheduleDialog({ timer, isSaving, onClose, onSave }: { timer: Workflo
   const [dueAt, setDueAt] = useState('')
   useEffect(() => setDueAt(timer ? toJakartaInput(timer.due_at) : ''), [timer])
   return (
-    <Dialog.Root open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="command-overlay" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] w-[min(430px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
-          <Dialog.Title className="text-base font-bold text-slate-900">Reschedule timer</Dialog.Title>
-          <Dialog.Description className="mt-1 text-xs leading-relaxed text-slate-500">Choose a new date and time for this workflow action. Shown in Jakarta time (GMT+7).</Dialog.Description>
-          <label className="mt-4 grid gap-1.5 text-xs font-semibold text-slate-700">
-            New execution time
-            <input type="datetime-local" value={dueAt} onChange={(event) => setDueAt(event.target.value)} className="form-input !m-0 !w-full !py-2" />
-          </label>
-          <DialogFooter>
-            <DialogButton onClick={onClose}>Cancel</DialogButton>
-            <DialogButton variant="primary" onClick={() => onSave(fromJakartaInput(dueAt))} disabled={!dueAt || isSaving}>Save schedule</DialogButton>
-          </DialogFooter>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Dialog open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[430px] p-6">
+        <DialogTitle className="text-base font-bold text-slate-900">Reschedule timer</DialogTitle>
+        <DialogDescription>Choose a new date and time for this workflow action. Shown in Jakarta time (GMT+7).</DialogDescription>
+        <label className="grid gap-1.5 text-xs font-semibold text-slate-700">
+          New execution time
+          <input type="datetime-local" value={dueAt} onChange={(event) => setDueAt(event.target.value)} className={inputClass} />
+        </label>
+        <DialogFooter>
+          <DialogButton onClick={onClose}>Cancel</DialogButton>
+          <DialogButton variant="primary" onClick={() => onSave(fromJakartaInput(dueAt))} disabled={!dueAt || isSaving}>Save schedule</DialogButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
 function CancelDialog({ timer, isSaving, onClose, onConfirm }: { timer: WorkflowTimer | null; isSaving: boolean; onClose: () => void; onConfirm: () => void }) {
   return (
-    <Dialog.Root open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="command-overlay" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] w-[min(430px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
-          <Dialog.Title className="text-base font-bold text-slate-900">Cancel scheduled timer?</Dialog.Title>
-          <Dialog.Description className="mt-1 text-xs leading-relaxed text-slate-500">This prevents the workflow action from running at {timer ? formatTime(timer.due_at) : 'the scheduled time'}.</Dialog.Description>
-          <DialogFooter>
-            <DialogButton onClick={onClose}>Keep timer</DialogButton>
-            <DialogButton variant="danger" onClick={onConfirm} disabled={isSaving}>Cancel timer</DialogButton>
-          </DialogFooter>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Dialog open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[430px] p-6">
+        <DialogTitle className="text-base font-bold text-slate-900">Cancel scheduled timer?</DialogTitle>
+        <DialogDescription>This prevents the workflow action from running at {timer ? formatTime(timer.due_at) : 'the scheduled time'}.</DialogDescription>
+        <DialogFooter>
+          <DialogButton onClick={onClose}>Keep timer</DialogButton>
+          <DialogButton variant="danger" onClick={onConfirm} disabled={isSaving}>Cancel timer</DialogButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
 function TimerDetail({ timer, onClose }: { timer: WorkflowTimer | null; onClose: () => void }) {
   return (
-    <Dialog.Root open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="command-overlay" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[31] w-[min(480px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-5 shadow-2xl">
-          <Dialog.Title className="text-base font-bold text-slate-900">Timer details</Dialog.Title>
-          <Dialog.Description className="mt-1 text-xs leading-relaxed text-slate-500">Retry and error context for this scheduled action.</Dialog.Description>
+    <Dialog open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[480px] p-6">
+        <DialogTitle className="text-base font-bold text-slate-900">Timer details</DialogTitle>
+        <DialogDescription>Retry and error context for this scheduled action.</DialogDescription>
           <dl className="mt-4 grid gap-3">
             <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-2.5"><dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Status</dt><dd><StatusBadge status={timer?.status ?? 'default'} /></dd></div>
             <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-2.5"><dt className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Retry policy</dt><dd className="text-xs font-semibold text-slate-700 tabular-nums">{timer?.attempt_count ?? 0} of {timer?.max_attempts ?? 0} attempts · {timer?.retry_delay_seconds ?? 0}s delay</dd></div>
@@ -199,8 +192,7 @@ function TimerDetail({ timer, onClose }: { timer: WorkflowTimer | null; onClose:
           <DialogFooter>
             <DialogButton onClick={onClose}>Close details</DialogButton>
           </DialogFooter>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </DialogContent>
+      </Dialog>
   )
 }

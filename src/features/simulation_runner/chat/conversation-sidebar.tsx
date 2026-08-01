@@ -1,5 +1,6 @@
 import { MessageSquare, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { inputClass } from '../../../shared/form-classes'
 import type { ChatConversation } from './types'
 import { formatChatTime } from './utils'
 
@@ -18,7 +19,7 @@ export function ConversationSidebar({ conversations, selectedActor, onSelect }: 
   return (
     <aside className="flex shrink-0 gap-1 overflow-x-auto border-b border-slate-200 bg-white p-2 lg:w-[280px] lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r lg:p-2">
       <p className="hidden px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:block">Conversations</p>
-      <label className="relative hidden px-1 pb-1 lg:block"><Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" /><input className="form-input !m-0 !w-full !py-2 !pl-8 text-xs" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name or actor ID" /></label>
+      <label className="relative hidden px-1 pb-1 lg:block"><Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" /><input className={`${inputClass} !py-2 !pl-8 text-xs`} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name or actor ID" /></label>
       {filteredConversations.map((conversation) => {
         const active = conversation.actor === selectedActor
         return (

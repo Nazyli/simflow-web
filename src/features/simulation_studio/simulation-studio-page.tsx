@@ -1,4 +1,8 @@
-import * as Dialog from '@radix-ui/react-dialog'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Textarea } from '../../components/ui/textarea'
 import { Background, Controls, MarkerType, MiniMap, ReactFlow, useEdgesState, useNodesState, type Connection, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { 
@@ -349,7 +353,7 @@ export function SimulationStudioPage() {
           <div className="flex items-center gap-2">
             <span className="text-xs uppercase tracking-wider text-purple-700 font-bold px-2 py-0.5 rounded bg-purple-50 border border-purple-200">Studio</span>
             <button 
-              className="workflow-picker-trigger flex items-center gap-2 hover:bg-slate-100 px-2.5 py-1 rounded-lg transition-colors"
+              className="flex items-center gap-2 hover:bg-slate-100 px-2.5 py-1 rounded-lg transition-colors"
               type="button" 
               onClick={() => setWorkflowPickerOpen(true)}
             >
@@ -369,8 +373,8 @@ export function SimulationStudioPage() {
           </div>
 
           <div className="hidden sm:flex items-center gap-2.5 pl-3 border-l border-slate-200">
-            {selectedVersion ? <StatusBadge status={selectedVersion.status} /> : <span className="status-badge status-draft">No Version</span>}
-            <span className="autosave-indicator text-xs text-slate-500 flex items-center gap-1">
+            {selectedVersion ? <StatusBadge status={selectedVersion.status} /> : <span className="inline-flex h-5 w-fit items-center rounded-4xl border border-transparent px-2 text-[0.66rem] font-bold capitalize" style={{ color: 'var(--status-draft)', backgroundColor: 'var(--status-draft-bg)' }}>No Version</span>}
+            <span className="text-xs text-slate-500 flex items-center gap-1">
               <Save size={13} className="text-emerald-600" /> Autosaved
             </span>
           </div>
@@ -395,7 +399,7 @@ export function SimulationStudioPage() {
               {selectedVersion?.status !== 'draft' && (
                 <button 
                   type="button" 
-                  className="btn-xs-primary flex items-center gap-1 px-2 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors"
+                  className="flex items-center gap-1 rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
                   onClick={() => createDraft.mutate(selectedWorkflow.workflow_id)}
                 >
                   <Plus className="w-3 h-3" /> New Draft
@@ -405,7 +409,7 @@ export function SimulationStudioPage() {
           )}
 
           <button 
-            className="publish-button flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white shadow-xs transition-all" 
+            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:bg-emerald-700 disabled:opacity-50" 
             type="button" 
             disabled={!selectedVersion || selectedVersion.status !== 'draft' || publish.isPending} 
             onClick={() => selectedVersion && publish.mutate(selectedVersion.workflow_version_id)}
@@ -516,20 +520,20 @@ export function SimulationStudioPage() {
           {/* Floating Canvas Glassmorphism Toolbar */}
           <div className="floating-canvas-toolbar absolute top-4 left-4 z-10 flex items-center gap-1.5 p-1.5 rounded-xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-md">
             <div className="flex items-center gap-1 pr-1.5 border-r border-slate-200">
-              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Undo" disabled title="Undo (Ctrl+Z)"><Undo2 size={15} /></button>
-              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Redo" disabled title="Redo (Ctrl+Y)"><Redo2 size={15} /></button>
+              <button type="button" className="inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100" aria-label="Undo" disabled title="Undo (Ctrl+Z)"><Undo2 size={15} /></button>
+              <button type="button" className="inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100" aria-label="Redo" disabled title="Redo (Ctrl+Y)"><Redo2 size={15} /></button>
             </div>
 
             <div className="flex items-center gap-1 px-1 border-r border-slate-200">
-              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Zoom Out" onClick={() => flowInstance?.zoomOut()} title="Zoom Out"><Minus size={15} /></button>
-              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Zoom In" onClick={() => flowInstance?.zoomIn()} title="Zoom In"><Plus size={15} /></button>
-              <button type="button" className="toolbar-btn text-slate-600 hover:bg-slate-100" aria-label="Fit View" onClick={() => flowInstance?.fitView()} title="Fit Canvas View"><Maximize size={15} /></button>
+              <button type="button" className="inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100" aria-label="Zoom Out" onClick={() => flowInstance?.zoomOut()} title="Zoom Out"><Minus size={15} /></button>
+              <button type="button" className="inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100" aria-label="Zoom In" onClick={() => flowInstance?.zoomIn()} title="Zoom In"><Plus size={15} /></button>
+              <button type="button" className="inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100" aria-label="Fit View" onClick={() => flowInstance?.fitView()} title="Fit Canvas View"><Maximize size={15} /></button>
             </div>
 
             <div className="flex items-center gap-1 pl-1">
               <button 
                 type="button" 
-                className={`toolbar-btn ${showMiniMap ? 'is-active text-purple-700 bg-purple-50' : 'text-slate-600 hover:bg-slate-100'}`} 
+                className={`inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${showMiniMap ? 'text-purple-700 bg-purple-50' : 'text-slate-600 hover:bg-slate-100'}`} 
                 onClick={() => setShowMiniMap(curr => !curr)} 
                 title="Toggle Minimap"
               >
@@ -538,7 +542,7 @@ export function SimulationStudioPage() {
               
               <button 
                 type="button" 
-                className={`toolbar-btn px-2 flex items-center gap-1 font-medium text-xs ${validationRequested ? 'is-active text-emerald-700 bg-emerald-50' : 'text-slate-600 hover:bg-slate-100'}`} 
+                className={`inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed px-2 gap-1 font-medium text-xs ${validationRequested ? 'text-emerald-700 bg-emerald-50' : 'text-slate-600 hover:bg-slate-100'}`} 
                 onClick={validateGraph}
                 title="Validate Graph Structure"
               >
@@ -730,147 +734,134 @@ export function SimulationStudioPage() {
       </div>
 
       {/* Select / Create Workflow Dialog */}
-      <Dialog.Root open={workflowPickerOpen} onOpenChange={setWorkflowPickerOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="command-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50" />
-          <Dialog.Content className="workflow-picker-dialog fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-6 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50">
-            <Dialog.Title className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <FolderKanban className="w-5 h-5 text-purple-600" /> Select Workflow
-            </Dialog.Title>
-            <Dialog.Description className="text-xs text-slate-500 mt-1 mb-4">
-              Choose an existing workflow to edit or create a new simulation workflow.
-            </Dialog.Description>
+      <Dialog open={workflowPickerOpen} onOpenChange={setWorkflowPickerOpen}>
+        <DialogContent className="sm:max-w-lg p-6">
+          <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <FolderKanban className="w-5 h-5 text-purple-600" /> Select Workflow
+          </DialogTitle>
+          <DialogDescription>
+            Choose an existing workflow to edit or create a new simulation workflow.
+          </DialogDescription>
 
-            <button 
-              className="workflow-picker-create w-full py-2.5 mb-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-colors" 
-              type="button" 
-              onClick={() => { setSelectedWorkflow(null); setVersionId(null); setWorkflowPickerOpen(false); setEditWorkflowOpen(true) }}
-            >
-              <Plus className="w-4 h-4" /> Create New Workflow
-            </button>
+          <Button 
+            type="button" 
+            className="w-full" 
+            onClick={() => { setSelectedWorkflow(null); setVersionId(null); setWorkflowPickerOpen(false); setEditWorkflowOpen(true) }}
+          >
+            <Plus className="w-4 h-4" /> Create New Workflow
+          </Button>
 
-            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-              {workflows.data?.map((item) => (
-                <button 
-                  className={`workflow-picker-item w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
-                    selectedWorkflow?.workflow_id === item.workflow_id ? 'bg-purple-50 border-purple-300' : 'bg-white border-slate-200 hover:border-slate-300'
-                  }`} 
-                  type="button" 
-                  key={item.workflow_id} 
-                  onClick={() => { setSelectedWorkflow(item); setVersionId(null); setWorkflowPickerOpen(false) }}
-                >
-                  <div>
-                    <strong className="block text-sm font-semibold text-slate-800">{item.workflow_name}</strong>
-                    <small className="text-xs text-slate-500 leading-normal">{item.workflow_desc ?? 'No description provided'}</small>
-                  </div>
-                  <StatusBadge status={item.status} />
-                </button>
-              ))}
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+            {workflows.data?.map((item) => (
+              <button 
+                className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
+                  selectedWorkflow?.workflow_id === item.workflow_id ? 'bg-purple-50 border-purple-300' : 'bg-white border-slate-200 hover:border-slate-300'
+                }`} 
+                type="button" 
+                key={item.workflow_id} 
+                onClick={() => { setSelectedWorkflow(item); setVersionId(null); setWorkflowPickerOpen(false) }}
+              >
+                <div>
+                  <strong className="block text-sm font-semibold text-slate-800">{item.workflow_name}</strong>
+                  <small className="text-xs text-slate-500 leading-normal">{item.workflow_desc ?? 'No description provided'}</small>
+                </div>
+                <StatusBadge status={item.status} />
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit / Create Workflow Modal */}
-      <Dialog.Root open={editWorkflowOpen} onOpenChange={setEditWorkflowOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="command-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50">
-            <Dialog.Title className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-              <Edit3 className="w-5 h-5 text-purple-600" /> {selectedWorkflow ? 'Edit Workflow' : 'Create Workflow'}
-            </Dialog.Title>
-            
-            <form className="flex flex-col gap-4" key={selectedWorkflow?.workflow_id ?? 'new'} onSubmit={submitWorkflow}>
-              <div className="form-group">
-                <label className="form-label text-slate-700">Workflow Name</label>
-                <input className="form-input" name="name" required defaultValue={selectedWorkflow?.workflow_name ?? ''} placeholder="e.g. Customer Onboarding Engine" />
-              </div>
-              <div className="form-group">
-                <label className="form-label text-slate-700">Description</label>
-                <textarea className="form-textarea" rows={3} name="description" defaultValue={selectedWorkflow?.workflow_desc ?? ''} placeholder="Describe the purpose of this simulation..." />
-              </div>
+      <Dialog open={editWorkflowOpen} onOpenChange={setEditWorkflowOpen}>
+        <DialogContent className="sm:max-w-md p-6">
+          <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Edit3 className="w-5 h-5 text-purple-600" /> {selectedWorkflow ? 'Edit Workflow' : 'Create Workflow'}
+          </DialogTitle>
+          
+          <form className="flex flex-col gap-4" key={selectedWorkflow?.workflow_id ?? 'new'} onSubmit={submitWorkflow}>
+            <div className="grid gap-1.5">
+              <Label htmlFor="workflow-name" className="text-slate-700">Workflow Name</Label>
+              <Input id="workflow-name" name="name" required defaultValue={selectedWorkflow?.workflow_name ?? ''} placeholder="e.g. Customer Onboarding Engine" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="workflow-desc" className="text-slate-700">Description</Label>
+              <Textarea id="workflow-desc" rows={3} name="description" defaultValue={selectedWorkflow?.workflow_desc ?? ''} placeholder="Describe the purpose of this simulation..." />
+            </div>
 
-              <div className="flex gap-2 justify-end mt-2">
-                <button type="button" className="btn-secondary" onClick={() => setEditWorkflowOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-primary" disabled={create.isPending || update.isPending}>
-                  <Save className="w-4 h-4 inline mr-1" /> {selectedWorkflow ? 'Save Changes' : 'Create Workflow'}
-                </button>
-              </div>
+            <div className="flex gap-2 justify-end mt-2">
+              <Button type="button" variant="outline" onClick={() => setEditWorkflowOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={create.isPending || update.isPending}>
+                <Save className="w-4 h-4" /> {selectedWorkflow ? 'Save Changes' : 'Create Workflow'}
+              </Button>
+            </div>
 
-              {selectedWorkflow && (
-                <div className="pt-4 border-t border-slate-200 mt-2">
-                  <button 
-                    className="btn-danger w-full flex items-center justify-center gap-2" 
-                    type="button" 
-                    disabled={removeWorkflow.isPending} 
-                    onClick={() => removeWorkflow.mutate(selectedWorkflow.workflow_id)}
-                  >
-                    <Trash2 className="w-4 h-4" /> Delete Workflow
-                  </button>
-                </div>
-              )}
-            </form>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+            {selectedWorkflow && (
+              <div className="pt-4 border-t border-slate-200 mt-2">
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  className="w-full" 
+                  disabled={removeWorkflow.isPending} 
+                  onClick={() => removeWorkflow.mutate(selectedWorkflow.workflow_id)}
+                >
+                  <Trash2 className="w-4 h-4" /> Delete Workflow
+                </Button>
+              </div>
+            )}
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Execution Log Confirmation */}
-      <Dialog.Root open={Boolean(deleteExecutionTarget)} onOpenChange={(open) => { if (!open) setDeleteExecutionTarget(null) }}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="command-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50" />
-          <Dialog.Content className="workflow-picker-dialog fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50">
-            <Dialog.Title className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-red-600" /> Delete execution log?
-            </Dialog.Title>
-            <Dialog.Description className="text-xs text-slate-500 mt-1 mb-4">
-              This permanently deletes the execution, its timeline events, node results, waits, timers, and the simulation session when no other execution uses it. This cannot be undone.
-            </Dialog.Description>
+      <Dialog open={Boolean(deleteExecutionTarget)} onOpenChange={(open) => { if (!open) setDeleteExecutionTarget(null) }}>
+        <DialogContent className="sm:max-w-md p-6">
+          <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-red-600" /> Delete execution log?
+          </DialogTitle>
+          <DialogDescription>
+            This permanently deletes the execution, its timeline events, node results, waits, timers, and the simulation session when no other execution uses it. This cannot be undone.
+          </DialogDescription>
 
-            <div className="flex items-center justify-end gap-2">
-              <button type="button" onClick={() => setDeleteExecutionTarget(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
-                Cancel
-              </button>
-              <button 
-                type="button" 
-                disabled={removeExecution.isPending} 
-                onClick={() => { if (deleteExecutionTarget) removeExecution.mutate(deleteExecutionTarget); setDeleteExecutionTarget(null) }} 
-                className="inline-flex items-center gap-1.5 rounded-lg border-0 bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-50"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> {removeExecution.isPending ? 'Deleting…' : 'Delete log'}
-              </button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          <div className="flex items-center justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteExecutionTarget(null)}>Cancel</Button>
+            <Button 
+              type="button" 
+              variant="destructive" 
+              disabled={removeExecution.isPending} 
+              onClick={() => { if (deleteExecutionTarget) removeExecution.mutate(deleteExecutionTarget); setDeleteExecutionTarget(null) }} 
+              className="border-0 bg-red-600 text-white hover:bg-red-700"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> {removeExecution.isPending ? 'Deleting…' : 'Delete log'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Workflow Version Confirmation */}
-      <Dialog.Root open={Boolean(deleteVersionTarget)} onOpenChange={(open) => { if (!open) setDeleteVersionTarget(null) }}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="command-overlay fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50" />
-          <Dialog.Content className="workflow-picker-dialog fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50">
-            <Dialog.Title className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-red-600" /> Delete workflow version?
-            </Dialog.Title>
-            <Dialog.Description className="text-xs text-slate-500 mt-1 mb-4">
-              This permanently deletes the version, its nodes, and its edges. This cannot be undone. Versions that already have execution logs cannot be deleted.
-            </Dialog.Description>
+      <Dialog open={Boolean(deleteVersionTarget)} onOpenChange={(open) => { if (!open) setDeleteVersionTarget(null) }}>
+        <DialogContent className="sm:max-w-md p-6">
+          <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-red-600" /> Delete workflow version?
+          </DialogTitle>
+          <DialogDescription>
+            This permanently deletes the version, its nodes, and its edges. This cannot be undone. Versions that already have execution logs cannot be deleted.
+          </DialogDescription>
 
-            <div className="flex items-center justify-end gap-2">
-              <button type="button" onClick={() => setDeleteVersionTarget(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
-                Cancel
-              </button>
-              <button 
-                type="button" 
-                disabled={removeVersion.isPending} 
-                onClick={() => { if (deleteVersionTarget) removeVersion.mutate(deleteVersionTarget); setDeleteVersionTarget(null) }} 
-                className="inline-flex items-center gap-1.5 rounded-lg border-0 bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-50"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> {removeVersion.isPending ? 'Deleting…' : 'Delete version'}
-              </button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          <div className="flex items-center justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteVersionTarget(null)}>Cancel</Button>
+            <Button 
+              type="button" 
+              variant="destructive" 
+              disabled={removeVersion.isPending} 
+              onClick={() => { if (deleteVersionTarget) removeVersion.mutate(deleteVersionTarget); setDeleteVersionTarget(null) }} 
+              className="border-0 bg-red-600 text-white hover:bg-red-700"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> {removeVersion.isPending ? 'Deleting…' : 'Delete version'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
