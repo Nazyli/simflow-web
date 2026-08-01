@@ -87,6 +87,7 @@ export function SimulationStudioPage() {
   // Cache node positions locally so React Query refetches don't reset user-arranged layout
   const localPositions = useRef<Map<string, { x: number; y: number }>>(new Map())
   const pendingEdgeKeys = useRef<Set<string>>(new Set())
+  const fittedVersionId = useRef<string | null>(null)
 
   // Stable refs for persistNode.mutate and version status — kept in sync after mutations are declared below.
   // Using refs avoids adding them as useEffect dependencies (which would cause infinite loops).
@@ -233,10 +234,11 @@ export function SimulationStudioPage() {
   }, [apiNodes, apiEdges, definitions, setNodes, setEdges, deleteEdge])
 
   useEffect(() => {
-    if (!flowInstance || apiNodes.length === 0) return
+    if (!flowInstance || !versionId || apiNodes.length === 0 || fittedVersionId.current === versionId) return
+    fittedVersionId.current = versionId
     const frame = requestAnimationFrame(() => flowInstance.fitView({ padding: 0.2, duration: 240 }))
     return () => cancelAnimationFrame(frame)
-  }, [apiEdges.length, apiNodes.length, flowInstance])
+  }, [apiNodes.length, flowInstance, versionId])
 
   useEffect(() => { setSelectedExecutionId(null); localPositions.current.clear() }, [versionId])
 
