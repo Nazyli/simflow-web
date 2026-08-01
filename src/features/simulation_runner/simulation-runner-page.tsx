@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Clock3, Play, RefreshCw, UserRound } from 'lucide-react'
+import { Clock3, FileText, Mail, MessageCircle, Phone, Play, RefreshCw, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { getExecution, markExecutionMessageRead, startExecutionBatch, submitExecutionAction, type BatchExecutionRun } from '../../shared/api/executions'
@@ -7,16 +7,22 @@ import { getMasterData } from '../../shared/api/master-data'
 import { getSessionsForParticipant, type SessionChannelEvent, type SimulationSession } from '../../shared/api/sessions'
 import { getPublishedVersions } from '../../shared/api/workflows'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
+import { MultiSelect } from '../../shared/components/multi-select'
 import { StatusBadge } from '../../shared/components/status-badge'
-import { formGroupClass, formLabelClass, inputClass, selectClass } from '../../shared/form-classes'
+import { formGroupClass, formLabelClass, inputClass } from '../../shared/form-classes'
 import type { Execution } from '../../shared/types/workflow'
 import { CallWorkspace, DocumentWorkspace, EmailWorkspace } from './channel-workspaces'
 import type { Channel, ChannelWorkspaceProps } from './channel-workspaces'
 import { ChatWorkspace } from './chat/chat-workspace'
 import type { ChatMessage } from './chat/types'
 
-const channels: Channel[] = ['chat', 'email', 'call', 'document']
 const eventLists: Record<Channel, keyof Pick<SimulationSession, 'chat_inbox' | 'email_inbox' | 'call_state' | 'document_state'>> = { chat: 'chat_inbox', email: 'email_inbox', call: 'call_state', document: 'document_state' }
+const channelNavigation: { channel: Channel; label: string; icon: typeof MessageCircle }[] = [
+  { channel: 'chat', label: 'Conversations', icon: MessageCircle },
+  { channel: 'email', label: 'Email', icon: Mail },
+  { channel: 'call', label: 'Call', icon: Phone },
+  { channel: 'document', label: 'Document', icon: FileText },
+]
 
 function eventTime(value?: string): number {
   const time = value ? new Date(value).getTime() : NaN
@@ -37,6 +43,7 @@ export function SimulationRunnerPage() {
   const [execution, setExecution] = useState<Execution | null>(null)
   const [runs, setRuns] = useState<BatchExecutionRun[]>([])
   const [quotedMessage, setQuotedMessage] = useState<ChatMessage | null>(null)
+  const [activeChannel, setActiveChannel] = useState<Channel>('chat')
   const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
   const actors = useQuery({ queryKey: ['master', 'actors'], queryFn: () => getMasterData('actors') })
   const documents = useQuery({ queryKey: ['master', 'documents'], queryFn: () => getMasterData('documents') })
@@ -87,9 +94,13 @@ export function SimulationRunnerPage() {
         </div>
         <div className={formGroupClass}>
           <label className={formLabelClass} htmlFor="runner-version">Workflow versions</label>
-          <select id="runner-version" multiple className={selectClass} required value={versionIds} onChange={(event) => setVersionIds(Array.from(event.currentTarget.selectedOptions, (option) => option.value))}>
-            {versions.data?.map((item) => <option key={item.workflow_version_id} value={item.workflow_version_id}>{item.workflow_name} · v{item.version_number}</option>)}
-          </select>
+          <MultiSelect
+            id="runner-version"
+            options={(versions.data ?? []).map((item) => ({ value: item.workflow_version_id, label: `${item.workflow_name} · v${item.version_number}` }))}
+            value={versionIds}
+            onValueChange={setVersionIds}
+            placeholder="Select one or more workflows"
+          />
         </div>
         <div className={`${formGroupClass} justify-end`}>
           <button type="submit" disabled={!actorId || !participantId.trim() || !versionIds.length || start.isPending} className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50">
@@ -164,8 +175,27 @@ export function SimulationRunnerPage() {
         </section>
       )}
 
-      <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={executionActorId ?? execution.participant_id ?? participantId} events={sortEventsByTime((existingSessions.data ?? []).flatMap((item) => { const workflow = versions.data?.find((version) => version.workflow_version_id === item.workflow_version_id); return ((item[eventLists[channel]] ?? []) as SessionChannelEvent[]).map((event) => ({ ...event, workflow_label: `${workflow?.workflow_name ?? item.workflow_version_id} · v${workflow?.version_number ?? '—'}`, workflow_version_id: item.workflow_version_id })) }))} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || !waitingRuns.length || (channel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id)} onSubmit={(event) => send(channel, event)} readMessageId={channel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={channel === 'chat' && deferredReadWait ? (messageId) => messageRead.mutate({ waitInstanceId: deferredReadWait.waitInstanceId, messageId }) : undefined} quotedMessage={channel === 'chat' ? quotedMessage : undefined} quoteRequired={channel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id} onQuote={channel === 'chat' ? setQuotedMessage : undefined} />)}
+      <section className="mt-4 flex min-h-[540px] flex-col gap-4 lg:flex-row">
+        <nav aria-label="Simulation channels" className="flex shrink-0 gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 shadow-sm lg:w-52 lg:flex-col lg:overflow-visible">
+          {channelNavigation.map(({ channel, label, icon: Icon }) => {
+            const isActive = activeChannel === channel
+            return (
+              <button
+                key={channel}
+                type="button"
+                aria-current={isActive ? 'page' : undefined}
+                onClick={() => setActiveChannel(channel)}
+                className={`!m-0 inline-flex min-w-max items-center gap-2 rounded-lg !border-0 px-3 py-2.5 text-left text-sm font-semibold transition lg:w-full ${isActive ? '!bg-violet-100 !text-violet-800 shadow-sm' : '!bg-transparent !text-slate-600 hover:!bg-slate-100 hover:!text-slate-900'}`}
+              >
+                <Icon size={17} />
+                <span>{label}</span>
+              </button>
+            )
+          })}
+        </nav>
+        <div className="min-w-0 flex-1">
+          <ChannelWorkspace channel={activeChannel} participantId={executionActorId ?? execution.participant_id ?? participantId} events={sortEventsByTime((existingSessions.data ?? []).flatMap((item) => { const workflow = versions.data?.find((version) => version.workflow_version_id === item.workflow_version_id); return ((item[eventLists[activeChannel]] ?? []) as SessionChannelEvent[]).map((event) => ({ ...event, workflow_label: `${workflow?.workflow_name ?? item.workflow_version_id} · v${workflow?.version_number ?? '—'}`, workflow_version_id: item.workflow_version_id })) }))} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || !waitingRuns.length || (activeChannel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id)} onSubmit={(event) => send(activeChannel, event)} readMessageId={activeChannel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={activeChannel === 'chat' && deferredReadWait ? (messageId) => messageRead.mutate({ waitInstanceId: deferredReadWait.waitInstanceId, messageId }) : undefined} quotedMessage={activeChannel === 'chat' ? quotedMessage : undefined} quoteRequired={activeChannel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id} onQuote={activeChannel === 'chat' ? setQuotedMessage : undefined} />
+        </div>
       </section>
     </main>
   )

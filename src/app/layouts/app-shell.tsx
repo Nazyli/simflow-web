@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Activity, Clock3, Database, History, Play, Settings, Users, Workflow } from 'lucide-react'
+import { Activity, Clock3, Database, History, Play, Users, Workflow } from 'lucide-react'
 import { type PropsWithChildren } from 'react'
 import { useLocation } from 'react-router-dom'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
@@ -13,7 +13,6 @@ const navigation = [
   { label: 'Participant History', path: '/history', icon: Users },
   { label: 'Master Data', path: '/master-data', icon: Database },
   { label: 'Timers', path: '/timers', icon: Clock3 },
-  { label: 'Settings', path: '/settings', icon: Settings },
 ]
 
 const pageNames: Record<string, string> = Object.fromEntries(navigation.map(({ path, label }) => [path, label]))
