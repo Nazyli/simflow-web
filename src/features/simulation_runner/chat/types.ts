@@ -8,6 +8,8 @@ export interface ChatMessage {
   content: string
   timestamp: string
   action_type: string
+  conversation_id?: string
+  workflow_label?: string
 }
 
 export interface ChatConversation {

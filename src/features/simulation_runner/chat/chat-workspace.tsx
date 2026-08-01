@@ -6,7 +6,7 @@ import { ConversationHeader } from './conversation-header'
 import { ConversationSidebar } from './conversation-sidebar'
 import { MessageComposer } from './message-composer'
 import type { ChatConversation, ChatMessage } from './types'
-import { buildActorNames, buildConversations } from './utils'
+import { buildActorNames, buildConversations, messageKey } from './utils'
 
 interface ChatLayoutProps {
   conversations: ChatConversation[]
@@ -15,6 +15,9 @@ interface ChatLayoutProps {
   activeConversation: ChatConversation | null
   participantId: string
   disabled: boolean
+  quoteRequired?: boolean
+  quotedMessage?: ChatMessage | null
+  onQuote?: (message: ChatMessage | null) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }
 
@@ -25,6 +28,9 @@ export function ChatLayout({
   activeConversation,
   participantId,
   disabled,
+  quoteRequired,
+  quotedMessage,
+  onQuote,
   onSubmit,
 }: ChatLayoutProps) {
   return (
@@ -32,14 +38,14 @@ export function ChatLayout({
       <ConversationSidebar conversations={conversations} selectedActor={selectedActor} onSelect={onSelectConversation} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <ConversationHeader conversation={activeConversation} />
-        <ConversationBody messages={activeConversation?.messages ?? []} participantId={participantId} />
-        <MessageComposer target={activeConversation?.actor ?? ''} disabled={disabled} onSubmit={onSubmit} />
+        <ConversationBody messages={activeConversation?.messages ?? []} participantId={participantId} quotedMessage={quotedMessage} onQuote={onQuote ?? undefined} />
+        <MessageComposer target={activeConversation?.actor ?? ''} disabled={disabled} quoteRequired={quoteRequired} quotedMessage={quotedMessage} onClearQuote={onQuote ? () => onQuote(null) : undefined} onSubmit={onSubmit} />
       </div>
     </div>
   )
 }
 
-export function ChatWorkspace({ participantId, events, actors, disabled, onSubmit, readMessageId, onMessageRead }: ChannelWorkspaceProps & { readMessageId?: string; onMessageRead?: (messageId: string) => void }) {
+export function ChatWorkspace({ participantId, events, actors, disabled, onSubmit, readMessageId, onMessageRead, quotedMessage, quoteRequired, onQuote }: ChannelWorkspaceProps & { readMessageId?: string; onMessageRead?: (messageId: string) => void; quotedMessage?: ChatMessage | null; quoteRequired?: boolean; onQuote?: (message: ChatMessage | null) => void }) {
   const messages = events as unknown as ChatMessage[]
   const [selectedActor, setSelectedActor] = useState<string | null>(null)
   const conversations = buildConversations(messages, buildActorNames(actors), participantId)
@@ -47,6 +53,12 @@ export function ChatWorkspace({ participantId, events, actors, disabled, onSubmi
     ? conversations.find((conversation) => conversation.actor === selectedActor) ?? conversations[0] ?? null
     : conversations[0] ?? null
   const reportedReads = useRef(new Set<string>())
+
+  useEffect(() => {
+    if (quotedMessage && !messages.some((message) => messageKey(message) === messageKey(quotedMessage))) {
+      onQuote?.(null)
+    }
+  }, [messages, onQuote, quotedMessage])
 
   useEffect(() => {
     if (!readMessageId || !onMessageRead || reportedReads.current.has(readMessageId)) return
@@ -65,6 +77,9 @@ export function ChatWorkspace({ participantId, events, actors, disabled, onSubmi
         activeConversation={activeConversation}
         participantId={participantId}
         disabled={disabled}
+        quoteRequired={quoteRequired}
+        quotedMessage={quotedMessage}
+        onQuote={onQuote}
         onSubmit={onSubmit}
       />
     </section>

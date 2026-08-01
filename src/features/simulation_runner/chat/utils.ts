@@ -10,6 +10,10 @@ export function isOwnMessage(message: ChatMessage, participantId: string): boole
   return message.from ? message.from === participantId : message.actor === participantId
 }
 
+export function messageKey(message: ChatMessage): string {
+  return message.message_id ?? [message.conversation_id, message.timestamp, message.content].filter(Boolean).join(':')
+}
+
 export function buildActorNames(actors: Record<string, unknown>[]): Record<string, string> {
   const names: Record<string, string> = {}
   for (const actor of actors) {

@@ -12,6 +12,7 @@ import type { Execution } from '../../shared/types/workflow'
 import { CallWorkspace, DocumentWorkspace, EmailWorkspace } from './channel-workspaces'
 import type { Channel, ChannelWorkspaceProps } from './channel-workspaces'
 import { ChatWorkspace } from './chat/chat-workspace'
+import type { ChatMessage } from './chat/types'
 
 const channels: Channel[] = ['chat', 'email', 'call', 'document']
 const eventLists: Record<Channel, keyof Pick<SimulationSession, 'chat_inbox' | 'email_inbox' | 'call_state' | 'document_state'>> = { chat: 'chat_inbox', email: 'email_inbox', call: 'call_state', document: 'document_state' }
@@ -25,6 +26,7 @@ export function SimulationRunnerPage() {
   const [checked, setChecked] = useState(false)
   const [execution, setExecution] = useState<Execution | null>(null)
   const [runs, setRuns] = useState<BatchExecutionRun[]>([])
+  const [quotedMessage, setQuotedMessage] = useState<ChatMessage | null>(null)
   const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
   const actors = useQuery({ queryKey: ['master', 'actors'], queryFn: () => getMasterData('actors') })
   const documents = useQuery({ queryKey: ['master', 'documents'], queryFn: () => getMasterData('documents') })
@@ -43,7 +45,14 @@ export function SimulationRunnerPage() {
     : null
   const elapsed = execution ? new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(new Date()) : '—'
   function begin(event: FormEvent) { event.preventDefault(); setChecked(true); start.mutate({ participant_id: participantId.trim(), workflow_version_ids: versionIds, context: { actor_id: actorId } }) }
-  function send(channel: Channel, event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const run = waitingRuns.length === 1 ? waitingRuns[0] : execution; const wait = run?.context.active_wait; if (!run || !wait || typeof wait !== 'object' || typeof (wait as Record<string, unknown>).wait_instance_id !== 'string' || typeof (wait as Record<string, unknown>).conversation_id !== 'string') { toast.error('Choose the workflow that is waiting for this action.'); return }; const actionType = channel === 'chat' || channel === 'email' ? 'message' : channel === 'call' ? 'finish_call' : 'close_document'; action.mutate({ executionId: run.execution_id, channel, target: String(data.get('target') ?? ''), content: String(data.get('content') ?? ''), actionType, waitInstanceId: (wait as Record<string, string>).wait_instance_id, conversationId: (wait as Record<string, string>).conversation_id }); event.currentTarget.reset() }
+  function resolveRun(channel: Channel): Execution | null {
+    if (waitingRuns.length === 1) return waitingRuns[0]
+    if (channel !== 'chat') return execution
+    const conversationId = quotedMessage?.conversation_id
+    if (!conversationId) return null
+    return waitingRuns.find((item) => typeof item.context.active_wait === 'object' && (item.context.active_wait as Record<string, unknown>).conversation_id === conversationId) ?? null
+  }
+  function send(channel: Channel, event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const run = resolveRun(channel); const wait = run?.context.active_wait; if (!run || !wait || typeof wait !== 'object' || typeof (wait as Record<string, unknown>).wait_instance_id !== 'string' || typeof (wait as Record<string, unknown>).conversation_id !== 'string') { toast.error(channel === 'chat' ? 'Quote the message you want to reply to first.' : 'Choose the workflow that is waiting for this action.'); return }; const actionType = channel === 'chat' || channel === 'email' ? 'message' : channel === 'call' ? 'finish_call' : 'close_document'; action.mutate({ executionId: run.execution_id, channel, target: String(data.get('target') ?? ''), content: String(data.get('content') ?? ''), actionType, waitInstanceId: (wait as Record<string, string>).wait_instance_id, conversationId: (wait as Record<string, string>).conversation_id }); setQuotedMessage(null); event.currentTarget.reset() }
 
   if (!execution) return (
     <main className="simulation-runner-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
@@ -120,17 +129,15 @@ export function SimulationRunnerPage() {
       </header>
 
       <section className="mt-4 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-        {runs.map((run) => { const item = versions.data?.find((version) => version.workflow_version_id === run.workflow_version_id); return <button type="button" key={run.execution_id} onClick={() => setExecution(run)} className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${execution?.execution_id === run.execution_id ? 'border-violet-500 bg-violet-50 text-violet-800' : 'border-slate-200 bg-white text-slate-700'}`}><span>{item?.workflow_name ?? run.workflow_version_id} · v{item?.version_number ?? '—'}</span><StatusBadge status={run.status} /></button> })}
+        {runs.map((run) => { const item = versions.data?.find((version) => version.workflow_version_id === run.workflow_version_id); return <span key={run.execution_id} className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${execution?.execution_id === run.execution_id ? 'border-violet-500 bg-violet-50 text-violet-800' : 'border-slate-200 bg-white text-slate-700'}`}><span>{item?.workflow_name ?? run.workflow_version_id} · v{item?.version_number ?? '—'}</span><StatusBadge status={run.status} /></span> })}
       </section>
-
-      {waitingRuns.length > 1 && <section className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><label className="font-semibold">Workflow awaiting this action</label><select className="ml-3 rounded border border-amber-300 bg-white px-2 py-1" value={execution?.execution_id ?? ''} onChange={(event) => setExecution(runs.find((run) => run.execution_id === event.target.value) ?? null)}>{waitingRuns.map((run) => <option key={run.execution_id} value={run.execution_id}>{versions.data?.find((version) => version.workflow_version_id === run.workflow_version_id)?.workflow_name ?? run.workflow_version_id}</option>)}</select></section>}
 
       {execution.status === 'waiting' && (
         <section className="mt-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-600"><Clock3 size={18} /></span>
           <div className="min-w-0 flex-1">
             <strong className="text-sm text-amber-900">Participant action required</strong>
-            <p className="mt-0.5 text-xs text-amber-700">Reply on the requested channel with the selected target. Previous actions that do not match the workflow transition will be rejected.</p>
+            <p className="mt-0.5 text-xs text-amber-700">{waitingRuns.length > 1 ? 'Multiple workflows are waiting. Quote the message you are replying to so the reply targets the right workflow.' : 'Reply on the requested channel with the selected target. Previous actions that do not match the workflow transition will be rejected.'}</p>
           </div>
           <StatusBadge status="waiting" />
         </section>
@@ -148,14 +155,14 @@ export function SimulationRunnerPage() {
       )}
 
       <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={executionActorId ?? execution.participant_id ?? participantId} events={(existingSessions.data ?? []).flatMap((item) => { const workflow = versions.data?.find((version) => version.workflow_version_id === item.workflow_version_id); return ((item[eventLists[channel]] ?? []) as SessionChannelEvent[]).map((event) => ({ ...event, workflow_label: `${workflow?.workflow_name ?? item.workflow_version_id} · v${workflow?.version_number ?? '—'}` })) })} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || !waitingRuns.length} onSubmit={(event) => send(channel, event)} readMessageId={channel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={channel === 'chat' && deferredReadWait ? (messageId) => messageRead.mutate({ waitInstanceId: deferredReadWait.waitInstanceId, messageId }) : undefined} />)}
+        {channels.map((channel) => <ChannelWorkspace key={channel} channel={channel} participantId={executionActorId ?? execution.participant_id ?? participantId} events={(existingSessions.data ?? []).flatMap((item) => { const workflow = versions.data?.find((version) => version.workflow_version_id === item.workflow_version_id); return ((item[eventLists[channel]] ?? []) as SessionChannelEvent[]).map((event) => ({ ...event, workflow_label: `${workflow?.workflow_name ?? item.workflow_version_id} · v${workflow?.version_number ?? '—'}` })) })} actors={actors.data ?? []} documents={documents.data ?? []} disabled={action.isPending || !waitingRuns.length || (channel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id)} onSubmit={(event) => send(channel, event)} readMessageId={channel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={channel === 'chat' && deferredReadWait ? (messageId) => messageRead.mutate({ waitInstanceId: deferredReadWait.waitInstanceId, messageId }) : undefined} quotedMessage={channel === 'chat' ? quotedMessage : undefined} quoteRequired={channel === 'chat' && waitingRuns.length > 1 && !quotedMessage?.conversation_id} onQuote={channel === 'chat' ? setQuotedMessage : undefined} />)}
       </section>
     </main>
   )
 }
 
-function ChannelWorkspace({ channel, readMessageId, onMessageRead, ...props }: ChannelWorkspaceProps & { channel: Channel; readMessageId?: string; onMessageRead?: (messageId: string) => void }) {
-  if (channel === 'chat') return <ChatWorkspace {...props} readMessageId={readMessageId} onMessageRead={onMessageRead} />
+function ChannelWorkspace({ channel, readMessageId, onMessageRead, quotedMessage, quoteRequired, onQuote, ...props }: ChannelWorkspaceProps & { channel: Channel; readMessageId?: string; onMessageRead?: (messageId: string) => void; quotedMessage?: ChatMessage | null; quoteRequired?: boolean; onQuote?: (message: ChatMessage | null) => void }) {
+  if (channel === 'chat') return <ChatWorkspace {...props} readMessageId={readMessageId} onMessageRead={onMessageRead} quotedMessage={quotedMessage} quoteRequired={quoteRequired} onQuote={onQuote} />
   if (channel === 'email') return <EmailWorkspace {...props} />
   if (channel === 'call') return <CallWorkspace {...props} />
   return <DocumentWorkspace {...props} />
