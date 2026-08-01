@@ -68,8 +68,11 @@ export function SimulationRunnerPage() {
   const channelRead = useMutation({ mutationFn: async ({ channel, events }: { channel: Channel; events: ChannelEventIdentity[] }) => {
     const bySession = new Map<string, string[]>()
     events.filter((event) => event.is_read === false && event.session_id && event.message_id).forEach((event) => bySession.set(event.session_id!, [...(bySession.get(event.session_id!) ?? []), event.message_id!]))
-    await Promise.all([...bySession].map(([sessionId, messageIds]) => markSessionChannelEventsRead(sessionId, channel, messageIds)))
-  }, onSuccess: () => client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] }) })
+    return Promise.all([...bySession].map(([sessionId, messageIds]) => markSessionChannelEventsRead(sessionId, channel, messageIds)))
+  }, onSuccess: (updatedSessions) => {
+    client.setQueryData<SimulationSession[]>(['participant-sessions', participantId.trim()], (current) => current?.map((session) => updatedSessions.find((updated) => updated.session_id === session.session_id) ?? session))
+    client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] })
+  } })
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
   const activeWait = execution?.context.active_wait
   const waitingRuns = runs.filter((run) => run.status === 'waiting' && typeof run.context.active_wait === 'object')
