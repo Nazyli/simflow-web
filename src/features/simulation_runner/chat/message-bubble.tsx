@@ -24,6 +24,7 @@ export function MessageBubble({ message, participantId, quoted = false, onQuote 
         <div className={`flex items-baseline gap-2 px-1 ${own ? 'justify-end' : 'justify-start'}`}>
           <span className="text-[10px] font-semibold text-slate-500">{sender}</span>
           <time className="text-[10px] text-slate-400">{formatChatTime(message.timestamp)}</time>
+          {message.workflow_version_id && <span className="text-[10px] text-slate-400">| {message.workflow_version_id.slice(0, 3)}</span>}
         </div>
         <button
           type="button"

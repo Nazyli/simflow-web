@@ -10,6 +10,7 @@ export interface ChatMessage {
   action_type: string
   conversation_id?: string
   workflow_label?: string
+  workflow_version_id?: string
 }
 
 export interface ChatConversation {
