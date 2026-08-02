@@ -19,6 +19,7 @@ export interface SimulationSession {
   session_id: string
   participant_id: string
   workflow_version_id: string
+  execution_id: string | null
   status: string
   email_inbox: SessionChannelEvent[]
   chat_inbox: SessionChannelEvent[]
@@ -32,6 +33,7 @@ export interface SimulationSessionSummary {
   session_id: string
   participant_id: string
   workflow_version_id: string
+  execution_id: string | null
   status: string
   unread_counts: Record<'chat' | 'email' | 'call' | 'document', number>
   created_at: string

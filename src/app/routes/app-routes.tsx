@@ -14,6 +14,7 @@ export function AppRoutes() {
       <Routes>
         <Route path="/studio" element={<SimulationStudioPage />} />
         <Route path="/simulation" element={<SimulationRunnerPage />} />
+        <Route path="/simulation/:participantId" element={<SimulationRunnerPage />} />
         <Route path="/timers" element={<TimerManagementPage />} />
         <Route path="/history" element={<ParticipantHistoryPage />} />
         <Route path="/workflow-history" element={<WorkflowHistoryPage />} />
