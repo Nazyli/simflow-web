@@ -33,6 +33,7 @@ export interface SimulationSessionSummary {
   participant_id: string
   workflow_version_id: string
   status: string
+  unread_counts: Record<'chat' | 'email' | 'call' | 'document', number>
   created_at: string
   last_activity_at: string
   completed_at: string | null
@@ -61,4 +62,4 @@ export const getSession = (sessionId: string) => apiClient<SimulationSession>(`/
 export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSessionSummary[]>(`/sessions?participant_id=${encodeURIComponent(participantId)}`)
 export const getChannelHistory = (sessionId: string, channel: ChannelEvent['channel'], cursor?: string) => apiClient<ChannelEventPage>(`/sessions/${sessionId}/channels/${channel}/events?limit=50${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`)
 export const getDocumentState = (sessionId: string) => apiClient<DocumentState[]>(`/sessions/${sessionId}/channels/document/state`)
-export const markSessionChannelEventsRead = (sessionId: string, channel: string, messageIds: string[]) => apiClient<SimulationSession>(`/sessions/${sessionId}/channel-events/read`, { method: 'POST', body: JSON.stringify({ channel, message_ids: messageIds }) })
+export const markSessionChannelEventsRead = (sessionId: string, channel: string, eventIds: string[]) => apiClient<SimulationSession>(`/sessions/${sessionId}/channel-events/read`, { method: 'POST', body: JSON.stringify({ channel, event_ids: eventIds }) })
