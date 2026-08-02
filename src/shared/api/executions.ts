@@ -5,6 +5,8 @@ export interface ExecutionEvent { event_id: string; node_id: string | null; even
 export interface NodeResult { node_result_id: string; node_id: string; status: string; result: Record<string, unknown>; created_at: string }
 export const getExecutions = (workflowVersionId: string) => apiClient<Execution[]>(`/executions?workflow_version_id=${encodeURIComponent(workflowVersionId)}`)
 export const getExecution = (executionId: string) => apiClient<Execution>(`/executions/${executionId}`)
+export interface ExecutionState { execution_id: string; status: string; current_node_id: string | null; active_wait: Record<string, unknown> | null }
+export const getExecutionState = (executionId: string) => apiClient<ExecutionState>(`/executions/${executionId}/state`)
 export const startExecution = (payload: { workflow_version_id: string; participant_id: string; context: Record<string, unknown> }) => apiClient<Execution>('/executions', { method: 'POST', body: JSON.stringify(payload) })
 export interface BatchExecutionRun extends Execution { outcome: 'created' | 'resumed' | 'archived' }
 export interface BatchExecutionResponse { participant_id: string; runs: BatchExecutionRun[] }

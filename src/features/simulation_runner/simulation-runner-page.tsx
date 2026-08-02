@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock3, FileText, Mail, MessageCircle, Phone, Play, RefreshCw, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
-import { getExecution, markExecutionMessageRead, startExecutionBatch, submitExecutionAction, type BatchExecutionRun } from '../../shared/api/executions'
+import { getExecutionState, markExecutionMessageRead, startExecutionBatch, submitExecutionAction, type BatchExecutionRun } from '../../shared/api/executions'
 import { getMasterData } from '../../shared/api/master-data'
-import { getSessionsForParticipant, markSessionChannelEventsRead, type SessionChannelEvent } from '../../shared/api/sessions'
+import { getChannelHistory, getSessionsForParticipant, markSessionChannelEventsRead, type SessionChannelEvent } from '../../shared/api/sessions'
 import { getPublishedVersions } from '../../shared/api/workflows'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { MultiSelect } from '../../shared/components/multi-select'
@@ -50,13 +50,16 @@ export function SimulationRunnerPage() {
   const actors = useQuery({ queryKey: ['master', 'actors'], queryFn: () => getMasterData('actors') })
   const documents = useQuery({ queryKey: ['master', 'documents'], queryFn: () => getMasterData('documents') })
   const existingSessions = useQuery({ queryKey: ['participant-sessions', participantId.trim()], queryFn: () => getSessionsForParticipant(participantId.trim()), enabled: checked && Boolean(participantId.trim()) })
-  const executionState = useQuery({ queryKey: ['execution', execution?.execution_id], queryFn: () => getExecution(execution!.execution_id), enabled: Boolean(execution), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
+  const executionState = useQuery({ queryKey: ['execution-state', execution?.execution_id], queryFn: () => getExecutionState(execution!.execution_id), enabled: Boolean(execution), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
   useEffect(() => {
     if (!executionState.data) return
-    setExecution(executionState.data)
-    setRuns((current) => current.map((run) => run.execution_id === executionState.data.execution_id ? { ...run, ...executionState.data } : run))
+    setExecution((current) => {
+      if (!current || current.execution_id !== executionState.data.execution_id) return current
+      return { ...current, status: executionState.data.status, current_node_id: executionState.data.current_node_id, context: { ...current.context, active_wait: executionState.data.active_wait ?? undefined } }
+    })
+    setRuns((current) => current.map((run) => run.execution_id === executionState.data.execution_id ? { ...run, status: executionState.data.status, current_node_id: executionState.data.current_node_id, context: { ...run.context, active_wait: executionState.data.active_wait ?? undefined } } : run))
   }, [executionState.data])
-  const start = useMutation({ mutationFn: startExecutionBatch, onSuccess: (result) => { setRuns(result.runs); const selected = result.runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? result.runs[0]; setExecution(selected ?? null); setVersionId(selected?.workflow_version_id ?? ''); client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] }); toast.success(`${result.runs.length} workflow simulation(s) ready.`) }, onError: () => toast.error('Unable to start or resume the selected simulations.') })
+  const start = useMutation({ mutationFn: startExecutionBatch, onSuccess: (result) => { const runs = result.runs.map((run) => ({ ...run, participant_id: participantId.trim(), current_node_id: null, context: {} })); setRuns(runs); const selected = runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? runs[0]; setExecution(selected ?? null); setVersionId(selected?.workflow_version_id ?? ''); client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] }); toast.success(`${result.runs.length} workflow simulation(s) ready.`) }, onError: () => toast.error('Unable to start or resume the selected simulations.') })
   const action = useMutation({ mutationFn: ({ executionId, channel, target, content, actionType, conversationId }: { executionId: string; channel: Channel; target: string; content: string; actionType: string; conversationId: string }) => submitExecutionAction(executionId, { action_type: actionType, actor_id: actorId, conversation_id: conversationId, payload: { channel, content, to: target, document_id: channel === 'document' ? target : undefined } }), onSuccess: (result) => { setExecution(result); setRuns((current) => current.map((run) => run.execution_id === result.execution_id ? { ...run, ...result } : run)); client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] }); toast.success('Workflow action submitted.') }, onError: () => toast.error('Action was rejected. Check the requested channel and target.') })
   const messageRead = useMutation({ mutationFn: ({ waitInstanceId, messageId }: { waitInstanceId: string; messageId: string }) => markExecutionMessageRead(execution!.execution_id, { wait_instance_id: waitInstanceId, message_id: messageId }), onSuccess: (result) => { setExecution(result); setRuns((current) => current.map((run) => run.execution_id === result.execution_id ? { ...run, ...result } : run)); client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] }) } })
   const channelRead = useMutation({ mutationFn: async ({ channel, events }: { channel: Channel; events: ChannelEventIdentity[] }) => {
@@ -68,15 +71,15 @@ export function SimulationRunnerPage() {
   } })
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
   const activeWait = execution?.context.active_wait
+  const channelHistory = useQuery({ queryKey: ['channel-history', execution?.session_id, activeChannel], queryFn: () => getChannelHistory(execution!.session_id!, activeChannel!).then((page) => page.items.map((item) => ({ ...item.payload, event_id: item.event_id, channel: item.channel, is_read: item.is_read, timestamp: item.occurred_at, session_id: execution!.session_id! }))), enabled: Boolean(execution?.session_id && activeChannel), refetchInterval: execution?.status === 'waiting' || execution?.status === 'running' ? 2_000 : false })
   const waitingRuns = runs.filter((run) => run.status === 'waiting' && typeof run.context.active_wait === 'object')
   const waitingForRead = waitingRuns.some((run) => (run.context.active_wait as Record<string, unknown>).waits_for_read === true)
-  const executionActorId = typeof execution?.context.actor_id === 'string' ? execution.context.actor_id : undefined
   const deferredReadWait = activeWait && typeof activeWait === 'object' && ((((activeWait as Record<string, unknown>).timeout_starts_after_read === true && typeof (activeWait as Record<string, unknown>).timer_id !== 'string') || (activeWait as Record<string, unknown>).waits_for_read === true)) && typeof (activeWait as Record<string, unknown>).wait_instance_id === 'string' && typeof (activeWait as Record<string, unknown>).message_id === 'string'
     ? { waitInstanceId: (activeWait as Record<string, string>).wait_instance_id, messageId: (activeWait as Record<string, string>).message_id }
     : null
-  const runnerParticipantId = executionActorId ?? execution?.participant_id ?? participantId
+  const runnerParticipantId = actorId || execution?.participant_id || participantId
   function channelEvents(_channel: Channel): SessionChannelEvent[] {
-    return []
+    return channelHistory.data ?? []
   }
   function eventsWithUnreadStatus(channel: Channel): SessionChannelEvent[] {
     return channelEvents(channel).map((event) => ({ ...event, is_unread: event.is_read === false }))
