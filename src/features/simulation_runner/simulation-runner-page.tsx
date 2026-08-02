@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { getExecution, markExecutionMessageRead, startExecutionBatch, submitExecutionAction, type BatchExecutionRun } from '../../shared/api/executions'
 import { getMasterData } from '../../shared/api/master-data'
-import { getSessionsForParticipant, markSessionChannelEventsRead, type SessionChannelEvent, type SimulationSession } from '../../shared/api/sessions'
+import { getSessionsForParticipant, markSessionChannelEventsRead, type SessionChannelEvent } from '../../shared/api/sessions'
 import { getPublishedVersions } from '../../shared/api/workflows'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { MultiSelect } from '../../shared/components/multi-select'
@@ -16,7 +16,6 @@ import type { Channel, ChannelWorkspaceProps } from './channel-workspaces'
 import { ChatWorkspace } from './chat/chat-workspace'
 import type { ChatMessage } from './chat/types'
 
-const eventLists: Record<Channel, keyof Pick<SimulationSession, 'chat_inbox' | 'email_inbox' | 'call_state' | 'document_state'>> = { chat: 'chat_inbox', email: 'email_inbox', call: 'call_state', document: 'document_state' }
 const channelNavigation: { channel: Channel; label: string; icon: typeof MessageCircle }[] = [
   { channel: 'chat', label: 'Conversations', icon: MessageCircle },
   { channel: 'email', label: 'Email', icon: Mail },
@@ -34,15 +33,6 @@ interface ChannelEventIdentity {
   from?: string
   session_id?: string
   is_read?: boolean
-}
-
-function eventTime(value?: string): number {
-  const time = value ? new Date(value).getTime() : NaN
-  return Number.isNaN(time) ? 0 : time
-}
-
-function sortEventsByTime<T extends { timestamp?: string }>(events: T[]): T[] {
-  return [...events].sort((a, b) => eventTime(a.timestamp) - eventTime(b.timestamp))
 }
 
 export function SimulationRunnerPage() {
@@ -73,8 +63,7 @@ export function SimulationRunnerPage() {
     const bySession = new Map<string, string[]>()
     events.filter((event) => event.is_read === false && event.session_id && event.message_id).forEach((event) => bySession.set(event.session_id!, [...(bySession.get(event.session_id!) ?? []), event.message_id!]))
     return Promise.all([...bySession].map(([sessionId, messageIds]) => markSessionChannelEventsRead(sessionId, channel, messageIds)))
-  }, onSuccess: (updatedSessions) => {
-    client.setQueryData<SimulationSession[]>(['participant-sessions', participantId.trim()], (current) => current?.map((session) => updatedSessions.find((updated) => updated.session_id === session.session_id) ?? session))
+  }, onSuccess: () => {
     client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] })
   } })
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
@@ -86,11 +75,8 @@ export function SimulationRunnerPage() {
     ? { waitInstanceId: (activeWait as Record<string, string>).wait_instance_id, messageId: (activeWait as Record<string, string>).message_id }
     : null
   const runnerParticipantId = executionActorId ?? execution?.participant_id ?? participantId
-  function channelEvents(channel: Channel): SessionChannelEvent[] {
-    return sortEventsByTime((existingSessions.data ?? []).flatMap((item) => {
-      const workflow = versions.data?.find((version) => version.workflow_version_id === item.workflow_version_id)
-      return ((item[eventLists[channel]] ?? []) as SessionChannelEvent[]).map((event) => ({ ...event, session_id: item.session_id, workflow_label: `${workflow?.workflow_name ?? item.workflow_version_id} · v${workflow?.version_number ?? '—'}`, workflow_version_id: item.workflow_version_id }))
-    }))
+  function channelEvents(_channel: Channel): SessionChannelEvent[] {
+    return []
   }
   function eventsWithUnreadStatus(channel: Channel): SessionChannelEvent[] {
     return channelEvents(channel).map((event) => ({ ...event, is_unread: event.is_read === false }))

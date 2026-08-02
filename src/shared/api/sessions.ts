@@ -28,6 +28,16 @@ export interface SimulationSession {
   completed_at: string | null
 }
 
+export interface SimulationSessionSummary {
+  session_id: string
+  participant_id: string
+  workflow_version_id: string
+  status: string
+  created_at: string
+  last_activity_at: string
+  completed_at: string | null
+}
+
 export const getSession = (sessionId: string) => apiClient<SimulationSession>(`/sessions/${sessionId}`)
-export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSession[]>(`/sessions?participant_id=${encodeURIComponent(participantId)}`)
+export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSessionSummary[]>(`/sessions?participant_id=${encodeURIComponent(participantId)}`)
 export const markSessionChannelEventsRead = (sessionId: string, channel: string, messageIds: string[]) => apiClient<SimulationSession>(`/sessions/${sessionId}/channel-events/read`, { method: 'POST', body: JSON.stringify({ channel, message_ids: messageIds }) })

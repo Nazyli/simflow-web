@@ -5,7 +5,7 @@ import { BellRing, CheckCircle2, CircleAlert, Clock3, FileText, Mail, MessageSqu
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getExecutions, getTimeline, type ExecutionEvent } from '../../shared/api/executions'
-import { getSessionsForParticipant, type SimulationSession } from '../../shared/api/sessions'
+import { getSessionsForParticipant, type SimulationSessionSummary } from '../../shared/api/sessions'
 import { getWorkflowVersion } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
@@ -42,7 +42,7 @@ export function ParticipantHistoryPage() {
   const [searchId, setSearchId] = useState('')
   const [status, setStatus] = useState('all')
   const [date, setDate] = useState('')
-  const [session, setSession] = useState<SimulationSession | null>(null)
+  const [session, setSession] = useState<SimulationSessionSummary | null>(null)
   const [event, setEvent] = useState<ExecutionEvent | null>(null)
   const [flowOpen, setFlowOpen] = useState(false)
   const sessions = useQuery({ queryKey: ['participant-sessions', searchId], queryFn: () => getSessionsForParticipant(searchId), enabled: Boolean(searchId) })
