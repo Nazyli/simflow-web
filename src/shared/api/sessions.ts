@@ -38,6 +38,20 @@ export interface SimulationSessionSummary {
   completed_at: string | null
 }
 
+export interface ChannelEvent {
+  event_id: string
+  channel: 'chat' | 'email' | 'call' | 'document'
+  payload: Record<string, unknown>
+  is_read: boolean
+  occurred_at: string
+}
+
+export interface ChannelEventPage {
+  items: ChannelEvent[]
+  next_cursor: string | null
+}
+
 export const getSession = (sessionId: string) => apiClient<SimulationSession>(`/sessions/${sessionId}`)
 export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSessionSummary[]>(`/sessions?participant_id=${encodeURIComponent(participantId)}`)
+export const getChannelHistory = (sessionId: string, channel: ChannelEvent['channel'], cursor?: string) => apiClient<ChannelEventPage>(`/sessions/${sessionId}/channels/${channel}/events?limit=50${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`)
 export const markSessionChannelEventsRead = (sessionId: string, channel: string, messageIds: string[]) => apiClient<SimulationSession>(`/sessions/${sessionId}/channel-events/read`, { method: 'POST', body: JSON.stringify({ channel, message_ids: messageIds }) })
