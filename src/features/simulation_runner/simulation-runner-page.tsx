@@ -66,7 +66,7 @@ export function SimulationRunnerPage() {
     const events = new EventSource(eventsUrl(streamParticipantId))
     const refreshRunner = () => {
       void client.invalidateQueries({ queryKey: ['participant-sessions', streamParticipantId] })
-      void client.invalidateQueries({ queryKey: ['channel-history'] })
+      void client.invalidateQueries({ queryKey: ['chat-messages'] })
     }
     events.addEventListener('notification', refreshRunner)
     return () => events.close()
