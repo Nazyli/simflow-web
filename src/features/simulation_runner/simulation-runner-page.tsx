@@ -64,9 +64,18 @@ export function SimulationRunnerPage() {
     const streamParticipantId = participantIdFromPath ?? (checked ? participantId.trim() : '')
     if (!streamParticipantId) return
     const events = new EventSource(eventsUrl(streamParticipantId))
-    const refreshRunner = () => {
+    const refreshRunner = (event: Event) => {
       void client.invalidateQueries({ queryKey: ['participant-sessions', streamParticipantId] })
       void client.invalidateQueries({ queryKey: ['chat-messages'] })
+      if (!(event instanceof MessageEvent)) return
+      try {
+        const payload = JSON.parse(event.data) as { type?: string; message?: { sender_type?: string; sender_id?: string; content?: string; is_read?: boolean } }
+        if (payload.type === 'chat_message' && payload.message?.sender_type === 'actor' && payload.message.is_read === false) {
+          toast.info(`New message from ${payload.message.sender_id ?? 'actor'}`, { description: payload.message.content })
+        }
+      } catch {
+        // Ignore malformed SSE payloads while still refreshing server state.
+      }
     }
     events.addEventListener('notification', refreshRunner)
     return () => events.close()
