@@ -60,8 +60,8 @@ export interface DocumentState {
   updated_at: string
 }
 
-export const getSession = (sessionId: string) => apiClient<SimulationSession>(`/sessions/${sessionId}`)
-export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSessionSummary[]>(`/sessions?participant_id=${encodeURIComponent(participantId)}`)
-export const getChannelHistory = (sessionId: string, channel: ChannelEvent['channel'], cursor?: string) => apiClient<ChannelEventPage>(`/sessions/${sessionId}/channels/${channel}/events?limit=50${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`)
-export const getDocumentState = (sessionId: string) => apiClient<DocumentState[]>(`/sessions/${sessionId}/channels/document/state`)
-export const markSessionChannelEventsRead = (sessionId: string, channel: string, eventIds: string[]) => apiClient<SimulationSession>(`/sessions/${sessionId}/channel-events/read`, { method: 'POST', body: JSON.stringify({ channel, event_ids: eventIds }) })
+export const getSession = (sessionId: string) => apiClient<SimulationSession>(`/history/sessions/${sessionId}`)
+export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSessionSummary[]>(`/history/sessions?participant_id=${encodeURIComponent(participantId)}`)
+export const getChannelHistory = (sessionId: string, channel: ChannelEvent['channel'], cursor?: string) => apiClient<ChannelEventPage>(`/history/sessions/${sessionId}/channels/${channel}/events?limit=50${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`)
+export const getDocumentState = (sessionId: string) => apiClient<DocumentState[]>(`/history/sessions/${sessionId}/channels/document/state`)
+export const markSessionChannelEventsRead = (sessionId: string, channel: string, eventIds: string[]) => apiClient<SimulationSession>(`/history/sessions/${sessionId}/channel-events/read`, { method: 'POST', body: JSON.stringify({ channel, event_ids: eventIds }) })
