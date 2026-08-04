@@ -1,4 +1,5 @@
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api/v1'
+const apiRootUrl = apiBaseUrl.replace(/\/v1$/, '')
 
 export class ApiError extends Error {
   readonly status: number
@@ -20,8 +21,11 @@ export async function apiClient<T>(path: string, init: RequestInit = {}): Promis
 }
 
 export async function apiRootClient<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const rootUrl = apiBaseUrl.replace(/\/v1$/, '')
-  const response = await fetch(`${rootUrl}${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...init.headers } })
+  const response = await fetch(`${apiRootUrl}${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...init.headers } })
   if (!response.ok) throw new ApiError(await response.text() || 'API request failed.', response.status)
   return response.json() as Promise<T>
+}
+
+export function eventsUrl(participantId: string): string {
+  return `${apiRootUrl}/events?participant_id=${encodeURIComponent(participantId)}`
 }

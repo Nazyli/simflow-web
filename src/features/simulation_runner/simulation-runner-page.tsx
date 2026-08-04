@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { getExecution, getExecutionState, markExecutionMessageRead, startExecutionBatch, submitExecutionAction, type BatchExecutionRun } from '../../shared/api/executions'
+import { eventsUrl } from '../../shared/api/client'
 import { getMasterData } from '../../shared/api/master-data'
 import { getChannelHistory, getSessionsForParticipant, markSessionChannelEventsRead, type SessionChannelEvent } from '../../shared/api/sessions'
 import { getPublishedVersions } from '../../shared/api/workflows'
@@ -54,7 +55,7 @@ export function SimulationRunnerPage() {
   const documents = useQuery({ queryKey: ['master', 'documents'], queryFn: () => getMasterData('documents') })
   const existingSessions = useQuery({ queryKey: ['participant-sessions', participantId.trim()], queryFn: () => getSessionsForParticipant(participantId.trim()), enabled: checked && Boolean(participantId.trim()) })
   const savedExecutionQueries = useQueries({ queries: (existingSessions.data ?? []).filter((session) => session.execution_id).map((session) => ({ queryKey: ['runner-execution', session.execution_id], queryFn: () => getExecution(session.execution_id!), enabled: Boolean(participantIdFromPath && !execution) })) })
-  const executionStateQueries = useQueries({ queries: runs.map((run) => ({ queryKey: ['execution-state', run.execution_id], queryFn: () => getExecutionState(run.execution_id), refetchInterval: run.status === 'waiting' || run.status === 'running' ? 2_000 : false })) })
+  const executionStateQueries = useQueries({ queries: runs.map((run) => ({ queryKey: ['execution-state', run.execution_id], queryFn: () => getExecutionState(run.execution_id) })) })
   const executionStates = executionStateQueries.flatMap((query) => query.data ? [query.data] : [])
   const executionStateKey = JSON.stringify(executionStates)
   useEffect(() => {
@@ -71,6 +72,18 @@ export function SimulationRunnerPage() {
     setExecution(selected)
     setVersionId(selected.workflow_version_id)
   }, [execution, savedExecutionQueries])
+  useEffect(() => {
+    const streamParticipantId = participantIdFromPath ?? (checked ? participantId.trim() : '')
+    if (!streamParticipantId) return
+    const events = new EventSource(eventsUrl(streamParticipantId))
+    const refreshRunner = () => {
+      void client.invalidateQueries({ queryKey: ['participant-sessions', streamParticipantId] })
+      void client.invalidateQueries({ queryKey: ['channel-history'] })
+    }
+    events.addEventListener('channel_event', refreshRunner)
+    events.addEventListener('channel_events_read', refreshRunner)
+    return () => events.close()
+  }, [checked, client, participantId, participantIdFromPath])
   useEffect(() => {
     if (!executionStates.length) return
     setExecution((current) => {
@@ -96,7 +109,7 @@ export function SimulationRunnerPage() {
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
   const activeWait = execution?.context.active_wait
   const channelHistorySources = runs.filter((run) => run.session_id)
-  const channelHistoryQueries = useQueries({ queries: channelHistorySources.map((run) => ({ queryKey: ['channel-history', run.session_id, activeChannel], queryFn: () => getChannelHistory(run.session_id!, activeChannel!), enabled: Boolean(activeChannel), refetchInterval: run.status === 'waiting' || run.status === 'running' ? 2_000 : false })) })
+  const channelHistoryQueries = useQueries({ queries: channelHistorySources.map((run) => ({ queryKey: ['channel-history', run.session_id, activeChannel], queryFn: () => getChannelHistory(run.session_id!, activeChannel!), enabled: Boolean(activeChannel) })) })
   const waitingRuns = runs.filter((run) => run.status === 'waiting' && typeof run.context.active_wait === 'object')
   const waitingForRead = waitingRuns.some((run) => (run.context.active_wait as Record<string, unknown>).waits_for_read === true)
   const deferredReadWait = activeWait && typeof activeWait === 'object' && ((((activeWait as Record<string, unknown>).timeout_starts_after_read === true && typeof (activeWait as Record<string, unknown>).timer_id !== 'string') || (activeWait as Record<string, unknown>).waits_for_read === true)) && typeof (activeWait as Record<string, unknown>).wait_instance_id === 'string' && typeof (activeWait as Record<string, unknown>).message_id === 'string'
