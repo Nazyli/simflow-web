@@ -89,7 +89,7 @@ export function SimulationRunnerPage() {
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
   const activeWait = execution?.context.active_wait
   const channelHistorySources = runs.filter((run) => run.session_id)
-  const chatQueries = useQueries({ queries: channelHistorySources.map((run) => ({ queryKey: ['chat-messages', run.session_id, actorId], queryFn: () => getChatMessages(run.session_id!, actorId), enabled: Boolean(run.session_id) })) })
+  const chatQueries = useQueries({ queries: channelHistorySources.map((run) => ({ queryKey: ['chat-messages', run.session_id], queryFn: () => getChatMessages(run.session_id!), enabled: Boolean(run.session_id) })) })
   const waitingRuns = runs.filter((run) => run.status === 'waiting' && typeof run.context.active_wait === 'object')
   const waitingForRead = waitingRuns.some((run) => (run.context.active_wait as Record<string, unknown>).waits_for_read === true)
   const deferredReadWait = activeWait && typeof activeWait === 'object' && typeof (activeWait as Record<string, unknown>).node_execution_id === 'string' && typeof (activeWait as Record<string, unknown>).message_id === 'string'

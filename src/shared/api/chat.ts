@@ -12,6 +12,6 @@ export interface ChatMessage {
   created_date: string
 }
 
-export const getChatMessages = (sessionId: string, actorId: string) => apiClient<ChatMessage[]>(`/runner/sessions/${sessionId}/chat/${encodeURIComponent(actorId)}`)
+export const getChatMessages = (sessionId: string) => apiClient<ChatMessage[]>(`/runner/sessions/${sessionId}/chat`)
 export const sendParticipantChat = (sessionId: string, actorId: string, content: string) => apiClient<ChatMessage>(`/runner/sessions/${sessionId}/chat`, { method: 'POST', body: JSON.stringify({ actor_id: actorId, content }) })
 export const markChatMessageRead = (sessionId: string, messageId: string) => apiClient<ChatMessage>(`/runner/sessions/${sessionId}/chat/messages/${messageId}/read`, { method: 'POST' })
