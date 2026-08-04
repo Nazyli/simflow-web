@@ -11,7 +11,7 @@ export function isOwnMessage(message: ChatMessage, participantId: string): boole
 }
 
 export function messageKey(message: ChatMessage): string {
-  return message.message_id ?? [message.conversation_id, message.timestamp, message.content].filter(Boolean).join(':')
+  return message.message_id ?? [message.timestamp, message.content].filter(Boolean).join(':')
 }
 
 export function buildActorNames(actors: Record<string, unknown>[]): Record<string, string> {

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { BellRing, CheckCircle2, CircleAlert, Clock3, FileText, Mail, MessageSquare, Phone, Route, Search, Timer, Workflow } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { getExecutions, getTimeline, type ExecutionEvent } from '../../shared/api/executions'
+import { getExecutionTrace, getExecutions, type ExecutionTrace } from '../../shared/api/executions'
 import { getSessionsForParticipant, type SimulationSessionSummary } from '../../shared/api/sessions'
 import { getWorkflowVersion } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
@@ -43,7 +43,7 @@ export function ParticipantHistoryPage() {
   const [status, setStatus] = useState('all')
   const [date, setDate] = useState('')
   const [session, setSession] = useState<SimulationSessionSummary | null>(null)
-  const [event, setEvent] = useState<ExecutionEvent | null>(null)
+  const [event, setEvent] = useState<ExecutionTrace | null>(null)
   const [flowOpen, setFlowOpen] = useState(false)
   const sessions = useQuery({ queryKey: ['participant-sessions', searchId], queryFn: () => getSessionsForParticipant(searchId), enabled: Boolean(searchId) })
   const [searchParams] = useSearchParams()
@@ -62,7 +62,7 @@ export function ParticipantHistoryPage() {
   const workflow = useQuery({ queryKey: ['history-workflow', session?.workflow_version_id], queryFn: () => getWorkflowVersion(session!.workflow_version_id), enabled: Boolean(session) })
   const executions = useQuery({ queryKey: ['history-executions', session?.workflow_version_id], queryFn: () => getExecutions(session!.workflow_version_id), enabled: Boolean(session) })
   const execution = executions.data?.find((item) => item.session_id === session?.session_id)
-  const timeline = useQuery({ queryKey: ['history-timeline', execution?.execution_id], queryFn: () => getTimeline(execution!.execution_id), enabled: Boolean(execution) })
+  const timeline = useQuery({ queryKey: ['history-node-executions', execution?.execution_id], queryFn: () => getExecutionTrace(execution!.execution_id), enabled: Boolean(execution) })
   const filteredSessions = useMemo(() => (sessions.data ?? []).filter((item) => (status === 'all' || item.status === status) && (!date || item.created_at.startsWith(date))), [date, sessions.data, status])
   function search(event: FormEvent) { event.preventDefault(); setSearchId(participantId); setSession(null) }
   const progress = execution ? Math.min(100, Math.max(12, (timeline.data?.length ?? 0) * 18)) : 0
@@ -143,7 +143,7 @@ export function ParticipantHistoryPage() {
   )
 }
 
-function TimelineEvent({ event, onOpen }: { event: ExecutionEvent; onOpen: () => void }) {
+function TimelineEvent({ event, onOpen }: { event: ExecutionTrace; onOpen: () => void }) {
   const appearance = eventAppearance(event.event_type)
   const Icon = appearance.icon
   return (
@@ -158,7 +158,7 @@ function TimelineEvent({ event, onOpen }: { event: ExecutionEvent; onOpen: () =>
   )
 }
 
-function EventDialog({ event, onClose }: { event: ExecutionEvent | null; onClose: () => void }) {
+function EventDialog({ event, onClose }: { event: ExecutionTrace | null; onClose: () => void }) {
   const [tab, setTab] = useState<'detail' | 'raw'>('detail')
   return (
     <Dialog open={Boolean(event)} onOpenChange={(open) => !open && onClose()}>

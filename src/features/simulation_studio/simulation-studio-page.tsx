@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import dagre from 'dagre'
 import { ApiError } from '../../shared/api/client'
-import { deleteExecution, getExecutions, getTimeline } from '../../shared/api/executions'
+import { deleteExecution, getExecutionTrace, getExecutions } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
 import { addNode, addWorkflowEdge, createDraftFromVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, deleteWorkflowVersion, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
@@ -99,7 +99,7 @@ export function SimulationStudioPage() {
   const nodeCatalog = useQuery({ queryKey: ['node-catalog'], queryFn: getNodeCatalog })
   const versions = useQuery({ queryKey: ['workflow-versions', selectedWorkflow?.workflow_id], queryFn: () => getWorkflowVersions(selectedWorkflow!.workflow_id), enabled: Boolean(selectedWorkflow) })
   const executions = useQuery({ queryKey: ['executions', versionId], queryFn: () => getExecutions(versionId!), enabled: Boolean(versionId) })
-  const executionTimeline = useQuery({ queryKey: ['execution-timeline', selectedExecutionId], queryFn: () => getTimeline(selectedExecutionId!), enabled: Boolean(selectedExecutionId) })
+  const executionTimeline = useQuery({ queryKey: ['execution-node-executions', selectedExecutionId], queryFn: () => getExecutionTrace(selectedExecutionId!), enabled: Boolean(selectedExecutionId) })
 
   const create = useMutation({ mutationFn: createWorkflow, onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
   const update = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'> }) => updateWorkflow(id, payload), onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })

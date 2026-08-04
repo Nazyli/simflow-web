@@ -5,7 +5,7 @@ import { Background, Controls, MarkerType, ReactFlow, useEdgesState, useNodesSta
 import { CircleAlert, Route } from 'lucide-react'
 import dagre from 'dagre'
 import { useEffect, useMemo, useState } from 'react'
-import { getNodeResults, getTimeline } from '../../shared/api/executions'
+import { getNodeExecutions } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
 import { getGraph, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
 import { EmptyState, LoadingState } from '../../shared/components/async-state'
@@ -41,8 +41,7 @@ function dagLayout(apiNodes: ApiNode[], apiEdges: ApiEdge[]): Map<string, { x: n
 export function ParticipantFlowView({ open, onClose, versionId, executionId, title, currentState }: { open: boolean; onClose: () => void; versionId: string; executionId: string; title: string; currentState: string | null }) {
   const graph = useQuery({ queryKey: ['graph', versionId], queryFn: () => getGraph(versionId), enabled: open && Boolean(versionId) })
   const nodeCatalog = useQuery({ queryKey: ['node-catalog'], queryFn: getNodeCatalog, enabled: open })
-  const timeline = useQuery({ queryKey: ['history-timeline', executionId], queryFn: () => getTimeline(executionId), enabled: open && Boolean(executionId) })
-  const nodeResults = useQuery({ queryKey: ['history-node-results', executionId], queryFn: () => getNodeResults(executionId), enabled: open && Boolean(executionId) })
+  const nodeExecutions = useQuery({ queryKey: ['node-executions', executionId], queryFn: () => getNodeExecutions(executionId), enabled: open && Boolean(executionId) })
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -56,12 +55,7 @@ export function ParticipantFlowView({ open, onClose, versionId, executionId, tit
     const layout = dagLayout(apiNodes, apiEdges)
 
     const referencedIds = new Set<string>()
-    let systemEvents = 0
-    for (const event of timeline.data ?? []) {
-      if (event.node_id) referencedIds.add(event.node_id)
-      else systemEvents += 1
-    }
-    for (const result of nodeResults.data ?? []) referencedIds.add(result.node_id)
+    for (const item of nodeExecutions.data ?? []) referencedIds.add(item.node_id)
 
     const visitedNodeIds = new Set<string>()
     const externalNodeIds = new Set<string>()
@@ -71,11 +65,8 @@ export function ParticipantFlowView({ open, onClose, versionId, executionId, tit
     }
 
     const takenEdgeIds = new Set<string>()
-    for (const result of nodeResults.data ?? []) {
-      const selectedPort = (result.result as Record<string, unknown> | undefined)?.selected_port
-      if (typeof selectedPort !== 'string') continue
-      const edge = apiEdges.find((item) => item.source_node_id === result.node_id && item.source_port_id === selectedPort)
-      if (edge) takenEdgeIds.add(edge.edge_id)
+    for (const item of nodeExecutions.data ?? []) {
+      if (item.selected_edge_id) takenEdgeIds.add(item.selected_edge_id)
     }
 
     const flowNodes: Node[] = apiNodes.map((node) => {
@@ -107,14 +98,14 @@ export function ParticipantFlowView({ open, onClose, versionId, executionId, tit
       }
     })
 
-    return { flowNodes, flowEdges, visitedCount: visitedNodeIds.size, takenCount: takenEdgeIds.size, externalStates: { systemEvents, nodeIds: [...externalNodeIds] } }
-  }, [currentState, graph.data, nodeCatalog.data, nodeResults.data, timeline.data])
+    return { flowNodes, flowEdges, visitedCount: visitedNodeIds.size, takenCount: takenEdgeIds.size, externalStates: { nodeIds: [...externalNodeIds] } }
+  }, [currentState, graph.data, nodeCatalog.data, nodeExecutions.data])
 
   useEffect(() => {
-    if (graph.isPending || nodeResults.isPending || timeline.isPending) return
+    if (graph.isPending || nodeExecutions.isPending) return
     setNodes(view.flowNodes)
     setEdges(view.flowEdges)
-  }, [graph.isPending, nodeResults.isPending, setEdges, setNodes, timeline.isPending, view.flowEdges, view.flowNodes])
+  }, [graph.isPending, nodeExecutions.isPending, setEdges, setNodes, view.flowEdges, view.flowNodes])
 
   useEffect(() => {
     if (!flowInstance || nodes.length === 0) return
@@ -122,8 +113,8 @@ export function ParticipantFlowView({ open, onClose, versionId, executionId, tit
     return () => cancelAnimationFrame(frame)
   }, [flowInstance, nodes.length])
 
-  const pending = graph.isPending || nodeCatalog.isPending || nodeResults.isPending || timeline.isPending
-  const hasWarnings = view.externalStates.systemEvents > 0 || view.externalStates.nodeIds.length > 0
+  const pending = graph.isPending || nodeCatalog.isPending || nodeExecutions.isPending
+  const hasWarnings = view.externalStates.nodeIds.length > 0
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -153,9 +144,8 @@ export function ParticipantFlowView({ open, onClose, versionId, executionId, tit
                 <div>
                   <strong>States outside the workflow nodes</strong>
                   <p className="mt-0.5 leading-relaxed">
-                    {view.externalStates.systemEvents > 0 && <>{view.externalStates.systemEvents} system event(s) without a node (e.g. start, timers, participant actions). </>}
                     {view.externalStates.nodeIds.length > 0 && <>Node reference(s) not present in this version: {view.externalStates.nodeIds.join(', ')}. </>}
-                    These states stay visible in the timeline but cannot be mapped onto the flow.
+                    These node executions cannot be mapped onto the flow.
                   </p>
                 </div>
               </div>

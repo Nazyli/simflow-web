@@ -4,7 +4,6 @@ export interface SessionChannelEvent {
   event_id?: string
   message_id?: string
   workflow_label?: string
-  conversation_id?: string
   wait_instance_id?: string
   channel?: string
   action_type?: string

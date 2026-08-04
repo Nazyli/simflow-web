@@ -8,7 +8,6 @@ export interface ChatMessage {
   content: string
   timestamp: string
   action_type: string
-  conversation_id?: string
   workflow_label?: string
   workflow_version_id?: string
   is_unread?: boolean
