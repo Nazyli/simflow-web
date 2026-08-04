@@ -7,12 +7,10 @@ export const getExecutions = (workflowVersionId: string) => apiClient<Execution[
 export const getExecution = (executionId: string) => apiClient<Execution>(`/runner/executions/${executionId}`)
 export interface ExecutionState { execution_id: string; status: string; current_node_id: string | null; active_wait: Record<string, unknown> | null }
 export const getExecutionState = (executionId: string) => apiClient<ExecutionState>(`/runner/executions/${executionId}/state`)
-export const startExecution = (payload: { workflow_version_id: string; participant_id: string; context: Record<string, unknown> }) => apiClient<Execution>('/runner/executions', { method: 'POST', body: JSON.stringify(payload) })
 export interface BatchExecutionRun extends Execution { outcome: 'created' | 'resumed' | 'archived' }
 export interface BatchExecutionResponse { participant_id: string; runs: BatchExecutionRun[] }
 export const startExecutionBatch = (payload: { participant_id: string; workflow_version_ids: string[]; context?: Record<string, unknown> }) => apiClient<BatchExecutionResponse>('/runner/executions/batch', { method: 'POST', body: JSON.stringify(payload) })
 export const submitExecutionAction = (executionId: string, payload: { action_type: string; actor_id?: string; payload: Record<string, unknown> }) => apiClient<Execution>(`/runner/executions/${executionId}/actions`, { method: 'POST', body: JSON.stringify(payload) })
-export const completeExecution = (executionId: string) => apiClient<Execution>(`/runner/executions/${executionId}/complete`, { method: 'POST' })
 export const deleteExecution = (executionId: string) => apiClient<void>(`/runner/executions/${executionId}`, { method: 'DELETE' })
 export const getNodeExecutions = (executionId: string) => apiClient<NodeExecution[]>(`/runner/executions/${executionId}/node-executions`)
 export const getExecutionTrace = async (executionId: string): Promise<ExecutionTrace[]> => (await getNodeExecutions(executionId)).map((item) => ({ event_id: item.node_execution_id, node_id: item.node_id, event_type: item.status, payload: { selected_port: item.selected_port, selected_edge_id: item.selected_edge_id, output_data: item.output_data }, created_at: '' }))

@@ -14,17 +14,6 @@ export interface SessionChannelEvent {
   [key: string]: unknown
 }
 
-export interface SimulationSession {
-  session_id: string
-  participant_id: string
-  execution_id: string | null
-  status: string
-  email_inbox: SessionChannelEvent[]
-  call_state: SessionChannelEvent[]
-  created_at: string
-  completed_at: string | null
-}
-
 export interface SimulationSessionSummary {
   session_id: string
   participant_id: string
@@ -36,12 +25,4 @@ export interface SimulationSessionSummary {
   completed_at: string | null
 }
 
-export interface DocumentState {
-  document_id: string
-  state: Record<string, unknown>
-  updated_at: string
-}
-
-export const getSession = (sessionId: string) => apiClient<SimulationSession>(`/history/sessions/${sessionId}`)
 export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSessionSummary[]>(`/history/sessions?participant_id=${encodeURIComponent(participantId)}`)
-export const getDocumentState = (sessionId: string) => apiClient<DocumentState[]>(`/history/sessions/${sessionId}/channels/document/state`)
