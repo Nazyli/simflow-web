@@ -80,8 +80,7 @@ export function SimulationRunnerPage() {
       void client.invalidateQueries({ queryKey: ['participant-sessions', streamParticipantId] })
       void client.invalidateQueries({ queryKey: ['channel-history'] })
     }
-    events.addEventListener('channel_event', refreshRunner)
-    events.addEventListener('channel_events_read', refreshRunner)
+    events.addEventListener('notification', refreshRunner)
     return () => events.close()
   }, [checked, client, participantId, participantIdFromPath])
   useEffect(() => {
