@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { BellRing, CheckCircle2, CircleAlert, Clock3, FileText, Mail, MessageSquare, Phone, Route, Search, Timer, Workflow } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { getExecutionTrace, getExecutions, type ExecutionTrace } from '../../shared/api/executions'
+import { getExecution, getExecutionTrace, type ExecutionTrace } from '../../shared/api/executions'
 import { getSessionsForParticipant, type SimulationSessionSummary } from '../../shared/api/sessions'
 import { getWorkflowVersion } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
@@ -59,9 +59,9 @@ export function ParticipantHistoryPage() {
     const match = sessions.data.find((item) => item.session_id === preselectedSessionId)
     if (match) { setSession(match); setPreselectedSessionId(null) }
   }, [preselectedSessionId, sessions.data])
-  const workflow = useQuery({ queryKey: ['history-workflow', session?.workflow_version_id], queryFn: () => getWorkflowVersion(session!.workflow_version_id), enabled: Boolean(session) })
-  const executions = useQuery({ queryKey: ['history-executions', session?.workflow_version_id], queryFn: () => getExecutions(session!.workflow_version_id), enabled: Boolean(session) })
-  const execution = executions.data?.find((item) => item.session_id === session?.session_id)
+  const executionQuery = useQuery({ queryKey: ['history-execution', session?.execution_id], queryFn: () => getExecution(session!.execution_id!), enabled: Boolean(session?.execution_id) })
+  const execution = executionQuery.data
+  const workflow = useQuery({ queryKey: ['history-workflow', execution?.workflow_version_id], queryFn: () => getWorkflowVersion(execution!.workflow_version_id), enabled: Boolean(execution) })
   const timeline = useQuery({ queryKey: ['history-node-executions', execution?.execution_id], queryFn: () => getExecutionTrace(execution!.execution_id), enabled: Boolean(execution) })
   const filteredSessions = useMemo(() => (sessions.data ?? []).filter((item) => (status === 'all' || item.status === status) && (!date || item.created_at.startsWith(date))), [date, sessions.data, status])
   function search(event: FormEvent) { event.preventDefault(); setSearchId(participantId); setSession(null) }
@@ -138,7 +138,7 @@ export function ParticipantHistoryPage() {
       </section>
 
       <EventDialog event={event} onClose={() => setEvent(null)} />
-      <ParticipantFlowView open={flowOpen} onClose={() => setFlowOpen(false)} versionId={session?.workflow_version_id ?? ''} executionId={execution?.execution_id ?? ''} title={workflow.data ? `${workflow.data.workflow_name} · v${workflow.data.version_number}` : 'Participant flow'} currentState={execution?.current_node_id ?? null} />
+      <ParticipantFlowView open={flowOpen} onClose={() => setFlowOpen(false)} versionId={execution?.workflow_version_id ?? ''} executionId={execution?.execution_id ?? ''} title={workflow.data ? `${workflow.data.workflow_name} · v${workflow.data.version_number}` : 'Participant flow'} currentState={execution?.current_node_id ?? null} />
     </main>
   )
 }

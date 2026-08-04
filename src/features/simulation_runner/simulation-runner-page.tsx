@@ -7,7 +7,7 @@ import { getExecution, getExecutionState, startExecutionBatch, submitExecutionAc
 import { getChatMessages, markChatMessageRead, sendParticipantChat } from '../../shared/api/chat'
 import { eventsUrl } from '../../shared/api/client'
 import { getMasterData } from '../../shared/api/master-data'
-import { getChannelHistory, getSessionsForParticipant, markSessionChannelEventsRead, type SessionChannelEvent } from '../../shared/api/sessions'
+import { getSessionsForParticipant, type SessionChannelEvent } from '../../shared/api/sessions'
 import { getPublishedVersions } from '../../shared/api/workflows'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { MultiSelect } from '../../shared/components/multi-select'
@@ -25,18 +25,6 @@ const channelNavigation: { channel: Channel; label: string; icon: typeof Message
   { channel: 'call', label: 'Call', icon: Phone },
   { channel: 'document', label: 'Document', icon: FileText },
 ]
-interface ChannelEventIdentity {
-  event_id?: string
-  message_id?: string
-  workflow_version_id?: string
-  actor?: string
-  timestamp?: string
-  content?: string
-  from?: string
-  session_id?: string
-  is_read?: boolean
-}
-
 export function SimulationRunnerPage() {
   const client = useQueryClient()
   const navigate = useNavigate()
@@ -98,18 +86,9 @@ export function SimulationRunnerPage() {
   const action = useMutation({ mutationFn: ({ executionId, channel, target, content, actionType }: { executionId: string; channel: Channel; target: string; content: string; actionType: string }) => submitExecutionAction(executionId, { action_type: actionType, actor_id: actorId, payload: { channel, content, to: target, document_id: channel === 'document' ? target : undefined } }), onSuccess: async (result) => { await client.refetchQueries({ queryKey: ['channel-history'] }); setExecution(result); setRuns((current) => current.map((run) => run.execution_id === result.execution_id ? { ...run, ...result } : run)); client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] }); toast.success('Workflow action submitted.') }, onError: () => toast.error('Action was rejected. Check the requested channel and target.') })
   const chatAction = useMutation({ mutationFn: ({ sessionId, target, content }: { sessionId: string; target: string; content: string }) => sendParticipantChat(sessionId, target, content), onSuccess: () => { client.invalidateQueries({ queryKey: ['chat-messages'] }); client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] }) } })
   const messageRead = useMutation({ mutationFn: ({ sessionId, messageId }: { sessionId: string; messageId: string }) => markChatMessageRead(sessionId, messageId), onSuccess: () => client.invalidateQueries({ queryKey: ['chat-messages'] }) })
-  const channelRead = useMutation({ mutationFn: async ({ channel, events }: { channel: Channel; events: ChannelEventIdentity[] }) => {
-    const bySession = new Map<string, string[]>()
-    events.filter((event) => event.is_read === false && event.session_id && event.event_id).forEach((event) => bySession.set(event.session_id!, [...(bySession.get(event.session_id!) ?? []), event.event_id!]))
-    return Promise.all([...bySession].map(([sessionId, eventIds]) => markSessionChannelEventsRead(sessionId, channel, eventIds)))
-  }, onSuccess: () => {
-    client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] })
-    client.invalidateQueries({ queryKey: ['channel-history'] })
-  } })
   const workflow = versions.data?.find((item) => item.workflow_version_id === versionId)
   const activeWait = execution?.context.active_wait
   const channelHistorySources = runs.filter((run) => run.session_id)
-  const channelHistoryQueries = useQueries({ queries: channelHistorySources.map((run) => ({ queryKey: ['channel-history', run.session_id, activeChannel], queryFn: () => getChannelHistory(run.session_id!, activeChannel!), enabled: Boolean(activeChannel && activeChannel !== 'chat') })) })
   const chatQueries = useQueries({ queries: channelHistorySources.map((run) => ({ queryKey: ['chat-messages', run.session_id, actorId], queryFn: () => getChatMessages(run.session_id!, actorId), enabled: Boolean(run.session_id) })) })
   const waitingRuns = runs.filter((run) => run.status === 'waiting' && typeof run.context.active_wait === 'object')
   const waitingForRead = waitingRuns.some((run) => (run.context.active_wait as Record<string, unknown>).waits_for_read === true)
@@ -119,13 +98,10 @@ export function SimulationRunnerPage() {
   const runnerParticipantId = actorId || execution?.participant_id || participantId
   function channelEvents(_channel: Channel): SessionChannelEvent[] {
     if (_channel === 'chat') return chatQueries.flatMap((query) => (query.data ?? []).map((message) => ({ message_id: message.participant_chat_id, from: message.sender_id, to: message.sender_type === 'participant' ? message.chat_partner_id : participantId, actor: message.sender_id, channel: 'chat', chat_id: null, action_type: 'message', content: message.content, timestamp: message.created_date, is_read: message.is_read, session_id: message.session_id })))
-    return channelHistoryQueries.flatMap((query, index) => (query.data?.items ?? []).map((item) => ({ ...item.payload, event_id: item.event_id, channel: item.channel, is_read: item.is_read, timestamp: typeof item.payload.timestamp === 'string' ? item.payload.timestamp : item.occurred_at, session_id: channelHistorySources[index].session_id!, workflow_version_id: channelHistorySources[index].workflow_version_id }))).sort((left, right) => new Date(left.timestamp ?? 0).getTime() - new Date(right.timestamp ?? 0).getTime())
+    return []
   }
   function eventsWithUnreadStatus(channel: Channel): SessionChannelEvent[] {
     return channelEvents(channel).map((event) => ({ ...event, is_unread: event.is_read === false }))
-  }
-  function markEventsRead(channel: Channel, events: ChannelEventIdentity[]) {
-    channelRead.mutate({ channel, events })
   }
   const unreadByChannel = Object.fromEntries(channelNavigation.map(({ channel }) => [channel, (existingSessions.data ?? []).reduce((total, session) => total + (session.unread_counts[channel] ?? 0), 0)])) as Record<Channel, number>
   const elapsed = execution ? new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(new Date()) : '—'
@@ -247,7 +223,6 @@ export function SimulationRunnerPage() {
                 type="button"
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => {
-                  if (channel !== 'chat') markEventsRead(channel, channelEvents(channel))
                   setActiveChannel(channel)
                 }}
                 className={`!m-0 inline-flex min-w-max items-center gap-2 rounded-lg !border-0 px-3 py-2.5 text-left text-sm font-semibold transition lg:w-full ${isActive ? '!bg-violet-100 !text-violet-800 shadow-sm' : '!bg-transparent !text-slate-600 hover:!bg-slate-100 hover:!text-slate-900'}`}
@@ -261,7 +236,7 @@ export function SimulationRunnerPage() {
         </nav>
         <div className="min-w-0 flex-1">
           {activeChannel ? (
-            <ChannelWorkspace channel={activeChannel} participantId={runnerParticipantId} events={eventsWithUnreadStatus(activeChannel)} actors={actors.data ?? []} documents={documents.data ?? []} disabled={activeChannel === 'chat' ? chatAction.isPending : action.isPending || !waitingRuns.length || waitingForRead} onSubmit={(event) => send(activeChannel, event)} readMessageId={activeChannel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={activeChannel === 'chat' && deferredReadWait && execution?.session_id ? (messageId) => messageRead.mutate({ sessionId: execution.session_id!, messageId }) : undefined} quotedMessage={activeChannel === 'chat' ? quotedMessage : undefined} quoteRequired={false} onQuote={activeChannel === 'chat' ? setQuotedMessage : undefined} onConversationOpen={activeChannel === 'chat' ? () => undefined : (messages) => markEventsRead('chat', messages)} />
+            <ChannelWorkspace channel={activeChannel} participantId={runnerParticipantId} events={eventsWithUnreadStatus(activeChannel)} actors={actors.data ?? []} documents={documents.data ?? []} disabled={activeChannel === 'chat' ? chatAction.isPending : action.isPending || !waitingRuns.length || waitingForRead} onSubmit={(event) => send(activeChannel, event)} readMessageId={activeChannel === 'chat' ? deferredReadWait?.messageId : undefined} onMessageRead={activeChannel === 'chat' && deferredReadWait && execution?.session_id ? (messageId) => messageRead.mutate({ sessionId: execution.session_id!, messageId }) : undefined} quotedMessage={activeChannel === 'chat' ? quotedMessage : undefined} quoteRequired={false} onQuote={activeChannel === 'chat' ? setQuotedMessage : undefined} onConversationOpen={activeChannel === 'chat' ? () => undefined : undefined} />
           ) : (
             <div className="flex h-[540px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 text-center shadow-sm">
               <div>
