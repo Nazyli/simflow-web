@@ -199,11 +199,12 @@ export function SimulationStudioPage() {
         localPositions.current.set(nodeId, pos)
       })
 
-      // Persist auto-layout positions to DB so they are saved for next session.
+      // Persist auto-layout positions only for editable drafts. Published versions
+      // remain read-only even when their stored positions are missing.
       // Deferred with setTimeout to avoid calling mutate during the render phase.
-      // Runs for all version statuses — if the API rejects (e.g. immutable version), it fails silently.
       const nodesToSave = apiNodes.filter((n) => nodesNeedingLayout.includes(n.node_id))
       setTimeout(() => {
+        if (selectedVersionStatusRef.current !== 'draft') return
         nodesToSave.forEach((node) => {
           const pos = localPositions.current.get(node.node_id)
           if (!pos || !persistNodeRef.current) return

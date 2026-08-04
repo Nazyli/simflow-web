@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Copy, GitBranch, Save, Sliders, Trash2 } from 'lucide-react'
+import { Copy, GitBranch, Plus, Save, Sliders, Trash2, X } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
 import { Input } from '../../components/ui/input'
@@ -69,11 +69,38 @@ function isRequired(rule: Record<string, unknown> | undefined, configuration: Co
 
 function CatalogParameterField({ name, value, defaultValue, required, onChange }: { name: string; value: unknown; defaultValue: unknown; required: boolean; onChange: (value: unknown) => void }) {
   const label = name.replaceAll('_', ' ')
+  if (name === 'labels') return <ClassificationLabelsField value={value} required={required} onChange={onChange} />
   if (typeof defaultValue === 'boolean') return <div className="flex items-center gap-2"><Checkbox id={name} checked={Boolean(value)} onCheckedChange={(checked) => onChange(Boolean(checked))} /><Label htmlFor={name} className="cursor-pointer">{label}</Label></div>
   if (typeof defaultValue === 'number') return <TextField label={label} value={value} onChange={(next) => onChange(Number(next))} required={required} type="number" />
   if (typeof defaultValue === 'object') return <JsonField label={label} value={value ?? defaultValue} required={required} onChange={onChange} />
   const multiline = ['body', 'content', 'input'].includes(name)
   return <TextField label={label} value={value} onChange={onChange} required={required} multiline={multiline} />
+}
+
+function ClassificationLabelsField({ value, required, onChange }: { value: unknown; required: boolean; onChange: (value: unknown) => void }) {
+  const labels = Array.isArray(value)
+    ? value.filter((item): item is { id: string; label?: string } => typeof item === 'object' && item !== null && typeof (item as { id?: unknown }).id === 'string')
+    : []
+  const rows = labels.length ? labels : [{ id: '', label: '' }]
+
+  function updateLabel(index: number, label: string) {
+    onChange(rows.map((item, itemIndex) => itemIndex === index ? { id: label, label } : item))
+  }
+
+  function removeLabel(index: number) {
+    onChange(labels.filter((_, itemIndex) => itemIndex !== index))
+  }
+
+  return <div className="grid gap-2">
+    <div className="flex items-center justify-between"><Label>Labels</Label><Button type="button" variant="outline" size="xs" onClick={() => onChange([...labels, { id: '', label: '' }])}><Plus /> Add label</Button></div>
+    <div className="space-y-2">
+      {rows.map((item, index) => <div key={index} className="flex gap-2">
+        <Input required={required} aria-label={`Label ${index + 1}`} placeholder="e.g. probing" value={item.label ?? item.id} onChange={(event) => updateLabel(index, event.target.value)} />
+        <Button type="button" variant="ghost" size="icon-sm" aria-label={`Remove label ${index + 1}`} onClick={() => removeLabel(index)}><X /></Button>
+      </div>)}
+    </div>
+    <p className="text-xs text-slate-500">Each label becomes an output port.</p>
+  </div>
 }
 
 function TextField({ label, value, onChange, required = false, placeholder, type = 'text', multiline = false }: { label: string; value: unknown; onChange: (value: string) => void; required?: boolean; placeholder?: string; type?: string; multiline?: boolean }) {
