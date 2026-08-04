@@ -37,8 +37,8 @@ function edgeToFlow(edge: ApiEdge, sourcePort: OutputPort | undefined, onDelete:
 function publishErrors(error: Error | null): string[] {
   if (!(error instanceof ApiError)) return []
   try {
-    const detail = JSON.parse(error.message).detail
-    return Array.isArray(detail?.errors) ? detail.errors.filter((item: unknown): item is string => typeof item === 'string') : []
+    const info = JSON.parse(error.message).info
+    return typeof info?.message === 'string' ? [info.message] : []
   } catch {
     return []
   }
@@ -47,9 +47,8 @@ function publishErrors(error: Error | null): string[] {
 function apiErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     try {
-      const detail = JSON.parse(error.message).detail
-      if (typeof detail === 'string') return detail
-      if (Array.isArray(detail)) return detail.map((item: unknown) => (typeof item === 'object' && item !== null && 'msg' in item ? String((item as { msg: string }).msg) : String(item))).join(', ')
+      const info = JSON.parse(error.message).info
+      if (typeof info?.message === 'string') return info.message
     } catch {
       // fall through to raw message
     }
