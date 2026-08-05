@@ -25,11 +25,12 @@ const channelNavigation: { channel: Channel; label: string; icon: typeof Message
   { channel: 'call', label: 'Call', icon: Phone },
   { channel: 'document', label: 'Document', icon: FileText },
 ]
+const randomParticipantId = () => String(Math.floor(10000 + Math.random() * 90000))
 export function SimulationRunnerPage() {
   const client = useQueryClient()
   const navigate = useNavigate()
   const { participantId: participantIdFromPath } = useParams()
-  const [participantId, setParticipantId] = useState(participantIdFromPath ?? '')
+  const [participantId, setParticipantId] = useState(() => participantIdFromPath ?? randomParticipantId())
   const [actorId, setActorId] = useState('participant-001-ambj-01-platform')
   const [versionId, setVersionId] = useState('')
   const [versionIds, setVersionIds] = useState<string[]>([])
@@ -137,7 +138,7 @@ export function SimulationRunnerPage() {
         </div>
         <div className={formGroupClass}>
           <label className={formLabelClass} htmlFor="runner-participant">Participant ID</label>
-          <input id="runner-participant" className={inputClass} required value={participantId} placeholder="e.g. participant-123" onChange={(event) => setParticipantId(event.target.value)} />
+          <input id="runner-participant" className={inputClass} required value={participantId} placeholder="5-digit ID" onChange={(event) => setParticipantId(event.target.value)} />
         </div>
         <div className={formGroupClass}>
           <label className={formLabelClass} htmlFor="runner-version">Workflow versions</label>
