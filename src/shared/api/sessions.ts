@@ -26,3 +26,4 @@ export interface SimulationSessionSummary {
 }
 
 export const getSessionsForParticipant = (participantId: string) => apiClient<SimulationSessionSummary[]>(`/history/sessions?participant_id=${encodeURIComponent(participantId)}`)
+export const getSessions = () => apiClient<SimulationSessionSummary[]>('/history/sessions')
