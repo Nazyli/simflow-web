@@ -17,7 +17,7 @@ import dagre from 'dagre'
 import { ApiError } from '../../shared/api/client'
 import { deleteExecution, getExecutionTrace, getExecutions } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
-import { addNode, addWorkflowEdge, createDraftFromVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, deleteWorkflowVersion, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
+import { addNode, addWorkflowEdge, createDraftFromVersion, createVersion, createWorkflow, deleteNode, deleteWorkflow, deleteWorkflowEdge, deleteWorkflowVersion, getGraph, getWorkflowVersions, getWorkflows, publishVersion, updateNode, updateWorkflow, updateWorkflowEdge, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
 import type { Execution, NodeDefinition, OutputPort, Workflow } from '../../shared/types/workflow'
@@ -101,7 +101,21 @@ export function SimulationStudioPage() {
   const executions = useQuery({ queryKey: ['executions', versionId], queryFn: () => getExecutions(versionId!), enabled: Boolean(versionId) })
   const executionTimeline = useQuery({ queryKey: ['execution-node-executions', selectedExecutionId], queryFn: () => getExecutionTrace(selectedExecutionId!), enabled: Boolean(selectedExecutionId) })
 
-  const create = useMutation({ mutationFn: createWorkflow, onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
+  const create = useMutation({
+    mutationFn: async (payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'>) => {
+      const workflow = await createWorkflow(payload)
+      const version = await createVersion(workflow.workflow_id)
+      return { workflow, version }
+    },
+    onSuccess: ({ workflow, version }) => {
+      setSelectedWorkflow(workflow)
+      setVersionId(version.workflow_version_id)
+      setEditWorkflowOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['workflows'] })
+      queryClient.invalidateQueries({ queryKey: ['workflow-versions', workflow.workflow_id] })
+    },
+    onError: (error) => toast.error(apiErrorMessage(error)),
+  })
   const update = useMutation({ mutationFn: ({ id, payload }: { id: string; payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'> }) => updateWorkflow(id, payload), onSuccess: (workflow) => { setSelectedWorkflow(workflow); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
   const removeWorkflow = useMutation({ mutationFn: deleteWorkflow, onSuccess: () => { setSelectedWorkflow(null); setVersionId(null); setSelectedNodeId(null); setSelectedEdgeId(null); setNodes([]); setEdges([]); setEditWorkflowOpen(false); queryClient.invalidateQueries({ queryKey: ['workflows'] }) }, onError: (error) => toast.error(apiErrorMessage(error)) })
   
@@ -135,12 +149,13 @@ export function SimulationStudioPage() {
   persistNodeRef.current = persistNode.mutate
   selectedVersionStatusRef.current = selectedVersion?.status
 
-  // Select first available workflow automatically if none selected
+  // Select a workflow automatically only outside the create dialog, which must
+  // keep its selection empty so it remains in create mode.
   useEffect(() => {
-    if (!selectedWorkflow && workflows.data && workflows.data.length > 0) {
+    if (!editWorkflowOpen && !selectedWorkflow && workflows.data && workflows.data.length > 0) {
       setSelectedWorkflow(workflows.data[0])
     }
-  }, [workflows.data, selectedWorkflow])
+  }, [editWorkflowOpen, workflows.data, selectedWorkflow])
 
   // Select first version automatically when workflow versions load
   useEffect(() => {
@@ -532,6 +547,7 @@ export function SimulationStudioPage() {
                   <FolderKanban className="w-3.5 h-3.5 text-purple-600" /> Workflows
                 </h3>
                 <button 
+                  type="button"
                   className="text-xs text-purple-600 hover:text-purple-700 font-semibold"
                   onClick={() => { setSelectedWorkflow(null); setVersionId(null); setEditWorkflowOpen(true) }}
                 >
