@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Ban, CheckCircle2, Hourglass, ListTree, PlayCircle, Route, Workflow, XCircle } from 'lucide-react'
+import { Ban, Check, CheckCircle2, Copy, Hourglass, ListTree, PlayCircle, Route, Workflow, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
@@ -127,18 +127,51 @@ export function ParticipantHistoryPage() {
 
 function NodeExecutionDialog({ open, onClose, row, nodeExecutions, loading }: { open: boolean; onClose: () => void; row: HistoryRow | null; nodeExecutions: NodeExecution[]; loading: boolean }) {
   return <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-    <DialogContent className="max-w-4xl p-6">
+    <DialogContent className="max-w-[min(94vw,80rem)] sm:max-w-[min(94vw,80rem)] p-6">
       <DialogTitle className="text-base font-bold text-slate-900">Workflow node execution history</DialogTitle>
       <DialogDescription>{row ? `${row.workflowName} · ${row.session.session_id}` : 'Node execution details'}</DialogDescription>
-      {loading ? <LoadingState /> : <div className="max-h-[55vh] overflow-auto rounded-lg border border-slate-200">
+      {loading ? <LoadingState /> : nodeExecutions.length ? <div className="max-h-[62vh] overflow-auto rounded-lg border border-slate-200">
         <Table>
-          <TableHeader><TableRow><TableHead>Sequence</TableHead><TableHead>Node ID</TableHead><TableHead>Status</TableHead><TableHead>Selected port</TableHead><TableHead>Output</TableHead></TableRow></TableHeader>
-          <TableBody>{nodeExecutions.map((item) => <TableRow key={item.node_execution_id}>
-            <TableCell>{item.sequence_number}</TableCell><TableCell className="font-mono text-xs">{item.node_id}</TableCell><TableCell><StatusBadge status={item.status} /></TableCell><TableCell className="font-mono text-xs">{item.selected_port ?? '—'}</TableCell><TableCell className="max-w-72 truncate font-mono text-xs" title={JSON.stringify(item.output_data ?? {})}>{JSON.stringify(item.output_data ?? {})}</TableCell>
-          </TableRow>)}</TableBody>
+          <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:bg-slate-50 [&_th]:text-[0.66rem] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-[0.06em]">
+            <TableRow><TableHead>Sequence</TableHead><TableHead>Node ID</TableHead><TableHead>Status</TableHead><TableHead>Selected</TableHead><TableHead>Output</TableHead></TableRow>
+          </TableHeader>
+          <TableBody>
+            {nodeExecutions.map((item) => (
+              <TableRow key={item.node_execution_id} className="align-top">
+                <TableCell className="font-mono text-xs text-slate-600 tabular-nums">{item.sequence_number}</TableCell>
+                <TableCell className="max-w-56 whitespace-normal break-all font-mono text-xs text-slate-700">{item.node_id}</TableCell>
+                <TableCell><StatusBadge status={item.status} /></TableCell>
+                <TableCell>{item.selected_port ? <div className="flex flex-col items-start gap-1">
+                  <span className="inline-flex rounded-md bg-violet-50 px-1.5 py-0.5 font-mono text-[11px] font-bold text-violet-700">{item.selected_port}</span>
+                  {item.selected_edge_id && <span className="max-w-44 truncate font-mono text-[10px] text-slate-400" title={item.selected_edge_id}>{item.selected_edge_id}</span>}
+                </div> : <span className="text-slate-300">—</span>}</TableCell>
+                <TableCell className="whitespace-normal"><JsonCell value={item.output_data} /></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
         </Table>
-      </div>}
+      </div> : <div className="rounded-lg border border-slate-200 px-5 py-10 text-center text-sm text-slate-500">No node executions recorded.</div>}
       <div className="flex justify-end"><DialogClose asChild><Button variant="outline" size="sm">Close</Button></DialogClose></div>
     </DialogContent>
   </Dialog>
+}
+
+function JsonCell({ value }: { value: Record<string, unknown> | null }) {
+  const text = JSON.stringify(value ?? {}, null, 2)
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+  return (
+    <div className="relative min-w-[260px]">
+      <button onClick={copy} className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-md bg-slate-700/80 text-slate-200 transition hover:bg-slate-600" title="Copy output">{copied ? <Check size={12} /> : <Copy size={12} />}</button>
+      <pre className="max-h-48 overflow-auto rounded-lg bg-slate-900 p-3 pr-9 font-mono text-[11px] leading-relaxed text-slate-100">{text}</pre>
+    </div>
+  )
 }
