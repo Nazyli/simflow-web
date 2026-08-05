@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Activity, Clock3, Database, History, Play, Users, Workflow } from 'lucide-react'
+import { Activity, Clock3, Database, Play, Users, Workflow } from 'lucide-react'
 import { type PropsWithChildren } from 'react'
 import { useLocation } from 'react-router-dom'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
@@ -9,7 +9,6 @@ import { AppSidebar } from './app-sidebar'
 const navigation = [
   { label: 'Studio', path: '/studio', icon: Workflow },
   { label: 'Runner', path: '/simulation', icon: Play },
-  { label: 'Workflow History', path: '/workflow-history', icon: History },
   { label: 'Participant History', path: '/history', icon: Users },
   { label: 'Master Data', path: '/master-data', icon: Database },
   { label: 'Timers', path: '/timers', icon: Clock3 },
