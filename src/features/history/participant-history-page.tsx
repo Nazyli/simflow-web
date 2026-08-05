@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ListTree, Route, Workflow } from 'lucide-react'
+import { Ban, CheckCircle2, Hourglass, ListTree, PlayCircle, Route, Workflow, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
@@ -7,19 +7,52 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { getExecution, getNodeExecutions, type NodeExecution } from '../../shared/api/executions'
 import { getSessions, type SimulationSessionSummary } from '../../shared/api/sessions'
 import { getWorkflowVersion } from '../../shared/api/workflows'
-import { LoadingState } from '../../shared/components/async-state'
+import { ErrorState, LoadingState } from '../../shared/components/async-state'
+import { DataTable, type DataTableColumn } from '../../shared/components/data-table'
 import { StatusBadge } from '../../shared/components/status-badge'
 import type { Execution } from '../../shared/types/workflow'
 import { ParticipantFlowView } from './participant-flow-view'
 
 interface HistoryRow {
+  id: string
   session: SimulationSessionSummary
   execution: Execution | null
   workflowName: string
   versionNumber: number | null
 }
 
-const formatDate = (value: string | null | undefined) => (value ? new Date(value).toLocaleString() : '—')
+const HISTORY_STATUSES = ['active', 'running', 'waiting', 'completed', 'failed', 'cancelled']
+
+const JAKARTA = 'Asia/Jakarta'
+function parseServerTime(value: string | null | undefined) { return value ? new Date(/(?:[zZ]$|[+-]\d{2}:?\d{2}$)/.test(value) ? value : `${value}Z`) : null }
+function formatTime(value: string | null | undefined) { const parsed = parseServerTime(value); return parsed ? parsed.toLocaleString([], { timeZone: JAKARTA }) : '—' }
+function effectiveStatus(row: HistoryRow) { return row.execution?.status ?? row.session.status }
+
+const STATUS_TONES: Record<string, string> = {
+  active: 'bg-blue-50 text-blue-600',
+  running: 'bg-indigo-50 text-indigo-600',
+  waiting: 'bg-amber-50 text-amber-600',
+  completed: 'bg-emerald-50 text-emerald-600',
+  failed: 'bg-red-50 text-red-600',
+  cancelled: 'bg-slate-100 text-slate-500',
+  total: 'bg-purple-50 text-[#5b46c5]',
+}
+
+function StatusIcon({ status }: { status: string }) { return status === 'failed' ? <XCircle size={18} /> : status === 'completed' ? <CheckCircle2 size={18} /> : status === 'cancelled' ? <Ban size={18} /> : status === 'waiting' ? <Hourglass size={18} /> : status === 'active' || status === 'running' ? <PlayCircle size={18} /> : <Workflow size={18} /> }
+
+function StatCard({ status, count }: { status: string; count: number }) {
+  return (
+    <article className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${STATUS_TONES[status] ?? STATUS_TONES.total}`}>
+        <StatusIcon status={status} />
+      </span>
+      <div className="min-w-0">
+        <small className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">{status === 'total' ? 'All sessions' : status}</small>
+        <strong className="block text-xl font-bold leading-tight text-slate-900 tabular-nums">{count}</strong>
+      </div>
+    </article>
+  )
+}
 
 export function ParticipantHistoryPage() {
   const [selectedRow, setSelectedRow] = useState<HistoryRow | null>(null)
@@ -30,13 +63,14 @@ export function ParticipantHistoryPage() {
     queryFn: async (): Promise<HistoryRow[]> => {
       const sessions = await getSessions()
       return Promise.all(sessions.map(async (session): Promise<HistoryRow> => {
-        if (!session.execution_id) return { session, execution: null, workflowName: 'No execution', versionNumber: null }
+        const row = { id: session.session_id, session, execution: null, workflowName: 'No execution', versionNumber: null }
+        if (!session.execution_id) return row
         const execution = await getExecution(session.execution_id)
         try {
           const version = await getWorkflowVersion(execution.workflow_version_id)
-          return { session, execution, workflowName: version.workflow_name, versionNumber: version.version_number }
+          return { ...row, execution, workflowName: version.workflow_name, versionNumber: version.version_number }
         } catch {
-          return { session, execution, workflowName: 'Workflow unavailable', versionNumber: null }
+          return { ...row, execution, workflowName: 'Workflow unavailable' }
         }
       }))
     },
@@ -47,6 +81,22 @@ export function ParticipantHistoryPage() {
     enabled: detailOpen && Boolean(selectedRow?.execution),
   })
   const rows = useMemo(() => history.data ?? [], [history.data])
+  const counts = useMemo(() => [...HISTORY_STATUSES.map((status) => ({ status, count: rows.filter((row) => effectiveStatus(row) === status).length })), { status: 'total', count: rows.length }], [rows])
+  const columns: DataTableColumn<HistoryRow>[] = [
+    { id: 'status', header: 'Status', cell: (row) => <StatusBadge status={effectiveStatus(row)} />, sortValue: (row) => effectiveStatus(row) },
+    { id: 'participant', header: 'Participant ID', cell: (row) => <span className="block max-w-[150px] truncate font-mono text-xs text-slate-700" title={row.session.participant_id}>{row.session.participant_id}</span>, filterValue: (row) => row.session.participant_id },
+    { id: 'session', header: 'Session ID', cell: (row) => <span className="block max-w-44 truncate font-mono text-xs text-slate-700" title={row.session.session_id}>{row.session.session_id}</span>, filterValue: (row) => row.session.session_id },
+    { id: 'workflow', header: 'Workflow', cell: (row) => <span className="block max-w-48 truncate font-medium text-slate-800" title={row.workflowName}>{row.workflowName}</span>, filterValue: (row) => row.workflowName },
+    { id: 'version', header: 'Version', cell: (row) => <span className="inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">v{row.versionNumber ?? '—'}</span>, sortValue: (row) => row.versionNumber ?? 0 },
+    { id: 'started', header: 'Started at', cell: (row) => <time className="text-xs text-slate-700 tabular-nums" dateTime={row.session.created_at}>{formatTime(row.execution?.started_at ?? row.session.created_at)}</time>, sortValue: (row) => row.execution?.started_at ?? row.session.created_at },
+    { id: 'completed', header: 'Completed at', cell: (row) => <time className="text-xs text-slate-700 tabular-nums" dateTime={row.session.completed_at ?? ''}>{formatTime(row.execution?.completed_at ?? row.session.completed_at)}</time>, sortValue: (row) => row.execution?.completed_at ?? row.session.completed_at ?? '' },
+    { id: 'actions', header: 'Actions', cell: (row) => (
+      <div className="flex items-center justify-end gap-1.5">
+        <button onClick={() => { setSelectedRow(row); setDetailOpen(true) }} disabled={!row.execution} className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50 disabled:opacity-50"><ListTree size={12} className="mr-1 inline" />Detail</button>
+        <button onClick={() => { setSelectedRow(row); setFlowOpen(true) }} disabled={!row.execution} className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50 disabled:opacity-50"><Route size={12} className="mr-1 inline" />Flow</button>
+      </div>
+    ) },
+  ]
 
   return (
     <main className="history-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
@@ -61,33 +111,12 @@ export function ParticipantHistoryPage() {
         </div>
       </header>
 
+      <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-7">
+        {counts.map(({ status, count }) => <StatCard key={status} status={status} count={count} />)}
+      </section>
+
       <section className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        {history.isPending ? <LoadingState /> : rows.length ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Participant ID</TableHead><TableHead>Session ID</TableHead><TableHead>Workflow</TableHead><TableHead>Version</TableHead><TableHead>Status</TableHead><TableHead>Started at</TableHead><TableHead>Completed at</TableHead><TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.session.session_id}>
-                  <TableCell className="font-mono text-xs">{row.session.participant_id}</TableCell>
-                  <TableCell className="max-w-44 truncate font-mono text-xs" title={row.session.session_id}>{row.session.session_id}</TableCell>
-                  <TableCell className="max-w-48 truncate font-medium" title={row.workflowName}>{row.workflowName}</TableCell>
-                  <TableCell>v{row.versionNumber ?? '—'}</TableCell>
-                  <TableCell><StatusBadge status={row.execution?.status ?? row.session.status} /></TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-slate-600">{formatDate(row.execution?.started_at ?? row.session.created_at)}</TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-slate-600">{formatDate(row.execution?.completed_at ?? row.session.completed_at)}</TableCell>
-                  <TableCell><div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" disabled={!row.execution} onClick={() => { setSelectedRow(row); setDetailOpen(true) }}><ListTree /> Detail</Button>
-                    <Button variant="outline" size="sm" disabled={!row.execution} onClick={() => { setSelectedRow(row); setFlowOpen(true) }}><Route /> Flow</Button>
-                  </div></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : <div className="px-5 py-10 text-center text-sm text-slate-500">No simulation sessions yet.</div>}
+        {history.isPending ? <LoadingState /> : history.isError ? <ErrorState message="Unable to load execution history." /> : rows.length ? <DataTable rows={rows} columns={columns} selectable={false} /> : <div className="px-5 py-10 text-center text-sm text-slate-500">No simulation sessions yet.</div>}
       </section>
 
       <NodeExecutionDialog open={detailOpen} onClose={() => setDetailOpen(false)} row={selectedRow} nodeExecutions={nodeExecutions.data ?? []} loading={nodeExecutions.isPending} />
