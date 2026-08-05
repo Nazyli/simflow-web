@@ -23,7 +23,7 @@ function Breadcrumb() {
   const title = pageNames[basePath] ?? 'Workspace'
   return (
     <nav className="flex items-center gap-2 overflow-hidden text-[0.76rem] text-slate-400 whitespace-nowrap max-[620px]:max-w-[180px] max-[620px]:mr-auto" aria-label="Breadcrumb">
-      <span>SimFlow</span>
+      <span>Scenario Builder</span>
       <span>/</span>
       <strong className="font-semibold text-slate-600">{title}</strong>
       {segments.length > 1 && <><span>/</span><strong className="font-semibold text-slate-600">{segments.at(-1)}</strong></>}

@@ -37,7 +37,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
               <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-[0_4px_12px_rgba(124,58,237,0.3)]">
                 <Bot size={16} />
               </span>
-              <span className="group-data-[collapsible=icon]:hidden">SimFlow</span>
+              <span className="group-data-[collapsible=icon]:hidden">Scenario Builder</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

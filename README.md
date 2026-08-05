@@ -1,6 +1,6 @@
-# SimFlow Web
+# Scenario Builder Web
 
-React/Vite interface for configuring and running SimFlow workflows.
+React/Vite interface for configuring and running Scenario Builder workflows.
 
 ## Routes
 

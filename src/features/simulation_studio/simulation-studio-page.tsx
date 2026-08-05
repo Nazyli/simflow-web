@@ -268,14 +268,14 @@ export function SimulationStudioPage() {
   useEffect(() => {
     function acceptPaletteDrop(event: globalThis.DragEvent) {
       if (!(event.target instanceof Element) || !event.target.closest('.graph') || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
-      const nodeType = event.dataTransfer?.getData('application/simflow-node-type')
+      const nodeType = event.dataTransfer?.getData('application/scenario-builder-node-type')
       const definition = definitions.get(nodeType ?? '')
       if (!definition) return
       event.preventDefault(); event.stopPropagation()
       addGraphNode.mutate({ definition, position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }) })
     }
     function allowPaletteDrop(event: globalThis.DragEvent) {
-      if (event.target instanceof Element && event.target.closest('.graph') && event.dataTransfer?.types.includes('application/simflow-node-type')) event.preventDefault()
+      if (event.target instanceof Element && event.target.closest('.graph') && event.dataTransfer?.types.includes('application/scenario-builder-node-type')) event.preventDefault()
     }
     document.addEventListener('dragover', allowPaletteDrop, true)
     document.addEventListener('drop', acceptPaletteDrop, true)
@@ -350,7 +350,7 @@ export function SimulationStudioPage() {
   }
 
   function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: string) {
-    event.dataTransfer.setData('application/simflow-node-type', nodeType)
+    event.dataTransfer.setData('application/scenario-builder-node-type', nodeType)
     event.dataTransfer.setData('text/plain', nodeType)
     event.dataTransfer.effectAllowed = 'move'
   }
@@ -362,7 +362,7 @@ export function SimulationStudioPage() {
 
   function dropPaletteNode(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
-    const definition = definitions.get(event.dataTransfer.getData('application/simflow-node-type'))
+    const definition = definitions.get(event.dataTransfer.getData('application/scenario-builder-node-type'))
     if (!definition || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
     addGraphNode.mutate({ definition, position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }) })
   }
