@@ -23,7 +23,7 @@ function countdown(value: string, now: number) { const total = Math.max(0, Math.
 function countdownLabel(parts: { total: number }) { return `${parts.total}s` }
 function durationSeconds(from: string, to: string) { return Math.round((parseServerTime(to).getTime() - parseServerTime(from).getTime()) / 1000) }
 function formatCancelDelta(dueAt: string, cancelledAt: string) { const seconds = durationSeconds(cancelledAt, dueAt); return seconds > 0 ? `${seconds}s before due` : seconds < 0 ? `${Math.abs(seconds)}s after due` : 'at due' }
-function progress(timer: WorkflowTimer, now: number) { const start = parseServerTime(timer.created_at).getTime(); const due = parseServerTime(timer.due_at).getTime(); return Math.min(100, Math.max(0, ((now - start) / Math.max(1, due - start)) * 100)) }
+function progress(timer: WorkflowTimer, now: number) { const start = parseServerTime(timer.created_date).getTime(); const due = parseServerTime(timer.due_at).getTime(); return Math.min(100, Math.max(0, ((now - start) / Math.max(1, due - start)) * 100)) }
 
 const STATUS_TONES: Record<string, string> = {
   scheduled: 'bg-blue-50 text-blue-600',
@@ -80,7 +80,7 @@ export function TimerManagementPage() {
     { id: 'status', header: 'Status', cell: (timer) => <StatusBadge status={timer.status} />, sortValue: (timer) => timer.status },
     { id: 'countdown', header: 'Countdown', cell: (timer) => (isPending(timer) ? <CountdownCell timer={timer} now={now} /> : <span className="text-slate-300">—</span>), sortValue: (timer) => timer.due_at },
     { id: 'due', header: 'Due at', cell: (timer) => <time className="text-xs text-slate-700 tabular-nums" dateTime={timer.due_at}>{formatTime(timer.due_at)}</time>, sortValue: (timer) => timer.due_at },
-    { id: 'timeout', header: 'Timeout', cell: (timer) => <span className="inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">{durationSeconds(timer.created_at, timer.due_at)}s</span>, sortValue: (timer) => timer.due_at },
+    { id: 'timeout', header: 'Timeout', cell: (timer) => <span className="inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">{durationSeconds(timer.created_date, timer.due_at)}s</span>, sortValue: (timer) => timer.due_at },
     { id: 'cancel', header: 'Cancel at', cell: (timer) => timer.cancelled_at ? <div className="flex flex-col gap-0.5"><time className="text-xs text-slate-700 tabular-nums" dateTime={timer.cancelled_at}>{formatTime(timer.cancelled_at)}</time><span className="text-[10px] font-semibold text-slate-400">{formatCancelDelta(timer.due_at, timer.cancelled_at)}</span></div> : <span className="text-slate-300">—</span>, sortValue: (timer) => timer.cancelled_at ?? '' },
     { id: 'retries', header: 'Retries', cell: (timer) => <span className="text-xs text-slate-600 tabular-nums">{timer.attempt_count} / {timer.max_attempts}</span>, sortValue: (timer) => timer.attempt_count },
     { id: 'delay', header: 'Retry delay', cell: (timer) => <span className="inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">{timer.retry_delay_seconds}s</span>, sortValue: (timer) => timer.retry_delay_seconds },
