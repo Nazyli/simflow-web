@@ -935,7 +935,7 @@ function ExecutionHistoryPanel({ executions, selectedExecution, timeline, isLoad
             onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(execution.execution_id) } }}
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="font-semibold text-slate-800 truncate mr-2">{execution.participant_id ?? 'Anonymous Participant'}</span>
+              <span className="font-semibold text-slate-800 truncate mr-2">{typeof execution.context.participant_id === 'string' ? execution.context.participant_id : execution.participant_id ?? 'Participant unavailable'}</span>
               <span className="flex items-center gap-1.5 shrink-0">
                 <StatusBadge status={execution.status} />
                 <button type="button" aria-label="Delete log" title="Delete log" onClick={(event) => { event.stopPropagation(); onRequestDelete(execution.execution_id) }} className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600">
