@@ -1,6 +1,7 @@
 import { FileText, Mail, MessageCircle, Phone } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { Channel } from './channel-workspaces'
+
+export type Channel = 'chat' | 'email' | 'call' | 'document'
 
 export interface ChannelNavItem {
   channel: Channel

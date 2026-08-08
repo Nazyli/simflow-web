@@ -21,3 +21,11 @@ export interface ChatConversation {
   lastMessage: ChatMessage | null
   unreadCount: number
 }
+
+export interface ChatWorkflow {
+  workflowVersionId: string
+  workflowName: string
+  versionNumber: number
+  status: string
+  unreadCount: number
+}

@@ -4,15 +4,12 @@ import { formatChatTime, isOwnMessage } from './utils'
 interface MessageBubbleProps {
   message: ChatMessage
   participantId: string
-  quoted?: boolean
-  onQuote?: (message: ChatMessage) => void
 }
 
-export function MessageBubble({ message, participantId, quoted = false, onQuote }: MessageBubbleProps) {
+export function MessageBubble({ message, participantId }: MessageBubbleProps) {
   const own = isOwnMessage(message, participantId)
   const sender = own ? 'You' : message.from || message.actor || 'system'
   const content = message.content || message.action_type || ''
-  const interactive = Boolean(onQuote)
   return (
     <article className={`flex gap-2 ${own ? 'justify-end' : 'justify-start'}`}>
       {!own && (
@@ -24,16 +21,15 @@ export function MessageBubble({ message, participantId, quoted = false, onQuote 
         <div className={`flex items-baseline gap-2 px-1 ${own ? 'justify-end' : 'justify-start'}`}>
           <span className="text-[10px] font-semibold text-slate-500">{sender}</span>
           <time className="text-[10px] text-slate-400">{formatChatTime(message.timestamp)}</time>
-          {message.workflow_version_id && <span className="text-[10px] text-slate-400">| {message.workflow_version_id.slice(0, 3)}</span>}
+          {message.workflow_label && <span className="truncate text-[10px] text-slate-400">| {message.workflow_label}</span>}
         </div>
-        <button
-          type="button"
-          disabled={!interactive}
-          onClick={onQuote ? () => onQuote(message) : undefined}
-          className={`[font-family:inherit] mt-0.5 block max-w-full whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-left text-sm leading-relaxed ${own ? 'rounded-br-md bg-[#5b46c5] text-white' : 'rounded-bl-md border border-slate-200 bg-white text-slate-800'} ${interactive ? 'cursor-pointer transition hover:ring-2 hover:ring-violet-300' : ''} ${quoted ? 'ring-2 ring-[#5b46c5]' : ''}`}
+        <div
+          className={`mt-0.5 block max-w-full whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-left text-sm leading-relaxed ${
+            own ? 'rounded-br-md bg-[#5b46c5] text-white' : 'rounded-bl-md border border-slate-200 bg-white text-slate-800'
+          }`}
         >
           {content}
-        </button>
+        </div>
       </div>
     </article>
   )

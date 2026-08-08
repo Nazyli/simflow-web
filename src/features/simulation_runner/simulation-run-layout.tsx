@@ -5,7 +5,7 @@ import { SimulationChannelNav } from './simulation-channel-nav'
 import { SimulationRunProvider, useSimulationRun } from './simulation-run-context'
 
 function SimulationRunShell() {
-  const { activeExecution, activeWorkflow, participantId, waitingRuns } = useSimulationRun()
+  const { activeExecution, activeWorkflow, participantId } = useSimulationRun()
   const elapsed = activeExecution ? new Intl.DateTimeFormat(undefined, { timeStyle: 'medium' }).format(new Date()) : '—'
 
   return (
@@ -48,7 +48,7 @@ function SimulationRunShell() {
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-600"><Clock3 size={18} /></span>
           <div className="min-w-0 flex-1">
             <strong className="text-sm text-amber-900">Participant action required</strong>
-            <p className="mt-0.5 text-xs text-amber-700">{waitingRuns.length > 1 ? 'Multiple workflows are waiting. Quote the message you are replying to so the reply targets the right workflow.' : 'Reply on the requested channel with the selected target. Previous actions that do not match the workflow transition will be rejected.'}</p>
+            <p className="mt-0.5 text-xs text-amber-700">Open the workflow that is waiting on the Conversations channel and reply there. The selected workflow scopes your reply; actions sent to the wrong workflow are rejected.</p>
           </div>
           <StatusBadge status="waiting" />
         </section>
