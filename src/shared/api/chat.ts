@@ -13,7 +13,12 @@ export interface ChatMessage {
   created_date: string
 }
 
-export const getChatMessages = (sessionId: string) => apiClient<ChatMessage[]>(`/runner/sessions/${sessionId}/chat`)
+export const getChatMessages = (sessionId: string, workflowVersionId?: string) => {
+  const params = new URLSearchParams({ session_id: sessionId })
+  if (workflowVersionId) params.set('workflow_version_id', workflowVersionId)
+  return apiClient<ChatMessage[]>(`/runner/chat?${params.toString()}`)
+}
 export const sendParticipantChat = (sessionId: string, actorId: string, content: string, workflowVersionId: string) =>
-  apiClient<ChatMessage>(`/runner/sessions/${sessionId}/chat`, { method: 'POST', body: JSON.stringify({ actor_id: actorId, content, workflow_version_id: workflowVersionId }) })
-export const markChatMessageRead = (sessionId: string, messageId: string) => apiClient<ChatMessage>(`/runner/sessions/${sessionId}/chat/messages/${messageId}/read`, { method: 'POST' })
+  apiClient<ChatMessage>(`/runner/chat?session_id=${encodeURIComponent(sessionId)}`, { method: 'POST', body: JSON.stringify({ actor_id: actorId, content, workflow_version_id: workflowVersionId }) })
+export const markChatMessageRead = (sessionId: string, messageId: string) =>
+  apiClient<ChatMessage>(`/runner/chat/read?session_id=${encodeURIComponent(sessionId)}&message_id=${encodeURIComponent(messageId)}`, { method: 'POST' })
