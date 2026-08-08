@@ -6,12 +6,12 @@ import type { ChatActor, ChatMessage, ChatWorkflow } from './chat/types'
 import { useSimulationRun } from './simulation-run-context'
 
 export function ChatChannelPage() {
-  const { participantId, isChatPending, sendChat, markChatRead } = useSimulationRun()
+  const { participantId, runnerParticipantId, isChatPending, sendChat, markChatRead } = useSimulationRun()
 
   const toChatMessage = (message: ApiChatMessage): ChatMessage => ({
     message_id: message.participant_chat_id,
     from: message.sender_id,
-    to: message.sender_type === 'participant' ? message.chat_partner_id : participantId,
+    to: message.sender_type === 'participant' ? message.chat_partner_id : runnerParticipantId,
     actor: message.sender_id,
     channel: 'chat' as const,
     chat_id: null,
@@ -88,7 +88,7 @@ export function ChatChannelPage() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
       <ChatWorkspace
-        participantId={participantId}
+        participantId={runnerParticipantId}
         messages={visibleMessages}
         actors={actors}
         workflows={workflows}
