@@ -14,15 +14,6 @@ export function messageKey(message: ChatMessage): string {
   return message.message_id ?? [message.timestamp, message.content].filter(Boolean).join(':')
 }
 
-export function buildActorNames(actors: Record<string, unknown>[]): Record<string, string> {
-  const names: Record<string, string> = {}
-  for (const actor of actors) {
-    const id = String(actor.actor_id ?? '')
-    if (id) names[id] = String(actor.actor_name ?? id)
-  }
-  return names
-}
-
 export function buildConversations(messages: ChatMessage[], actorNames: Record<string, string>, participantId: string): ChatConversation[] {
   const grouped = new Map<string, ChatMessage[]>()
   for (const message of messages) {

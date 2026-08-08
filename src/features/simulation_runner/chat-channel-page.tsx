@@ -1,16 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
-import { getChatMessages, type ChatMessage as ApiChatMessage } from '../../shared/api/chat'
-import { getMasterData } from '../../shared/api/master-data'
-import { getPublishedVersions } from '../../shared/api/workflows'
+import { getChatActors, getChatMessages, getChatWorkflows, type ChatActorItem, type ChatMessage as ApiChatMessage, type ChatWorkflowItem } from '../../shared/api/chat'
 import { ChatWorkspace } from './chat/chat-workspace'
-import type { ChatMessage, ChatWorkflow } from './chat/types'
+import type { ChatActor, ChatMessage, ChatWorkflow } from './chat/types'
 import { useSimulationRun } from './simulation-run-context'
 
 export function ChatChannelPage() {
-  const { participantId, runnerParticipantId, sessionId, runs, isChatPending, sendChat, markChatRead } = useSimulationRun()
-  const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
-  const actors = useQuery({ queryKey: ['master', 'actors'], queryFn: () => getMasterData('actors') })
+  const { participantId, isChatPending, sendChat, markChatRead } = useSimulationRun()
 
   const toChatMessage = (message: ApiChatMessage): ChatMessage => ({
     message_id: message.participant_chat_id,
@@ -27,29 +23,27 @@ export function ChatChannelPage() {
     is_unread: message.is_read === false,
   })
 
-  const sessionChatQuery = useQuery({
-    queryKey: ['chat-messages', sessionId],
-    queryFn: () => getChatMessages(sessionId!),
-    enabled: Boolean(sessionId),
+  const toChatWorkflow = (item: ChatWorkflowItem): ChatWorkflow => ({
+    workflowVersionId: item.workflow_version_id,
+    workflowName: item.workflow_name,
+    versionNumber: item.version_number,
+    status: item.status,
+    unreadCount: item.unread_count,
   })
 
-  const events: ChatMessage[] = (sessionChatQuery.data ?? []).map(toChatMessage)
+  const toChatActor = (item: ChatActorItem): ChatActor => ({
+    actorId: item.actor_id,
+    actorName: item.actor_name,
+    unreadCount: item.unread_count,
+  })
 
-  const versionById = new Map((versions.data ?? []).map((item) => [item.workflow_version_id, item]))
-  const workflows: ChatWorkflow[] = runs
-    .map((run) => {
-      const version = versionById.get(run.workflow_version_id)
-      const unreadCount = events.filter(
-        (event) => event.workflow_version_id === run.workflow_version_id && event.from !== runnerParticipantId && event.is_unread,
-      ).length
-      return {
-        workflowVersionId: run.workflow_version_id,
-        workflowName: version?.workflow_name ?? run.workflow_version_id.slice(0, 8),
-        versionNumber: version?.version_number ?? 0,
-        status: run.status,
-        unreadCount,
-      }
-    })
+  const workflowsQuery = useQuery({
+    queryKey: ['chat-workflows', participantId],
+    queryFn: () => getChatWorkflows(participantId),
+    enabled: Boolean(participantId.trim()),
+  })
+  const workflows = (workflowsQuery.data ?? [])
+    .map(toChatWorkflow)
     .sort((a, b) => {
       const rank = (status: string) => (status === 'waiting' ? 0 : status === 'running' ? 1 : 2)
       return rank(a.status) - rank(b.status)
@@ -62,23 +56,32 @@ export function ChatChannelPage() {
     workflows[0]?.workflowVersionId ??
     null
 
+  const actorsQuery = useQuery({
+    queryKey: ['chat-actors', participantId, effectiveSelected],
+    queryFn: () => getChatActors(participantId, effectiveSelected!),
+    enabled: Boolean(participantId.trim() && effectiveSelected),
+  })
+  const actors = (actorsQuery.data ?? []).map(toChatActor)
+
+  const [selectedActor, setSelectedActor] = useState<string | null>(null)
+
   const chatQuery = useQuery({
-    queryKey: ['chat-messages', sessionId, effectiveSelected],
-    queryFn: () => getChatMessages(sessionId!, effectiveSelected!),
-    enabled: Boolean(sessionId && effectiveSelected),
+    queryKey: ['chat-messages', participantId, effectiveSelected, selectedActor],
+    queryFn: () => getChatMessages(participantId, effectiveSelected!, selectedActor!),
+    enabled: Boolean(participantId.trim() && effectiveSelected && selectedActor),
   })
 
   const visibleMessages: ChatMessage[] = (chatQuery.data ?? []).map(toChatMessage)
 
-  const selectedRun = runs.find((run) => run.workflow_version_id === effectiveSelected)
+  const selectedRun = workflows.find((workflow) => workflow.workflowVersionId === effectiveSelected)
   const canReply = Boolean(selectedRun && (selectedRun.status === 'waiting' || selectedRun.status === 'running'))
   const disabled = isChatPending || !canReply
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    if (!effectiveSelected) return
-    sendChat({ workflowVersionId: effectiveSelected, target: String(data.get('target') ?? ''), content: String(data.get('content') ?? '') })
+    if (!effectiveSelected || !selectedActor) return
+    sendChat({ workflowVersionId: effectiveSelected, target: selectedActor, content: String(data.get('content') ?? '') })
     event.currentTarget.reset()
   }
 
@@ -87,18 +90,19 @@ export function ChatChannelPage() {
       <ChatWorkspace
         participantId={participantId}
         messages={visibleMessages}
-        actors={actors.data ?? []}
+        actors={actors}
         workflows={workflows}
         selectedWorkflow={effectiveSelected}
-        onSelectWorkflow={setSelectedWorkflow}
+        onSelectWorkflow={(workflowVersionId) => {
+          setSelectedWorkflow(workflowVersionId)
+          setSelectedActor(null)
+        }}
+        selectedActor={selectedActor}
+        onSelectActor={setSelectedActor}
         disabled={disabled}
         onSubmit={submit}
-        onConversationOpen={(messages) => {
-          for (const message of messages) {
-            if (message.message_id && message.session_id && message.from !== runnerParticipantId && message.is_unread) {
-              markChatRead(message.session_id, message.message_id)
-            }
-          }
+        onConversationOpen={(actorId) => {
+          if (effectiveSelected) markChatRead(effectiveSelected, actorId)
         }}
       />
     </div>

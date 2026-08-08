@@ -39,7 +39,7 @@ export interface SimulationRunContextValue {
   runnerParticipantId: string
   isChatPending: boolean
   sendChat: (input: { workflowVersionId: string; target: string; content: string }) => void
-  markChatRead: (sessionId: string, messageId: string) => void
+  markChatRead: (workflowVersionId: string, actorId: string) => void
   refresh: () => void
 }
 
@@ -91,6 +91,8 @@ export function SimulationRunProvider({ participantId, children }: { participant
     const refreshRunner = (event: Event) => {
       void client.invalidateQueries({ queryKey: ['participant-sessions', streamParticipantId] })
       void client.invalidateQueries({ queryKey: ['session-executions'] })
+      void client.invalidateQueries({ queryKey: ['chat-workflows'] })
+      void client.invalidateQueries({ queryKey: ['chat-actors'] })
       void client.invalidateQueries({ queryKey: ['chat-messages'] })
       if (!(event instanceof MessageEvent)) return
       try {
@@ -107,10 +109,12 @@ export function SimulationRunProvider({ participantId, children }: { participant
   }, [client, participantId])
 
   const chatAction = useMutation({
-    mutationFn: ({ sessionId, workflowVersionId, target, content }: { sessionId: string; workflowVersionId: string; target: string; content: string }) =>
-      sendParticipantChat(sessionId, target, content, workflowVersionId),
+    mutationFn: ({ workflowVersionId, target, content }: { workflowVersionId: string; target: string; content: string }) =>
+      sendParticipantChat(participantId.trim(), target, content, workflowVersionId),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['chat-messages'] })
+      client.invalidateQueries({ queryKey: ['chat-workflows'] })
+      client.invalidateQueries({ queryKey: ['chat-actors'] })
       client.invalidateQueries({ queryKey: ['session-executions'] })
       client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] })
     },
@@ -118,9 +122,12 @@ export function SimulationRunProvider({ participantId, children }: { participant
   })
 
   const messageRead = useMutation({
-    mutationFn: ({ sessionId, messageId }: { sessionId: string; messageId: string }) => markChatMessageRead(sessionId, messageId),
+    mutationFn: ({ workflowVersionId, actorId }: { workflowVersionId: string; actorId: string }) =>
+      markChatMessageRead(participantId.trim(), workflowVersionId, actorId),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['chat-messages'] })
+      client.invalidateQueries({ queryKey: ['chat-workflows'] })
+      client.invalidateQueries({ queryKey: ['chat-actors'] })
       client.invalidateQueries({ queryKey: ['session-executions'] })
       client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] })
     },
@@ -131,16 +138,18 @@ export function SimulationRunProvider({ participantId, children }: { participant
   const activeWorkflow = (versions.data ?? []).find((item) => item.workflow_version_id === activeExecution?.workflow_version_id) ?? null
 
   const sendChat = (input: { workflowVersionId: string; target: string; content: string }) => {
-    if (!sessionId) {
+    if (!participantId.trim()) {
       toast.error('Choose an active simulation session.')
       return
     }
-    chatAction.mutate({ sessionId, workflowVersionId: input.workflowVersionId, target: input.target, content: input.content })
+    chatAction.mutate({ workflowVersionId: input.workflowVersionId, target: input.target, content: input.content })
   }
 
   const refresh = () => {
     client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] })
     client.invalidateQueries({ queryKey: ['session-executions'] })
+    client.invalidateQueries({ queryKey: ['chat-workflows'] })
+    client.invalidateQueries({ queryKey: ['chat-actors'] })
     client.invalidateQueries({ queryKey: ['chat-messages'] })
   }
 
@@ -156,7 +165,7 @@ export function SimulationRunProvider({ participantId, children }: { participant
       runnerParticipantId,
       isChatPending: chatAction.isPending,
       sendChat,
-      markChatRead: (sessionId, messageId) => messageRead.mutate({ sessionId, messageId }),
+      markChatRead: (workflowVersionId, actorId) => messageRead.mutate({ workflowVersionId, actorId }),
       refresh,
     }}>
       {children}

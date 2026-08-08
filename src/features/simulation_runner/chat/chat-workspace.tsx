@@ -1,44 +1,41 @@
-import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ConversationBody } from './conversation-body'
 import { ConversationHeader } from './conversation-header'
 import { ConversationSidebar } from './conversation-sidebar'
 import { MessageComposer } from './message-composer'
 import { WorkflowSidebar } from './workflow-sidebar'
-import type { ChatMessage, ChatWorkflow } from './types'
-import { buildActorNames, buildConversations } from './utils'
+import type { ChatActor, ChatMessage, ChatWorkflow } from './types'
+import { buildConversations } from './utils'
 
 export interface ChatWorkspaceProps {
   participantId: string
   messages: ChatMessage[]
-  actors: Record<string, unknown>[]
+  actors: ChatActor[]
   workflows: ChatWorkflow[]
   selectedWorkflow: string | null
   onSelectWorkflow: (workflowVersionId: string) => void
+  selectedActor: string | null
+  onSelectActor: (actorId: string) => void
   disabled: boolean
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
-  onConversationOpen?: (messages: ChatMessage[]) => void
+  onConversationOpen?: (actorId: string) => void
 }
 
-export function ChatWorkspace({ participantId, messages, actors, workflows, selectedWorkflow, onSelectWorkflow, disabled, onSubmit, onConversationOpen }: ChatWorkspaceProps) {
-  const [selectedActor, setSelectedActor] = useState<string | null>(null)
-  const conversations = buildConversations(messages, buildActorNames(actors), participantId)
+export function ChatWorkspace({ participantId, messages, actors, workflows, selectedWorkflow, onSelectWorkflow, selectedActor, onSelectActor, disabled, onSubmit, onConversationOpen }: ChatWorkspaceProps) {
+  const actorNames = Object.fromEntries(actors.map((actor) => [actor.actorId, actor.actorName]))
+  const conversations = buildConversations(messages, actorNames, participantId)
   const activeConversation = selectedActor ? conversations.find((conversation) => conversation.actor === selectedActor) ?? null : null
-
-  useEffect(() => {
-    setSelectedActor(null)
-  }, [selectedWorkflow])
 
   return (
     <section className="col-span-full flex h-[540px] min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
         <WorkflowSidebar workflows={workflows} selectedWorkflow={selectedWorkflow} onSelect={onSelectWorkflow} />
         <ConversationSidebar
-          conversations={conversations}
-          selectedActor={activeConversation?.actor ?? null}
+          actors={actors}
+          selectedActor={selectedActor}
           onSelect={(actor) => {
-            setSelectedActor(actor)
-            onConversationOpen?.(conversations.find((conversation) => conversation.actor === actor)?.messages ?? [])
+            onSelectActor(actor)
+            onConversationOpen?.(actor)
           }}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -51,7 +48,7 @@ export function ChatWorkspace({ participantId, messages, actors, workflows, sele
           ) : (
             <div className="flex flex-1 items-center justify-center bg-slate-50/70 px-6 text-center">
               <div>
-                <p className="text-sm font-semibold text-slate-700">{workflows.length ? 'Select a conversation' : 'Select a workflow'}</p>
+                <p className="text-sm font-semibold text-slate-700">{actors.length ? 'Select a conversation' : 'Select a workflow'}</p>
                 <p className="mt-1 text-xs text-slate-500">Choose a workflow, then a conversation to open its messages.</p>
               </div>
             </div>

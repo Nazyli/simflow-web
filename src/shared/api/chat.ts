@@ -13,12 +13,32 @@ export interface ChatMessage {
   created_date: string
 }
 
-export const getChatMessages = (sessionId: string, workflowVersionId?: string) => {
-  const params = new URLSearchParams({ session_id: sessionId })
-  if (workflowVersionId) params.set('workflow_version_id', workflowVersionId)
-  return apiClient<ChatMessage[]>(`/runner/chat?${params.toString()}`)
+export interface ChatWorkflowItem {
+  workflow_version_id: string
+  workflow_name: string
+  version_number: number
+  status: string
+  unread_count: number
 }
-export const sendParticipantChat = (sessionId: string, actorId: string, content: string, workflowVersionId: string) =>
-  apiClient<ChatMessage>(`/runner/chat?session_id=${encodeURIComponent(sessionId)}`, { method: 'POST', body: JSON.stringify({ actor_id: actorId, content, workflow_version_id: workflowVersionId }) })
-export const markChatMessageRead = (sessionId: string, messageId: string) =>
-  apiClient<ChatMessage>(`/runner/chat/read?session_id=${encodeURIComponent(sessionId)}&message_id=${encodeURIComponent(messageId)}`, { method: 'POST' })
+
+export interface ChatActorItem {
+  actor_id: string
+  actor_name: string
+  unread_count: number
+}
+
+export interface ChatMarkAsReadResult {
+  status: string
+  count: number
+}
+
+export const getChatWorkflows = (participantId: string) =>
+  apiClient<ChatWorkflowItem[]>(`/runner/chat/workflows?participant_id=${encodeURIComponent(participantId)}`)
+export const getChatActors = (participantId: string, workflowVersionId: string) =>
+  apiClient<ChatActorItem[]>(`/runner/chat/actors?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}`)
+export const getChatMessages = (participantId: string, workflowVersionId: string, actorId: string) =>
+  apiClient<ChatMessage[]>(`/runner/chat/messages?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}&actor_id=${encodeURIComponent(actorId)}`)
+export const sendParticipantChat = (participantId: string, actorId: string, content: string, workflowVersionId: string) =>
+  apiClient<ChatMessage>(`/runner/chat?participant_id=${encodeURIComponent(participantId)}`, { method: 'POST', body: JSON.stringify({ actor_id: actorId, content, workflow_version_id: workflowVersionId }) })
+export const markChatMessageRead = (participantId: string, workflowVersionId: string, actorId: string) =>
+  apiClient<ChatMarkAsReadResult>(`/runner/chat/mark-as-read?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}&actor_id=${encodeURIComponent(actorId)}`, { method: 'POST' })

@@ -29,3 +29,9 @@ export interface ChatWorkflow {
   status: string
   unreadCount: number
 }
+
+export interface ChatActor {
+  actorId: string
+  actorName: string
+  unreadCount: number
+}
