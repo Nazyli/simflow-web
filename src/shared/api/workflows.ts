@@ -11,7 +11,6 @@ export const createDraftFromVersion = (versionId: string) => apiClient<WorkflowV
 export const getWorkflowVersions = (workflowId: string) => apiClient<WorkflowVersion[]>(`/studio/workflows/${workflowId}/versions`)
 export interface PublishedWorkflowVersion extends WorkflowVersion { workflow_name: string; is_active: boolean }
 export const getPublishedVersions = () => apiClient<PublishedWorkflowVersion[]>('/studio/workflows/versions/published')
-export const getWorkflowVersion = (versionId: string) => apiClient<WorkflowVersion & { workflow_name: string }>(`/studio/workflows/versions/${versionId}`)
 export const deleteWorkflowVersion = (versionId: string) => apiClient<void>(`/studio/workflows/versions/${versionId}`, { method: 'DELETE' })
 export const publishVersion = (versionId: string) => apiClient<WorkflowVersion>(`/studio/workflows/versions/${versionId}/publish`, { method: 'POST' })
 export interface ApiNode { node_id: string; node_name: string; node_type: string; parameters: Record<string, unknown>; position_x: number | null; position_y: number | null; category: string; input_ports: InputPort[]; output_ports: OutputPort[] }
