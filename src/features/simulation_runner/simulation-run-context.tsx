@@ -12,7 +12,7 @@ import {
 import { eventsUrl } from '../../shared/api/client'
 import { getSessionExecutions } from '../../shared/api/executions'
 import { getSessionsForParticipant, type SimulationSessionSummary } from '../../shared/api/sessions'
-import { getPublishedVersions, type PublishedWorkflowVersion } from '../../shared/api/workflows'
+import { type PublishedWorkflowVersion } from '../../shared/api/workflows'
 import type { Execution } from '../../shared/types/workflow'
 import type { Channel } from './simulation-channels'
 
@@ -62,7 +62,6 @@ export function SimulationRunProvider({ participantId, children }: { participant
   const client = useQueryClient()
   const [actorId] = useState(readActorId)
 
-  const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
   const sessionsQuery = useQuery({
     queryKey: ['participant-sessions', participantId],
     queryFn: () => getSessionsForParticipant(participantId),
@@ -148,7 +147,9 @@ export function SimulationRunProvider({ participantId, children }: { participant
 
   const runnerParticipantId = actorId || activeExecution?.participant_id || participantId
   const unreadCounts = Object.fromEntries(CHANNELS.map((channel) => [channel, sessions.reduce((total, session) => total + (session.unread_counts[channel] ?? 0), 0)])) as Record<Channel, number>
-  const activeWorkflow = (versions.data ?? []).find((item) => item.workflow_version_id === activeExecution?.workflow_version_id) ?? null
+  const activeWorkflow = (client.getQueryData<PublishedWorkflowVersion[]>(['published-versions']) ?? []).find(
+    (item) => item.workflow_version_id === activeExecution?.workflow_version_id,
+  ) ?? null
 
   const sendChat = (input: { workflowVersionId: string; target: string; content: string }) => {
     if (!participantId.trim()) {
