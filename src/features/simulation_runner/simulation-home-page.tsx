@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom'
 import { StatusBadge } from '../../shared/components/status-badge'
 import { channelNavigation, channelPath } from './simulation-channels'
 import { useSimulationRun } from './simulation-run-context'
+import { useParticipantRuns } from './use-participant-runs'
 
 const CHANNEL_KEYS = ['chat', 'email', 'call', 'document'] as const
 
 export function SimulationHomePage() {
-  const { participantId, activeExecution, activeWorkflow, runs, unreadCounts } = useSimulationRun()
+  const { participantId, unreadCounts } = useSimulationRun()
+  const { runs, activeExecution, activeWorkflow } = useParticipantRuns(participantId)
   const totalUnread = CHANNEL_KEYS.reduce((sum, channel) => sum + (unreadCounts[channel] ?? 0), 0)
 
   if (!runs.length) {

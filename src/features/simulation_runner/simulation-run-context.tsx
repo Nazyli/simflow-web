@@ -10,10 +10,7 @@ import {
   type ChatWorkflowItem,
 } from '../../shared/api/chat'
 import { eventsUrl } from '../../shared/api/client'
-import { getParticipantExecutions } from '../../shared/api/executions'
 import { getNotificationActivity, type NotificationActivity } from '../../shared/api/notifications'
-import { type PublishedWorkflowVersion } from '../../shared/api/workflows'
-import type { Execution } from '../../shared/types/workflow'
 import type { Channel } from './simulation-channels'
 
 export const ACTOR_STORAGE_KEY = 'simflow-runner-actor-id'
@@ -37,9 +34,6 @@ const CHANNELS: Channel[] = ['chat', 'email', 'call', 'document']
 
 export interface SimulationRunContextValue {
   participantId: string
-  runs: Execution[]
-  activeExecution: Execution | null
-  activeWorkflow: PublishedWorkflowVersion | null
   unreadCounts: Record<Channel, number>
   runnerParticipantId: string
   isChatPending: boolean
@@ -59,14 +53,6 @@ export function useSimulationRun(): SimulationRunContextValue {
 export function SimulationRunProvider({ participantId, children }: { participantId: string; children: ReactNode }) {
   const client = useQueryClient()
   const [actorId] = useState(readActorId)
-
-  const runsQuery = useQuery({
-    queryKey: ['participant-executions', participantId],
-    queryFn: () => getParticipantExecutions(participantId),
-    enabled: Boolean(participantId.trim()),
-  })
-  const runs = runsQuery.data ?? []
-  const activeExecution = runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? runs[0] ?? null
 
   const activityQuery = useQuery({
     queryKey: ['notification-activity', participantId],
@@ -146,13 +132,10 @@ export function SimulationRunProvider({ participantId, children }: { participant
     },
   })
 
-  const runnerParticipantId = actorId || activeExecution?.participant_id || participantId
+  const runnerParticipantId = actorId || participantId
   const unreadCounts = Object.fromEntries(
     CHANNELS.map((channel) => [channel, channel === 'chat' ? activity.activity_chat.reduce((total, item) => total + item.unread_count, 0) : 0]),
   ) as Record<Channel, number>
-  const activeWorkflow = (client.getQueryData<PublishedWorkflowVersion[]>(['published-versions']) ?? []).find(
-    (item) => item.workflow_version_id === activeExecution?.workflow_version_id,
-  ) ?? null
 
   const sendChat = (input: { workflowVersionId: string; target: string; content: string }) => {
     if (!participantId.trim()) {
@@ -173,9 +156,6 @@ export function SimulationRunProvider({ participantId, children }: { participant
   return (
     <SimulationRunContext.Provider value={{
       participantId,
-      runs,
-      activeExecution,
-      activeWorkflow,
       unreadCounts,
       runnerParticipantId,
       isChatPending: chatAction.isPending,
