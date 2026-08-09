@@ -31,7 +31,7 @@ export async function apiClient<T>(path: string, init: RequestInit = {}): Promis
     ...init,
     headers: { 'Content-Type': 'application/json', ...init.headers },
   })
-  const body = await response.json() as SuccessResponse<T> | ErrorResponse
+  const body = (await response.json()) as SuccessResponse<T> | ErrorResponse
   if (!response.ok) throw new ApiError(JSON.stringify(body), response.status)
   return (body as SuccessResponse<T>).data
 }

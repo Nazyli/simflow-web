@@ -1,10 +1,21 @@
 import { NodeResizer, NodeToolbar, Position, type NodeProps } from '@xyflow/react'
 import { CircleDot } from 'lucide-react'
 import { BaseHandle } from '@/components/base-handle'
-import { BaseNode, BaseNodeContent, BaseNodeHeader, BaseNodeHeaderTitle } from '@/components/base-node'
+import {
+  BaseNode,
+  BaseNodeContent,
+  BaseNodeHeader,
+  BaseNodeHeaderTitle,
+} from '@/components/base-node'
 import type { InputPort, OutputPort } from '../../shared/types/workflow'
 
-type WorkflowNodeData = { label: string; nodeType: string; color: string; inputPorts: InputPort[]; outputPorts: OutputPort[] }
+type WorkflowNodeData = {
+  label: string
+  nodeType: string
+  color: string
+  inputPorts: InputPort[]
+  outputPorts: OutputPort[]
+}
 
 export function WorkflowGraphNode({ data, selected }: NodeProps) {
   const nodeData = data as WorkflowNodeData
@@ -29,13 +40,21 @@ export function WorkflowGraphNode({ data, selected }: NodeProps) {
           />
         ))}
         <BaseNodeHeader>
-          <CircleDot size={14} aria-hidden="true" className="shrink-0" style={{ color: nodeData.color }} />
-          <BaseNodeHeaderTitle className="text-xs font-bold uppercase tracking-wider" style={{ color: nodeData.color }}>
+          <CircleDot
+            size={14}
+            aria-hidden="true"
+            className="shrink-0"
+            style={{ color: nodeData.color }}
+          />
+          <BaseNodeHeaderTitle
+            className="text-xs font-bold tracking-wider uppercase"
+            style={{ color: nodeData.color }}
+          >
             {nodeData.nodeType}
           </BaseNodeHeaderTitle>
         </BaseNodeHeader>
         <BaseNodeContent>
-          <strong className="text-sm font-semibold leading-tight">{nodeData.label}</strong>
+          <strong className="text-sm leading-tight font-semibold">{nodeData.label}</strong>
         </BaseNodeContent>
         {nodeData.outputPorts.map((port, index) => (
           <BaseHandle
@@ -44,7 +63,10 @@ export function WorkflowGraphNode({ data, selected }: NodeProps) {
             type="source"
             position={Position.Right}
             title={port.label}
-            style={{ top: `${((index + 1) / (nodeData.outputPorts.length + 1)) * 100}%`, background: port.edge_style.color }}
+            style={{
+              top: `${((index + 1) / (nodeData.outputPorts.length + 1)) * 100}%`,
+              background: port.edge_style.color,
+            }}
           />
         ))}
       </BaseNode>

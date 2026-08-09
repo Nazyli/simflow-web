@@ -1,5 +1,8 @@
-export const inputClass = 'h-9 w-full min-w-0 rounded-lg border border-input bg-white px-3 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50'
-export const selectClass = 'h-9 w-full min-w-0 rounded-lg border border-input bg-white px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50'
-export const textareaClass = 'field-sizing-content min-h-16 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50'
+export const inputClass =
+  'h-9 w-full min-w-0 rounded-lg border border-input bg-white px-3 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50'
+export const selectClass =
+  'h-9 w-full min-w-0 rounded-lg border border-input bg-white px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50'
+export const textareaClass =
+  'field-sizing-content min-h-16 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50'
 export const formGroupClass = 'flex flex-col gap-1.5'
 export const formLabelClass = 'text-xs font-semibold text-slate-700'

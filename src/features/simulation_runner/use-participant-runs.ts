@@ -12,9 +12,11 @@ export function useParticipantRuns(participantId: string, options?: { enabled?: 
     enabled: enabled && Boolean(participantId.trim()),
   })
   const runs = enabled ? (runsQuery.data ?? []) : []
-  const activeExecution: Execution | null = runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? runs[0] ?? null
-  const activeWorkflow = (client.getQueryData<PublishedWorkflowVersion[]>(['published-versions']) ?? []).find(
-    (item) => item.workflow_version_id === activeExecution?.workflow_version_id,
-  ) ?? null
+  const activeExecution: Execution | null =
+    runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? runs[0] ?? null
+  const activeWorkflow =
+    (client.getQueryData<PublishedWorkflowVersion[]>(['published-versions']) ?? []).find(
+      (item) => item.workflow_version_id === activeExecution?.workflow_version_id,
+    ) ?? null
   return { runs, activeExecution, activeWorkflow }
 }

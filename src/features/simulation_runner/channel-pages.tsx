@@ -1,10 +1,28 @@
 import { FileText, Mail, Phone } from 'lucide-react'
 import type { Channel } from './simulation-channels'
 
-const CONTENT: Record<Exclude<Channel, 'chat'>, { title: string; description: string; icon: typeof Mail }> = {
-  email: { title: 'Email', description: 'Email action is planned but not available yet. The Conversations channel is the active runner channel for now.', icon: Mail },
-  call: { title: 'Call', description: 'Call handling is planned but not available yet. The Conversations channel is the active runner channel for now.', icon: Phone },
-  document: { title: 'Document', description: 'Document review is planned but not available yet. The Conversations channel is the active runner channel for now.', icon: FileText },
+const CONTENT: Record<
+  Exclude<Channel, 'chat'>,
+  { title: string; description: string; icon: typeof Mail }
+> = {
+  email: {
+    title: 'Email',
+    description:
+      'Email action is planned but not available yet. The Conversations channel is the active runner channel for now.',
+    icon: Mail,
+  },
+  call: {
+    title: 'Call',
+    description:
+      'Call handling is planned but not available yet. The Conversations channel is the active runner channel for now.',
+    icon: Phone,
+  },
+  document: {
+    title: 'Document',
+    description:
+      'Document review is planned but not available yet. The Conversations channel is the active runner channel for now.',
+    icon: FileText,
+  },
 }
 
 export function EmailChannelPage() {

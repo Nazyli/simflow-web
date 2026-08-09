@@ -21,15 +21,33 @@ export interface ChatWorkspaceProps {
   onConversationOpen?: (actorId: string) => void
 }
 
-export function ChatWorkspace({ participantId, messages, actors, workflows, selectedWorkflow, onSelectWorkflow, selectedActor, onSelectActor, disabled, onSubmit, onConversationOpen }: ChatWorkspaceProps) {
+export function ChatWorkspace({
+  participantId,
+  messages,
+  actors,
+  workflows,
+  selectedWorkflow,
+  onSelectWorkflow,
+  selectedActor,
+  onSelectActor,
+  disabled,
+  onSubmit,
+  onConversationOpen,
+}: ChatWorkspaceProps) {
   const actorNames = Object.fromEntries(actors.map((actor) => [actor.actorId, actor.actorName]))
   const conversations = buildConversations(messages, actorNames, participantId)
-  const activeConversation = selectedActor ? conversations.find((conversation) => conversation.actor === selectedActor) ?? null : null
+  const activeConversation = selectedActor
+    ? (conversations.find((conversation) => conversation.actor === selectedActor) ?? null)
+    : null
 
   return (
     <section className="col-span-full flex h-[540px] min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
-        <WorkflowSidebar workflows={workflows} selectedWorkflow={selectedWorkflow} onSelect={onSelectWorkflow} />
+        <WorkflowSidebar
+          workflows={workflows}
+          selectedWorkflow={selectedWorkflow}
+          onSelect={onSelectWorkflow}
+        />
         <ConversationSidebar
           actors={actors}
           selectedActor={selectedActor}
@@ -42,14 +60,25 @@ export function ChatWorkspace({ participantId, messages, actors, workflows, sele
           {activeConversation ? (
             <>
               <ConversationHeader conversation={activeConversation} />
-              <ConversationBody messages={activeConversation.messages} participantId={participantId} />
-              <MessageComposer target={activeConversation.actor} disabled={disabled} onSubmit={onSubmit} />
+              <ConversationBody
+                messages={activeConversation.messages}
+                participantId={participantId}
+              />
+              <MessageComposer
+                target={activeConversation.actor}
+                disabled={disabled}
+                onSubmit={onSubmit}
+              />
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center bg-slate-50/70 px-6 text-center">
               <div>
-                <p className="text-sm font-semibold text-slate-700">{actors.length ? 'Select a conversation' : 'Select a workflow'}</p>
-                <p className="mt-1 text-xs text-slate-500">Choose a workflow, then a conversation to open its messages.</p>
+                <p className="text-sm font-semibold text-slate-700">
+                  {actors.length ? 'Select a conversation' : 'Select a workflow'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Choose a workflow, then a conversation to open its messages.
+                </p>
               </div>
             </div>
           )}

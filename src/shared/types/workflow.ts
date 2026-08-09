@@ -19,10 +19,47 @@ export interface Execution {
   completed_at: string | null
 }
 
-export interface WorkflowVersion { workflow_version_id: string; workflow_id: string; version_number: number; status: string }
+export interface WorkflowVersion {
+  workflow_version_id: string
+  workflow_id: string
+  version_number: number
+  status: string
+}
 
-export interface EdgeStyle { color: string; line_style: 'solid' | 'dashed' | 'dotted'; animated: boolean }
-export interface InputPort { id: string; label: string; description: string; accepted_data_types: string[]; max_connections: number }
-export interface OutputPort { id: string; label: string; description: string; data_schema: Record<string, unknown>; data_type: string; max_connections: number; edge_style: EdgeStyle }
-export interface NodeDefinition { node_type: string; category: string; label: string; icon: string; color: string; description: string; input_ports: InputPort[]; output_ports: OutputPort[]; parameters: Record<string, unknown>; validation_rules: Record<string, unknown> }
-export interface NodeCatalog { categories: { id: string; label: string }[]; nodes: NodeDefinition[] }
+export interface EdgeStyle {
+  color: string
+  line_style: 'solid' | 'dashed' | 'dotted'
+  animated: boolean
+}
+export interface InputPort {
+  id: string
+  label: string
+  description: string
+  accepted_data_types: string[]
+  max_connections: number
+}
+export interface OutputPort {
+  id: string
+  label: string
+  description: string
+  data_schema: Record<string, unknown>
+  data_type: string
+  max_connections: number
+  edge_style: EdgeStyle
+}
+export interface NodeDefinition {
+  node_type: string
+  category: string
+  label: string
+  icon: string
+  color: string
+  description: string
+  input_ports: InputPort[]
+  output_ports: OutputPort[]
+  parameters: Record<string, unknown>
+  validation_rules: Record<string, unknown>
+}
+export interface NodeCatalog {
+  categories: { id: string; label: string }[]
+  nodes: NodeDefinition[]
+}

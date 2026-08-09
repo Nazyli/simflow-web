@@ -34,46 +34,91 @@ export function SimulationEntryPage() {
 
   function begin(event: FormEvent) {
     event.preventDefault()
-    start.mutate({ participant_id: participantId.trim(), workflow_version_ids: versionIds, context: { actor_id: actorId.trim() } })
+    start.mutate({
+      participant_id: participantId.trim(),
+      workflow_version_ids: versionIds,
+      context: { actor_id: actorId.trim() },
+    })
   }
 
   return (
     <main className="simulation-runner-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
       <header className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm"><Play size={15} /></span>
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
+            <Play size={15} />
+          </span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-purple-700">Simulation cockpit</p>
+            <p className="text-[10px] font-bold tracking-wider text-purple-700 uppercase">
+              Simulation cockpit
+            </p>
             <h1 className="truncate text-lg font-bold text-slate-900">Run a simulation</h1>
-            <p className="truncate text-xs text-slate-500">Enter the participant persona, select a workflow, then start to open the participant workspace.</p>
+            <p className="truncate text-xs text-slate-500">
+              Enter the participant persona, select a workflow, then start to open the participant
+              workspace.
+            </p>
           </div>
         </div>
       </header>
-      <form className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-4" onSubmit={begin}>
+      <form
+        className="grid gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-4"
+        onSubmit={begin}
+      >
         <div className={formGroupClass}>
-          <label className={formLabelClass} htmlFor="runner-actor">Participant actor</label>
-          <input id="runner-actor" className={inputClass} required value={actorId} onChange={(event) => setActorId(event.target.value)} />
+          <label className={formLabelClass} htmlFor="runner-actor">
+            Participant actor
+          </label>
+          <input
+            id="runner-actor"
+            className={inputClass}
+            required
+            value={actorId}
+            onChange={(event) => setActorId(event.target.value)}
+          />
         </div>
         <div className={formGroupClass}>
-          <label className={formLabelClass} htmlFor="runner-participant">Participant ID</label>
-          <input id="runner-participant" className={inputClass} required value={participantId} placeholder="5-digit ID" onChange={(event) => setParticipantId(event.target.value)} />
+          <label className={formLabelClass} htmlFor="runner-participant">
+            Participant ID
+          </label>
+          <input
+            id="runner-participant"
+            className={inputClass}
+            required
+            value={participantId}
+            placeholder="5-digit ID"
+            onChange={(event) => setParticipantId(event.target.value)}
+          />
         </div>
         <div className={formGroupClass}>
-          <label className={formLabelClass} htmlFor="runner-version">Workflow versions</label>
+          <label className={formLabelClass} htmlFor="runner-version">
+            Workflow versions
+          </label>
           <MultiSelect
             id="runner-version"
-            options={(versions.data ?? []).map((item) => ({ value: item.workflow_version_id, label: `${item.workflow_name} · v${item.version_number}` }))}
+            options={(versions.data ?? []).map((item) => ({
+              value: item.workflow_version_id,
+              label: `${item.workflow_name} · v${item.version_number}`,
+            }))}
             value={versionIds}
             onValueChange={setVersionIds}
             placeholder="Select one or more workflows"
           />
         </div>
         <div className={`${formGroupClass} justify-end`}>
-          <button type="submit" disabled={!actorId || !participantId.trim() || !versionIds.length || start.isPending} className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50">
-            <Play size={15} /> {start.isPending ? 'Starting simulations…' : 'Start selected simulations'}
+          <button
+            type="submit"
+            disabled={!actorId || !participantId.trim() || !versionIds.length || start.isPending}
+            className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50"
+          >
+            <Play size={15} />{' '}
+            {start.isPending ? 'Starting simulations…' : 'Start selected simulations'}
           </button>
         </div>
-        {start.isError && <div className="sm:col-span-2 lg:col-span-4"><ErrorState message="Unable to start or resume the simulation." /></div>}
+        {start.isError && (
+          <div className="sm:col-span-2 lg:col-span-4">
+            <ErrorState message="Unable to start or resume the simulation." />
+          </div>
+        )}
       </form>
       {versions.isPending && <LoadingState />}
     </main>

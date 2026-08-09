@@ -50,7 +50,13 @@ export function useSimulationRun(): SimulationRunContextValue {
   return value
 }
 
-export function SimulationRunProvider({ participantId, children }: { participantId: string; children: ReactNode }) {
+export function SimulationRunProvider({
+  participantId,
+  children,
+}: {
+  participantId: string
+  children: ReactNode
+}) {
   const client = useQueryClient()
   const [actorId] = useState(readActorId)
 
@@ -73,9 +79,23 @@ export function SimulationRunProvider({ participantId, children }: { participant
       void client.invalidateQueries({ queryKey: ['chat-messages'] })
       if (!(event instanceof MessageEvent)) return
       try {
-        const payload = JSON.parse(event.data) as { type?: string; message?: { sender_type?: string; sender_id?: string; content?: string; is_read?: boolean } }
-        if (payload.type === 'chat_message' && payload.message?.sender_type === 'actor' && payload.message.is_read === false) {
-          toast.info(`New message from ${payload.message.sender_id ?? 'actor'}`, { description: payload.message.content })
+        const payload = JSON.parse(event.data) as {
+          type?: string
+          message?: {
+            sender_type?: string
+            sender_id?: string
+            content?: string
+            is_read?: boolean
+          }
+        }
+        if (
+          payload.type === 'chat_message' &&
+          payload.message?.sender_type === 'actor' &&
+          payload.message.is_read === false
+        ) {
+          toast.info(`New message from ${payload.message.sender_id ?? 'actor'}`, {
+            description: payload.message.content,
+          })
         }
       } catch {
         // Ignore malformed SSE payloads while still refreshing server state.
@@ -86,8 +106,15 @@ export function SimulationRunProvider({ participantId, children }: { participant
   }, [client, participantId])
 
   const chatAction = useMutation({
-    mutationFn: ({ workflowVersionId, target, content }: { workflowVersionId: string; target: string; content: string }) =>
-      sendParticipantChat(participantId.trim(), target, content, workflowVersionId),
+    mutationFn: ({
+      workflowVersionId,
+      target,
+      content,
+    }: {
+      workflowVersionId: string
+      target: string
+      content: string
+    }) => sendParticipantChat(participantId.trim(), target, content, workflowVersionId),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['chat-messages'] })
       client.invalidateQueries({ queryKey: ['chat-workflows'] })
@@ -103,19 +130,27 @@ export function SimulationRunProvider({ participantId, children }: { participant
       markChatMessageRead(participantId.trim(), workflowVersionId, actorId),
     onSuccess: ({ count }, { workflowVersionId, actorId }) => {
       const pid = participantId.trim()
-      client.setQueryData<ChatMessage[]>(['chat-messages', pid, workflowVersionId, actorId], (messages) =>
-        messages?.map((message) =>
-          message.sender_type === 'actor' && !message.is_read
-            ? { ...message, is_read: true, read_at: message.read_at ?? new Date().toISOString() }
-            : message,
-        ),
+      client.setQueryData<ChatMessage[]>(
+        ['chat-messages', pid, workflowVersionId, actorId],
+        (messages) =>
+          messages?.map((message) =>
+            message.sender_type === 'actor' && !message.is_read
+              ? { ...message, is_read: true, read_at: message.read_at ?? new Date().toISOString() }
+              : message,
+          ),
       )
       client.setQueryData<ChatActorItem[]>(['chat-actors', pid, workflowVersionId], (actors) =>
-        actors?.map((actor) => (actor.actor_id === actorId ? { ...actor, unread_count: Math.max(0, actor.unread_count - count) } : actor)),
+        actors?.map((actor) =>
+          actor.actor_id === actorId
+            ? { ...actor, unread_count: Math.max(0, actor.unread_count - count) }
+            : actor,
+        ),
       )
       client.setQueryData<ChatWorkflowItem[]>(['chat-workflows', pid], (workflows) =>
         workflows?.map((workflow) =>
-          workflow.workflow_version_id === workflowVersionId ? { ...workflow, unread_count: Math.max(0, workflow.unread_count - count) } : workflow,
+          workflow.workflow_version_id === workflowVersionId
+            ? { ...workflow, unread_count: Math.max(0, workflow.unread_count - count) }
+            : workflow,
         ),
       )
       client.setQueryData<NotificationActivity>(['notification-activity', pid], (activity) =>
@@ -123,7 +158,11 @@ export function SimulationRunProvider({ participantId, children }: { participant
           ? {
               ...activity,
               activity_chat: activity.activity_chat
-                .map((item) => (item.actor_id === actorId ? { ...item, unread_count: Math.max(0, item.unread_count - count) } : item))
+                .map((item) =>
+                  item.actor_id === actorId
+                    ? { ...item, unread_count: Math.max(0, item.unread_count - count) }
+                    : item,
+                )
                 .filter((item) => item.unread_count > 0),
             }
           : activity,
@@ -134,7 +173,12 @@ export function SimulationRunProvider({ participantId, children }: { participant
 
   const runnerParticipantId = actorId || participantId
   const unreadCounts = Object.fromEntries(
-    CHANNELS.map((channel) => [channel, channel === 'chat' ? activity.activity_chat.reduce((total, item) => total + item.unread_count, 0) : 0]),
+    CHANNELS.map((channel) => [
+      channel,
+      channel === 'chat'
+        ? activity.activity_chat.reduce((total, item) => total + item.unread_count, 0)
+        : 0,
+    ]),
   ) as Record<Channel, number>
 
   const sendChat = (input: { workflowVersionId: string; target: string; content: string }) => {
@@ -142,7 +186,11 @@ export function SimulationRunProvider({ participantId, children }: { participant
       toast.error('Choose an active simulation session.')
       return
     }
-    chatAction.mutate({ workflowVersionId: input.workflowVersionId, target: input.target, content: input.content })
+    chatAction.mutate({
+      workflowVersionId: input.workflowVersionId,
+      target: input.target,
+      content: input.content,
+    })
   }
 
   const refresh = () => {
@@ -154,15 +202,18 @@ export function SimulationRunProvider({ participantId, children }: { participant
   }
 
   return (
-    <SimulationRunContext.Provider value={{
-      participantId,
-      unreadCounts,
-      runnerParticipantId,
-      isChatPending: chatAction.isPending,
-      sendChat,
-      markChatRead: (workflowVersionId, actorId) => messageRead.mutateAsync({ workflowVersionId, actorId }),
-      refresh,
-    }}>
+    <SimulationRunContext.Provider
+      value={{
+        participantId,
+        unreadCounts,
+        runnerParticipantId,
+        isChatPending: chatAction.isPending,
+        sendChat,
+        markChatRead: (workflowVersionId, actorId) =>
+          messageRead.mutateAsync({ workflowVersionId, actorId }),
+        refresh,
+      }}
+    >
       {children}
     </SimulationRunContext.Provider>
   )

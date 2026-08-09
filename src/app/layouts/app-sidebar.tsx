@@ -47,7 +47,8 @@ export function AppSidebar({ items }: AppSidebarProps) {
         <SidebarGroup>
           <SidebarMenu>
             {items.map(({ label, path, icon: Icon }) => {
-              const isActive = location.pathname === path || location.pathname.startsWith(`${path}/`)
+              const isActive =
+                location.pathname === path || location.pathname.startsWith(`${path}/`)
               return (
                 <SidebarMenuItem key={path}>
                   <SidebarMenuButton asChild isActive={isActive} tooltip={label}>

@@ -3,7 +3,9 @@ import type { ChatConversation, ChatMessage } from './types'
 export function formatChatTime(timestamp?: string): string {
   if (!timestamp) return 'Just now'
   const date = new Date(timestamp)
-  return Number.isNaN(date.getTime()) ? 'Just now' : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return Number.isNaN(date.getTime())
+    ? 'Just now'
+    : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 export function isOwnMessage(message: ChatMessage, participantId: string): boolean {
@@ -14,7 +16,11 @@ export function messageKey(message: ChatMessage): string {
   return message.message_id ?? [message.timestamp, message.content].filter(Boolean).join(':')
 }
 
-export function buildConversations(messages: ChatMessage[], actorNames: Record<string, string>, participantId: string): ChatConversation[] {
+export function buildConversations(
+  messages: ChatMessage[],
+  actorNames: Record<string, string>,
+  participantId: string,
+): ChatConversation[] {
   const grouped = new Map<string, ChatMessage[]>()
   for (const message of messages) {
     const sender = message.from || message.actor
@@ -24,7 +30,9 @@ export function buildConversations(messages: ChatMessage[], actorNames: Record<s
     list.push(message)
     grouped.set(counterpart, list)
   }
-  const actorIds = new Set<string>([...grouped.keys(), ...Object.keys(actorNames)].filter((id) => id && id !== participantId))
+  const actorIds = new Set<string>(
+    [...grouped.keys(), ...Object.keys(actorNames)].filter((id) => id && id !== participantId),
+  )
   return [...actorIds]
     .map((actor) => {
       const list = grouped.get(actor) ?? []
@@ -33,7 +41,9 @@ export function buildConversations(messages: ChatMessage[], actorNames: Record<s
         actorName: actorNames[actor] ?? actor,
         messages: list,
         lastMessage: list[list.length - 1] ?? null,
-        unreadCount: list.filter((message) => message.is_unread && !isOwnMessage(message, participantId)).length,
+        unreadCount: list.filter(
+          (message) => message.is_unread && !isOwnMessage(message, participantId),
+        ).length,
       }
     })
     .sort((a, b) => {

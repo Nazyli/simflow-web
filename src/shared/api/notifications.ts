@@ -11,4 +11,7 @@ export interface NotificationActivity {
   activity_email: unknown[]
 }
 
-export const getNotificationActivity = (participantId: string) => apiClient<NotificationActivity>(`/runner/notifications/activity?participant_id=${encodeURIComponent(participantId)}`)
+export const getNotificationActivity = (participantId: string) =>
+  apiClient<NotificationActivity>(
+    `/runner/notifications/activity?participant_id=${encodeURIComponent(participantId)}`,
+  )

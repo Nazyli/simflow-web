@@ -10,7 +10,20 @@ type WorkflowEdgeData = {
   onDelete?: (edgeId: string) => void
 }
 
-export function WorkflowGraphEdge({ id, source, target, sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, markerEnd, data, selected }: EdgeProps) {
+export function WorkflowGraphEdge({
+  id,
+  source,
+  target,
+  sourceX,
+  sourceY,
+  sourcePosition,
+  targetX,
+  targetY,
+  targetPosition,
+  markerEnd,
+  data,
+  selected,
+}: EdgeProps) {
   const edgeData = data as WorkflowEdgeData
   const priority = edgeData?.priority ?? 0
   const label = edgeData?.label ?? ''
@@ -33,16 +46,34 @@ export function WorkflowGraphEdge({ id, source, target, sourceX, sourceY, source
       style={{
         stroke,
         strokeWidth: selected ? 2.5 : 1.5,
-        strokeDasharray: style.line_style === 'dashed' ? '6 4' : style.line_style === 'dotted' ? '2 3' : undefined,
+        strokeDasharray:
+          style.line_style === 'dashed' ? '6 4' : style.line_style === 'dotted' ? '2 3' : undefined,
       }}
     >
-      <div className="flex items-center gap-1 rounded-full bg-background p-1 shadow-sm ring-1 ring-border" style={{ transform: `translateY(${labelOffset}px)` }}>
-        <Button type="button" variant="outline" size="xs" className="h-auto gap-1 rounded-full px-2 py-0.5 text-[0.65rem] text-muted-foreground">
-          <span className="rounded-full bg-muted px-1.5 py-px text-[0.6rem] font-bold text-muted-foreground">P{priority}</span>
+      <div
+        className="bg-background ring-border flex items-center gap-1 rounded-full p-1 shadow-sm ring-1"
+        style={{ transform: `translateY(${labelOffset}px)` }}
+      >
+        <Button
+          type="button"
+          variant="outline"
+          size="xs"
+          className="text-muted-foreground h-auto gap-1 rounded-full px-2 py-0.5 text-[0.65rem]"
+        >
+          <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-px text-[0.6rem] font-bold">
+            P{priority}
+          </span>
           <span className="max-w-[180px] truncate">{label}</span>
         </Button>
         {onDelete && (
-          <Button type="button" variant="ghost" size="icon-xs" className="nodrag size-5 rounded-full text-muted-foreground" onClick={() => onDelete(id)} aria-label={`Delete edge ${label}`}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className="nodrag text-muted-foreground size-5 rounded-full"
+            onClick={() => onDelete(id)}
+            aria-label={`Delete edge ${label}`}
+          >
             <X />
           </Button>
         )}

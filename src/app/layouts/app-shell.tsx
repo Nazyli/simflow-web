@@ -12,7 +12,9 @@ const navigation = [
   { label: 'Timers', path: '/timers', icon: Clock3 },
 ]
 
-const pageNames: Record<string, string> = Object.fromEntries(navigation.map(({ path, label }) => [path, label]))
+const pageNames: Record<string, string> = Object.fromEntries(
+  navigation.map(({ path, label }) => [path, label]),
+)
 
 function Breadcrumb() {
   const location = useLocation()
@@ -20,11 +22,19 @@ function Breadcrumb() {
   const basePath = `/${segments[0] ?? 'studio'}`
   const title = pageNames[basePath] ?? 'Workspace'
   return (
-    <nav className="flex items-center gap-2 overflow-hidden text-[0.76rem] text-slate-400 whitespace-nowrap max-[620px]:max-w-[180px] max-[620px]:mr-auto" aria-label="Breadcrumb">
+    <nav
+      className="flex items-center gap-2 overflow-hidden text-[0.76rem] whitespace-nowrap text-slate-400 max-[620px]:mr-auto max-[620px]:max-w-[180px]"
+      aria-label="Breadcrumb"
+    >
       <span>Scenario Builder</span>
       <span>/</span>
       <strong className="font-semibold text-slate-600">{title}</strong>
-      {segments.length > 1 && <><span>/</span><strong className="font-semibold text-slate-600">{segments.at(-1)}</strong></>}
+      {segments.length > 1 && (
+        <>
+          <span>/</span>
+          <strong className="font-semibold text-slate-600">{segments.at(-1)}</strong>
+        </>
+      )}
     </nav>
   )
 }
@@ -39,7 +49,9 @@ export function AppShell({ children }: PropsWithChildren) {
           <SidebarTrigger className="shrink-0 text-slate-500" />
           <Breadcrumb />
         </header>
-        <div className="app-content mx-0 mt-0 max-w-none p-7 max-[900px]:px-[18px] max-[900px]:py-[22px] max-[620px]:p-3">{children}</div>
+        <div className="app-content mx-0 mt-0 max-w-none p-7 max-[900px]:px-[18px] max-[900px]:py-[22px] max-[620px]:p-3">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )
