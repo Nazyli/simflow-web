@@ -5,6 +5,7 @@ import {
   markChatMessageRead,
   sendParticipantChat,
   type ChatActorItem,
+  type ChatMarkAsReadResult,
   type ChatMessage,
   type ChatWorkflowItem,
 } from '../../shared/api/chat'
@@ -45,7 +46,7 @@ export interface SimulationRunContextValue {
   runnerParticipantId: string
   isChatPending: boolean
   sendChat: (input: { workflowVersionId: string; target: string; content: string }) => void
-  markChatRead: (workflowVersionId: string, actorId: string) => void
+  markChatRead: (workflowVersionId: string, actorId: string) => Promise<ChatMarkAsReadResult>
   refresh: () => void
 }
 
@@ -189,7 +190,7 @@ export function SimulationRunProvider({ participantId, children }: { participant
       runnerParticipantId,
       isChatPending: chatAction.isPending,
       sendChat,
-      markChatRead: (workflowVersionId, actorId) => messageRead.mutate({ workflowVersionId, actorId }),
+      markChatRead: (workflowVersionId, actorId) => messageRead.mutateAsync({ workflowVersionId, actorId }),
       refresh,
     }}>
       {children}

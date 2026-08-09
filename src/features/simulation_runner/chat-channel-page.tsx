@@ -64,11 +64,12 @@ export function ChatChannelPage() {
   const actors = (actorsQuery.data ?? []).map(toChatActor)
 
   const [selectedActor, setSelectedActor] = useState<string | null>(null)
+  const [readPendingActors, setReadPendingActors] = useState<ReadonlySet<string>>(new Set())
 
   const chatQuery = useQuery({
     queryKey: ['chat-messages', participantId, effectiveSelected, selectedActor],
     queryFn: () => getChatMessages(participantId, effectiveSelected!, selectedActor!),
-    enabled: Boolean(participantId.trim() && effectiveSelected && selectedActor),
+    enabled: Boolean(participantId.trim() && effectiveSelected && selectedActor && !readPendingActors.has(selectedActor)),
   })
 
   const visibleMessages: ChatMessage[] = (chatQuery.data ?? []).map(toChatMessage)
@@ -104,7 +105,16 @@ export function ChatChannelPage() {
         onConversationOpen={(actorId) => {
           if (!effectiveSelected) return
           const actor = actors.find((item) => item.actorId === actorId)
-          if (actor && actor.unreadCount > 0) markChatRead(effectiveSelected, actorId)
+          if (actor && actor.unreadCount > 0) {
+            setReadPendingActors((prev) => new Set(prev).add(actorId))
+            void markChatRead(effectiveSelected, actorId).finally(() =>
+              setReadPendingActors((prev) => {
+                const next = new Set(prev)
+                next.delete(actorId)
+                return next
+              }),
+            )
+          }
         }}
       />
     </div>
