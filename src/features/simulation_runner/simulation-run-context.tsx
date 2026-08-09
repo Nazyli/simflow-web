@@ -10,7 +10,7 @@ import {
   type ChatWorkflowItem,
 } from '../../shared/api/chat'
 import { eventsUrl } from '../../shared/api/client'
-import { getExecutionState, getSessionExecutions } from '../../shared/api/executions'
+import { getSessionExecutions } from '../../shared/api/executions'
 import { getSessionsForParticipant, type SimulationSessionSummary } from '../../shared/api/sessions'
 import { getPublishedVersions, type PublishedWorkflowVersion } from '../../shared/api/workflows'
 import type { Execution } from '../../shared/types/workflow'
@@ -77,19 +77,7 @@ export function SimulationRunProvider({ participantId, children }: { participant
     enabled: Boolean(sessionId),
   })
   const runs = runsQuery.data ?? []
-
-  const executionStates = useQuery({
-    queryKey: ['execution-states', runs.map((run) => run.execution_id).join(',')],
-    queryFn: async () => Promise.all(runs.map((run) => getExecutionState(run.execution_id))),
-    enabled: runs.length > 0,
-  }).data ?? []
-  const mergedRuns = runs.map((run) => {
-    const state = executionStates.find((item) => item.execution_id === run.execution_id)
-    return state
-      ? { ...run, status: state.status, current_node_id: state.current_node_id, context: { ...run.context, active_wait: state.active_wait ?? undefined } }
-      : run
-  })
-  const activeExecution = mergedRuns.find((run) => run.status === 'waiting' || run.status === 'running') ?? mergedRuns[0] ?? null
+  const activeExecution = runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? runs[0] ?? null
 
   useEffect(() => {
     const streamParticipantId = participantId.trim()
@@ -183,7 +171,7 @@ export function SimulationRunProvider({ participantId, children }: { participant
       participantId,
       sessions,
       sessionId,
-      runs: mergedRuns,
+      runs,
       activeExecution,
       activeWorkflow,
       unreadCounts,
