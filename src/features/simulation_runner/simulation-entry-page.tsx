@@ -24,7 +24,8 @@ export function SimulationEntryPage() {
     onSuccess: (result) => {
       const normalizedParticipantId = participantId.trim()
       writeActorId(actorId.trim())
-      client.invalidateQueries({ queryKey: ['participant-sessions', normalizedParticipantId] })
+      client.invalidateQueries({ queryKey: ['participant-executions', normalizedParticipantId] })
+      client.invalidateQueries({ queryKey: ['notification-activity', normalizedParticipantId] })
       navigate(`/simulation/${encodeURIComponent(normalizedParticipantId)}`)
       toast.success(`${result.runs.length} workflow simulation(s) ready.`)
     },

@@ -10,8 +10,8 @@ import {
   type ChatWorkflowItem,
 } from '../../shared/api/chat'
 import { eventsUrl } from '../../shared/api/client'
-import { getSessionExecutions } from '../../shared/api/executions'
-import { getSessionsForParticipant, type SimulationSessionSummary } from '../../shared/api/sessions'
+import { getParticipantExecutions } from '../../shared/api/executions'
+import { getNotificationActivity, type NotificationActivity } from '../../shared/api/notifications'
 import { type PublishedWorkflowVersion } from '../../shared/api/workflows'
 import type { Execution } from '../../shared/types/workflow'
 import type { Channel } from './simulation-channels'
@@ -37,8 +37,6 @@ const CHANNELS: Channel[] = ['chat', 'email', 'call', 'document']
 
 export interface SimulationRunContextValue {
   participantId: string
-  sessions: SimulationSessionSummary[]
-  sessionId: string | null
   runs: Execution[]
   activeExecution: Execution | null
   activeWorkflow: PublishedWorkflowVersion | null
@@ -62,29 +60,28 @@ export function SimulationRunProvider({ participantId, children }: { participant
   const client = useQueryClient()
   const [actorId] = useState(readActorId)
 
-  const sessionsQuery = useQuery({
-    queryKey: ['participant-sessions', participantId],
-    queryFn: () => getSessionsForParticipant(participantId),
-    enabled: Boolean(participantId.trim()),
-  })
-  const sessions = sessionsQuery.data ?? []
-  const sessionId = sessions[0]?.session_id ?? null
-
   const runsQuery = useQuery({
-    queryKey: ['session-executions', sessionId],
-    queryFn: () => getSessionExecutions(sessionId!),
-    enabled: Boolean(sessionId),
+    queryKey: ['participant-executions', participantId],
+    queryFn: () => getParticipantExecutions(participantId),
+    enabled: Boolean(participantId.trim()),
   })
   const runs = runsQuery.data ?? []
   const activeExecution = runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? runs[0] ?? null
+
+  const activityQuery = useQuery({
+    queryKey: ['notification-activity', participantId],
+    queryFn: () => getNotificationActivity(participantId),
+    enabled: Boolean(participantId.trim()),
+  })
+  const activity = activityQuery.data ?? { activity_chat: [], activity_email: [] }
 
   useEffect(() => {
     const streamParticipantId = participantId.trim()
     if (!streamParticipantId) return
     const events = new EventSource(eventsUrl(streamParticipantId))
     const refreshRunner = (event: Event) => {
-      void client.invalidateQueries({ queryKey: ['participant-sessions', streamParticipantId] })
-      void client.invalidateQueries({ queryKey: ['session-executions'] })
+      void client.invalidateQueries({ queryKey: ['notification-activity', streamParticipantId] })
+      void client.invalidateQueries({ queryKey: ['participant-executions', streamParticipantId] })
       void client.invalidateQueries({ queryKey: ['chat-workflows'] })
       void client.invalidateQueries({ queryKey: ['chat-actors'] })
       void client.invalidateQueries({ queryKey: ['chat-messages'] })
@@ -109,8 +106,8 @@ export function SimulationRunProvider({ participantId, children }: { participant
       client.invalidateQueries({ queryKey: ['chat-messages'] })
       client.invalidateQueries({ queryKey: ['chat-workflows'] })
       client.invalidateQueries({ queryKey: ['chat-actors'] })
-      client.invalidateQueries({ queryKey: ['session-executions'] })
-      client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] })
+      client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
+      client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
     },
     onError: () => toast.error('Reply was rejected. Check the requested actor and workflow.'),
   })
@@ -135,18 +132,24 @@ export function SimulationRunProvider({ participantId, children }: { participant
           workflow.workflow_version_id === workflowVersionId ? { ...workflow, unread_count: Math.max(0, workflow.unread_count - count) } : workflow,
         ),
       )
-      client.setQueryData<SimulationSessionSummary[]>(['participant-sessions', pid], (sessions) =>
-        sessions?.map((session) => ({
-          ...session,
-          unread_counts: { ...session.unread_counts, chat: Math.max(0, (session.unread_counts.chat ?? 0) - count) },
-        })),
+      client.setQueryData<NotificationActivity>(['notification-activity', pid], (activity) =>
+        activity
+          ? {
+              ...activity,
+              activity_chat: activity.activity_chat
+                .map((item) => (item.actor_id === actorId ? { ...item, unread_count: Math.max(0, item.unread_count - count) } : item))
+                .filter((item) => item.unread_count > 0),
+            }
+          : activity,
       )
-      client.invalidateQueries({ queryKey: ['session-executions'] })
+      client.invalidateQueries({ queryKey: ['participant-executions', pid] })
     },
   })
 
   const runnerParticipantId = actorId || activeExecution?.participant_id || participantId
-  const unreadCounts = Object.fromEntries(CHANNELS.map((channel) => [channel, sessions.reduce((total, session) => total + (session.unread_counts[channel] ?? 0), 0)])) as Record<Channel, number>
+  const unreadCounts = Object.fromEntries(
+    CHANNELS.map((channel) => [channel, channel === 'chat' ? activity.activity_chat.reduce((total, item) => total + item.unread_count, 0) : 0]),
+  ) as Record<Channel, number>
   const activeWorkflow = (client.getQueryData<PublishedWorkflowVersion[]>(['published-versions']) ?? []).find(
     (item) => item.workflow_version_id === activeExecution?.workflow_version_id,
   ) ?? null
@@ -160,8 +163,8 @@ export function SimulationRunProvider({ participantId, children }: { participant
   }
 
   const refresh = () => {
-    client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] })
-    client.invalidateQueries({ queryKey: ['session-executions'] })
+    client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
+    client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
     client.invalidateQueries({ queryKey: ['chat-workflows'] })
     client.invalidateQueries({ queryKey: ['chat-actors'] })
     client.invalidateQueries({ queryKey: ['chat-messages'] })
@@ -170,8 +173,6 @@ export function SimulationRunProvider({ participantId, children }: { participant
   return (
     <SimulationRunContext.Provider value={{
       participantId,
-      sessions,
-      sessionId,
       runs,
       activeExecution,
       activeWorkflow,

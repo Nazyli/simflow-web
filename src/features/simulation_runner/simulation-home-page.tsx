@@ -7,10 +7,10 @@ import { useSimulationRun } from './simulation-run-context'
 const CHANNEL_KEYS = ['chat', 'email', 'call', 'document'] as const
 
 export function SimulationHomePage() {
-  const { participantId, activeExecution, activeWorkflow, sessions, unreadCounts } = useSimulationRun()
+  const { participantId, activeExecution, activeWorkflow, runs, unreadCounts } = useSimulationRun()
   const totalUnread = CHANNEL_KEYS.reduce((sum, channel) => sum + (unreadCounts[channel] ?? 0), 0)
 
-  if (!sessions.length) {
+  if (!runs.length) {
     return (
       <div className="flex h-[540px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 text-center shadow-sm">
         <div>
@@ -31,7 +31,7 @@ export function SimulationHomePage() {
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-purple-700">Active simulation</p>
             <h2 className="truncate text-base font-bold text-slate-900">{activeWorkflow?.workflow_name ?? (activeExecution ? 'Workflow' : 'No active run')}</h2>
-            <p className="truncate text-xs text-slate-500">{activeExecution ? `Version ${activeWorkflow?.version_number ?? '—'} · Session ${activeExecution.session_id}` : `${sessions.length} saved session${sessions.length === 1 ? '' : 's'} for this participant`}</p>
+            <p className="truncate text-xs text-slate-500">{activeExecution ? `Version ${activeWorkflow?.version_number ?? '—'} · Session ${activeExecution.session_id}` : `${runs.length} workflow run${runs.length === 1 ? '' : 's'} for this participant`}</p>
           </div>
           <div className="flex items-center gap-2">
             {activeExecution ? <StatusBadge status={activeExecution.status} /> : <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">Idle</span>}
