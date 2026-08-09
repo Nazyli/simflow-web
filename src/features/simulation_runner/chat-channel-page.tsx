@@ -102,7 +102,9 @@ export function ChatChannelPage() {
         disabled={disabled}
         onSubmit={submit}
         onConversationOpen={(actorId) => {
-          if (effectiveSelected) markChatRead(effectiveSelected, actorId)
+          if (!effectiveSelected) return
+          const actor = actors.find((item) => item.actorId === actorId)
+          if (actor && actor.unreadCount > 0) markChatRead(effectiveSelected, actorId)
         }}
       />
     </div>

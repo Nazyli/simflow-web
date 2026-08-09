@@ -1,7 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { markChatMessageRead, sendParticipantChat } from '../../shared/api/chat'
+import {
+  markChatMessageRead,
+  sendParticipantChat,
+  type ChatActorItem,
+  type ChatMessage,
+  type ChatWorkflowItem,
+} from '../../shared/api/chat'
 import { eventsUrl } from '../../shared/api/client'
 import { getExecutionState, getSessionExecutions } from '../../shared/api/executions'
 import { getSessionsForParticipant, type SimulationSessionSummary } from '../../shared/api/sessions'
@@ -124,12 +130,30 @@ export function SimulationRunProvider({ participantId, children }: { participant
   const messageRead = useMutation({
     mutationFn: ({ workflowVersionId, actorId }: { workflowVersionId: string; actorId: string }) =>
       markChatMessageRead(participantId.trim(), workflowVersionId, actorId),
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ['chat-messages'] })
-      client.invalidateQueries({ queryKey: ['chat-workflows'] })
-      client.invalidateQueries({ queryKey: ['chat-actors'] })
+    onSuccess: ({ count }, { workflowVersionId, actorId }) => {
+      const pid = participantId.trim()
+      client.setQueryData<ChatMessage[]>(['chat-messages', pid, workflowVersionId, actorId], (messages) =>
+        messages?.map((message) =>
+          message.sender_type === 'actor' && !message.is_read
+            ? { ...message, is_read: true, read_at: message.read_at ?? new Date().toISOString() }
+            : message,
+        ),
+      )
+      client.setQueryData<ChatActorItem[]>(['chat-actors', pid, workflowVersionId], (actors) =>
+        actors?.map((actor) => (actor.actor_id === actorId ? { ...actor, unread_count: Math.max(0, actor.unread_count - count) } : actor)),
+      )
+      client.setQueryData<ChatWorkflowItem[]>(['chat-workflows', pid], (workflows) =>
+        workflows?.map((workflow) =>
+          workflow.workflow_version_id === workflowVersionId ? { ...workflow, unread_count: Math.max(0, workflow.unread_count - count) } : workflow,
+        ),
+      )
+      client.setQueryData<SimulationSessionSummary[]>(['participant-sessions', pid], (sessions) =>
+        sessions?.map((session) => ({
+          ...session,
+          unread_counts: { ...session.unread_counts, chat: Math.max(0, (session.unread_counts.chat ?? 0) - count) },
+        })),
+      )
       client.invalidateQueries({ queryKey: ['session-executions'] })
-      client.invalidateQueries({ queryKey: ['participant-sessions', participantId.trim()] })
     },
   })
 
