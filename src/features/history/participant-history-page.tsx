@@ -4,19 +4,17 @@ import { useMemo, useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table'
-import { getExecution, getNodeExecutions, type NodeExecution } from '../../shared/api/executions'
-import { getSessions, type SimulationSessionSummary } from '../../shared/api/sessions'
-import { getWorkflowVersion } from '../../shared/api/workflows'
+import { getNodeExecutions, type NodeExecution } from '../../shared/api/executions'
+import { getSessions, type LatestExecutionSummary, type SimulationSessionSummary } from '../../shared/api/sessions'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { DataTable, type DataTableColumn } from '../../shared/components/data-table'
 import { StatusBadge } from '../../shared/components/status-badge'
-import type { Execution } from '../../shared/types/workflow'
 import { ParticipantFlowView } from './participant-flow-view'
 
 interface HistoryRow {
   id: string
   session: SimulationSessionSummary
-  execution: Execution | null
+  execution: LatestExecutionSummary | null
   workflowName: string
   versionNumber: number | null
 }
@@ -62,23 +60,19 @@ export function ParticipantHistoryPage() {
     queryKey: ['participant-history'],
     queryFn: async (): Promise<HistoryRow[]> => {
       const sessions = await getSessions()
-      return Promise.all(sessions.map(async (session): Promise<HistoryRow> => {
-        const row = { id: session.session_id, session, execution: null, workflowName: 'No execution', versionNumber: null }
-        if (!session.execution_id) return row
-        const execution = await getExecution(session.execution_id)
-        try {
-          const version = await getWorkflowVersion(execution.workflow_version_id)
-          return { ...row, execution, workflowName: version.workflow_name, versionNumber: version.version_number }
-        } catch {
-          return { ...row, execution, workflowName: 'Workflow unavailable' }
-        }
+      return sessions.map((session) => ({
+        id: session.session_id,
+        session,
+        execution: session.execution,
+        workflowName: session.workflow_name ?? (session.execution_id ? 'Workflow unavailable' : 'No execution'),
+        versionNumber: session.version_number,
       }))
     },
   })
   const nodeExecutions = useQuery({
-    queryKey: ['history-node-executions', selectedRow?.execution?.execution_id],
-    queryFn: () => getNodeExecutions(selectedRow!.execution!.execution_id),
-    enabled: detailOpen && Boolean(selectedRow?.execution),
+    queryKey: ['history-node-executions', selectedRow?.session.execution_id],
+    queryFn: () => getNodeExecutions(selectedRow!.session.execution_id!),
+    enabled: detailOpen && Boolean(selectedRow?.session.execution_id),
   })
   const rows = useMemo(() => history.data ?? [], [history.data])
   const counts = useMemo(() => [...HISTORY_STATUSES.map((status) => ({ status, count: rows.filter((row) => effectiveStatus(row) === status).length })), { status: 'total', count: rows.length }], [rows])
@@ -120,7 +114,7 @@ export function ParticipantHistoryPage() {
       </section>
 
       <NodeExecutionDialog open={detailOpen} onClose={() => setDetailOpen(false)} row={selectedRow} nodeExecutions={nodeExecutions.data ?? []} loading={nodeExecutions.isPending} />
-      <ParticipantFlowView open={flowOpen} onClose={() => setFlowOpen(false)} versionId={selectedRow?.execution?.workflow_version_id ?? ''} executionId={selectedRow?.execution?.execution_id ?? ''} title={selectedRow ? `${selectedRow.workflowName} · v${selectedRow.versionNumber ?? '—'}` : 'Participant flow'} currentState={selectedRow?.execution?.current_node_id ?? null} />
+      <ParticipantFlowView open={flowOpen} onClose={() => setFlowOpen(false)} versionId={selectedRow?.execution?.workflow_version_id ?? ''} executionId={selectedRow?.session.execution_id ?? ''} title={selectedRow ? `${selectedRow.workflowName} · v${selectedRow.versionNumber ?? '—'}` : 'Participant flow'} currentState={selectedRow?.execution?.current_node_id ?? null} />
     </main>
   )
 }

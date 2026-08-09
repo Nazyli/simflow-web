@@ -14,12 +14,23 @@ export interface SessionChannelEvent {
   [key: string]: unknown
 }
 
+export interface LatestExecutionSummary {
+  workflow_version_id: string | null
+  status: string | null
+  current_node_id: string | null
+  started_at: string | null
+  completed_at: string | null
+}
+
 export interface SimulationSessionSummary {
   session_id: string
   participant_id: string
   execution_id: string | null
+  execution: LatestExecutionSummary | null
   status: string
   unread_counts: Record<'chat' | 'email' | 'call' | 'document', number>
+  workflow_name: string | null
+  version_number: number | null
   created_at: string
   last_activity_at: string
   completed_at: string | null
