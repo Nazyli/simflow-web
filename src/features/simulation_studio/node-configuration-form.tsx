@@ -6,6 +6,7 @@ import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
 import type { NodeDefinition } from '../../shared/types/workflow'
+import { MasterPickerField } from './pickers/master-picker-field'
 
 type Configuration = Record<string, unknown>
 
@@ -115,6 +116,8 @@ export function NodeConfigurationForm({
                 definition.validation_rules[key] as Record<string, unknown>,
                 configuration,
               )}
+              definition={definition}
+              configuration={configuration}
               onChange={(value) => change(key, value)}
             />
           ))
@@ -169,15 +172,32 @@ function CatalogParameterField({
   value,
   defaultValue,
   required,
+  definition,
+  configuration,
   onChange,
 }: {
   name: string
   value: unknown
   defaultValue: unknown
   required: boolean
+  definition?: NodeDefinition
+  configuration: Configuration
   onChange: (value: unknown) => void
 }) {
   const label = name.replaceAll('_', ' ')
+  const picker = definition?.parameter_options?.[name]?.picker
+  if (picker)
+    return (
+      <MasterPickerField
+        label={label}
+        value={value}
+        required={required}
+        multiline={['body', 'content', 'input'].includes(name)}
+        picker={picker}
+        filterValue={picker.filter_by ? String(configuration[picker.filter_by] ?? '') : undefined}
+        onChange={(next) => onChange(next)}
+      />
+    )
   if (name === 'labels')
     return <ClassificationLabelsField value={value} required={required} onChange={onChange} />
   if (typeof defaultValue === 'boolean')

@@ -47,6 +47,16 @@ export interface OutputPort {
   max_connections: number
   edge_style: EdgeStyle
 }
+export interface ParameterPicker {
+  resource: string
+  value_field: string
+  display_fields: string[]
+  filter_field?: string
+  filter_by?: string
+}
+export interface ParameterOption {
+  picker?: ParameterPicker
+}
 export interface NodeDefinition {
   node_type: string
   category: string
@@ -58,6 +68,7 @@ export interface NodeDefinition {
   output_ports: OutputPort[]
   parameters: Record<string, unknown>
   validation_rules: Record<string, unknown>
+  parameter_options?: Record<string, ParameterOption>
 }
 export interface NodeCatalog {
   categories: { id: string; label: string }[]
