@@ -735,24 +735,26 @@ export function SimulationStudioPage() {
       toast.error('The target input port has reached its connection limit.')
       return
     }
-    const adjacency = new Map<string, string[]>()
-    apiEdges.forEach((edge) =>
-      adjacency.set(edge.source_node_id, [
-        ...(adjacency.get(edge.source_node_id) ?? []),
-        edge.target_node_id,
-      ]),
-    )
-    const pending = [connection.target]
-    const visited = new Set<string>()
-    while (pending.length) {
-      const nodeId = pending.pop()!
-      if (nodeId === connection.source) {
-        toast.error('That connection would create a cycle.')
-        return
-      }
-      if (!visited.has(nodeId)) {
-        visited.add(nodeId)
-        pending.push(...(adjacency.get(nodeId) ?? []))
+    if (targetNode?.node_type !== 'conversation_group') {
+      const adjacency = new Map<string, string[]>()
+      apiEdges.forEach((edge) =>
+        adjacency.set(edge.source_node_id, [
+          ...(adjacency.get(edge.source_node_id) ?? []),
+          edge.target_node_id,
+        ]),
+      )
+      const pending = [connection.target]
+      const visited = new Set<string>()
+      while (pending.length) {
+        const nodeId = pending.pop()!
+        if (nodeId === connection.source) {
+          toast.error('That connection would create a cycle.')
+          return
+        }
+        if (!visited.has(nodeId)) {
+          visited.add(nodeId)
+          pending.push(...(adjacency.get(nodeId) ?? []))
+        }
       }
     }
     const pendingEdgeId = `pending:${connectionKey}`

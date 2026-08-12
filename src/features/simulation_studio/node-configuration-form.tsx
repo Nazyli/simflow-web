@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Copy, GitBranch, Plus, Save, Sliders, Trash2, X } from 'lucide-react'
+import { Copy, GitBranch, PackageSearch, Plus, Save, Sliders, Trash2, X } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
-import type { NodeDefinition } from '../../shared/types/workflow'
+import type { NodeDefinition, ParameterPicker } from '../../shared/types/workflow'
+import { MasterPickerDialog } from './pickers/master-picker-dialog'
 import { MasterPickerField } from './pickers/master-picker-field'
 
 type Configuration = Record<string, unknown>
@@ -186,6 +187,15 @@ function CatalogParameterField({
 }) {
   const label = name.replaceAll('_', ' ')
   const picker = definition?.parameter_options?.[name]?.picker
+  if (name === 'actors')
+    return (
+      <ConversationGroupActorsField
+        value={value}
+        required={required}
+        picker={picker}
+        onChange={onChange}
+      />
+    )
   if (picker)
     return (
       <MasterPickerField
@@ -241,6 +251,105 @@ function CatalogParameterField({
       required={required}
       multiline={multiline}
     />
+  )
+}
+
+function ConversationGroupActorsField({
+  value,
+  required,
+  picker,
+  onChange,
+}: {
+  value: unknown
+  required: boolean
+  picker?: ParameterPicker
+  onChange: (value: unknown) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const actors = Array.isArray(value)
+    ? value.filter(
+        (item): item is { actor_id: string; actor_name?: string } =>
+          typeof item === 'object' &&
+          item !== null &&
+          typeof (item as { actor_id?: unknown }).actor_id === 'string',
+      )
+    : []
+
+  function updateActor(index: number, actorId: string) {
+    onChange(
+      actors.map((item, itemIndex) =>
+        itemIndex === index
+          ? { ...item, actor_id: actorId, actor_name: item.actor_name ?? actorId }
+          : item,
+      ),
+    )
+  }
+
+  function removeActor(index: number) {
+    onChange(actors.filter((_, itemIndex) => itemIndex !== index))
+  }
+
+  function addActor(record: Record<string, unknown>) {
+    if (!picker) return
+    const actorId = String(record[picker.value_field] ?? '')
+    const actorName =
+      picker.display_fields
+        .map((field) => record[field])
+        .find(
+          (recordValue): recordValue is string =>
+            typeof recordValue === 'string' && recordValue !== actorId,
+        ) ?? actorId
+    onChange([...actors, { actor_id: actorId, actor_name: actorName }])
+  }
+
+  return (
+    <div className="grid gap-2">
+      <div className="flex items-center justify-between">
+        <Label className="capitalize">Actors</Label>
+        {picker && (
+          <Button type="button" variant="outline" size="xs" onClick={() => setOpen(true)}>
+            <PackageSearch /> Add actor
+          </Button>
+        )}
+      </div>
+      <div className="space-y-2">
+        {actors.map((item, index) => (
+          <div key={index} className="flex gap-2">
+            <Input
+              required={required}
+              aria-label={`Actor ${index + 1}`}
+              placeholder="actor_id"
+              value={item.actor_id}
+              onChange={(event) => updateActor(index, event.target.value)}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Remove actor ${index + 1}`}
+              onClick={() => removeActor(index)}
+            >
+              <X />
+            </Button>
+          </div>
+        ))}
+        {!actors.length && (
+          <p className="text-xs text-slate-500">
+            Add at least one actor. Each actor becomes an output port.
+          </p>
+        )}
+      </div>
+      {picker && (
+        <MasterPickerDialog
+          open={open}
+          onOpenChange={setOpen}
+          title="Pick actor"
+          resource={picker.resource}
+          displayFields={picker.display_fields}
+          onSelect={addActor}
+        />
+      )}
+    </div>
   )
 }
 
