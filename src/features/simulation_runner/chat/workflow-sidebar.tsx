@@ -21,17 +21,12 @@ export function WorkflowSidebar({ workflows, selectedWorkflow, onSelect }: Workf
             key={workflow.workflowVersionId}
             type="button"
             onClick={() => onSelect(workflow.workflowVersionId)}
-            className={`flex min-w-[200px] items-center gap-3 rounded-lg px-3 py-2.5 text-left lg:min-w-0 ${
+            className={`flex min-w-[200px] rounded-lg px-3 py-2.5 text-left lg:min-w-0 ${
               active
                 ? '!border-0 !bg-violet-50 !text-[#5b46c5]'
                 : '!border-0 !bg-transparent !text-slate-700 hover:!bg-slate-50'
             }`}
           >
-            <span
-              className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${active ? 'bg-[#5b46c5] text-white' : 'bg-slate-100 text-slate-500'}`}
-            >
-              <Workflow size={15} />
-            </span>
             <span className="min-w-0 flex-1">
               <span className="flex items-center justify-between gap-2">
                 <span className="truncate text-sm font-semibold">{workflow.workflowName}</span>
