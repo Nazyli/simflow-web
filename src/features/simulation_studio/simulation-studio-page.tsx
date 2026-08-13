@@ -3,6 +3,7 @@ import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import {
   Background,
   Controls,
@@ -28,7 +29,6 @@ import {
   Save,
   Undo2,
   Redo2,
-  CircleDot,
   ChevronRight,
   Sliders,
   History,
@@ -1026,52 +1026,53 @@ export function SimulationStudioPage() {
             </span>
           </div>
 
-          <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
-            <p className="mb-2 text-xs text-slate-500">
-              Drag a component card onto the canvas or click to append.
-            </p>
+          <div className="flex-1 overflow-y-auto p-3">
+            <div className="grid grid-cols-2 content-start gap-1.5">
+              <p className="col-span-2 mb-1 text-xs text-slate-500">
+                Drag a component card onto the canvas or click to append.
+              </p>
 
-            {(nodeCatalog.data?.nodes ?? []).map((definition) => {
-              const isDraft = Boolean(versionId && selectedVersion?.status === 'draft')
+              {(nodeCatalog.data?.nodes ?? []).map((definition) => {
+                const isDraft = Boolean(versionId && selectedVersion?.status === 'draft')
 
-              return (
-                <div
-                  key={definition.node_type}
-                  draggable={isDraft}
-                  onDragStart={(event) => startPaletteDrag(event, definition.node_type)}
-                  onClick={() => isDraft && addGraphNode.mutate({ definition })}
-                  style={{
-                    borderColor: `${definition.color}55`,
-                    backgroundColor: `${definition.color}0d`,
-                  }}
-                  className={`palette-card-item cursor-grab rounded-xl border p-3 transition-all active:cursor-grabbing ${
-                    isDraft
-                      ? 'border-slate-200 opacity-100 hover:scale-[1.02] hover:shadow-md'
-                      : 'cursor-not-allowed opacity-50'
-                  }`}
-                >
-                  <div className="mb-1 flex items-center gap-2.5">
-                    <div
-                      className="rounded-lg bg-white p-1.5 shadow-xs"
-                      style={{ color: definition.color }}
-                    >
-                      <CircleDot className="h-4 w-4" />
-                    </div>
-                    <strong className="text-sm font-semibold text-slate-800">
-                      {definition.label}
-                    </strong>
-                  </div>
-                  <p className="text-xs leading-snug text-slate-500">{definition.description}</p>
+                return (
+                  <Tooltip key={definition.node_type}>
+                    <TooltipTrigger asChild>
+                      <div
+                        draggable={isDraft}
+                        onDragStart={(event) => startPaletteDrag(event, definition.node_type)}
+                        onClick={() => isDraft && addGraphNode.mutate({ definition })}
+                        style={{
+                          borderColor: `${definition.color}55`,
+                          backgroundColor: `${definition.color}0d`,
+                        }}
+                        className={`palette-card-item cursor-grab rounded-lg border px-2 py-1.5 text-center transition-all active:cursor-grabbing ${
+                          isDraft
+                            ? 'border-slate-200 opacity-100 hover:scale-[1.02] hover:shadow-md'
+                            : 'cursor-not-allowed opacity-50'
+                        }`}
+                      >
+                        <strong className="w-full text-xs leading-tight font-semibold text-slate-800">
+                          {definition.label}
+                        </strong>
+                      </div>
+                    </TooltipTrigger>
+                    {definition.description && (
+                      <TooltipContent side="right" className="max-w-60">
+                        {definition.description}
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                )
+              })}
+
+              {!selectedVersion && (
+                <div className="col-span-2 mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+                  Select or create a version to start editing nodes.
                 </div>
-              )
-            })}
-
-            {!selectedVersion && (
-              <div className="mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-                Select or create a version to start editing nodes.
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Quick Workflows List */}
             <div className="mt-6 border-t border-slate-200 pt-4">
@@ -1095,21 +1096,27 @@ export function SimulationStudioPage() {
               <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
                 {workflows.isPending && <LoadingState />}
                 {workflows.data?.map((wf) => (
-                  <button
-                    key={wf.workflow_id}
-                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors ${
-                      selectedWorkflow?.workflow_id === wf.workflow_id
-                        ? 'border border-purple-200 bg-purple-50 font-semibold text-purple-900'
-                        : 'text-slate-700 hover:bg-slate-100'
-                    }`}
-                    onClick={() => {
-                      setSelectedWorkflow(wf)
-                      setVersionId(null)
-                    }}
-                  >
-                    <span className="truncate">{wf.workflow_name}</span>
-                    <StatusBadge status={wf.status} />
-                  </button>
+                  <Tooltip key={wf.workflow_id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs transition-colors ${
+                          selectedWorkflow?.workflow_id === wf.workflow_id
+                            ? 'border border-purple-200 bg-purple-50 font-semibold text-purple-900'
+                            : 'text-slate-700 hover:bg-slate-100'
+                        }`}
+                        onClick={() => {
+                          setSelectedWorkflow(wf)
+                          setVersionId(null)
+                        }}
+                      >
+                        <span className="truncate">{wf.workflow_name}</span>
+                        <StatusBadge status={wf.status} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-60">
+                      {wf.workflow_name}
+                    </TooltipContent>
+                  </Tooltip>
                 ))}
               </div>
             </div>
