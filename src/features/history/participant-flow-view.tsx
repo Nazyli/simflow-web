@@ -147,6 +147,7 @@ export function ParticipantFlowView({
           color: definition?.color ?? '#64748b',
           inputPorts: node.input_ports,
           outputPorts: node.output_ports,
+          rotation: node.rotation ?? 0,
         },
       }
     })

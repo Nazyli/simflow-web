@@ -88,7 +88,12 @@ const emptyEdges: ApiEdge[] = []
 const workflowNodeRenderers = { workflow: WorkflowGraphNode }
 const workflowEdgeRenderers = { workflow: WorkflowGraphEdge }
 
-function nodeToFlow(node: ApiNode, definition: NodeDefinition | undefined): Node {
+function nodeToFlow(
+  node: ApiNode,
+  definition: NodeDefinition | undefined,
+  editable: boolean,
+  onRotate: (nodeId: string) => void,
+): Node {
   return {
     id: node.node_id,
     type: 'workflow',
@@ -99,6 +104,9 @@ function nodeToFlow(node: ApiNode, definition: NodeDefinition | undefined): Node
       color: definition?.color ?? '#64748b',
       inputPorts: node.input_ports,
       outputPorts: node.output_ports,
+      rotation: node.rotation ?? 0,
+      editable,
+      onRotate,
     },
   }
 }
@@ -302,6 +310,7 @@ export function SimulationStudioPage() {
         node_name: `${definition.label} node`,
         node_type: definition.node_type,
         parameters: { ...definition.parameters },
+        rotation: 0,
         position_x: Math.round(position?.x ?? 180),
         position_y: Math.round(position?.y ?? 180),
       }),
@@ -319,6 +328,7 @@ export function SimulationStudioPage() {
         node_name: `${node.node_name} copy`,
         node_type: node.node_type,
         parameters: { ...node.parameters },
+        rotation: node.rotation ?? 0,
         position_x: (node.position_x ?? 80) + 60,
         position_y: (node.position_y ?? 80) + 60,
       }),
@@ -440,6 +450,30 @@ export function SimulationStudioPage() {
     [validationErrors],
   )
 
+  const rotateNode = useCallback(
+    (nodeId: string) => {
+      if (selectedVersion?.status !== 'draft') return
+      const current = apiNodes.find((item) => item.node_id === nodeId)
+      if (!current) return
+      const next = ((current.rotation ?? 0) + 90) % 360
+      setNodes((flowNodes) =>
+        flowNodes.map((flowNode) =>
+          flowNode.id === nodeId
+            ? { ...flowNode, data: { ...flowNode.data, rotation: next } }
+            : flowNode,
+        ),
+      )
+      persistNodeRef.current?.({
+        id: nodeId,
+        payload: {
+          ...current,
+          rotation: next,
+        },
+      })
+    },
+    [apiNodes, selectedVersion?.status, setNodes],
+  )
+
   // Keep stable refs in sync with latest values
   persistNodeRef.current = persistNode.mutate
   selectedVersionStatusRef.current = selectedVersion?.status
@@ -534,6 +568,7 @@ export function SimulationStudioPage() {
               node_name: node.node_name,
               node_type: node.node_type,
               parameters: node.parameters,
+              rotation: node.rotation ?? 0,
               position_x: pos.x,
               position_y: pos.y,
             },
@@ -547,7 +582,12 @@ export function SimulationStudioPage() {
       apiNodes.map((node) => {
         const cached = localPositions.current.get(node.node_id)
         return {
-          ...nodeToFlow(node, definitions.get(node.node_type)),
+          ...nodeToFlow(
+            node,
+            definitions.get(node.node_type),
+            selectedVersion?.status === 'draft',
+            rotateNode,
+          ),
           position: cached ?? { x: node.position_x ?? 100, y: node.position_y ?? 100 },
         }
       }),
@@ -563,7 +603,16 @@ export function SimulationStudioPage() {
         ),
       ),
     )
-  }, [apiNodes, apiEdges, definitions, setNodes, setEdges, deleteEdge])
+  }, [
+    apiNodes,
+    apiEdges,
+    definitions,
+    setNodes,
+    setEdges,
+    deleteEdge,
+    rotateNode,
+    selectedVersion?.status,
+  ])
 
   useEffect(() => {
     if (
@@ -825,6 +874,7 @@ export function SimulationStudioPage() {
             node_name: node.node_name,
             node_type: node.node_type,
             parameters: node.parameters,
+            rotation: node.rotation ?? 0,
             position_x: position.x,
             position_y: position.y,
           },
@@ -864,6 +914,7 @@ export function SimulationStudioPage() {
         node_name: name,
         node_type: selectedNode.node_type,
         parameters,
+        rotation: selectedNode.rotation ?? 0,
         position_x: selectedNode.position_x,
         position_y: selectedNode.position_y,
       },

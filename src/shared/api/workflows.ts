@@ -39,6 +39,7 @@ export interface ApiNode {
   parameters: Record<string, unknown>
   position_x: number | null
   position_y: number | null
+  rotation: number
   category: string
   input_ports: InputPort[]
   output_ports: OutputPort[]
