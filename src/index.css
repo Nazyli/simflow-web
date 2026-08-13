@@ -62,7 +62,6 @@ body {
 .app-content:has(
   .studio-app-container,
   .timer-management-page,
-  .master-data-page,
   .history-page,
   .simulation-runner-page
 ) {

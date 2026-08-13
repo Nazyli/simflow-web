@@ -11,7 +11,6 @@ import { SimulationRunLayout } from '../../features/simulation_runner/simulation
 import { SimulationStudioPage } from '../../features/simulation_studio/simulation-studio-page'
 import { TimerManagementPage } from '../../features/timers/timer-management-page'
 import { ParticipantHistoryPage } from '../../features/history/participant-history-page'
-import { MasterDataPage } from '../../features/master_data/master-data-page'
 import { AppShell } from '../layouts/app-shell'
 
 export function AppRoutes() {
@@ -30,7 +29,6 @@ export function AppRoutes() {
           </Route>
           <Route path="/timers" element={<TimerManagementPage />} />
           <Route path="/history" element={<ParticipantHistoryPage />} />
-          <Route path="/master-data" element={<MasterDataPage />} />
           <Route path="*" element={<Navigate to="/studio" replace />} />
         </Routes>
       </AppShell>

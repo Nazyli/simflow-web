@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '../../../components/ui/table'
-import { getMasterData, getStudioMasterData } from '../../../shared/api/master-data'
+import { getStudioMasterData } from '../../../shared/api/master-data'
 
 function displayValue(record: Record<string, unknown>, field: string): string {
   const value = record[field]
@@ -56,7 +56,7 @@ export function MasterPickerDialog({
   const [query, setQuery] = useState('')
   const records = useQuery({
     queryKey: ['master', resource, endpoint ?? ''],
-    queryFn: () => (endpoint ? getStudioMasterData(endpoint) : getMasterData(resource)),
+    queryFn: () => getStudioMasterData(endpoint ?? `/studio/master-data/${resource}`),
   })
   const rows = useMemo(() => {
     const source = records.data ?? []
@@ -82,7 +82,7 @@ export function MasterPickerDialog({
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
           <div className="relative">
-            <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
             <Input
               className="pl-8"
               placeholder="Search records..."
@@ -93,7 +93,7 @@ export function MasterPickerDialog({
         </div>
         <div className="min-h-40 flex-1 overflow-auto border-y">
           <Table>
-            <TableHeader className="sticky top-0 z-10 bg-popover">
+            <TableHeader className="bg-popover sticky top-0 z-10">
               <TableRow>
                 {displayFields.map((field) => (
                   <TableHead key={field}>{columnLabel(field)}</TableHead>
@@ -105,7 +105,7 @@ export function MasterPickerDialog({
                 <TableRow>
                   <TableCell
                     colSpan={displayFields.length}
-                    className="py-6 text-center text-xs text-muted-foreground"
+                    className="text-muted-foreground py-6 text-center text-xs"
                   >
                     Loading records...
                   </TableCell>
@@ -114,7 +114,7 @@ export function MasterPickerDialog({
                 <TableRow>
                   <TableCell
                     colSpan={displayFields.length}
-                    className="py-6 text-center text-xs text-destructive"
+                    className="text-destructive py-6 text-center text-xs"
                   >
                     Unable to load records.
                   </TableCell>
@@ -123,7 +123,7 @@ export function MasterPickerDialog({
                 <TableRow>
                   <TableCell
                     colSpan={displayFields.length}
-                    className="py-6 text-center text-xs text-muted-foreground"
+                    className="text-muted-foreground py-6 text-center text-xs"
                   >
                     No matching records.
                   </TableCell>
@@ -141,7 +141,9 @@ export function MasterPickerDialog({
                     {displayFields.map((field, index) => (
                       <TableCell
                         key={field}
-                        className={index === 0 ? 'max-w-xs font-medium' : 'max-w-xs text-muted-foreground'}
+                        className={
+                          index === 0 ? 'max-w-xs font-medium' : 'text-muted-foreground max-w-xs'
+                        }
                       >
                         <span className="line-clamp-2">{displayValue(record, field)}</span>
                       </TableCell>
@@ -153,10 +155,8 @@ export function MasterPickerDialog({
           </Table>
         </div>
         <div className="flex items-center justify-between px-6 py-3">
-          <p className="text-xs text-muted-foreground">
-            {records.isSuccess
-              ? `${rows.length} record${rows.length === 1 ? '' : 's'}`
-              : ' '}
+          <p className="text-muted-foreground text-xs">
+            {records.isSuccess ? `${rows.length} record${rows.length === 1 ? '' : 's'}` : ' '}
           </p>
           <DialogClose asChild>
             <Button type="button" variant="outline" size="sm">
