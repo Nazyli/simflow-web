@@ -29,11 +29,7 @@ import {
   TableRow,
 } from '../../components/ui/table'
 import { getNodeExecutions, type NodeExecution } from '../../shared/api/executions'
-import {
-  getSessions,
-  type LatestExecutionSummary,
-  type SimulationSessionSummary,
-} from '../../shared/api/sessions'
+import { getExecutionHistory, type ExecutionHistoryItem } from '../../shared/api/sessions'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { DataTable, type DataTableColumn } from '../../shared/components/data-table'
 import { StatusBadge } from '../../shared/components/status-badge'
@@ -41,13 +37,12 @@ import { ParticipantFlowView } from './participant-flow-view'
 
 interface HistoryRow {
   id: string
-  session: SimulationSessionSummary
-  execution: LatestExecutionSummary | null
+  execution: ExecutionHistoryItem
   workflowName: string
   versionNumber: number | null
 }
 
-const HISTORY_STATUSES = ['active', 'running', 'waiting', 'completed', 'failed', 'cancelled']
+const HISTORY_STATUSES = ['pending', 'running', 'waiting', 'completed', 'failed', 'cancelled']
 
 const JAKARTA = 'Asia/Jakarta'
 function parseServerTime(value: string | null | undefined) {
@@ -58,11 +53,11 @@ function formatTime(value: string | null | undefined) {
   return parsed ? parsed.toLocaleString([], { timeZone: JAKARTA }) : '—'
 }
 function effectiveStatus(row: HistoryRow) {
-  return row.execution?.status ?? row.session.status
+  return row.execution.status
 }
 
 const STATUS_TONES: Record<string, string> = {
-  active: 'bg-blue-50 text-blue-600',
+  pending: 'bg-slate-100 text-slate-500',
   running: 'bg-indigo-50 text-indigo-600',
   waiting: 'bg-amber-50 text-amber-600',
   completed: 'bg-emerald-50 text-emerald-600',
@@ -97,7 +92,7 @@ function StatCard({ status, count }: { status: string; count: number }) {
       </span>
       <div className="min-w-0">
         <small className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-          {status === 'total' ? 'All sessions' : status}
+          {status === 'total' ? 'All executions' : status}
         </small>
         <strong className="block text-xl leading-tight font-bold text-slate-900 tabular-nums">
           {count}
@@ -114,21 +109,19 @@ export function ParticipantHistoryPage() {
   const history = useQuery({
     queryKey: ['participant-history'],
     queryFn: async (): Promise<HistoryRow[]> => {
-      const sessions = await getSessions()
-      return sessions.map((session) => ({
-        id: session.session_id,
-        session,
-        execution: session.execution,
-        workflowName:
-          session.workflow_name ?? (session.execution_id ? 'Workflow unavailable' : 'No execution'),
-        versionNumber: session.version_number,
+      const executions = await getExecutionHistory()
+      return executions.map((execution) => ({
+        id: execution.execution_id,
+        execution,
+        workflowName: execution.workflow_name ?? 'Workflow unavailable',
+        versionNumber: execution.version_number,
       }))
     },
   })
   const nodeExecutions = useQuery({
-    queryKey: ['history-node-executions', selectedRow?.session.execution_id],
-    queryFn: () => getNodeExecutions(selectedRow!.session.execution_id!),
-    enabled: detailOpen && Boolean(selectedRow?.session.execution_id),
+    queryKey: ['history-node-executions', selectedRow?.execution.execution_id],
+    queryFn: () => getNodeExecutions(selectedRow!.execution.execution_id),
+    enabled: detailOpen && Boolean(selectedRow?.execution.execution_id),
   })
   const rows = useMemo(() => history.data ?? [], [history.data])
   const counts = useMemo(
@@ -154,12 +147,12 @@ export function ParticipantHistoryPage() {
       cell: (row) => (
         <span
           className="block max-w-[150px] truncate font-mono text-xs text-slate-700"
-          title={row.session.participant_id}
+          title={row.execution.participant_id}
         >
-          {row.session.participant_id}
+          {row.execution.participant_id}
         </span>
       ),
-      filterValue: (row) => row.session.participant_id,
+      filterValue: (row) => row.execution.participant_id,
     },
     {
       id: 'session',
@@ -167,12 +160,12 @@ export function ParticipantHistoryPage() {
       cell: (row) => (
         <span
           className="block max-w-44 truncate font-mono text-xs text-slate-700"
-          title={row.session.session_id}
+          title={row.execution.session_id}
         >
-          {row.session.session_id}
+          {row.execution.session_id}
         </span>
       ),
-      filterValue: (row) => row.session.session_id,
+      filterValue: (row) => row.execution.session_id,
     },
     {
       id: 'workflow',
@@ -201,11 +194,14 @@ export function ParticipantHistoryPage() {
       id: 'started',
       header: 'Started at',
       cell: (row) => (
-        <time className="text-xs text-slate-700 tabular-nums" dateTime={row.session.created_at}>
-          {formatTime(row.execution?.started_at ?? row.session.created_at)}
+        <time
+          className="text-xs text-slate-700 tabular-nums"
+          dateTime={row.execution.started_at ?? row.execution.created_at}
+        >
+          {formatTime(row.execution.started_at ?? row.execution.created_at)}
         </time>
       ),
-      sortValue: (row) => row.execution?.started_at ?? row.session.created_at,
+      sortValue: (row) => row.execution.started_at ?? row.execution.created_at,
     },
     {
       id: 'completed',
@@ -213,12 +209,12 @@ export function ParticipantHistoryPage() {
       cell: (row) => (
         <time
           className="text-xs text-slate-700 tabular-nums"
-          dateTime={row.session.completed_at ?? ''}
+          dateTime={row.execution.completed_at ?? ''}
         >
-          {formatTime(row.execution?.completed_at ?? row.session.completed_at)}
+          {formatTime(row.execution.completed_at)}
         </time>
       ),
-      sortValue: (row) => row.execution?.completed_at ?? row.session.completed_at ?? '',
+      sortValue: (row) => row.execution.completed_at ?? '',
     },
     {
       id: 'actions',
@@ -230,8 +226,7 @@ export function ParticipantHistoryPage() {
               setSelectedRow(row)
               setDetailOpen(true)
             }}
-            disabled={!row.execution}
-            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50"
           >
             <ListTree size={12} className="mr-1 inline" />
             Detail
@@ -241,8 +236,7 @@ export function ParticipantHistoryPage() {
               setSelectedRow(row)
               setFlowOpen(true)
             }}
-            disabled={!row.execution}
-            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50"
           >
             <Route size={12} className="mr-1 inline" />
             Flow
@@ -267,7 +261,7 @@ export function ParticipantHistoryPage() {
               Workflow execution history
             </h1>
             <p className="truncate text-xs text-slate-500">
-              All simulation sessions and their latest workflow executions.
+              Every workflow execution across simulation sessions.
             </p>
           </div>
         </div>
@@ -288,7 +282,7 @@ export function ParticipantHistoryPage() {
           <DataTable rows={rows} columns={columns} selectable={false} />
         ) : (
           <div className="px-5 py-10 text-center text-sm text-slate-500">
-            No simulation sessions yet.
+            No workflow executions yet.
           </div>
         )}
       </section>
@@ -303,14 +297,14 @@ export function ParticipantHistoryPage() {
       <ParticipantFlowView
         open={flowOpen}
         onClose={() => setFlowOpen(false)}
-        versionId={selectedRow?.execution?.workflow_version_id ?? ''}
-        executionId={selectedRow?.session.execution_id ?? ''}
+        versionId={selectedRow?.execution.workflow_version_id ?? ''}
+        executionId={selectedRow?.execution.execution_id ?? ''}
         title={
           selectedRow
             ? `${selectedRow.workflowName} · v${selectedRow.versionNumber ?? '—'}`
             : 'Participant flow'
         }
-        currentState={selectedRow?.execution?.current_node_id ?? null}
+        currentState={selectedRow?.execution.current_node_id ?? null}
       />
     </main>
   )
@@ -336,7 +330,7 @@ function NodeExecutionDialog({
           Workflow node execution history
         </DialogTitle>
         <DialogDescription>
-          {row ? `${row.workflowName} · ${row.session.session_id}` : 'Node execution details'}
+          {row ? `${row.workflowName} · ${row.execution.session_id}` : 'Node execution details'}
         </DialogDescription>
         {loading ? (
           <LoadingState />
