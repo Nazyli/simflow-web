@@ -202,7 +202,7 @@ function CatalogParameterField({
         label={label}
         value={value}
         required={required}
-        multiline={['body', 'content', 'input'].includes(name)}
+        multiline={['body'].includes(name)}
         picker={picker}
         filterValue={picker.filter_by ? String(configuration[picker.filter_by] ?? '') : undefined}
         onChange={(next) => onChange(next)}
@@ -242,7 +242,7 @@ function CatalogParameterField({
         onChange={onChange}
       />
     )
-  const multiline = ['body', 'content', 'input'].includes(name)
+  const multiline = ['body'].includes(name)
   return (
     <TextField
       label={label}
