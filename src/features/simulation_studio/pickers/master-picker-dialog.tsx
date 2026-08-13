@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '../../../components/ui/dialog'
-import { getMasterData } from '../../../shared/api/master-data'
+import { getMasterData, getStudioMasterData } from '../../../shared/api/master-data'
 
 function displayValue(record: Record<string, unknown>, field: string): string {
   const value = record[field]
@@ -21,6 +21,7 @@ export function MasterPickerDialog({
   title,
   description,
   resource,
+  endpoint,
   displayFields,
   filter,
   onSelect,
@@ -30,14 +31,15 @@ export function MasterPickerDialog({
   title: string
   description?: string
   resource: string
+  endpoint?: string
   displayFields: string[]
   filter?: { field: string; value: string }
   onSelect: (record: Record<string, unknown>) => void
 }) {
   const [query, setQuery] = useState('')
   const records = useQuery({
-    queryKey: ['master', resource],
-    queryFn: () => getMasterData(resource),
+    queryKey: ['master', resource, endpoint ?? ''],
+    queryFn: () => (endpoint ? getStudioMasterData(endpoint) : getMasterData(resource)),
   })
   const rows = useMemo(() => {
     const source = records.data ?? []

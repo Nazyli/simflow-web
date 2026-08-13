@@ -1,6 +1,8 @@
 import { apiClient } from './client'
 export const getMasterData = (resource: string) =>
   apiClient<Record<string, unknown>[]>(`/master-data/${resource}`)
+export const getStudioMasterData = (endpoint: string) =>
+  apiClient<Record<string, unknown>[]>(endpoint)
 export const updateMasterData = (
   resource: string,
   recordId: string,

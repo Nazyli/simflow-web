@@ -53,6 +53,7 @@ export interface ParameterPicker {
   display_fields: string[]
   filter_field?: string
   filter_by?: string
+  endpoint?: string
 }
 export interface ParameterOption {
   picker?: ParameterPicker

@@ -57,6 +57,7 @@ export function MasterPickerField({
         onOpenChange={setOpen}
         title={`Pick ${label}`}
         resource={picker.resource}
+        endpoint={picker.endpoint}
         displayFields={picker.display_fields}
         filter={filter}
         onSelect={(record) => {

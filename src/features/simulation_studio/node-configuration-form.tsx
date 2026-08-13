@@ -345,6 +345,7 @@ function ConversationGroupActorsField({
           onOpenChange={setOpen}
           title="Pick actor"
           resource={picker.resource}
+          endpoint={picker.endpoint}
           displayFields={picker.display_fields}
           onSelect={addActor}
         />
