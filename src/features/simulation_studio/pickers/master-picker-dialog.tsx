@@ -1,18 +1,35 @@
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Input } from '../../../components/ui/input'
+import { Button } from '../../../components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from '../../../components/ui/dialog'
+import { Input } from '../../../components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../../components/ui/table'
 import { getMasterData, getStudioMasterData } from '../../../shared/api/master-data'
 
 function displayValue(record: Record<string, unknown>, field: string): string {
   const value = record[field]
   return value === null || value === undefined ? '—' : String(value)
+}
+
+function columnLabel(field: string): string {
+  return field
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
 }
 
 export function MasterPickerDialog({
@@ -60,50 +77,92 @@ export function MasterPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[min(640px,calc(100vh-48px))] overflow-auto p-6 sm:max-w-5xl">
-        <DialogTitle className="text-base font-bold text-slate-900">{title}</DialogTitle>
-        {description && <DialogDescription>{description}</DialogDescription>}
-        <div className="relative">
-          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-slate-400" />
-          <Input
-            className="pl-8"
-            placeholder="Search records..."
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
+      <DialogContent className="flex max-h-[min(640px,calc(100vh-48px))] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
+        <div className="grid gap-3 px-6 pt-6 pb-4">
+          <DialogTitle>{title}</DialogTitle>
+          {description && <DialogDescription>{description}</DialogDescription>}
+          <div className="relative">
+            <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="pl-8"
+              placeholder="Search records..."
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
         </div>
-        <div className="grid gap-1.5">
-          {records.isPending ? (
-            <p className="py-6 text-center text-xs text-slate-500">Loading records...</p>
-          ) : records.isError ? (
-            <p className="py-6 text-center text-xs text-red-600">Unable to load records.</p>
-          ) : rows.length === 0 ? (
-            <p className="py-6 text-center text-xs text-slate-500">No matching records.</p>
-          ) : (
-            rows.map((record) => (
-              <button
-                key={JSON.stringify(record)}
-                type="button"
-                className="flex flex-col gap-1 rounded-lg border border-slate-200 px-3.5 py-2.5 text-left transition hover:border-purple-200 hover:bg-purple-50"
-                onClick={() => {
-                  onSelect(record)
-                  onOpenChange(false)
-                }}
-              >
-                <span className="truncate text-sm font-semibold text-slate-800">
-                  {displayValue(record, displayFields[0])}
-                </span>
-                <span className="flex items-center gap-1.5 text-xs text-slate-500">
-                  {displayFields.slice(1).map((field, index) => (
-                    <span key={field} className="flex min-w-0 items-center gap-1.5">
-                      {index > 0 && <span className="text-slate-300">·</span>}
-                      <span className="truncate">{displayValue(record, field)}</span>
-                    </span>
-                  ))}
-                </span>
-              </button>
-            ))
-          )}
+        <div className="min-h-40 flex-1 overflow-auto border-y">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-popover">
+              <TableRow>
+                {displayFields.map((field) => (
+                  <TableHead key={field}>{columnLabel(field)}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {records.isPending ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={displayFields.length}
+                    className="py-6 text-center text-xs text-muted-foreground"
+                  >
+                    Loading records...
+                  </TableCell>
+                </TableRow>
+              ) : records.isError ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={displayFields.length}
+                    className="py-6 text-center text-xs text-destructive"
+                  >
+                    Unable to load records.
+                  </TableCell>
+                </TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={displayFields.length}
+                    className="py-6 text-center text-xs text-muted-foreground"
+                  >
+                    No matching records.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows.map((record) => (
+                  <TableRow
+                    key={JSON.stringify(record)}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      onSelect(record)
+                      onOpenChange(false)
+                    }}
+                  >
+                    {displayFields.map((field, index) => (
+                      <TableCell
+                        key={field}
+                        className={index === 0 ? 'max-w-xs font-medium' : 'max-w-xs text-muted-foreground'}
+                      >
+                        <span className="line-clamp-2">{displayValue(record, field)}</span>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="flex items-center justify-between px-6 py-3">
+          <p className="text-xs text-muted-foreground">
+            {records.isSuccess
+              ? `${rows.length} record${rows.length === 1 ? '' : 's'}`
+              : ' '}
+          </p>
+          <DialogClose asChild>
+            <Button type="button" variant="outline" size="sm">
+              Close
+            </Button>
+          </DialogClose>
         </div>
       </DialogContent>
     </Dialog>
