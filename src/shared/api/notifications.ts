@@ -6,9 +6,16 @@ export interface ChatActivityItem {
   unread_count: number
 }
 
+export interface EmailActivityItem {
+  actor_id: string
+  subject: string
+  content: string
+  unread_count: number
+}
+
 export interface NotificationActivity {
   activity_chat: ChatActivityItem[]
-  activity_email: unknown[]
+  activity_email: EmailActivityItem[]
 }
 
 export const getNotificationActivity = (participantId: string) =>

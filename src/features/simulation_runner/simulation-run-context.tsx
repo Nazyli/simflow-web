@@ -10,6 +10,14 @@ import {
   type ChatWorkflowItem,
 } from '../../shared/api/chat'
 import { eventsUrl } from '../../shared/api/client'
+import {
+  markEmailAsRead,
+  sendParticipantEmail,
+  type EmailActorItem,
+  type EmailMarkAsReadResult,
+  type EmailMessage,
+  type EmailWorkflowItem,
+} from '../../shared/api/email'
 import { getNotificationActivity, type NotificationActivity } from '../../shared/api/notifications'
 import type { Channel } from './simulation-channels'
 
@@ -39,6 +47,14 @@ export interface SimulationRunContextValue {
   isChatPending: boolean
   sendChat: (input: { workflowVersionId: string; target: string; content: string }) => void
   markChatRead: (workflowVersionId: string, actorId: string) => Promise<ChatMarkAsReadResult>
+  isEmailPending: boolean
+  sendEmail: (input: {
+    workflowVersionId: string
+    target: string
+    subject: string
+    content: string
+  }) => void
+  markEmailRead: (workflowVersionId: string, partnerId: string) => Promise<EmailMarkAsReadResult>
   refresh: () => void
 }
 
@@ -77,6 +93,9 @@ export function SimulationRunProvider({
       void client.invalidateQueries({ queryKey: ['chat-workflows'] })
       void client.invalidateQueries({ queryKey: ['chat-actors'] })
       void client.invalidateQueries({ queryKey: ['chat-messages'] })
+      void client.invalidateQueries({ queryKey: ['email-workflows'] })
+      void client.invalidateQueries({ queryKey: ['email-actors'] })
+      void client.invalidateQueries({ queryKey: ['email-messages'] })
       if (!(event instanceof MessageEvent)) return
       try {
         const payload = JSON.parse(event.data) as {
@@ -85,6 +104,7 @@ export function SimulationRunProvider({
             sender_type?: string
             sender_id?: string
             content?: string
+            subject?: string
             is_read?: boolean
           }
         }
@@ -95,6 +115,15 @@ export function SimulationRunProvider({
         ) {
           toast.info(`New message from ${payload.message.sender_id ?? 'actor'}`, {
             description: payload.message.content,
+          })
+        }
+        if (
+          payload.type === 'email_message' &&
+          payload.message?.sender_type === 'actor' &&
+          payload.message.is_read === false
+        ) {
+          toast.info(`New email from ${payload.message.sender_id ?? 'actor'}`, {
+            description: payload.message.subject ?? payload.message.content,
           })
         }
       } catch {
@@ -171,13 +200,84 @@ export function SimulationRunProvider({
     },
   })
 
+  const emailAction = useMutation({
+    mutationFn: ({
+      workflowVersionId,
+      target,
+      subject,
+      content,
+    }: {
+      workflowVersionId: string
+      target: string
+      subject: string
+      content: string
+    }) =>
+      sendParticipantEmail(
+        participantId.trim(),
+        target,
+        subject,
+        content,
+        workflowVersionId,
+      ),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['email-messages'] })
+      client.invalidateQueries({ queryKey: ['email-workflows'] })
+      client.invalidateQueries({ queryKey: ['email-actors'] })
+      client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
+      client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
+    },
+    onError: () => toast.error('Email was rejected. Check the requested contact and workflow.'),
+  })
+
+  const emailRead = useMutation({
+    mutationFn: ({
+      workflowVersionId,
+      partnerId,
+    }: {
+      workflowVersionId: string
+      partnerId: string
+    }) => markEmailAsRead(participantId.trim(), workflowVersionId, partnerId),
+    onSuccess: ({ count }, { workflowVersionId, partnerId }) => {
+      const pid = participantId.trim()
+      client.setQueryData<EmailMessage[]>(
+        ['email-messages', pid, workflowVersionId, partnerId],
+        (messages) =>
+          messages?.map((message) =>
+            message.sender_type === 'actor' && !message.is_read
+              ? { ...message, is_read: true, read_at: message.read_at ?? new Date().toISOString() }
+              : message,
+          ),
+      )
+      client.setQueryData<EmailActorItem[]>(['email-actors', pid, workflowVersionId], (actors) =>
+        actors?.map((actor) =>
+          actor.actor_id === partnerId
+            ? { ...actor, unread_count: Math.max(0, actor.unread_count - count) }
+            : actor,
+        ),
+      )
+      client.setQueryData<EmailWorkflowItem[]>(['email-workflows', pid], (workflows) =>
+        workflows?.map((workflow) =>
+          workflow.workflow_version_id === workflowVersionId
+            ? { ...workflow, unread_count: Math.max(0, workflow.unread_count - count) }
+            : workflow,
+        ),
+      )
+      client.invalidateQueries({ queryKey: ['participant-executions', pid] })
+    },
+  })
+
   const runnerParticipantId = actorId || participantId
   const unreadCounts = Object.fromEntries(
     CHANNELS.map((channel) => [
       channel,
       channel === 'chat'
         ? activity.activity_chat.reduce((total, item) => total + item.unread_count, 0)
-        : 0,
+        : channel === 'email'
+          ? activity.activity_email.reduce((total, item) => {
+              const emailItem = item as { unread_count?: number }
+              return total + (emailItem.unread_count ?? 0)
+            }, 0)
+          : 0,
     ]),
   ) as Record<Channel, number>
 
@@ -193,12 +293,33 @@ export function SimulationRunProvider({
     })
   }
 
+  const sendEmail = (input: {
+    workflowVersionId: string
+    target: string
+    subject: string
+    content: string
+  }) => {
+    if (!participantId.trim()) {
+      toast.error('Choose an active simulation session.')
+      return
+    }
+    emailAction.mutate({
+      workflowVersionId: input.workflowVersionId,
+      target: input.target,
+      subject: input.subject,
+      content: input.content,
+    })
+  }
+
   const refresh = () => {
     client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
     client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
     client.invalidateQueries({ queryKey: ['chat-workflows'] })
     client.invalidateQueries({ queryKey: ['chat-actors'] })
     client.invalidateQueries({ queryKey: ['chat-messages'] })
+    client.invalidateQueries({ queryKey: ['email-workflows'] })
+    client.invalidateQueries({ queryKey: ['email-actors'] })
+    client.invalidateQueries({ queryKey: ['email-messages'] })
   }
 
   return (
@@ -211,6 +332,10 @@ export function SimulationRunProvider({
         sendChat,
         markChatRead: (workflowVersionId, actorId) =>
           messageRead.mutateAsync({ workflowVersionId, actorId }),
+        isEmailPending: emailAction.isPending,
+        sendEmail,
+        markEmailRead: (workflowVersionId, partnerId) =>
+          emailRead.mutateAsync({ workflowVersionId, partnerId }),
         refresh,
       }}
     >
