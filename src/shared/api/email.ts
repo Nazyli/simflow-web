@@ -71,6 +71,7 @@ export const sendParticipantEmail = (
   workflowVersionId: string,
   to?: string[],
   cc?: string[],
+  parentEmailId?: string,
 ) =>
   apiClient<EmailMessage>(`/runner/email?participant_id=${encodeURIComponent(participantId)}`, {
     method: 'POST',
@@ -81,6 +82,7 @@ export const sendParticipantEmail = (
       workflow_version_id: workflowVersionId,
       to: to ?? [],
       cc: cc ?? [],
+      ...(parentEmailId ? { parent_email_id: parentEmailId } : {}),
     }),
   })
 

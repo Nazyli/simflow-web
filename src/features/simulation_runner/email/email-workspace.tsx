@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react'
+import { Inbox } from 'lucide-react'
 import { ConversationBody } from './conversation-body'
 import { ConversationHeader } from './conversation-header'
 import { ConversationSidebar } from './conversation-sidebar'
@@ -29,7 +30,7 @@ export function EmailWorkspace({
   onConversationOpen,
 }: EmailWorkspaceProps) {
   return (
-    <section className="col-span-full flex h-[540px] min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="col-span-full flex h-[540px] min-h-0 flex-col overflow-hidden rounded-xl border border-[#e8eaed] bg-white shadow-sm">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
         <ConversationSidebar
           threads={threads}
@@ -54,16 +55,21 @@ export function EmailWorkspace({
               />
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center bg-slate-50/70 px-6 text-center">
-              <div>
-                <p className="text-sm font-semibold text-slate-700">
-                  {threads.length ? 'Select a conversation' : 'No emails yet'}
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {threads.length
-                    ? 'Choose an email thread to open it.'
-                    : 'Email messages will appear here.'}
-                </p>
+            <div className="flex flex-1 items-center justify-center bg-[#f6f8fb] px-6 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-[#f1f3f4]">
+                  <Inbox size={20} className="text-[#9aa0a6]" />
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-[#1a1a2e]">
+                    {threads.length ? 'Select a conversation' : 'No emails yet'}
+                  </p>
+                  <p className="mt-1 text-xs text-[#5f6368]">
+                    {threads.length
+                      ? 'Choose an email thread from the list to read and reply.'
+                      : 'Email messages from workflow actors will appear here.'}
+                  </p>
+                </div>
               </div>
             </div>
           )}

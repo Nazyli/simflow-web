@@ -85,6 +85,7 @@ export function EmailChannelPage() {
       target,
       subject: String(data.get('subject') ?? ''),
       content: String(data.get('content') ?? ''),
+      parentEmailId: selectedRootId ?? undefined,
     })
     event.currentTarget.reset()
   }

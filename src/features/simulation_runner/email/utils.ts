@@ -11,9 +11,24 @@ export function formatEmailTime(timestamp?: string): string {
 export function formatEmailDate(timestamp?: string): string {
   if (!timestamp) return ''
   const date = new Date(timestamp)
-  return Number.isNaN(date.getTime())
-    ? ''
-    : date.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  if (Number.isNaN(date.getTime())) return ''
+
+  const now = new Date()
+  const isToday =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const isThisYear = date.getFullYear() === now.getFullYear()
+  if (isThisYear) {
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+  }
+
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 export function isOwnEmail(message: EmailMessage, participantId: string): boolean {
