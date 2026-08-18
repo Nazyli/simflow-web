@@ -78,10 +78,11 @@ export function EmailChannelPage() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    if (!threadVersionId || !selectedThread) return
+    const target = String(data.get('target') ?? '').trim()
+    if (!threadVersionId || !target) return
     sendEmail({
       workflowVersionId: threadVersionId,
-      target: selectedThread.latestSenderId,
+      target,
       subject: String(data.get('subject') ?? ''),
       content: String(data.get('content') ?? ''),
     })
