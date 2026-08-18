@@ -11,6 +11,7 @@ export interface EmailMessage {
   to: string[]
   cc: string[]
   workflow_version_id: string | null
+  parent_email_id: string | null
   is_read: boolean
   read_at: string | null
   created_date: string
