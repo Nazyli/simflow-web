@@ -30,7 +30,7 @@ export function EmailWorkspace({
   onConversationOpen,
 }: EmailWorkspaceProps) {
   return (
-    <section className="col-span-full flex h-[540px] min-h-0 flex-col overflow-hidden rounded-xl border border-[#e8eaed] bg-white shadow-sm">
+    <section className="col-span-full flex min-h-[540px] flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-[#e8eaed] bg-white shadow-sm">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
         <ConversationSidebar
           threads={threads}
