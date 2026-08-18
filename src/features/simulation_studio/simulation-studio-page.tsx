@@ -41,6 +41,7 @@ import {
   MapPin,
 } from 'lucide-react'
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -1083,37 +1084,45 @@ export function SimulationStudioPage() {
                 Drag a component card onto the canvas or click to append.
               </p>
 
-              {(nodeCatalog.data?.nodes ?? []).map((definition) => {
-                const isDraft = Boolean(versionId && selectedVersion?.status === 'draft')
-
+              {(nodeCatalog.data?.categories ?? []).map((cat) => {
+                const catNodes = (nodeCatalog.data?.nodes ?? []).filter((n) => n.category === cat.id)
+                if (catNodes.length === 0) return null
                 return (
-                  <Tooltip key={definition.node_type}>
-                    <TooltipTrigger asChild>
-                      <div
-                        draggable={isDraft}
-                        onDragStart={(event) => startPaletteDrag(event, definition.node_type)}
-                        onClick={() => isDraft && addGraphNode.mutate({ definition })}
-                        style={{
-                          borderColor: `${definition.color}55`,
-                          backgroundColor: `${definition.color}0d`,
-                        }}
-                        className={`palette-card-item cursor-grab rounded-lg border px-2 py-1.5 text-center transition-all active:cursor-grabbing ${
-                          isDraft
-                            ? 'border-slate-200 opacity-100 hover:scale-[1.02] hover:shadow-md'
-                            : 'cursor-not-allowed opacity-50'
-                        }`}
-                      >
-                        <strong className="w-full text-xs leading-tight font-semibold text-slate-800">
-                          {definition.label}
-                        </strong>
-                      </div>
-                    </TooltipTrigger>
-                    {definition.description && (
-                      <TooltipContent side="right" className="max-w-60">
-                        {definition.description}
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
+                  <Fragment key={cat.id}>
+                    {catNodes.map((definition) => {
+                      const isDraft = Boolean(versionId && selectedVersion?.status === 'draft')
+
+                      return (
+                        <Tooltip key={definition.node_type}>
+                          <TooltipTrigger asChild>
+                            <div
+                              draggable={isDraft}
+                              onDragStart={(event) => startPaletteDrag(event, definition.node_type)}
+                              onClick={() => isDraft && addGraphNode.mutate({ definition })}
+                              style={{
+                                borderColor: `${definition.color}55`,
+                                backgroundColor: `${definition.color}0d`,
+                              }}
+                              className={`palette-card-item cursor-grab rounded-lg border px-2 py-1.5 text-center transition-all active:cursor-grabbing ${
+                                isDraft
+                                  ? 'border-slate-200 opacity-100 hover:scale-[1.02] hover:shadow-md'
+                                  : 'cursor-not-allowed opacity-50'
+                              }`}
+                            >
+                              <strong className="w-full text-xs leading-tight font-semibold text-slate-800">
+                                {definition.label}
+                              </strong>
+                            </div>
+                          </TooltipTrigger>
+                          {definition.description && (
+                            <TooltipContent side="right" className="max-w-60">
+                              {definition.description}
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      )
+                    })}
+                  </Fragment>
                 )
               })}
 
