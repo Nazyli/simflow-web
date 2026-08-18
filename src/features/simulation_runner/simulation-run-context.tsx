@@ -13,10 +13,8 @@ import { eventsUrl } from '../../shared/api/client'
 import {
   markEmailThreadAsRead,
   sendParticipantEmail,
-  type EmailInboxThreadItem,
   type EmailMarkAsReadResult,
   type EmailMessage,
-  type EmailWorkflowItem,
 } from '../../shared/api/email'
 import { getNotificationActivity, type NotificationActivity } from '../../shared/api/notifications'
 import type { Channel } from './simulation-channels'
@@ -93,7 +91,6 @@ export function SimulationRunProvider({
       void client.invalidateQueries({ queryKey: ['chat-workflows'] })
       void client.invalidateQueries({ queryKey: ['chat-actors'] })
       void client.invalidateQueries({ queryKey: ['chat-messages'] })
-      void client.invalidateQueries({ queryKey: ['email-workflows'] })
       void client.invalidateQueries({ queryKey: ['email-inbox'] })
       void client.invalidateQueries({ queryKey: ['email-messages'] })
       if (!(event instanceof MessageEvent)) return
@@ -221,7 +218,6 @@ export function SimulationRunProvider({
       ),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['email-messages'] })
-      client.invalidateQueries({ queryKey: ['email-workflows'] })
       client.invalidateQueries({ queryKey: ['email-inbox'] })
       client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
       client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
@@ -239,14 +235,7 @@ export function SimulationRunProvider({
     }) => markEmailThreadAsRead(participantId.trim(), workflowVersionId, rootId),
     onSuccess: ({ count }, { workflowVersionId }) => {
       const pid = participantId.trim()
-      client.setQueryData<EmailWorkflowItem[]>(['email-workflows', pid], (workflows) =>
-        workflows?.map((workflow) =>
-          workflow.workflow_version_id === workflowVersionId
-            ? { ...workflow, unread_count: Math.max(0, workflow.unread_count - count) }
-            : workflow,
-        ),
-      )
-      client.invalidateQueries({ queryKey: ['email-inbox', pid, workflowVersionId] })
+      client.invalidateQueries({ queryKey: ['email-inbox', pid] })
       client.invalidateQueries({ queryKey: ['participant-executions', pid] })
     },
   })
@@ -302,7 +291,6 @@ export function SimulationRunProvider({
     client.invalidateQueries({ queryKey: ['chat-workflows'] })
     client.invalidateQueries({ queryKey: ['chat-actors'] })
     client.invalidateQueries({ queryKey: ['chat-messages'] })
-    client.invalidateQueries({ queryKey: ['email-workflows'] })
     client.invalidateQueries({ queryKey: ['email-inbox'] })
     client.invalidateQueries({ queryKey: ['email-messages'] })
   }

@@ -34,4 +34,5 @@ export interface EmailInboxThread {
   latestCreatedDate: string
   unreadCount: number
   messageCount: number
+  workflowVersionId: string | null
 }

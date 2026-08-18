@@ -3,13 +3,11 @@ import { useState, type FormEvent } from 'react'
 import {
   getEmailInbox,
   getEmailThreadMessages,
-  getEmailWorkflows,
   type EmailInboxThreadItem,
   type EmailMessage as ApiEmailMessage,
-  type EmailWorkflowItem,
 } from '../../shared/api/email'
 import { EmailWorkspace } from './email/email-workspace'
-import type { EmailInboxThread, EmailMessage, EmailWorkflow } from './email/types'
+import type { EmailInboxThread, EmailMessage } from './email/types'
 import { useSimulationRun } from './simulation-run-context'
 
 export function EmailChannelPage() {
@@ -33,14 +31,6 @@ export function EmailChannelPage() {
     is_unread: message.is_read === false,
   })
 
-  const toEmailWorkflow = (item: EmailWorkflowItem): EmailWorkflow => ({
-    workflowVersionId: item.workflow_version_id,
-    workflowName: item.workflow_name,
-    versionNumber: item.version_number,
-    status: item.status,
-    unreadCount: item.unread_count,
-  })
-
   const toEmailThread = (item: EmailInboxThreadItem): EmailInboxThread => ({
     rootId: item.root_id,
     latestSenderId: item.latest_sender_id,
@@ -51,42 +41,31 @@ export function EmailChannelPage() {
     latestCreatedDate: item.latest_created_date,
     unreadCount: item.unread_count,
     messageCount: item.message_count,
+    workflowVersionId: item.workflow_version_id,
   })
 
-  const workflowsQuery = useQuery({
-    queryKey: ['email-workflows', participantId],
-    queryFn: () => getEmailWorkflows(participantId),
-    enabled: Boolean(participantId.trim()),
-  })
-  const workflows = (workflowsQuery.data ?? []).map(toEmailWorkflow).sort((a, b) => {
-    const rank = (status: string) => (status === 'waiting' ? 0 : status === 'running' ? 1 : 2)
-    return rank(a.status) - rank(b.status)
-  })
-
-  const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null)
-  const effectiveSelected =
-    selectedWorkflow ??
-    workflows.find((workflow) => workflow.status === 'waiting' || workflow.status === 'running')
-      ?.workflowVersionId ??
-    workflows[0]?.workflowVersionId ??
-    null
-
+  // Fetch all threads across all workflows (no workflow_version_id filter).
   const inboxQuery = useQuery({
-    queryKey: ['email-inbox', participantId, effectiveSelected],
-    queryFn: () => getEmailInbox(participantId, effectiveSelected!),
-    enabled: Boolean(participantId.trim() && effectiveSelected),
+    queryKey: ['email-inbox', participantId],
+    queryFn: () => getEmailInbox(participantId),
+    enabled: Boolean(participantId.trim()),
   })
   const threads = (inboxQuery.data ?? []).map(toEmailThread)
 
   const [selectedRootId, setSelectedRootId] = useState<string | null>(null)
   const [readPendingThreads, setReadPendingThreads] = useState<ReadonlySet<string>>(new Set())
 
+  const selectedThread = threads.find((t) => t.rootId === selectedRootId) ?? null
+
+  // Fetch messages for the selected thread using its workflow_version_id.
+  const threadVersionId = selectedThread?.workflowVersionId ?? null
   const threadMessagesQuery = useQuery({
-    queryKey: ['email-thread-messages', participantId, effectiveSelected, selectedRootId],
-    queryFn: () => getEmailThreadMessages(participantId, effectiveSelected!, selectedRootId!),
+    queryKey: ['email-thread-messages', participantId, threadVersionId, selectedRootId],
+    queryFn: () =>
+      getEmailThreadMessages(participantId, threadVersionId!, selectedRootId!),
     enabled: Boolean(
       participantId.trim() &&
-        effectiveSelected &&
+        threadVersionId &&
         selectedRootId &&
         !readPendingThreads.has(selectedRootId),
     ),
@@ -94,20 +73,14 @@ export function EmailChannelPage() {
 
   const visibleMessages: EmailMessage[] = (threadMessagesQuery.data ?? []).map(toEmailMessage)
 
-  const selectedThread = threads.find((t) => t.rootId === selectedRootId) ?? null
-
-  const selectedRun = workflows.find((workflow) => workflow.workflowVersionId === effectiveSelected)
-  const canReply = Boolean(
-    selectedRun && (selectedRun.status === 'waiting' || selectedRun.status === 'running'),
-  )
-  const disabled = isEmailPending || !canReply
+  const disabled = isEmailPending
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    if (!effectiveSelected || !selectedThread) return
+    if (!threadVersionId || !selectedThread) return
     sendEmail({
-      workflowVersionId: effectiveSelected,
+      workflowVersionId: threadVersionId,
       target: selectedThread.latestSenderId,
       subject: String(data.get('subject') ?? ''),
       content: String(data.get('content') ?? ''),
@@ -121,23 +94,16 @@ export function EmailChannelPage() {
         participantId={runnerParticipantId}
         messages={visibleMessages}
         threads={threads}
-        workflows={workflows}
-        selectedWorkflow={effectiveSelected}
-        onSelectWorkflow={(workflowVersionId) => {
-          setSelectedWorkflow(workflowVersionId)
-          setSelectedRootId(null)
-        }}
         selectedRootId={selectedRootId}
         onSelectThread={setSelectedRootId}
         selectedThread={selectedThread}
         disabled={disabled}
         onSubmit={submit}
         onConversationOpen={(rootId) => {
-          if (!effectiveSelected) return
           const thread = threads.find((t) => t.rootId === rootId)
-          if (thread && thread.unreadCount > 0) {
+          if (thread && thread.unreadCount > 0 && thread.workflowVersionId) {
             setReadPendingThreads((prev) => new Set(prev).add(rootId))
-            void markEmailThreadRead(effectiveSelected, rootId).finally(() =>
+            void markEmailThreadRead(thread.workflowVersionId, rootId).finally(() =>
               setReadPendingThreads((prev) => {
                 const next = new Set(prev)
                 next.delete(rootId)

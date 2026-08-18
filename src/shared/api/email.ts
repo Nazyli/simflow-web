@@ -35,6 +35,7 @@ export interface EmailInboxThreadItem {
   latest_created_date: string
   unread_count: number
   message_count: number
+  workflow_version_id: string | null
 }
 
 export interface EmailMarkAsReadResult {
@@ -47,10 +48,11 @@ export const getEmailWorkflows = (participantId: string) =>
     `/runner/email/workflows?participant_id=${encodeURIComponent(participantId)}`,
   )
 
-export const getEmailInbox = (participantId: string, workflowVersionId: string) =>
-  apiClient<EmailInboxThreadItem[]>(
-    `/runner/email/inbox?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}`,
-  )
+export const getEmailInbox = (participantId: string, workflowVersionId?: string) => {
+  const params = new URLSearchParams({ participant_id: participantId })
+  if (workflowVersionId) params.set('workflow_version_id', workflowVersionId)
+  return apiClient<EmailInboxThreadItem[]>(`/runner/email/inbox?${params.toString()}`)
+}
 
 export const getEmailThreadMessages = (
   participantId: string,
