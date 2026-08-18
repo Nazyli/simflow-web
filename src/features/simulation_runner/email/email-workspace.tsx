@@ -4,42 +4,37 @@ import { ConversationHeader } from './conversation-header'
 import { ConversationSidebar } from './conversation-sidebar'
 import { MessageComposer } from './message-composer'
 import { WorkflowSidebar } from './workflow-sidebar'
-import type { EmailActor, EmailMessage, EmailWorkflow } from './types'
-import { buildEmailConversations } from './utils'
+import type { EmailInboxThread, EmailMessage, EmailWorkflow } from './types'
 
 export interface EmailWorkspaceProps {
   participantId: string
   messages: EmailMessage[]
-  actors: EmailActor[]
+  threads: EmailInboxThread[]
   workflows: EmailWorkflow[]
   selectedWorkflow: string | null
   onSelectWorkflow: (workflowVersionId: string) => void
-  selectedActor: string | null
-  onSelectActor: (actorId: string) => void
+  selectedRootId: string | null
+  onSelectThread: (rootId: string) => void
+  selectedThread: EmailInboxThread | null
   disabled: boolean
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
-  onConversationOpen?: (actorId: string) => void
+  onConversationOpen?: (rootId: string) => void
 }
 
 export function EmailWorkspace({
   participantId,
   messages,
-  actors,
+  threads,
   workflows,
   selectedWorkflow,
   onSelectWorkflow,
-  selectedActor,
-  onSelectActor,
+  selectedRootId,
+  onSelectThread,
+  selectedThread,
   disabled,
   onSubmit,
   onConversationOpen,
 }: EmailWorkspaceProps) {
-  const actorNames = Object.fromEntries(actors.map((actor) => [actor.actorId, actor.actorName]))
-  const conversations = buildEmailConversations(messages, actorNames, participantId)
-  const activeConversation = selectedActor
-    ? (conversations.find((conversation) => conversation.actor === selectedActor) ?? null)
-    : null
-
   return (
     <section className="col-span-full flex h-[540px] min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
@@ -49,23 +44,23 @@ export function EmailWorkspace({
           onSelect={onSelectWorkflow}
         />
         <ConversationSidebar
-          actors={actors}
-          selectedActor={selectedActor}
-          onSelect={(actor) => {
-            onSelectActor(actor)
-            onConversationOpen?.(actor)
+          threads={threads}
+          selectedRootId={selectedRootId}
+          onSelect={(rootId) => {
+            onSelectThread(rootId)
+            onConversationOpen?.(rootId)
           }}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {activeConversation ? (
+          {selectedThread ? (
             <>
-              <ConversationHeader conversation={activeConversation} />
+              <ConversationHeader thread={selectedThread} messages={messages} />
               <ConversationBody
-                messages={activeConversation.messages}
+                messages={messages}
                 participantId={participantId}
               />
               <MessageComposer
-                target={activeConversation.actor}
+                target={selectedThread.latestSenderId}
                 disabled={disabled}
                 onSubmit={onSubmit}
               />
@@ -74,10 +69,10 @@ export function EmailWorkspace({
             <div className="flex flex-1 items-center justify-center bg-slate-50/70 px-6 text-center">
               <div>
                 <p className="text-sm font-semibold text-slate-700">
-                  {actors.length ? 'Select a conversation' : 'Select a workflow'}
+                  {threads.length ? 'Select a conversation' : 'Select a workflow'}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Choose a workflow, then a contact to open its emails.
+                  Choose a workflow, then an email thread to open it.
                 </p>
               </div>
             </div>

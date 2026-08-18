@@ -24,10 +24,17 @@ export interface EmailWorkflowItem {
   unread_count: number
 }
 
-export interface EmailActorItem {
-  actor_id: string
-  actor_name: string
+export interface EmailInboxThreadItem {
+  root_id: string
+  latest_message_id: string
+  latest_sender_id: string
+  latest_sender_type: string
+  latest_subject: string
+  latest_content: string
+  latest_is_read: boolean
+  latest_created_date: string
   unread_count: number
+  message_count: number
 }
 
 export interface EmailMarkAsReadResult {
@@ -40,18 +47,18 @@ export const getEmailWorkflows = (participantId: string) =>
     `/runner/email/workflows?participant_id=${encodeURIComponent(participantId)}`,
   )
 
-export const getEmailActors = (participantId: string, workflowVersionId: string) =>
-  apiClient<EmailActorItem[]>(
-    `/runner/email/actors?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}`,
+export const getEmailInbox = (participantId: string, workflowVersionId: string) =>
+  apiClient<EmailInboxThreadItem[]>(
+    `/runner/email/inbox?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}`,
   )
 
-export const getEmailMessages = (
+export const getEmailThreadMessages = (
   participantId: string,
   workflowVersionId: string,
-  partnerId: string,
+  rootId: string,
 ) =>
   apiClient<EmailMessage[]>(
-    `/runner/email/messages?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}&partner_id=${encodeURIComponent(partnerId)}`,
+    `/runner/email/thread-messages?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}&root_id=${encodeURIComponent(rootId)}`,
   )
 
 export const sendParticipantEmail = (
@@ -75,12 +82,12 @@ export const sendParticipantEmail = (
     }),
   })
 
-export const markEmailAsRead = (
+export const markEmailThreadAsRead = (
   participantId: string,
   workflowVersionId: string,
-  partnerId: string,
+  rootId: string,
 ) =>
   apiClient<EmailMarkAsReadResult>(
-    `/runner/email/mark-as-read?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}&partner_id=${encodeURIComponent(partnerId)}`,
+    `/runner/email/mark-thread-read?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}&root_id=${encodeURIComponent(rootId)}`,
     { method: 'POST' },
   )

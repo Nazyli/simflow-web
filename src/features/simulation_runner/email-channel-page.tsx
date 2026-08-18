@@ -1,19 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import {
-  getEmailActors,
-  getEmailMessages,
+  getEmailInbox,
+  getEmailThreadMessages,
   getEmailWorkflows,
-  type EmailActorItem,
+  type EmailInboxThreadItem,
   type EmailMessage as ApiEmailMessage,
   type EmailWorkflowItem,
 } from '../../shared/api/email'
 import { EmailWorkspace } from './email/email-workspace'
-import type { EmailActor, EmailMessage, EmailWorkflow } from './email/types'
+import type { EmailInboxThread, EmailMessage, EmailWorkflow } from './email/types'
 import { useSimulationRun } from './simulation-run-context'
 
 export function EmailChannelPage() {
-  const { participantId, runnerParticipantId, isEmailPending, sendEmail, markEmailRead } =
+  const { participantId, runnerParticipantId, isEmailPending, sendEmail, markEmailThreadRead } =
     useSimulationRun()
 
   const toEmailMessage = (message: ApiEmailMessage): EmailMessage => ({
@@ -41,10 +41,16 @@ export function EmailChannelPage() {
     unreadCount: item.unread_count,
   })
 
-  const toEmailActor = (item: EmailActorItem): EmailActor => ({
-    actorId: item.actor_id,
-    actorName: item.actor_name,
+  const toEmailThread = (item: EmailInboxThreadItem): EmailInboxThread => ({
+    rootId: item.root_id,
+    latestSenderId: item.latest_sender_id,
+    latestSenderType: item.latest_sender_type,
+    latestSubject: item.latest_subject,
+    latestContent: item.latest_content,
+    latestIsRead: item.latest_is_read,
+    latestCreatedDate: item.latest_created_date,
     unreadCount: item.unread_count,
+    messageCount: item.message_count,
   })
 
   const workflowsQuery = useQuery({
@@ -65,28 +71,30 @@ export function EmailChannelPage() {
     workflows[0]?.workflowVersionId ??
     null
 
-  const actorsQuery = useQuery({
-    queryKey: ['email-actors', participantId, effectiveSelected],
-    queryFn: () => getEmailActors(participantId, effectiveSelected!),
+  const inboxQuery = useQuery({
+    queryKey: ['email-inbox', participantId, effectiveSelected],
+    queryFn: () => getEmailInbox(participantId, effectiveSelected!),
     enabled: Boolean(participantId.trim() && effectiveSelected),
   })
-  const actors = (actorsQuery.data ?? []).map(toEmailActor)
+  const threads = (inboxQuery.data ?? []).map(toEmailThread)
 
-  const [selectedActor, setSelectedActor] = useState<string | null>(null)
-  const [readPendingActors, setReadPendingActors] = useState<ReadonlySet<string>>(new Set())
+  const [selectedRootId, setSelectedRootId] = useState<string | null>(null)
+  const [readPendingThreads, setReadPendingThreads] = useState<ReadonlySet<string>>(new Set())
 
-  const emailQuery = useQuery({
-    queryKey: ['email-messages', participantId, effectiveSelected, selectedActor],
-    queryFn: () => getEmailMessages(participantId, effectiveSelected!, selectedActor!),
+  const threadMessagesQuery = useQuery({
+    queryKey: ['email-thread-messages', participantId, effectiveSelected, selectedRootId],
+    queryFn: () => getEmailThreadMessages(participantId, effectiveSelected!, selectedRootId!),
     enabled: Boolean(
       participantId.trim() &&
-      effectiveSelected &&
-      selectedActor &&
-      !readPendingActors.has(selectedActor),
+        effectiveSelected &&
+        selectedRootId &&
+        !readPendingThreads.has(selectedRootId),
     ),
   })
 
-  const visibleMessages: EmailMessage[] = (emailQuery.data ?? []).map(toEmailMessage)
+  const visibleMessages: EmailMessage[] = (threadMessagesQuery.data ?? []).map(toEmailMessage)
+
+  const selectedThread = threads.find((t) => t.rootId === selectedRootId) ?? null
 
   const selectedRun = workflows.find((workflow) => workflow.workflowVersionId === effectiveSelected)
   const canReply = Boolean(
@@ -97,10 +105,10 @@ export function EmailChannelPage() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    if (!effectiveSelected || !selectedActor) return
+    if (!effectiveSelected || !selectedThread) return
     sendEmail({
       workflowVersionId: effectiveSelected,
-      target: selectedActor,
+      target: selectedThread.latestSenderId,
       subject: String(data.get('subject') ?? ''),
       content: String(data.get('content') ?? ''),
     })
@@ -112,26 +120,27 @@ export function EmailChannelPage() {
       <EmailWorkspace
         participantId={runnerParticipantId}
         messages={visibleMessages}
-        actors={actors}
+        threads={threads}
         workflows={workflows}
         selectedWorkflow={effectiveSelected}
         onSelectWorkflow={(workflowVersionId) => {
           setSelectedWorkflow(workflowVersionId)
-          setSelectedActor(null)
+          setSelectedRootId(null)
         }}
-        selectedActor={selectedActor}
-        onSelectActor={setSelectedActor}
+        selectedRootId={selectedRootId}
+        onSelectThread={setSelectedRootId}
+        selectedThread={selectedThread}
         disabled={disabled}
         onSubmit={submit}
-        onConversationOpen={(actorId) => {
+        onConversationOpen={(rootId) => {
           if (!effectiveSelected) return
-          const actor = actors.find((item) => item.actorId === actorId)
-          if (actor && actor.unreadCount > 0) {
-            setReadPendingActors((prev) => new Set(prev).add(actorId))
-            void markEmailRead(effectiveSelected, actorId).finally(() =>
-              setReadPendingActors((prev) => {
+          const thread = threads.find((t) => t.rootId === rootId)
+          if (thread && thread.unreadCount > 0) {
+            setReadPendingThreads((prev) => new Set(prev).add(rootId))
+            void markEmailThreadRead(effectiveSelected, rootId).finally(() =>
+              setReadPendingThreads((prev) => {
                 const next = new Set(prev)
-                next.delete(actorId)
+                next.delete(rootId)
                 return next
               }),
             )

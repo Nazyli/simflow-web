@@ -11,9 +11,9 @@ import {
 } from '../../shared/api/chat'
 import { eventsUrl } from '../../shared/api/client'
 import {
-  markEmailAsRead,
+  markEmailThreadAsRead,
   sendParticipantEmail,
-  type EmailActorItem,
+  type EmailInboxThreadItem,
   type EmailMarkAsReadResult,
   type EmailMessage,
   type EmailWorkflowItem,
@@ -54,7 +54,7 @@ export interface SimulationRunContextValue {
     subject: string
     content: string
   }) => void
-  markEmailRead: (workflowVersionId: string, partnerId: string) => Promise<EmailMarkAsReadResult>
+  markEmailThreadRead: (workflowVersionId: string, rootId: string) => Promise<EmailMarkAsReadResult>
   refresh: () => void
 }
 
@@ -94,7 +94,7 @@ export function SimulationRunProvider({
       void client.invalidateQueries({ queryKey: ['chat-actors'] })
       void client.invalidateQueries({ queryKey: ['chat-messages'] })
       void client.invalidateQueries({ queryKey: ['email-workflows'] })
-      void client.invalidateQueries({ queryKey: ['email-actors'] })
+      void client.invalidateQueries({ queryKey: ['email-inbox'] })
       void client.invalidateQueries({ queryKey: ['email-messages'] })
       if (!(event instanceof MessageEvent)) return
       try {
@@ -222,7 +222,7 @@ export function SimulationRunProvider({
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['email-messages'] })
       client.invalidateQueries({ queryKey: ['email-workflows'] })
-      client.invalidateQueries({ queryKey: ['email-actors'] })
+      client.invalidateQueries({ queryKey: ['email-inbox'] })
       client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
       client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
     },
@@ -232,29 +232,13 @@ export function SimulationRunProvider({
   const emailRead = useMutation({
     mutationFn: ({
       workflowVersionId,
-      partnerId,
+      rootId,
     }: {
       workflowVersionId: string
-      partnerId: string
-    }) => markEmailAsRead(participantId.trim(), workflowVersionId, partnerId),
-    onSuccess: ({ count }, { workflowVersionId, partnerId }) => {
+      rootId: string
+    }) => markEmailThreadAsRead(participantId.trim(), workflowVersionId, rootId),
+    onSuccess: ({ count }, { workflowVersionId }) => {
       const pid = participantId.trim()
-      client.setQueryData<EmailMessage[]>(
-        ['email-messages', pid, workflowVersionId, partnerId],
-        (messages) =>
-          messages?.map((message) =>
-            message.sender_type === 'actor' && !message.is_read
-              ? { ...message, is_read: true, read_at: message.read_at ?? new Date().toISOString() }
-              : message,
-          ),
-      )
-      client.setQueryData<EmailActorItem[]>(['email-actors', pid, workflowVersionId], (actors) =>
-        actors?.map((actor) =>
-          actor.actor_id === partnerId
-            ? { ...actor, unread_count: Math.max(0, actor.unread_count - count) }
-            : actor,
-        ),
-      )
       client.setQueryData<EmailWorkflowItem[]>(['email-workflows', pid], (workflows) =>
         workflows?.map((workflow) =>
           workflow.workflow_version_id === workflowVersionId
@@ -262,6 +246,7 @@ export function SimulationRunProvider({
             : workflow,
         ),
       )
+      client.invalidateQueries({ queryKey: ['email-inbox', pid, workflowVersionId] })
       client.invalidateQueries({ queryKey: ['participant-executions', pid] })
     },
   })
@@ -318,7 +303,7 @@ export function SimulationRunProvider({
     client.invalidateQueries({ queryKey: ['chat-actors'] })
     client.invalidateQueries({ queryKey: ['chat-messages'] })
     client.invalidateQueries({ queryKey: ['email-workflows'] })
-    client.invalidateQueries({ queryKey: ['email-actors'] })
+    client.invalidateQueries({ queryKey: ['email-inbox'] })
     client.invalidateQueries({ queryKey: ['email-messages'] })
   }
 
@@ -334,8 +319,8 @@ export function SimulationRunProvider({
           messageRead.mutateAsync({ workflowVersionId, actorId }),
         isEmailPending: emailAction.isPending,
         sendEmail,
-        markEmailRead: (workflowVersionId, partnerId) =>
-          emailRead.mutateAsync({ workflowVersionId, partnerId }),
+        markEmailThreadRead: (workflowVersionId, rootId) =>
+          emailRead.mutateAsync({ workflowVersionId, rootId }),
         refresh,
       }}
     >

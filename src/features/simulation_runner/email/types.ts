@@ -16,14 +16,6 @@ export interface EmailMessage {
   is_unread?: boolean
 }
 
-export interface EmailConversation {
-  actor: string
-  actorName: string
-  messages: EmailMessage[]
-  lastMessage: EmailMessage | null
-  unreadCount: number
-}
-
 export interface EmailWorkflow {
   workflowVersionId: string
   workflowName: string
@@ -32,8 +24,14 @@ export interface EmailWorkflow {
   unreadCount: number
 }
 
-export interface EmailActor {
-  actorId: string
-  actorName: string
+export interface EmailInboxThread {
+  rootId: string
+  latestSenderId: string
+  latestSenderType: string
+  latestSubject: string
+  latestContent: string
+  latestIsRead: boolean
+  latestCreatedDate: string
   unreadCount: number
+  messageCount: number
 }
