@@ -1,12 +1,13 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarClock, CheckCircle2, Clock, RefreshCw, Timer, XCircle } from 'lucide-react'
+import { CalendarClock, CheckCircle2, Clock, Play, RefreshCw, Timer, XCircle } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import {
   cancelTimer,
   getTimers,
   rescheduleTimer,
+  runTimerNow,
   type WorkflowTimer,
 } from '../../shared/api/timers'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
@@ -146,6 +147,7 @@ export function TimerManagementPage() {
   const [now, setNow] = useState(Date.now())
   const [rescheduleTarget, setRescheduleTarget] = useState<WorkflowTimer | null>(null)
   const [cancelTarget, setCancelTarget] = useState<WorkflowTimer | null>(null)
+  const [runNowTarget, setRunNowTarget] = useState<WorkflowTimer | null>(null)
   const [detailTarget, setDetailTarget] = useState<WorkflowTimer | null>(null)
   const timers = useQuery({ queryKey: ['timers'], queryFn: getTimers, refetchInterval: 5_000 })
   useEffect(() => {
@@ -170,6 +172,15 @@ export function TimerManagementPage() {
       toast.success('Timer rescheduled.')
     },
     onError: () => toast.error('Unable to reschedule timer.'),
+  })
+  const runNow = useMutation({
+    mutationFn: runTimerNow,
+    onSuccess: () => {
+      refresh()
+      setRunNowTarget(null)
+      toast.success('Timer queued to run now.')
+    },
+    onError: () => toast.error('Unable to run timer now.'),
   })
   const rows = (timers.data ?? []).map((timer) => ({ ...timer, id: timer.timer_id }))
   const counts = useMemo(
@@ -284,6 +295,15 @@ export function TimerManagementPage() {
           </button>
           {canManage(timer) && (
             <>
+              {isPending(timer) && (
+                <button
+                  onClick={() => setRunNowTarget(timer)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-white px-2 py-1 text-[11px] font-semibold text-emerald-700 shadow-none transition hover:bg-emerald-50"
+                >
+                  <Play size={11} fill="currentColor" />
+                  Run now
+                </button>
+              )}
               <button
                 disabled={timer.status === 'cancelled'}
                 onClick={() => setCancelTarget(timer)}
@@ -364,6 +384,12 @@ export function TimerManagementPage() {
         isSaving={cancel.isPending}
         onClose={() => setCancelTarget(null)}
         onConfirm={() => cancelTarget && cancel.mutate(cancelTarget.timer_id)}
+      />
+      <RunNowDialog
+        timer={runNowTarget}
+        isSaving={runNow.isPending}
+        onClose={() => setRunNowTarget(null)}
+        onConfirm={() => runNowTarget && runNow.mutate(runNowTarget.timer_id)}
       />
       <TimerDetail timer={detailTarget} onClose={() => setDetailTarget(null)} />
     </main>
@@ -471,6 +497,35 @@ function CancelDialog({
           <DialogButton onClick={onClose}>Keep timer</DialogButton>
           <DialogButton variant="danger" onClick={onConfirm} disabled={isSaving}>
             Cancel timer
+          </DialogButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function RunNowDialog({
+  timer,
+  isSaving,
+  onClose,
+  onConfirm,
+}: {
+  timer: WorkflowTimer | null
+  isSaving: boolean
+  onClose: () => void
+  onConfirm: () => void
+}) {
+  return (
+    <Dialog open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="p-6 sm:max-w-[430px]">
+        <DialogTitle className="text-base font-bold text-slate-900">Run timer now?</DialogTitle>
+        <DialogDescription>
+          This immediately processes the timer event and continues the workflow through its configured path.
+        </DialogDescription>
+        <DialogFooter>
+          <DialogButton onClick={onClose}>Keep schedule</DialogButton>
+          <DialogButton variant="primary" onClick={onConfirm} disabled={isSaving}>
+            Run now
           </DialogButton>
         </DialogFooter>
       </DialogContent>

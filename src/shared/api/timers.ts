@@ -23,3 +23,5 @@ export const rescheduleTimer = (timerId: string, dueAt: string) =>
     method: 'POST',
     body: JSON.stringify({ due_at: dueAt }),
   })
+export const runTimerNow = (timerId: string) =>
+  apiClient<WorkflowTimer>(`/timers/${timerId}/run-now`, { method: 'POST' })
