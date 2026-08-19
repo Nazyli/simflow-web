@@ -12,6 +12,8 @@ export interface EmailMessage {
   cc: string[]
   workflow_version_id: string | null
   parent_email_id: string | null
+  reply_to_email_id: string | null
+  master_email_id: string | null
   is_read: boolean
   read_at: string | null
   created_date: string
@@ -73,6 +75,7 @@ export const sendParticipantEmail = (
   to?: string[],
   cc?: string[],
   parentEmailId?: string,
+  replyToEmailId?: string,
 ) =>
   apiClient<EmailMessage>(`/runner/email?participant_id=${encodeURIComponent(participantId)}`, {
     method: 'POST',
@@ -84,6 +87,7 @@ export const sendParticipantEmail = (
       to: to ?? [],
       cc: cc ?? [],
       ...(parentEmailId ? { parent_email_id: parentEmailId } : {}),
+      ...(replyToEmailId ? { reply_to_email_id: replyToEmailId } : {}),
     }),
   })
 

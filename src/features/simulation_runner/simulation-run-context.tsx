@@ -52,6 +52,7 @@ export interface SimulationRunContextValue {
     subject: string
     content: string
     parentEmailId?: string
+    replyToEmailId?: string
   }) => void
   markEmailThreadRead: (workflowVersionId: string, rootId: string) => Promise<EmailMarkAsReadResult>
   refresh: () => void
@@ -206,12 +207,14 @@ export function SimulationRunProvider({
       subject,
       content,
       parentEmailId,
+      replyToEmailId,
     }: {
       workflowVersionId: string
       target: string
       subject: string
       content: string
       parentEmailId?: string
+      replyToEmailId?: string
     }) =>
       sendParticipantEmail(
         participantId.trim(),
@@ -222,6 +225,7 @@ export function SimulationRunProvider({
         undefined,
         undefined,
         parentEmailId,
+        replyToEmailId,
       ),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['email-messages'] })
@@ -276,6 +280,7 @@ export function SimulationRunProvider({
     subject: string
     content: string
     parentEmailId?: string
+    replyToEmailId?: string
   }) => {
     if (!participantId.trim()) {
       toast.error('Choose an active simulation session.')
@@ -287,6 +292,7 @@ export function SimulationRunProvider({
       subject: input.subject,
       content: input.content,
       parentEmailId: input.parentEmailId,
+      replyToEmailId: input.replyToEmailId,
     })
   }
 
