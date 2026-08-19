@@ -94,6 +94,7 @@ export function SimulationRunProvider({
       void client.invalidateQueries({ queryKey: ['chat-messages'] })
       void client.invalidateQueries({ queryKey: ['email-inbox'] })
       void client.invalidateQueries({ queryKey: ['email-messages'] })
+      void client.invalidateQueries({ queryKey: ['email-thread-messages'] })
       if (!(event instanceof MessageEvent)) return
       try {
         const payload = JSON.parse(event.data) as {
@@ -225,6 +226,7 @@ export function SimulationRunProvider({
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['email-messages'] })
       client.invalidateQueries({ queryKey: ['email-inbox'] })
+      client.invalidateQueries({ queryKey: ['email-thread-messages'] })
       client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
       client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
     },
@@ -232,13 +234,8 @@ export function SimulationRunProvider({
   })
 
   const emailRead = useMutation({
-    mutationFn: ({
-      workflowVersionId,
-      rootId,
-    }: {
-      workflowVersionId: string
-      rootId: string
-    }) => markEmailThreadAsRead(participantId.trim(), workflowVersionId, rootId),
+    mutationFn: ({ workflowVersionId, rootId }: { workflowVersionId: string; rootId: string }) =>
+      markEmailThreadAsRead(participantId.trim(), workflowVersionId, rootId),
     onSuccess: ({ count }, { workflowVersionId }) => {
       const pid = participantId.trim()
       client.invalidateQueries({ queryKey: ['email-inbox', pid] })
@@ -301,6 +298,7 @@ export function SimulationRunProvider({
     client.invalidateQueries({ queryKey: ['chat-messages'] })
     client.invalidateQueries({ queryKey: ['email-inbox'] })
     client.invalidateQueries({ queryKey: ['email-messages'] })
+    client.invalidateQueries({ queryKey: ['email-thread-messages'] })
   }
 
   return (
