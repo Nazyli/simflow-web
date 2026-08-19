@@ -17,7 +17,7 @@ export function ConversationHeader({ thread, messages }: ConversationHeaderProps
   return (
     <div className="flex items-center justify-between border-b border-[#e8eaed] bg-white px-5 py-3">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-semibold text-[#1a1a2e]">
+        <p className="truncate text-base font-semibold text-slate-600">
           {thread.latestSubject || '(no subject)'}
         </p>
       </div>
