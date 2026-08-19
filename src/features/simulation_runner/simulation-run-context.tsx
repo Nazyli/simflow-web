@@ -14,7 +14,6 @@ import {
   markEmailThreadAsRead,
   sendParticipantEmail,
   type EmailMarkAsReadResult,
-  type EmailMessage,
 } from '../../shared/api/email'
 import { getNotificationActivity, type NotificationActivity } from '../../shared/api/notifications'
 import type { Channel } from './simulation-channels'
@@ -240,7 +239,7 @@ export function SimulationRunProvider({
   const emailRead = useMutation({
     mutationFn: ({ workflowVersionId, rootId }: { workflowVersionId: string; rootId: string }) =>
       markEmailThreadAsRead(participantId.trim(), workflowVersionId, rootId),
-    onSuccess: ({ count }, { workflowVersionId }) => {
+    onSuccess: () => {
       const pid = participantId.trim()
       client.invalidateQueries({ queryKey: ['email-inbox', pid] })
       client.invalidateQueries({ queryKey: ['participant-executions', pid] })

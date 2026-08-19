@@ -11,7 +11,12 @@ import {
 
 export type EdgePathType = 'default' | 'straight' | 'step' | 'smoothstep'
 
-function getPath(type: EdgePathType, props: EdgeProps): [string, number, number] {
+type PathProps = Pick<
+  EdgeProps,
+  'sourceX' | 'sourceY' | 'sourcePosition' | 'targetX' | 'targetY' | 'targetPosition'
+>
+
+function getPath(type: EdgePathType, props: PathProps): ReturnType<typeof getBezierPath> {
   const common = {
     sourceX: props.sourceX,
     sourceY: props.sourceY,

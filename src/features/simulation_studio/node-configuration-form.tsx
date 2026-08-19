@@ -1,12 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Copy, GitBranch, PackageSearch, Plus, Save, Sliders, Trash2, X } from 'lucide-react'
+import { Copy, GitBranch, Plus, Save, Sliders, Trash2, X } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
-import type { NodeDefinition, ParameterPicker } from '../../shared/types/workflow'
-import { MasterPickerDialog } from './pickers/master-picker-dialog'
+import type { NodeDefinition } from '../../shared/types/workflow'
 import { MasterPickerField } from './pickers/master-picker-field'
 
 type Configuration = Record<string, unknown>
@@ -187,15 +186,8 @@ function CatalogParameterField({
 }) {
   const label = name.replaceAll('_', ' ')
   const picker = definition?.parameter_options?.[name]?.picker
-  if (name === 'actors')
-    return (
-      <ConversationGroupActorsField
-        value={value}
-        required={required}
-        picker={picker}
-        onChange={onChange}
-      />
-    )
+  if (name === 'groups')
+    return <ConversationGroupGroupsField value={value} required={required} onChange={onChange} />
   if (picker)
     return (
       <MasterPickerField
@@ -254,102 +246,82 @@ function CatalogParameterField({
   )
 }
 
-function ConversationGroupActorsField({
+function ConversationGroupGroupsField({
   value,
   required,
-  picker,
   onChange,
 }: {
   value: unknown
   required: boolean
-  picker?: ParameterPicker
   onChange: (value: unknown) => void
 }) {
-  const [open, setOpen] = useState(false)
-  const actors = Array.isArray(value)
+  const groups = Array.isArray(value)
     ? value.filter(
-        (item): item is { actor_id: string; actor_name?: string } =>
+        (item): item is { id: string; label: string } =>
           typeof item === 'object' &&
           item !== null &&
-          typeof (item as { actor_id?: unknown }).actor_id === 'string',
+          typeof (item as { id?: unknown }).id === 'string' &&
+          typeof (item as { label?: unknown }).label === 'string',
       )
     : []
 
-  function updateActor(index: number, actorId: string) {
+  function updateGroup(index: number, field: 'id' | 'label', next: string) {
     onChange(
-      actors.map((item, itemIndex) =>
-        itemIndex === index
-          ? { ...item, actor_id: actorId, actor_name: item.actor_name ?? actorId }
-          : item,
-      ),
+      groups.map((item, itemIndex) => (itemIndex === index ? { ...item, [field]: next } : item)),
     )
   }
 
-  function removeActor(index: number) {
-    onChange(actors.filter((_, itemIndex) => itemIndex !== index))
-  }
-
-  function addActor(record: Record<string, unknown>) {
-    if (!picker) return
-    const actorId = String(record[picker.value_field] ?? '')
-    const actorName =
-      picker.display_fields
-        .map((field) => record[field])
-        .find(
-          (recordValue): recordValue is string =>
-            typeof recordValue === 'string' && recordValue !== actorId,
-        ) ?? actorId
-    onChange([...actors, { actor_id: actorId, actor_name: actorName }])
+  function removeGroup(index: number) {
+    onChange(groups.filter((_, itemIndex) => itemIndex !== index))
   }
 
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between">
-        <Label className="capitalize">Actors</Label>
-        {picker && (
-          <Button type="button" variant="outline" size="xs" onClick={() => setOpen(true)}>
-            <PackageSearch /> Add actor
-          </Button>
-        )}
+        <Label>Conversation groups</Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="xs"
+          onClick={() => onChange([...groups, { id: '', label: '' }])}
+        >
+          <Plus /> Add group
+        </Button>
       </div>
       <div className="space-y-2">
-        {actors.map((item, index) => (
+        {groups.map((item, index) => (
           <div key={index} className="flex gap-2">
             <Input
               required={required}
-              aria-label={`Actor ${index + 1}`}
-              placeholder="actor_id"
-              value={item.actor_id}
-              onChange={(event) => updateActor(index, event.target.value)}
+              aria-label={`Group ID ${index + 1}`}
+              placeholder="support"
+              value={item.id}
+              onChange={(event) => updateGroup(index, 'id', event.target.value)}
+            />
+            <Input
+              required={required}
+              aria-label={`Group label ${index + 1}`}
+              placeholder="Diskusi Support"
+              value={item.label}
+              onChange={(event) => updateGroup(index, 'label', event.target.value)}
             />
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label={`Remove actor ${index + 1}`}
-              onClick={() => removeActor(index)}
+              aria-label={`Remove group ${index + 1}`}
+              onClick={() => removeGroup(index)}
             >
               <X />
             </Button>
           </div>
         ))}
-        {!actors.length && (
+        {!groups.length && (
           <p className="text-xs text-slate-500">
-            Add at least one actor. Each actor becomes an output port.
+            Add at least one subgroup. Each subgroup becomes an output port.
           </p>
         )}
       </div>
-      {picker && (
-        <MasterPickerDialog
-          open={open}
-          onOpenChange={setOpen}
-          title="Pick actor"
-          resource={picker.resource}
-          endpoint={picker.endpoint}
-          displayFields={picker.display_fields}
-          onSelect={addActor}
-        />
-      )}
     </div>
   )
 }
