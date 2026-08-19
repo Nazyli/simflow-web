@@ -1,12 +1,13 @@
 import { X } from 'lucide-react'
 import type { EdgeProps } from '@xyflow/react'
-import { ButtonEdge } from '@/components/button-edge'
+import { ButtonEdge, type EdgePathType } from '@/components/button-edge'
 import { Button } from '@/components/ui/button'
 
 type WorkflowEdgeData = {
   priority: number
   label: string
   style: { color: string; line_style: string; animated: boolean }
+  edgeType?: EdgePathType
   onDelete?: (edgeId: string) => void
 }
 
@@ -28,6 +29,7 @@ export function WorkflowGraphEdge({
   const priority = edgeData?.priority ?? 0
   const label = edgeData?.label ?? ''
   const style = edgeData?.style ?? { color: '#94a3b8', line_style: 'solid', animated: false }
+  const edgeType = edgeData?.edgeType ?? 'default'
   const onDelete = edgeData?.onDelete
   const stroke = selected ? '#5b46c5' : style.color
   const labelOffset = priority % 2 === 0 ? -18 : 18
@@ -43,6 +45,7 @@ export function WorkflowGraphEdge({
       targetY={targetY}
       targetPosition={targetPosition}
       markerEnd={markerEnd}
+      data={{ edgeType }}
       style={{
         stroke,
         strokeWidth: selected ? 2.5 : 1.5,

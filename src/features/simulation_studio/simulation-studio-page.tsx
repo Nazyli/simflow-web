@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { Button } from '../../components/ui/button'
+import { ButtonEdge, type EdgePathType } from '../../components/button-edge'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
@@ -115,6 +116,7 @@ function edgeToFlow(
   edge: ApiEdge,
   sourcePort: OutputPort | undefined,
   onDelete: (edgeId: string) => void,
+  edgeType: EdgePathType = 'default',
 ): Edge {
   const style = sourcePort?.edge_style ?? { color: '#94a3b8', line_style: 'solid', animated: false }
   return {
@@ -130,6 +132,7 @@ function edgeToFlow(
       priority: edge.priority,
       label: sourcePort?.label ?? edge.source_port_id,
       style,
+      edgeType,
       onDelete,
     },
   }
@@ -172,6 +175,7 @@ export function SimulationStudioPage() {
   const [deleteVersionTarget, setDeleteVersionTarget] = useState<string | null>(null)
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [showMiniMap, setShowMiniMap] = useState(true)
+  const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
   const [validationRequested, setValidationRequested] = useState(false)
   const [workflowPickerOpen, setWorkflowPickerOpen] = useState(false)
   const [editWorkflowOpen, setEditWorkflowOpen] = useState(false)
@@ -516,6 +520,7 @@ export function SimulationStudioPage() {
               .find((node) => node.node_id === edge.source_node_id)
               ?.output_ports.find((port) => port.id === edge.source_port_id),
             deleteEdge,
+            edgePathType,
           ),
         ),
       )
@@ -601,6 +606,7 @@ export function SimulationStudioPage() {
             .find((node) => node.node_id === edge.source_node_id)
             ?.output_ports.find((port) => port.id === edge.source_port_id),
           deleteEdge,
+          edgePathType,
         ),
       ),
     )
@@ -632,6 +638,16 @@ export function SimulationStudioPage() {
     setSelectedExecutionId(null)
     localPositions.current.clear()
   }, [versionId])
+
+  // Apply edgePathType to all edges when dropdown changes
+  useEffect(() => {
+    setEdges((current) =>
+      current.map((edge) => ({
+        ...edge,
+        data: { ...edge.data, edgeType: edgePathType },
+      })),
+    )
+  }, [edgePathType, setEdges])
 
   useEffect(() => {
     const miniMap = document.querySelector<HTMLElement>('.graph .react-flow__minimap')
@@ -818,7 +834,7 @@ export function SimulationStudioPage() {
       is_valid: true,
     }
     pendingEdgeKeys.current.add(connectionKey)
-    setEdges((current) => [...current, edgeToFlow(pendingEdge, sourcePort, deleteEdge)])
+    setEdges((current) => [...current, edgeToFlow(pendingEdge, sourcePort, deleteEdge, edgePathType)])
     addWorkflowEdge(versionId, {
       source_node_id: connection.source,
       source_port_id: connection.sourceHandle,
@@ -1249,6 +1265,18 @@ export function SimulationStudioPage() {
             </div>
 
             <div className="flex items-center gap-1 pl-1">
+              <select
+                value={edgePathType}
+                onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
+                className="h-8 cursor-pointer rounded-lg border border-slate-200 bg-white px-1.5 text-xs text-slate-600 outline-none transition-colors hover:bg-slate-50"
+                title="Edge path style"
+              >
+                <option value="default">Bezier</option>
+                <option value="straight">Straight</option>
+                <option value="step">Step</option>
+                <option value="smoothstep">Smooth</option>
+              </select>
+
               <button
                 type="button"
                 className={`inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${showMiniMap ? 'bg-purple-50 text-purple-700' : 'text-slate-600 hover:bg-slate-100'}`}

@@ -1,6 +1,36 @@
 import { type ReactNode } from 'react'
 
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from '@xyflow/react'
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  getSmoothStepPath,
+  getStraightPath,
+  type EdgeProps,
+} from '@xyflow/react'
+
+export type EdgePathType = 'default' | 'straight' | 'step' | 'smoothstep'
+
+function getPath(type: EdgePathType, props: EdgeProps): [string, number, number] {
+  const common = {
+    sourceX: props.sourceX,
+    sourceY: props.sourceY,
+    sourcePosition: props.sourcePosition,
+    targetX: props.targetX,
+    targetY: props.targetY,
+    targetPosition: props.targetPosition,
+  }
+  switch (type) {
+    case 'straight':
+      return getStraightPath(common)
+    case 'step':
+      return getSmoothStepPath({ ...common, borderRadius: 0 })
+    case 'smoothstep':
+      return getSmoothStepPath({ ...common, borderRadius: 90 })
+    default:
+      return getBezierPath(common)
+  }
+}
 
 export function ButtonEdge({
   sourceX,
@@ -12,8 +42,10 @@ export function ButtonEdge({
   style = {},
   markerEnd,
   children,
+  data,
 }: EdgeProps & { children: ReactNode }) {
-  const [edgePath, labelX, labelY] = getBezierPath({
+  const edgeType = (data as { edgeType?: EdgePathType } | undefined)?.edgeType ?? 'default'
+  const [edgePath, labelX, labelY] = getPath(edgeType, {
     sourceX,
     sourceY,
     sourcePosition,

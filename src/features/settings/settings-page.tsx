@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { resetDatabase, type ResetResponse } from '../../shared/api/admin'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
