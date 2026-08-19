@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { Button } from '../../components/ui/button'
-import { ButtonEdge, type EdgePathType } from '../../components/button-edge'
+import { type EdgePathType } from '../../components/button-edge'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
@@ -76,6 +76,7 @@ import {
   updateWorkflowEdge,
   type ApiEdge,
   type ApiNode,
+  type ApiNodePayload,
 } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
@@ -83,12 +84,21 @@ import type { Execution, NodeDefinition, OutputPort, Workflow } from '../../shar
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { WorkflowGraphEdge } from './workflow-graph-edge'
 import { WorkflowGraphNode } from './workflow-graph-node'
+import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
 
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
 
 const workflowNodeRenderers = { workflow: WorkflowGraphNode }
 const workflowEdgeRenderers = { workflow: WorkflowGraphEdge }
+
+function combinedAutosaveStatus(statuses: Iterable<NodeAutosaveStatus>): NodeAutosaveStatus {
+  const current = new Set(statuses)
+  if (current.has('error')) return 'error'
+  if (current.has('saving')) return 'saving'
+  if (current.has('pending')) return 'pending'
+  return 'saved'
+}
 
 function nodeToFlow(
   node: ApiNode,
@@ -189,13 +199,17 @@ export function SimulationStudioPage() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
+  const [nodeAutosaveStatus, setNodeAutosaveStatus] = useState<NodeAutosaveStatus>('saved')
 
   // Cache node positions locally so React Query refetches don't reset user-arranged layout
   const localPositions = useRef<Map<string, { x: number; y: number }>>(new Map())
+  const localRotations = useRef<Map<string, number>>(new Map())
+  const nodeAutosaveStatuses = useRef<Map<string, NodeAutosaveStatus>>(new Map())
+  const nodeAutosaveQueue = useRef<NodeAutosaveQueue<ApiNodePayload> | null>(null)
   const pendingEdgeKeys = useRef<Set<string>>(new Set())
   const fittedVersionId = useRef<string | null>(null)
 
-  // Stable refs for persistNode.mutate and version status — kept in sync after mutations are declared below.
+  // Stable refs for autosave and version status — kept in sync after mutations are declared below.
   // Using refs avoids adding them as useEffect dependencies (which would cause infinite loops).
   const persistNodeRef = useRef<
     (args: {
@@ -204,6 +218,40 @@ export function SimulationStudioPage() {
     }) => void
   >(() => {})
   const selectedVersionStatusRef = useRef<string | undefined>(undefined)
+
+  const updateNodeAutosaveStatus = useCallback((nodeId: string, status: NodeAutosaveStatus) => {
+    nodeAutosaveStatuses.current.set(nodeId, status)
+    setNodeAutosaveStatus(combinedAutosaveStatus(nodeAutosaveStatuses.current.values()))
+  }, [])
+
+  if (!nodeAutosaveQueue.current) {
+    nodeAutosaveQueue.current = new NodeAutosaveQueue({
+      delayMs: 400,
+      save: updateNode,
+      onStatusChange: updateNodeAutosaveStatus,
+    })
+  }
+
+  const enqueueNodeSave = useCallback(
+    ({ id, payload }: { id: string; payload: ApiNodePayload }) => {
+      if (!versionId) return
+      queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', versionId], (current) => {
+        if (!current) return current
+        return [
+          current[0].map((node) => (node.node_id === id ? { ...node, ...payload } : node)),
+          current[1],
+        ]
+      })
+      nodeAutosaveQueue.current?.enqueue(id, payload)
+    },
+    [queryClient, versionId],
+  )
+
+  const retryFailedNodeSaves = useCallback(() => {
+    nodeAutosaveStatuses.current.forEach((status, nodeId) => {
+      if (status === 'error') nodeAutosaveQueue.current?.retry(nodeId)
+    })
+  }, [])
 
   // API Queries & Mutations
   const workflows = useQuery({ queryKey: ['workflows'], queryFn: getWorkflows })
@@ -345,17 +393,6 @@ export function SimulationStudioPage() {
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
-  const persistNode = useMutation({
-    mutationFn: ({
-      id,
-      payload,
-    }: {
-      id: string
-      payload: Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'>
-    }) => updateNode(id, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }),
-    onError: (error) => toast.error(apiErrorMessage(error)),
-  })
   const removeNode = useMutation({
     mutationFn: deleteNode,
     onSuccess: () => {
@@ -460,7 +497,9 @@ export function SimulationStudioPage() {
       if (selectedVersion?.status !== 'draft') return
       const current = apiNodes.find((item) => item.node_id === nodeId)
       if (!current) return
-      const next = ((current.rotation ?? 0) + 90) % 360
+      const currentRotation = localRotations.current.get(nodeId) ?? current.rotation ?? 0
+      const next = (currentRotation + 90) % 360
+      localRotations.current.set(nodeId, next)
       setNodes((flowNodes) =>
         flowNodes.map((flowNode) =>
           flowNode.id === nodeId
@@ -480,7 +519,7 @@ export function SimulationStudioPage() {
   )
 
   // Keep stable refs in sync with latest values
-  persistNodeRef.current = persistNode.mutate
+  persistNodeRef.current = enqueueNodeSave
   selectedVersionStatusRef.current = selectedVersion?.status
 
   // Select a workflow automatically only outside the create dialog, which must
@@ -587,9 +626,10 @@ export function SimulationStudioPage() {
     setNodes(
       apiNodes.map((node) => {
         const cached = localPositions.current.get(node.node_id)
+        const rotation = localRotations.current.get(node.node_id) ?? node.rotation
         return {
           ...nodeToFlow(
-            node,
+            { ...node, rotation },
             definitions.get(node.node_type),
             selectedVersion?.status === 'draft',
             rotateNode,
@@ -637,6 +677,7 @@ export function SimulationStudioPage() {
   useEffect(() => {
     setSelectedExecutionId(null)
     localPositions.current.clear()
+    localRotations.current.clear()
   }, [versionId])
 
   // Apply edgePathType to all edges when dropdown changes
@@ -885,7 +926,7 @@ export function SimulationStudioPage() {
     apiNodes.forEach((node) => {
       const position = positions.get(node.node_id)
       if (position)
-        persistNode.mutate({
+        enqueueNodeSave({
           id: node.node_id,
           payload: {
             node_name: node.node_name,
@@ -925,7 +966,7 @@ export function SimulationStudioPage() {
 
   function saveStructuredNode(name: string, parameters: Record<string, unknown>) {
     if (!selectedNode) return
-    persistNode.mutate({
+    enqueueNodeSave({
       id: selectedNode.node_id,
       payload: {
         node_name: name,
@@ -1007,9 +1048,27 @@ export function SimulationStudioPage() {
                 No Version
               </span>
             )}
-            <span className="flex items-center gap-1 text-xs text-slate-500">
-              <Save size={13} className="text-emerald-600" /> Autosaved
-            </span>
+            {nodeAutosaveStatus === 'error' ? (
+              <button
+                type="button"
+                onClick={retryFailedNodeSaves}
+                className="flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700"
+              >
+                <AlertTriangle size={13} /> Save failed — retry
+              </button>
+            ) : (
+              <span className="flex items-center gap-1 text-xs text-slate-500">
+                <Save
+                  size={13}
+                  className={nodeAutosaveStatus === 'saved' ? 'text-emerald-600' : 'text-amber-500'}
+                />
+                {nodeAutosaveStatus === 'saved'
+                  ? 'Autosaved'
+                  : nodeAutosaveStatus === 'saving'
+                    ? 'Saving…'
+                    : 'Changes pending…'}
+              </span>
+            )}
           </div>
         </div>
 
@@ -1360,7 +1419,7 @@ export function SimulationStudioPage() {
                 if (selectedVersion?.status !== 'draft') return
                 const current = apiNodes.find((item) => item.node_id === node.id)
                 if (current)
-                  persistNode.mutate({
+                  enqueueNodeSave({
                     id: node.id,
                     payload: {
                       ...current,
