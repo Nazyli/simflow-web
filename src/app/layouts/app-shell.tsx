@@ -1,4 +1,4 @@
-import { Clock3, Play, Users, Workflow } from 'lucide-react'
+import { Clock3, Play, Settings, Users, Workflow } from 'lucide-react'
 import { type PropsWithChildren } from 'react'
 import { useLocation } from 'react-router-dom'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
@@ -9,6 +9,7 @@ const navigation = [
   { label: 'Runner', path: '/simulation', icon: Play },
   { label: 'Participant History', path: '/history', icon: Users },
   { label: 'Timers', path: '/timers', icon: Clock3 },
+  { label: 'Settings', path: '/settings', icon: Settings },
 ]
 
 const pageNames: Record<string, string> = Object.fromEntries(
