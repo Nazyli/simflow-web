@@ -43,7 +43,12 @@ export const startExecutionBatch = (payload: {
   })
 export const submitExecutionAction = (
   executionId: string,
-  payload: { action_type: string; actor_id?: string; payload: Record<string, unknown> },
+  payload: {
+    action_type: string
+    actor_id?: string
+    group_id?: string
+    payload: Record<string, unknown>
+  },
 ) =>
   apiClient<Execution>(`/runner/executions/${executionId}/actions`, {
     method: 'POST',

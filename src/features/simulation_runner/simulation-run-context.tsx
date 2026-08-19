@@ -14,7 +14,6 @@ import {
   markEmailThreadAsRead,
   sendParticipantEmail,
   type EmailMarkAsReadResult,
-  type EmailMessage,
 } from '../../shared/api/email'
 import { getNotificationActivity, type NotificationActivity } from '../../shared/api/notifications'
 import type { Channel } from './simulation-channels'
@@ -52,6 +51,7 @@ export interface SimulationRunContextValue {
     subject: string
     content: string
     parentEmailId?: string
+    replyToEmailId?: string
   }) => void
   markEmailThreadRead: (workflowVersionId: string, rootId: string) => Promise<EmailMarkAsReadResult>
   refresh: () => void
@@ -206,12 +206,14 @@ export function SimulationRunProvider({
       subject,
       content,
       parentEmailId,
+      replyToEmailId,
     }: {
       workflowVersionId: string
       target: string
       subject: string
       content: string
       parentEmailId?: string
+      replyToEmailId?: string
     }) =>
       sendParticipantEmail(
         participantId.trim(),
@@ -222,6 +224,7 @@ export function SimulationRunProvider({
         undefined,
         undefined,
         parentEmailId,
+        replyToEmailId,
       ),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['email-messages'] })
@@ -236,7 +239,7 @@ export function SimulationRunProvider({
   const emailRead = useMutation({
     mutationFn: ({ workflowVersionId, rootId }: { workflowVersionId: string; rootId: string }) =>
       markEmailThreadAsRead(participantId.trim(), workflowVersionId, rootId),
-    onSuccess: ({ count }, { workflowVersionId }) => {
+    onSuccess: () => {
       const pid = participantId.trim()
       client.invalidateQueries({ queryKey: ['email-inbox', pid] })
       client.invalidateQueries({ queryKey: ['participant-executions', pid] })
@@ -276,6 +279,7 @@ export function SimulationRunProvider({
     subject: string
     content: string
     parentEmailId?: string
+    replyToEmailId?: string
   }) => {
     if (!participantId.trim()) {
       toast.error('Choose an active simulation session.')
@@ -287,6 +291,7 @@ export function SimulationRunProvider({
       subject: input.subject,
       content: input.content,
       parentEmailId: input.parentEmailId,
+      replyToEmailId: input.replyToEmailId,
     })
   }
 

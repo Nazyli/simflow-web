@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronUp, Clock3, Play, RefreshCw, UserRound } from 'lucide-react'
 import { useState } from 'react'
 import { StatusBadge } from '../../shared/components/status-badge'
+import { ConversationGroupPicker } from './conversation-group-picker'
 import { useParticipantRuns } from './use-participant-runs'
 
 const STORAGE_KEY = 'simflow-runner-info-panel-visible'
@@ -124,6 +125,7 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
           <StatusBadge status="waiting" />
         </section>
       )}
+      {activeExecution && <ConversationGroupPicker execution={activeExecution} />}
 
       {(activeExecution?.status === 'completed' || activeExecution?.status === 'failed') && (
         <section className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
