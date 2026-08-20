@@ -76,6 +76,48 @@ function formatCancelDelta(dueAt: string, cancelledAt: string) {
       ? `${Math.abs(seconds)}s after due`
       : 'at due'
 }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+function formatConfigurationScalar(value: unknown) {
+  if (value === null) return 'None'
+  if (value === undefined) return 'Not available'
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  return String(value)
+}
+function ConfigurationValue({ value }: { value: unknown }) {
+  if (Array.isArray(value)) {
+    return value.length ? (
+      <ul className="grid gap-1.5">
+        {value.map((item, index) => (
+          <li key={index} className="grid grid-cols-[auto_minmax(0,1fr)] gap-2 text-xs text-slate-600">
+            <span className="font-semibold text-slate-400">{index}</span>
+            <ConfigurationValue value={item} />
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <span className="text-xs text-slate-400">No items</span>
+    )
+  }
+  if (isRecord(value)) {
+    return Object.keys(value).length ? (
+      <dl className="grid gap-2">
+        {Object.entries(value).map(([key, nestedValue]) => (
+          <div key={key} className="grid gap-1 sm:grid-cols-[minmax(120px,0.35fr)_1fr] sm:gap-3">
+            <dt className="break-words text-xs font-semibold text-slate-500">{key}</dt>
+            <dd className="min-w-0 break-words text-xs text-slate-700">
+              <ConfigurationValue value={nestedValue} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    ) : (
+      <span className="text-xs text-slate-400">No fields</span>
+    )
+  }
+  return <span className="text-xs text-slate-700">{formatConfigurationScalar(value)}</span>
+}
 function progress(timer: WorkflowTimer, now: number) {
   const start = parseServerTime(timer.created_date).getTime()
   const due = parseServerTime(timer.due_at).getTime()
@@ -273,14 +315,36 @@ export function TimerManagementPage() {
       id: 'node',
       header: 'Node',
       cell: (timer) => (
-        <span
-          className="block max-w-[170px] truncate font-mono text-xs text-slate-500"
-          title={timer.node_id}
-        >
-          {timer.node_id}
-        </span>
+        <div className="min-w-[150px]">
+          <span className="block truncate text-xs font-semibold text-slate-700" title={timer.node_name ?? undefined}>
+            {timer.node_name ?? 'Node unavailable'}
+          </span>
+          <span className="block truncate font-mono text-[10px] text-slate-400" title={timer.node_type ?? undefined}>
+            {timer.node_type ?? 'Unknown type'}
+          </span>
+        </div>
       ),
-      filterValue: (timer) => timer.node_id,
+      filterValue: (timer) => `${timer.node_name ?? ''} ${timer.node_type ?? ''}`,
+    },
+    {
+      id: 'participant',
+      header: 'Participant ID',
+      cell: (timer) => <span className="font-mono text-xs text-slate-600">{timer.participant_id ?? 'Unavailable'}</span>,
+      filterValue: (timer) => timer.participant_id ?? '',
+    },
+    {
+      id: 'workflow',
+      header: 'Workflow',
+      cell: (timer) => (
+        <span className="block max-w-[180px] truncate text-xs text-slate-700">{timer.workflow_name ?? 'Unavailable'}</span>
+      ),
+      filterValue: (timer) => timer.workflow_name ?? '',
+    },
+    {
+      id: 'version',
+      header: 'Version',
+      cell: (timer) => <span className="text-xs text-slate-600">{timer.workflow_version ? `v${timer.workflow_version}` : 'Unavailable'}</span>,
+      sortValue: (timer) => timer.workflow_version ?? -1,
     },
     {
       id: 'actions',
@@ -569,8 +633,18 @@ function TimerDetail({ timer, onClose }: { timer: WorkflowTimer | null; onClose:
             <dt className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
               Execution / node
             </dt>
-            <dd className="truncate font-mono text-xs text-slate-600">
-              {timer?.execution_id} · {timer?.node_id}
+            <dd className="grid gap-1 font-mono text-xs text-slate-600">
+              <span>Execution: {timer?.execution_id ?? 'Unavailable'}</span>
+              <span>Node execution: {timer?.node_execution_id ?? 'Unavailable'}</span>
+              <span>
+                Node: {timer?.node_name ?? 'Unavailable'} ({timer?.node_type ?? 'Unknown type'})
+              </span>
+            </dd>
+          </div>
+          <div className="grid gap-2 border-t border-slate-100 pt-3">
+            <dt className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">Node configuration</dt>
+            <dd className="rounded-lg bg-slate-50 p-3">
+              <ConfigurationValue value={timer?.node_configuration} />
             </dd>
           </div>
         </dl>

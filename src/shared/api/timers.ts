@@ -2,9 +2,16 @@ import { apiClient } from './client'
 
 export type WorkflowTimer = {
   timer_id: string
+  node_execution_id: string
   session_id: string | null
-  execution_id: string
-  node_id: string
+  execution_id: string | null
+  node_id: string | null
+  node_type: string | null
+  node_name: string | null
+  node_configuration: Record<string, unknown> | null
+  participant_id: string | null
+  workflow_name: string | null
+  workflow_version: number | null
   status: string
   due_at: string
   attempt_count: number
