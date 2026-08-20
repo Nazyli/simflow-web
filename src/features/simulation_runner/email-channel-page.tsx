@@ -1,16 +1,19 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import {
   getEmailInbox,
   getEmailThreadMessages,
+  markEmailAttachmentOpened,
   type EmailInboxThreadItem,
   type EmailMessage as ApiEmailMessage,
+  type RuntimeEmailAttachment,
 } from '../../shared/api/email'
 import { EmailWorkspace } from './email/email-workspace'
-import type { EmailInboxThread, EmailMessage } from './email/types'
+import type { EmailAttachment, EmailInboxThread, EmailMessage } from './email/types'
 import { useSimulationRun } from './simulation-run-context'
 
 export function EmailChannelPage() {
+  const queryClient = useQueryClient()
   const { participantId, runnerParticipantId, isEmailPending, sendEmail, markEmailThreadRead } =
     useSimulationRun()
 
@@ -29,6 +32,7 @@ export function EmailChannelPage() {
     session_id: message.session_id,
     workflow_version_id: message.workflow_version_id ?? undefined,
     is_unread: message.is_read === false,
+    attachments: message.attachments ?? [],
   })
 
   const toEmailThread = (item: EmailInboxThreadItem): EmailInboxThread => ({
@@ -54,6 +58,7 @@ export function EmailChannelPage() {
 
   const [selectedRootId, setSelectedRootId] = useState<string | null>(null)
   const [readPendingThreads, setReadPendingThreads] = useState<ReadonlySet<string>>(new Set())
+  const [openingAttachmentIds, setOpeningAttachmentIds] = useState<ReadonlySet<string>>(new Set())
 
   const selectedThread = threads.find((t) => t.rootId === selectedRootId) ?? null
 
@@ -61,17 +66,58 @@ export function EmailChannelPage() {
   const threadVersionId = selectedThread?.workflowVersionId ?? null
   const threadMessagesQuery = useQuery({
     queryKey: ['email-thread-messages', participantId, threadVersionId, selectedRootId],
-    queryFn: () =>
-      getEmailThreadMessages(participantId, threadVersionId!, selectedRootId!),
+    queryFn: () => getEmailThreadMessages(participantId, threadVersionId!, selectedRootId!),
     enabled: Boolean(
       participantId.trim() &&
-        threadVersionId &&
-        selectedRootId &&
-        !readPendingThreads.has(selectedRootId),
+      threadVersionId &&
+      selectedRootId &&
+      !readPendingThreads.has(selectedRootId),
     ),
   })
 
   const visibleMessages: EmailMessage[] = (threadMessagesQuery.data ?? []).map(toEmailMessage)
+
+  const attachmentOpenMutation = useMutation({
+    mutationFn: ({
+      attachmentId,
+      participantEmailId,
+    }: {
+      attachmentId: string
+      participantEmailId: string
+    }) =>
+      markEmailAttachmentOpened(attachmentId, participantId, threadVersionId!, participantEmailId),
+    onSuccess: (
+      openedAttachment: RuntimeEmailAttachment,
+      { participantEmailId }: { attachmentId: string; participantEmailId: string },
+    ) => {
+      queryClient.setQueryData<ApiEmailMessage[]>(
+        ['email-thread-messages', participantId, threadVersionId, selectedRootId],
+        (messages) =>
+          messages?.map((message) =>
+            message.participant_email_id === participantEmailId
+              ? {
+                  ...message,
+                  attachments: message.attachments.map((attachment) =>
+                    attachment.attachment_id === openedAttachment.attachment_id
+                      ? openedAttachment
+                      : attachment,
+                  ),
+                }
+              : message,
+          ),
+      )
+    },
+    onMutate: ({ attachmentId }) => {
+      setOpeningAttachmentIds((current) => new Set(current).add(attachmentId))
+    },
+    onSettled: (_data, _error, { attachmentId }) => {
+      setOpeningAttachmentIds((current) => {
+        const next = new Set(current)
+        next.delete(attachmentId)
+        return next
+      })
+    },
+  })
 
   const disabled = isEmailPending
 
@@ -91,6 +137,20 @@ export function EmailChannelPage() {
     event.currentTarget.reset()
   }
 
+  function openAttachment(message: EmailMessage, attachment: EmailAttachment) {
+    if (
+      !threadVersionId ||
+      !message.message_id ||
+      attachment.opened_at ||
+      openingAttachmentIds.has(attachment.attachment_id)
+    )
+      return
+    attachmentOpenMutation.mutate({
+      attachmentId: attachment.attachment_id,
+      participantEmailId: message.message_id,
+    })
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
       <EmailWorkspace
@@ -102,6 +162,8 @@ export function EmailChannelPage() {
         selectedThread={selectedThread}
         disabled={disabled}
         onSubmit={submit}
+        openingAttachmentIds={openingAttachmentIds}
+        onOpenAttachment={openAttachment}
         onConversationOpen={(rootId) => {
           const thread = threads.find((t) => t.rootId === rootId)
           if (thread && thread.unreadCount > 0 && thread.workflowVersionId) {
@@ -116,6 +178,11 @@ export function EmailChannelPage() {
           }
         }}
       />
+      {attachmentOpenMutation.isError ? (
+        <p className="text-xs text-red-600" role="alert">
+          Unable to record the attachment opening. Please try again.
+        </p>
+      ) : null}
     </div>
   )
 }

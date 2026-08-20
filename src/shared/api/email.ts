@@ -1,5 +1,14 @@
 import { apiClient } from './client'
 
+export interface RuntimeEmailAttachment {
+  attachment_id: string
+  master_attachment_id: string
+  doc_content_id: string | null
+  document_id: string | null
+  document_name: string
+  opened_at: string | null
+}
+
 export interface EmailMessage {
   participant_email_id: string
   session_id: string
@@ -17,6 +26,7 @@ export interface EmailMessage {
   is_read: boolean
   read_at: string | null
   created_date: string
+  attachments: RuntimeEmailAttachment[]
 }
 
 export interface EmailWorkflowItem {
@@ -100,3 +110,20 @@ export const markEmailThreadAsRead = (
     `/runner/email/mark-thread-read?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}&root_id=${encodeURIComponent(rootId)}`,
     { method: 'POST' },
   )
+
+export const markEmailAttachmentOpened = (
+  attachmentId: string,
+  participantId: string,
+  workflowVersionId: string,
+  participantEmailId: string,
+) => {
+  const params = new URLSearchParams({
+    participant_id: participantId,
+    workflow_version_id: workflowVersionId,
+    participant_email_id: participantEmailId,
+  })
+  return apiClient<RuntimeEmailAttachment>(
+    `/runner/email/attachments/${encodeURIComponent(attachmentId)}/opened?${params.toString()}`,
+    { method: 'POST' },
+  )
+}

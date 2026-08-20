@@ -1,14 +1,38 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Copy, GitBranch, Plus, Save, Sliders, Trash2, X } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select'
 import { Textarea } from '../../components/ui/textarea'
+import { getStudioMasterEmail, type MasterEmailAttachment } from '../../shared/api/master-data'
 import type { NodeDefinition } from '../../shared/types/workflow'
 import { MasterPickerField } from './pickers/master-picker-field'
 
 type Configuration = Record<string, unknown>
+
+type GraphNode = {
+  node_id: string
+  node_name: string
+  node_type: string
+  parameters: Configuration
+}
+
+const attachmentOpenParameterNames = new Set([
+  'source_send_email_node_id',
+  'attachment_selection',
+  'attachment_ids',
+  'completion_mode',
+  'minimum_opened',
+])
 
 export function NodeConfigurationForm({
   node,
@@ -16,8 +40,10 @@ export function NodeConfigurationForm({
   onSave,
   onDuplicate,
   onDelete,
+  graphNodes = [],
 }: {
   node: {
+    node_id?: string
     node_name: string
     node_type: string
     configuration: Configuration
@@ -27,6 +53,7 @@ export function NodeConfigurationForm({
   onSave: (name: string, configuration: Configuration) => void
   onDuplicate: () => void
   onDelete: () => void
+  graphNodes?: GraphNode[]
 }) {
   const [name, setName] = useState(node.node_name)
   const [configuration, setConfiguration] = useState<Configuration>({
@@ -50,14 +77,18 @@ export function NodeConfigurationForm({
     const required = Object.entries(definition?.validation_rules ?? {})
       .filter(([, rule]) => isRequired(rule as Record<string, unknown>, configuration))
       .map(([key]) => key)
-    const missing = required.filter(
-      (key) =>
-        configuration[key] === '' ||
-        configuration[key] === null ||
-        configuration[key] === undefined,
-    )
+    const missing = required.filter((key) => isMissing(configuration[key]))
     if (missing.length) {
       setError(`Required parameter: ${missing.join(', ')}`)
+      return
+    }
+    const attachmentOpenError = validateAttachmentOpenConfiguration(
+      node.node_type,
+      configuration,
+      graphNodes,
+    )
+    if (attachmentOpenError) {
+      setError(attachmentOpenError)
       return
     }
     onSave(name, configuration)
@@ -100,6 +131,11 @@ export function NodeConfigurationForm({
       ) : null}
       {definition ? (
         Object.entries(definition.parameters)
+          .filter(
+            ([key]) =>
+              node.node_type !== 'wait_for_attachment_open' ||
+              !attachmentOpenParameterNames.has(key),
+          )
           .filter(([key]) =>
             isVisible(
               definition.validation_rules[key] as Record<string, unknown> | undefined,
@@ -124,6 +160,13 @@ export function NodeConfigurationForm({
       ) : (
         <p className="text-xs text-amber-700">Node definition is unavailable from the catalog.</p>
       )}
+      {node.node_type === 'wait_for_attachment_open' ? (
+        <AttachmentOpenConfigurationFields
+          configuration={configuration}
+          graphNodes={graphNodes}
+          onChange={(patch) => setConfiguration((current) => ({ ...current, ...patch }))}
+        />
+      ) : null}
       {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="grid gap-2">
         <Button type="submit" className="w-full">
@@ -139,6 +182,215 @@ export function NodeConfigurationForm({
         </div>
       </div>
     </form>
+  )
+}
+
+function isMissing(value: unknown): boolean {
+  return (
+    value === '' ||
+    value === null ||
+    value === undefined ||
+    (Array.isArray(value) && value.length === 0)
+  )
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : []
+}
+
+function validateAttachmentOpenConfiguration(
+  nodeType: string,
+  configuration: Configuration,
+  graphNodes: GraphNode[],
+): string | null {
+  if (nodeType !== 'wait_for_attachment_open') return null
+  const sourceNodeId = configuration.source_send_email_node_id
+  const sourceNode = graphNodes.find(
+    (candidate) => candidate.node_id === sourceNodeId && candidate.node_type === 'send_email',
+  )
+  if (!sourceNode) return 'Choose a source Send Email node.'
+  if (typeof sourceNode.parameters.email_id !== 'string' || !sourceNode.parameters.email_id.trim())
+    return 'The selected Send Email node must have an email template.'
+  const selection = configuration.attachment_selection
+  const attachmentIds = stringArray(configuration.attachment_ids)
+  if (selection === 'selected' && !attachmentIds.length)
+    return 'Select at least one attachment to monitor.'
+  if (selection === 'all' && attachmentIds.length)
+    return 'All attachments uses an empty attachment list.'
+  if (new Set(attachmentIds).size !== attachmentIds.length)
+    return 'An attachment may only be selected once.'
+  if (configuration.completion_mode === 'minimum') {
+    const minimumOpened = Number(configuration.minimum_opened)
+    if (!Number.isInteger(minimumOpened) || minimumOpened < 1)
+      return 'Minimum opened attachments must be at least 1.'
+    if (selection === 'selected' && minimumOpened > attachmentIds.length)
+      return 'Minimum opened attachments cannot exceed the selected attachments.'
+  }
+  return null
+}
+
+function AttachmentOpenConfigurationFields({
+  configuration,
+  graphNodes,
+  onChange,
+}: {
+  configuration: Configuration
+  graphNodes: GraphNode[]
+  onChange: (patch: Configuration) => void
+}) {
+  const sourceNodes = graphNodes.filter((candidate) => candidate.node_type === 'send_email')
+  const sourceNodeId =
+    typeof configuration.source_send_email_node_id === 'string'
+      ? configuration.source_send_email_node_id
+      : ''
+  const sourceNode = sourceNodes.find((candidate) => candidate.node_id === sourceNodeId)
+  const emailId =
+    typeof sourceNode?.parameters.email_id === 'string' ? sourceNode.parameters.email_id : ''
+  const emailDetail = useQuery({
+    queryKey: ['studio-master-email', emailId],
+    queryFn: () => getStudioMasterEmail(emailId),
+    enabled: Boolean(emailId),
+  })
+  const attachments = emailDetail.data?.attachments ?? []
+  const attachmentSelection = configuration.attachment_selection === 'all' ? 'all' : 'selected'
+  const attachmentIds = stringArray(configuration.attachment_ids)
+  const completionMode = configuration.completion_mode === 'all' ? 'all' : 'minimum'
+  const minimumOpened = Number(configuration.minimum_opened ?? 1)
+
+  function updateAttachment(attachmentId: string, checked: boolean) {
+    const next = checked
+      ? [...attachmentIds, attachmentId]
+      : attachmentIds.filter((candidate) => candidate !== attachmentId)
+    onChange({ attachment_ids: next })
+  }
+
+  return (
+    <div className="grid gap-4 rounded-lg border border-emerald-100 bg-emerald-50/40 p-3">
+      <div className="grid gap-1.5">
+        <Label htmlFor="source-send-email-node">Source email</Label>
+        <Select
+          value={sourceNodeId || undefined}
+          onValueChange={(value) =>
+            onChange({ source_send_email_node_id: value, attachment_ids: [] })
+          }
+        >
+          <SelectTrigger id="source-send-email-node" className="w-full bg-white">
+            <SelectValue placeholder="Choose a Send Email node" />
+          </SelectTrigger>
+          <SelectContent>
+            {sourceNodes.map((candidate) => (
+              <SelectItem key={candidate.node_id} value={candidate.node_id}>
+                {candidate.node_name}
+                {typeof candidate.parameters.email_id === 'string'
+                  ? ` (${candidate.parameters.email_id})`
+                  : ''}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {!sourceNodes.length ? (
+          <p className="text-xs text-amber-700">Add and configure a Send Email node first.</p>
+        ) : null}
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="attachment-selection">Attachments to monitor</Label>
+        <Select
+          value={attachmentSelection}
+          onValueChange={(value) =>
+            onChange({
+              attachment_selection: value,
+              attachment_ids: [],
+            })
+          }
+          disabled={!emailId}
+        >
+          <SelectTrigger id="attachment-selection" className="w-full bg-white">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="selected">Selected attachments</SelectItem>
+            <SelectItem value="all">All attachments in this email</SelectItem>
+          </SelectContent>
+        </Select>
+        {attachmentSelection === 'all' ? (
+          <p className="text-xs text-slate-600">
+            Every attachment on the sent email will be monitored at runtime.
+          </p>
+        ) : emailDetail.isLoading ? (
+          <p className="text-xs text-slate-600">Loading source email attachments…</p>
+        ) : emailDetail.isError ? (
+          <p className="text-xs text-red-600">Unable to load source email attachments.</p>
+        ) : emailId && !attachments.length ? (
+          <p className="text-xs text-amber-700">The selected email has no attachments.</p>
+        ) : (
+          <AttachmentPicker
+            attachments={attachments}
+            selectedIds={attachmentIds}
+            disabled={!emailId}
+            onChange={updateAttachment}
+          />
+        )}
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="completion-mode">Completion</Label>
+        <Select
+          value={completionMode}
+          onValueChange={(value) => onChange({ completion_mode: value })}
+          disabled={!emailId}
+        >
+          <SelectTrigger id="completion-mode" className="w-full bg-white">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="minimum">At least N attachments opened</SelectItem>
+            <SelectItem value="all">All qualifying attachments opened</SelectItem>
+          </SelectContent>
+        </Select>
+        {completionMode === 'minimum' ? (
+          <TextField
+            label="Minimum opened attachments"
+            value={minimumOpened}
+            type="number"
+            required
+            onChange={(value) => onChange({ minimum_opened: Number(value) })}
+          />
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function AttachmentPicker({
+  attachments,
+  selectedIds,
+  disabled,
+  onChange,
+}: {
+  attachments: MasterEmailAttachment[]
+  selectedIds: string[]
+  disabled: boolean
+  onChange: (attachmentId: string, checked: boolean) => void
+}) {
+  return (
+    <div className="space-y-2 rounded-md border border-emerald-100 bg-white p-2">
+      {attachments.map((attachment) => (
+        <label
+          key={attachment.attachment_id}
+          className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-emerald-50"
+        >
+          <Checkbox
+            checked={selectedIds.includes(attachment.attachment_id)}
+            disabled={disabled}
+            onCheckedChange={(checked) => onChange(attachment.attachment_id, checked === true)}
+          />
+          <span>{attachment.document_name}</span>
+        </label>
+      ))}
+    </div>
   )
 }
 

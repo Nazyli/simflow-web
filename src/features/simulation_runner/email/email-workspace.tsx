@@ -4,7 +4,7 @@ import { ConversationBody } from './conversation-body'
 import { ConversationHeader } from './conversation-header'
 import { ConversationSidebar } from './conversation-sidebar'
 import { MessageComposer } from './message-composer'
-import type { EmailInboxThread, EmailMessage } from './types'
+import type { EmailAttachment, EmailInboxThread, EmailMessage } from './types'
 
 export interface EmailWorkspaceProps {
   participantId: string
@@ -16,6 +16,8 @@ export interface EmailWorkspaceProps {
   disabled: boolean
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onConversationOpen?: (rootId: string) => void
+  openingAttachmentIds: ReadonlySet<string>
+  onOpenAttachment: (message: EmailMessage, attachment: EmailAttachment) => void
 }
 
 export function EmailWorkspace({
@@ -28,9 +30,11 @@ export function EmailWorkspace({
   disabled,
   onSubmit,
   onConversationOpen,
+  openingAttachmentIds,
+  onOpenAttachment,
 }: EmailWorkspaceProps) {
   return (
-    <section className="col-span-full flex min-h-[540px] flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-[#e8eaed] bg-white shadow-sm">
+    <section className="col-span-full flex min-h-0 min-h-[540px] flex-1 flex-col overflow-hidden rounded-xl border border-[#e8eaed] bg-white shadow-sm">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
         <ConversationSidebar
           threads={threads}
@@ -47,6 +51,8 @@ export function EmailWorkspace({
               <ConversationBody
                 messages={messages}
                 participantId={participantId}
+                openingAttachmentIds={openingAttachmentIds}
+                onOpenAttachment={onOpenAttachment}
               />
               <MessageComposer
                 target={selectedThread.latestSenderId}

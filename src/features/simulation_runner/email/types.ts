@@ -14,6 +14,13 @@ export interface EmailMessage {
   workflow_label?: string
   workflow_version_id?: string
   is_unread?: boolean
+  attachments: EmailAttachment[]
+}
+
+export interface EmailAttachment {
+  attachment_id: string
+  document_name: string
+  opened_at: string | null
 }
 
 export interface EmailWorkflow {

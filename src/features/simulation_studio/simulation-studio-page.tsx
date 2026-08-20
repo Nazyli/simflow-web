@@ -875,7 +875,10 @@ export function SimulationStudioPage() {
       is_valid: true,
     }
     pendingEdgeKeys.current.add(connectionKey)
-    setEdges((current) => [...current, edgeToFlow(pendingEdge, sourcePort, deleteEdge, edgePathType)])
+    setEdges((current) => [
+      ...current,
+      edgeToFlow(pendingEdge, sourcePort, deleteEdge, edgePathType),
+    ])
     addWorkflowEdge(versionId, {
       source_node_id: connection.source,
       source_port_id: connection.sourceHandle,
@@ -1160,7 +1163,9 @@ export function SimulationStudioPage() {
               </p>
 
               {(nodeCatalog.data?.categories ?? []).map((cat) => {
-                const catNodes = (nodeCatalog.data?.nodes ?? []).filter((n) => n.category === cat.id)
+                const catNodes = (nodeCatalog.data?.nodes ?? []).filter(
+                  (n) => n.category === cat.id,
+                )
                 if (catNodes.length === 0) return null
                 return (
                   <Fragment key={cat.id}>
@@ -1327,7 +1332,7 @@ export function SimulationStudioPage() {
               <select
                 value={edgePathType}
                 onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
-                className="h-8 cursor-pointer rounded-lg border border-slate-200 bg-white px-1.5 text-xs text-slate-600 outline-none transition-colors hover:bg-slate-50"
+                className="h-8 cursor-pointer rounded-lg border border-slate-200 bg-white px-1.5 text-xs text-slate-600 transition-colors outline-none hover:bg-slate-50"
                 title="Edge path style"
               >
                 <option value="default">Bezier</option>
@@ -1492,6 +1497,7 @@ export function SimulationStudioPage() {
                   <NodeConfigurationForm
                     node={{ ...selectedNode, configuration: selectedNode.parameters }}
                     definition={definitions.get(selectedNode.node_type)}
+                    graphNodes={apiNodes}
                     onSave={saveStructuredNode}
                     onDuplicate={() => duplicateGraphNode.mutate(selectedNode)}
                     onDelete={() => removeNode.mutate(selectedNode.node_id)}

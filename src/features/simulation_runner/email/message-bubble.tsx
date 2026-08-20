@@ -1,26 +1,34 @@
+import { Check, FileText, LoaderCircle } from 'lucide-react'
 import { isOwnEmail, formatEmailDate } from './utils'
-import type { EmailMessage } from './types'
+import type { EmailAttachment, EmailMessage } from './types'
 
 interface MessageBubbleProps {
   message: EmailMessage
   participantId: string
+  openingAttachmentIds: ReadonlySet<string>
+  onOpenAttachment: (message: EmailMessage, attachment: EmailAttachment) => void
 }
 
 function avatarColor(message: EmailMessage, participantId: string): string {
   return isOwnEmail(message, participantId) ? '#039be5' : '#5b46c5'
 }
 
-export function MessageBubble({ message, participantId }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  participantId,
+  openingAttachmentIds,
+  onOpenAttachment,
+}: MessageBubbleProps) {
   const isOwn = isOwnEmail(message, participantId)
   const bgColor = avatarColor(message, participantId)
 
   const senderName = message.from || message.actor || 'Unknown'
 
   return (
-    <article className="bg-white border-t border-slate-200">
+    <article className="border-t border-slate-200 bg-white">
       {/* Subject */}
       <div className="px-5 pt-4 pb-1.5">
-        <h2 className="text-base font-semibold leading-snug text-slate-600">
+        <h2 className="text-base leading-snug font-semibold text-slate-600">
           {message.subject || '(No subject)'}
         </h2>
       </div>
@@ -35,35 +43,31 @@ export function MessageBubble({ message, participantId }: MessageBubbleProps) {
           >
             {senderName.charAt(0).toUpperCase()}
           </span>
-          <div className="flex-1 min-w-0 space-y-0.5">
+          <div className="min-w-0 flex-1 space-y-0.5">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-slate-600">
-                {senderName}
-              </span>
+              <span className="text-sm font-semibold text-slate-600">{senderName}</span>
               {isOwn && (
-                <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
                   You
                 </span>
               )}
               {message.workflow_label && (
-                <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600">
                   {message.workflow_label}
                 </span>
               )}
-              <time className="ml-auto text-xs text-slate-400 shrink-0">
+              <time className="ml-auto shrink-0 text-xs text-slate-400">
                 {formatEmailDate(message.timestamp)}
               </time>
             </div>
             {message.to.length > 0 && (
               <div className="text-xs text-slate-500">
-                <span className="font-medium text-slate-600">To:</span>{' '}
-                {message.to.join(', ')}
+                <span className="font-medium text-slate-600">To:</span> {message.to.join(', ')}
               </div>
             )}
             {message.cc.length > 0 && (
               <div className="text-xs text-slate-500">
-                <span className="font-medium text-slate-600">Cc:</span>{' '}
-                {message.cc.join(', ')}
+                <span className="font-medium text-slate-600">Cc:</span> {message.cc.join(', ')}
               </div>
             )}
           </div>
@@ -72,10 +76,42 @@ export function MessageBubble({ message, participantId }: MessageBubbleProps) {
 
       {/* Body */}
       <div className="px-5 py-4">
-        <p className="text-[13px] leading-[1.7] text-slate-700 whitespace-pre-wrap">
+        <p className="text-[13px] leading-[1.7] whitespace-pre-wrap text-slate-700">
           {message.content}
         </p>
       </div>
+      {message.attachments.length ? (
+        <div className="border-t border-slate-100 px-5 py-3">
+          <p className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+            Attachments
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {message.attachments.map((attachment) => {
+              const isOpened = Boolean(attachment.opened_at)
+              const isOpening = openingAttachmentIds.has(attachment.attachment_id)
+              return (
+                <button
+                  key={attachment.attachment_id}
+                  type="button"
+                  disabled={isOpened || isOpening}
+                  onClick={() => onOpenAttachment(message, attachment)}
+                  className="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium text-slate-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-default disabled:opacity-70"
+                >
+                  {isOpening ? (
+                    <LoaderCircle className="size-4 shrink-0 animate-spin" aria-hidden="true" />
+                  ) : isOpened ? (
+                    <Check className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                  ) : (
+                    <FileText className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
+                  )}
+                  <span className="truncate">{attachment.document_name}</span>
+                  {isOpened ? <span className="text-emerald-700">Opened</span> : null}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
     </article>
   )
 }
