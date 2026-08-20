@@ -18,9 +18,40 @@ export interface EmailMessage {
 }
 
 export interface EmailAttachment {
-  attachment_id: string
-  document_name: string
+  email_attachment_id: string
+  participant_email_id: string
+  participant_doc_id: string | null
+  master_attachment_id: string | null
+  document_id: string | null
+  file_name: string | null
+  is_highlight: boolean
+  owner_name: string | null
   opened_at: string | null
+  modified_date: string | null
+  contents: EmailAttachmentContent[]
+}
+
+export interface EmailAttachmentContent {
+  participant_attachment_email_id: string
+  email_attachment_id: string
+  participant_doc_content_id: string | null
+  page: number | null
+  content: string | null
+  is_highlight: boolean
+  owner_name: string | null
+}
+
+export function sortAttachmentPreviewPages<T extends EmailAttachmentContent>(
+  contents: readonly T[],
+): T[] {
+  return [...contents].sort((first, second) => {
+    const firstPage = first.page ?? Number.MAX_SAFE_INTEGER
+    const secondPage = second.page ?? Number.MAX_SAFE_INTEGER
+    return (
+      firstPage - secondPage ||
+      first.participant_attachment_email_id.localeCompare(second.participant_attachment_email_id)
+    )
+  })
 }
 
 export interface EmailWorkflow {

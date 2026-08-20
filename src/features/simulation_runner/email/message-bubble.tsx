@@ -88,12 +88,12 @@ export function MessageBubble({
           <div className="flex flex-wrap gap-2">
             {message.attachments.map((attachment) => {
               const isOpened = Boolean(attachment.opened_at)
-              const isOpening = openingAttachmentIds.has(attachment.attachment_id)
+              const isOpening = openingAttachmentIds.has(attachment.email_attachment_id)
               return (
                 <button
-                  key={attachment.attachment_id}
+                  key={attachment.email_attachment_id}
                   type="button"
-                  disabled={isOpened || isOpening}
+                  disabled={isOpening}
                   onClick={() => onOpenAttachment(message, attachment)}
                   className="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium text-slate-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-default disabled:opacity-70"
                 >
@@ -104,7 +104,7 @@ export function MessageBubble({
                   ) : (
                     <FileText className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   )}
-                  <span className="truncate">{attachment.document_name}</span>
+                  <span className="truncate">{attachment.file_name ?? 'Attachment'}</span>
                   {isOpened ? <span className="text-emerald-700">Opened</span> : null}
                 </button>
               )

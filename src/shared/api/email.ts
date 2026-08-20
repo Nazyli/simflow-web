@@ -1,12 +1,27 @@
 import { apiClient } from './client'
 
+export interface RuntimeEmailAttachmentContent {
+  participant_attachment_email_id: string
+  email_attachment_id: string
+  participant_doc_content_id: string | null
+  page: number | null
+  content: string | null
+  is_highlight: boolean
+  owner_name: string | null
+}
+
 export interface RuntimeEmailAttachment {
-  attachment_id: string
-  master_attachment_id: string
-  doc_content_id: string | null
+  email_attachment_id: string
+  participant_email_id: string
+  participant_doc_id: string | null
+  master_attachment_id: string | null
   document_id: string | null
-  document_name: string
+  file_name: string | null
+  is_highlight: boolean
+  owner_name: string | null
   opened_at: string | null
+  modified_date: string | null
+  contents: RuntimeEmailAttachmentContent[]
 }
 
 export interface EmailMessage {

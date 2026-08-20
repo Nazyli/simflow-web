@@ -8,6 +8,7 @@ import {
   type EmailMessage as ApiEmailMessage,
   type RuntimeEmailAttachment,
 } from '../../shared/api/email'
+import { AttachmentPreviewDialog } from './email/attachment-preview-dialog'
 import { EmailWorkspace } from './email/email-workspace'
 import type { EmailAttachment, EmailInboxThread, EmailMessage } from './email/types'
 import { useSimulationRun } from './simulation-run-context'
@@ -59,6 +60,7 @@ export function EmailChannelPage() {
   const [selectedRootId, setSelectedRootId] = useState<string | null>(null)
   const [readPendingThreads, setReadPendingThreads] = useState<ReadonlySet<string>>(new Set())
   const [openingAttachmentIds, setOpeningAttachmentIds] = useState<ReadonlySet<string>>(new Set())
+  const [previewAttachment, setPreviewAttachment] = useState<EmailAttachment | null>(null)
 
   const selectedThread = threads.find((t) => t.rootId === selectedRootId) ?? null
 
@@ -98,7 +100,7 @@ export function EmailChannelPage() {
               ? {
                   ...message,
                   attachments: message.attachments.map((attachment) =>
-                    attachment.attachment_id === openedAttachment.attachment_id
+                    attachment.email_attachment_id === openedAttachment.email_attachment_id
                       ? openedAttachment
                       : attachment,
                   ),
@@ -106,6 +108,7 @@ export function EmailChannelPage() {
               : message,
           ),
       )
+      setPreviewAttachment(openedAttachment)
     },
     onMutate: ({ attachmentId }) => {
       setOpeningAttachmentIds((current) => new Set(current).add(attachmentId))
@@ -141,12 +144,15 @@ export function EmailChannelPage() {
     if (
       !threadVersionId ||
       !message.message_id ||
-      attachment.opened_at ||
-      openingAttachmentIds.has(attachment.attachment_id)
+      openingAttachmentIds.has(attachment.email_attachment_id)
     )
       return
+    if (attachment.opened_at) {
+      setPreviewAttachment(attachment)
+      return
+    }
     attachmentOpenMutation.mutate({
-      attachmentId: attachment.attachment_id,
+      attachmentId: attachment.email_attachment_id,
       participantEmailId: message.message_id,
     })
   }
@@ -178,6 +184,15 @@ export function EmailChannelPage() {
           }
         }}
       />
+      {previewAttachment ? (
+        <AttachmentPreviewDialog
+          attachment={previewAttachment}
+          open
+          onOpenChange={(open) => {
+            if (!open) setPreviewAttachment(null)
+          }}
+        />
+      ) : null}
       {attachmentOpenMutation.isError ? (
         <p className="text-xs text-red-600" role="alert">
           Unable to record the attachment opening. Please try again.
