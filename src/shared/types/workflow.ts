@@ -57,6 +57,7 @@ export interface ParameterPicker {
 }
 export interface ParameterOption {
   picker?: ParameterPicker
+  select?: { id: string; label: string }[]
 }
 export interface NodeDefinition {
   node_type: string

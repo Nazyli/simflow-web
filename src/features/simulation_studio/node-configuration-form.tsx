@@ -437,9 +437,35 @@ function CatalogParameterField({
   onChange: (value: unknown) => void
 }) {
   const label = name.replaceAll('_', ' ')
+  const select = definition?.parameter_options?.[name]?.select
   const picker = definition?.parameter_options?.[name]?.picker
   if (name === 'groups')
     return <ConversationGroupGroupsField value={value} required={required} onChange={onChange} />
+  if (select)
+    return (
+      <div className="grid gap-1.5">
+        <Label htmlFor={name} className="capitalize">
+          {label}
+        </Label>
+        <Select
+          name={name}
+          required={required}
+          value={typeof value === 'string' && value ? value : undefined}
+          onValueChange={onChange}
+        >
+          <SelectTrigger id={name} className="w-full">
+            <SelectValue placeholder={`Select ${label}`} />
+          </SelectTrigger>
+          <SelectContent>
+            {select.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    )
   if (picker)
     return (
       <MasterPickerField
