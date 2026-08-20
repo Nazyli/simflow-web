@@ -1495,6 +1495,7 @@ export function SimulationStudioPage() {
               <div className="space-y-4">
                 {selectedNode && (
                   <NodeConfigurationForm
+                    key={selectedNode.node_id}
                     node={{ ...selectedNode, configuration: selectedNode.parameters }}
                     definition={definitions.get(selectedNode.node_type)}
                     graphNodes={apiNodes}

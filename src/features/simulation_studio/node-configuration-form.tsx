@@ -271,7 +271,7 @@ function AttachmentOpenConfigurationFields({
       <div className="grid gap-1.5">
         <Label htmlFor="source-send-email-node">Source email</Label>
         <Select
-          value={sourceNodeId || undefined}
+          value={sourceNodeId}
           onValueChange={(value) =>
             onChange({ source_send_email_node_id: value, attachment_ids: [] })
           }
