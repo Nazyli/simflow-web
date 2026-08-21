@@ -54,6 +54,8 @@ export interface ParameterPicker {
   filter_field?: string
   filter_by?: string
   endpoint?: string
+  value_type?: 'array'
+  selection_mode?: 'append_one'
 }
 export interface ParameterOption {
   picker?: ParameterPicker

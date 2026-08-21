@@ -5,6 +5,7 @@ export interface RuntimeDocumentContent {
   simulation_document_id: string | null
   page: number | null
   content: string | null
+  content_md: string | null
   is_highlight: boolean
 }
 
