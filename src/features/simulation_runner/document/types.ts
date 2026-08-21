@@ -22,6 +22,7 @@ export interface SimulationDocument {
   openedAt: string | null
   summary: string
   content: string
+  pages: string[]
 }
 
 /** Visual metadata derived from document type. */
@@ -47,8 +48,10 @@ const SUMMARY_MAX_LENGTH = 160
 
 /** Convert a runtime document record from `/runner/documents` into the view model. */
 export function mapRuntimeDocument(record: RuntimeSimulationDocument): SimulationDocument {
-  const pages = record.contents.map((page) => page.content ?? '').filter((text) => text.length > 0)
-  const content = pages.join('\n\n')
+  const pageTexts = record.contents
+    .map((page) => page.content ?? '')
+    .filter((text) => text.length > 0)
+  const content = pageTexts.join('\n\n')
   return {
     id: record.simulation_document_id,
     title: record.document_name ?? 'Untitled document',
@@ -64,6 +67,7 @@ export function mapRuntimeDocument(record: RuntimeSimulationDocument): Simulatio
     summary:
       content.length > SUMMARY_MAX_LENGTH ? `${content.slice(0, SUMMARY_MAX_LENGTH)}…` : content,
     content,
+    pages: pageTexts.length > 0 ? pageTexts : [''],
   }
 }
 

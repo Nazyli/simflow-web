@@ -50,13 +50,24 @@ export function DocumentPreviewDialog({
           </div>
         </DialogHeader>
         <div className="overflow-y-auto bg-slate-100 p-4 sm:p-6">
-          <article className="mx-auto min-h-[720px] max-w-[680px] bg-white p-6 text-sm leading-7 whitespace-pre-wrap text-slate-700 shadow-sm sm:p-10">
-            {doc.content}
-          </article>
-          <p className="mt-4 text-center text-[11px] text-slate-400">
-            {doc.pageCount} page{doc.pageCount === 1 ? '' : 's'} · {typeMeta.label} · opened{' '}
-            {doc.openCount}×
-          </p>
+          <div className="mx-auto flex max-w-[680px] flex-col gap-5">
+            {doc.pages.map((page, index) => (
+              <section key={index}>
+                <article className="min-h-[720px] bg-white p-6 text-sm leading-7 whitespace-pre-wrap text-slate-700 shadow-sm sm:p-10">
+                  {page}
+                </article>
+                {doc.pages.length > 1 ? (
+                  <p className="mt-2 text-center text-[11px] text-slate-400">
+                    Page {index + 1} of {doc.pages.length}
+                  </p>
+                ) : null}
+              </section>
+            ))}
+            <p className="text-center text-[11px] text-slate-400">
+              {doc.pageCount} page{doc.pageCount === 1 ? '' : 's'} · {typeMeta.label} · opened{' '}
+              {doc.openCount}×
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
