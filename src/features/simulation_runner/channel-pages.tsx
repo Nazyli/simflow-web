@@ -1,5 +1,6 @@
 import { FileText, Mail, Phone } from 'lucide-react'
 import type { Channel } from './simulation-channels'
+import { DocumentChannelPage as DocumentChannelPageImpl } from './document-channel-page'
 import { EmailChannelPage as EmailChannelPageImpl } from './email-channel-page'
 
 const CONTENT: Record<
@@ -35,7 +36,7 @@ export function CallChannelPage() {
 }
 
 export function DocumentChannelPage() {
-  return <ChannelPlaceholder channel="document" />
+  return <DocumentChannelPageImpl />
 }
 
 function ChannelPlaceholder({ channel }: { channel: Exclude<Channel, 'chat'> }) {
