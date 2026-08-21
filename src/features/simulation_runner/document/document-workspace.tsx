@@ -1,4 +1,4 @@
-import { FileText, ExternalLink, Calendar, BookOpen, Search } from 'lucide-react'
+import { FileText, ExternalLink, Calendar, BookOpen, Eye, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { inputClass } from '../../../shared/form-classes'
 import { DOCUMENT_STATUS_META, DOCUMENT_TYPE_META, type SimulationDocument } from './types'
@@ -201,6 +201,7 @@ function DocumentDetail({
               />
             ) : null}
             <MetaCard icon={<FileText size={14} />} label="Pages" value={`${doc.pageCount}`} />
+            <MetaCard icon={<Eye size={14} />} label="Opened" value={`${doc.openCount}×`} />
             <MetaCard
               icon={<ExternalLink size={14} />}
               label="Shared by"

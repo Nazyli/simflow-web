@@ -18,6 +18,8 @@ export interface SimulationDocument {
   sharedBy: string
   sharedAt: string
   pageCount: number
+  openCount: number
+  openedAt: string | null
   summary: string
   content: string
 }
@@ -57,6 +59,8 @@ export function mapRuntimeDocument(record: RuntimeSimulationDocument): Simulatio
     sharedBy: record.owner ?? '',
     sharedAt: record.created_date,
     pageCount: record.contents.length,
+    openCount: record.counter,
+    openedAt: record.opened_at,
     summary:
       content.length > SUMMARY_MAX_LENGTH ? `${content.slice(0, SUMMARY_MAX_LENGTH)}…` : content,
     content,

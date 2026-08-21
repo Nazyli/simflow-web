@@ -54,7 +54,8 @@ export function DocumentPreviewDialog({
             {doc.content}
           </article>
           <p className="mt-4 text-center text-[11px] text-slate-400">
-            {doc.pageCount} page{doc.pageCount === 1 ? '' : 's'} · {typeMeta.label}
+            {doc.pageCount} page{doc.pageCount === 1 ? '' : 's'} · {typeMeta.label} · opened{' '}
+            {doc.openCount}×
           </p>
         </div>
       </DialogContent>
