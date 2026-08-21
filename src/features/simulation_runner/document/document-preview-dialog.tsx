@@ -1,14 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  DOCUMENT_STATUS_META,
-  DOCUMENT_TYPE_META,
-  type SimulationDocument,
-} from './types'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { DOCUMENT_STATUS_META, DOCUMENT_TYPE_META, type SimulationDocument } from './types'
 
 interface DocumentPreviewDialogProps {
   document: SimulationDocument
@@ -39,14 +30,21 @@ export function DocumentPreviewDialog({
               <DialogTitle className="truncate text-slate-800">{doc.title}</DialogTitle>
               <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
                 <span
-                  className={`inline-flex items-center rounded border px-1.5 py-px font-medium leading-4 ${statusMeta.className}`}
+                  className={`inline-flex items-center rounded border px-1.5 py-px leading-4 font-medium ${statusMeta.className}`}
                 >
                   {statusMeta.label}
                 </span>
                 <span className="text-slate-400">·</span>
                 <span>{doc.sharedBy}</span>
-                <span className="text-slate-400">·</span>
-                <span>{doc.workflowName} v{doc.versionNumber}</span>
+                {doc.workflowName ? (
+                  <>
+                    <span className="text-slate-400">·</span>
+                    <span>
+                      {doc.workflowName}
+                      {doc.versionNumber != null ? ` v${doc.versionNumber}` : ''}
+                    </span>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>

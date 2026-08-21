@@ -1,10 +1,4 @@
-import {
-  FileText,
-  ExternalLink,
-  Calendar,
-  BookOpen,
-  Search,
-} from 'lucide-react'
+import { FileText, ExternalLink, Calendar, BookOpen, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { inputClass } from '../../../shared/form-classes'
 import { DOCUMENT_STATUS_META, DOCUMENT_TYPE_META, type SimulationDocument } from './types'
@@ -34,7 +28,7 @@ export function DocumentWorkspace({
             doc.title.toLowerCase().includes(q) ||
             doc.summary.toLowerCase().includes(q) ||
             doc.sharedBy.toLowerCase().includes(q) ||
-            doc.workflowName.toLowerCase().includes(q),
+            (doc.workflowName ?? '').toLowerCase().includes(q),
         )
       : documents
   }, [documents, search])
@@ -43,7 +37,7 @@ export function DocumentWorkspace({
     <div className="flex min-h-[540px] flex-1 flex-col overflow-hidden rounded-xl border border-[#e8eaed] bg-white shadow-sm">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
         {/* Sidebar list */}
-        <aside className="flex shrink-0 flex-col border-b border-[#e8eaed] bg-white lg:w-[340px] lg:border-b-0 lg:border-r">
+        <aside className="flex shrink-0 flex-col border-b border-[#e8eaed] bg-white lg:w-[340px] lg:border-r lg:border-b-0">
           <p className="px-4 pt-3 pb-2 text-[10px] font-bold tracking-wider text-[#9aa0a6] uppercase">
             Documents
           </p>
@@ -74,7 +68,7 @@ export function DocumentWorkspace({
                     key={doc.id}
                     type="button"
                     onClick={() => onSelectDocument(doc.id)}
-                    className={`group flex w-full items-stretch gap-0 text-left transition-colors border-b border-[#e8eaed] last:border-b-0 hover:bg-[#f1f3f4] ${active ? 'bg-[#e8f0fe]' : 'bg-white'}`}
+                    className={`group flex w-full items-stretch gap-0 border-b border-[#e8eaed] text-left transition-colors last:border-b-0 hover:bg-[#f1f3f4] ${active ? 'bg-[#e8f0fe]' : 'bg-white'}`}
                   >
                     {/* Type ribbon */}
                     <span
@@ -102,7 +96,7 @@ export function DocumentWorkspace({
                         </span>
                         <span className="mt-0.5 flex items-center gap-1.5">
                           <span
-                            className={`inline-flex items-center rounded border px-1.5 py-px text-[10px] font-medium leading-4 ${statusMeta.className}`}
+                            className={`inline-flex items-center rounded border px-1.5 py-px text-[10px] leading-4 font-medium ${statusMeta.className}`}
                           >
                             {statusMeta.label}
                           </span>
@@ -168,7 +162,7 @@ function DocumentDetail({
           <p className="truncate text-base font-semibold text-slate-600">{doc.title}</p>
           <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
             <span
-              className={`inline-flex items-center rounded border px-1.5 py-px font-medium leading-4 ${statusMeta.className}`}
+              className={`inline-flex items-center rounded border px-1.5 py-px leading-4 font-medium ${statusMeta.className}`}
             >
               {statusMeta.label}
             </span>
@@ -196,34 +190,28 @@ function DocumentDetail({
 
           {/* Metadata grid */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <MetaCard
-              icon={<BookOpen size={14} />}
-              label="Workflow"
-              value={doc.workflowName}
-            />
-            <MetaCard
-              icon={<Calendar size={14} />}
-              label="Version"
-              value={`v${doc.versionNumber}`}
-            />
-            <MetaCard
-              icon={<FileText size={14} />}
-              label="Pages"
-              value={`${doc.pageCount}`}
-            />
+            {doc.workflowName ? (
+              <MetaCard icon={<BookOpen size={14} />} label="Workflow" value={doc.workflowName} />
+            ) : null}
+            {doc.versionNumber != null ? (
+              <MetaCard
+                icon={<Calendar size={14} />}
+                label="Version"
+                value={`v${doc.versionNumber}`}
+              />
+            ) : null}
+            <MetaCard icon={<FileText size={14} />} label="Pages" value={`${doc.pageCount}`} />
             <MetaCard
               icon={<ExternalLink size={14} />}
               label="Shared by"
-              value={doc.sharedBy}
+              value={doc.sharedBy || '—'}
             />
           </div>
 
           {/* Preview excerpt */}
           <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
-              <h3 className="text-xs font-bold tracking-wide text-slate-500 uppercase">
-                Preview
-              </h3>
+              <h3 className="text-xs font-bold tracking-wide text-slate-500 uppercase">Preview</h3>
               <button
                 type="button"
                 onClick={() => onOpenPreview(doc)}
@@ -234,10 +222,8 @@ function DocumentDetail({
               </button>
             </div>
             <div className="max-h-[420px] overflow-y-auto p-4">
-              <pre className="whitespace-pre-wrap font-sans text-[13px] leading-7 text-slate-600">
-                {doc.content.length > 1200
-                  ? `${doc.content.slice(0, 1200)}\n\n…`
-                  : doc.content}
+              <pre className="font-sans text-[13px] leading-7 whitespace-pre-wrap text-slate-600">
+                {doc.content.length > 1200 ? `${doc.content.slice(0, 1200)}\n\n…` : doc.content}
               </pre>
             </div>
           </div>
@@ -247,15 +233,7 @@ function DocumentDetail({
   )
 }
 
-function MetaCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-}) {
+function MetaCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
       <span className="mt-0.5 text-slate-400">{icon}</span>
