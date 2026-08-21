@@ -14,6 +14,7 @@ import {
   markEmailThreadAsRead,
   sendParticipantEmail,
   type EmailMarkAsReadResult,
+  type ParticipantEmailAttachmentInput,
 } from '../../shared/api/email'
 import { getNotificationActivity, type NotificationActivity } from '../../shared/api/notifications'
 import type { Channel } from './simulation-channels'
@@ -52,6 +53,7 @@ export interface SimulationRunContextValue {
     content: string
     parentEmailId?: string
     replyToEmailId?: string
+    attachments?: ParticipantEmailAttachmentInput[]
   }) => void
   markEmailThreadRead: (workflowVersionId: string, rootId: string) => Promise<EmailMarkAsReadResult>
   refresh: () => void
@@ -207,6 +209,7 @@ export function SimulationRunProvider({
       content,
       parentEmailId,
       replyToEmailId,
+      attachments,
     }: {
       workflowVersionId: string
       target: string
@@ -214,6 +217,7 @@ export function SimulationRunProvider({
       content: string
       parentEmailId?: string
       replyToEmailId?: string
+      attachments?: ParticipantEmailAttachmentInput[]
     }) =>
       sendParticipantEmail(
         participantId.trim(),
@@ -225,6 +229,7 @@ export function SimulationRunProvider({
         undefined,
         parentEmailId,
         replyToEmailId,
+        attachments,
       ),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['email-messages'] })
@@ -280,6 +285,7 @@ export function SimulationRunProvider({
     content: string
     parentEmailId?: string
     replyToEmailId?: string
+    attachments?: ParticipantEmailAttachmentInput[]
   }) => {
     if (!participantId.trim()) {
       toast.error('Choose an active simulation session.')
@@ -292,6 +298,7 @@ export function SimulationRunProvider({
       content: input.content,
       parentEmailId: input.parentEmailId,
       replyToEmailId: input.replyToEmailId,
+      attachments: input.attachments,
     })
   }
 

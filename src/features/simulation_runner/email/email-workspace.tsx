@@ -3,6 +3,7 @@ import { Inbox } from 'lucide-react'
 import { ConversationBody } from './conversation-body'
 import { ConversationHeader } from './conversation-header'
 import { ConversationSidebar } from './conversation-sidebar'
+import type { AttachmentSelection } from './attachment-picker-dialog'
 import { MessageComposer } from './message-composer'
 import type { EmailAttachment, EmailInboxThread, EmailMessage } from './types'
 
@@ -14,6 +15,9 @@ export interface EmailWorkspaceProps {
   onSelectThread: (rootId: string) => void
   selectedThread: EmailInboxThread | null
   disabled: boolean
+  attachments: AttachmentSelection[]
+  onOpenAttachmentPicker: () => void
+  onRemoveAttachment: (participantDocId: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onConversationOpen?: (rootId: string) => void
   openingAttachmentIds: ReadonlySet<string>
@@ -28,6 +32,9 @@ export function EmailWorkspace({
   onSelectThread,
   selectedThread,
   disabled,
+  attachments,
+  onOpenAttachmentPicker,
+  onRemoveAttachment,
   onSubmit,
   onConversationOpen,
   openingAttachmentIds,
@@ -57,6 +64,9 @@ export function EmailWorkspace({
               <MessageComposer
                 target={selectedThread.latestSenderId}
                 disabled={disabled}
+                attachments={attachments}
+                onOpenAttachmentPicker={onOpenAttachmentPicker}
+                onRemoveAttachment={onRemoveAttachment}
                 onSubmit={onSubmit}
               />
             </>

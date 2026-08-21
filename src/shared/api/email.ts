@@ -71,6 +71,15 @@ export interface EmailMarkAsReadResult {
   count: number
 }
 
+export interface ParticipantEmailAttachmentContentInput {
+  participant_doc_content_id: string
+}
+
+export interface ParticipantEmailAttachmentInput {
+  participant_doc_id: string
+  contents: ParticipantEmailAttachmentContentInput[]
+}
+
 export const getEmailWorkflows = (participantId: string) =>
   apiClient<EmailWorkflowItem[]>(
     `/runner/email/workflows?participant_id=${encodeURIComponent(participantId)}`,
@@ -101,6 +110,7 @@ export const sendParticipantEmail = (
   cc?: string[],
   parentEmailId?: string,
   replyToEmailId?: string,
+  attachments?: ParticipantEmailAttachmentInput[],
 ) =>
   apiClient<EmailMessage>(`/runner/email?participant_id=${encodeURIComponent(participantId)}`, {
     method: 'POST',
@@ -113,6 +123,7 @@ export const sendParticipantEmail = (
       cc: cc ?? [],
       ...(parentEmailId ? { parent_email_id: parentEmailId } : {}),
       ...(replyToEmailId ? { reply_to_email_id: replyToEmailId } : {}),
+      ...(attachments?.length ? { attachments } : {}),
     }),
   })
 

@@ -6,9 +6,15 @@ import {
   markEmailAttachmentOpened,
   type EmailInboxThreadItem,
   type EmailMessage as ApiEmailMessage,
+  type ParticipantEmailAttachmentInput,
   type RuntimeEmailAttachment,
 } from '../../shared/api/email'
+import { getDocuments } from '../../shared/api/documents'
 import { AttachmentPreviewDialog } from './email/attachment-preview-dialog'
+import {
+  AttachmentPickerDialog,
+  type AttachmentSelection,
+} from './email/attachment-picker-dialog'
 import { EmailWorkspace } from './email/email-workspace'
 import type { EmailAttachment, EmailInboxThread, EmailMessage } from './email/types'
 import { useSimulationRun } from './simulation-run-context'
@@ -61,6 +67,14 @@ export function EmailChannelPage() {
   const [readPendingThreads, setReadPendingThreads] = useState<ReadonlySet<string>>(new Set())
   const [openingAttachmentIds, setOpeningAttachmentIds] = useState<ReadonlySet<string>>(new Set())
   const [previewAttachment, setPreviewAttachment] = useState<EmailAttachment | null>(null)
+  const [selectedAttachments, setSelectedAttachments] = useState<AttachmentSelection[]>([])
+  const [isPickerOpen, setIsPickerOpen] = useState(false)
+
+  const documentsQuery = useQuery({
+    queryKey: ['runner-documents', participantId],
+    queryFn: () => getDocuments(participantId),
+    enabled: Boolean(participantId.trim()),
+  })
 
   const selectedThread = threads.find((t) => t.rootId === selectedRootId) ?? null
 
@@ -129,6 +143,12 @@ export function EmailChannelPage() {
     const data = new FormData(event.currentTarget)
     const target = String(data.get('target') ?? '').trim()
     if (!threadVersionId || !target) return
+    const attachments: ParticipantEmailAttachmentInput[] = selectedAttachments.map((selection) => ({
+      participant_doc_id: selection.participant_doc_id,
+      contents: selection.contents.map((page) => ({
+        participant_doc_content_id: page.participant_doc_content_id,
+      })),
+    }))
     sendEmail({
       workflowVersionId: threadVersionId,
       target,
@@ -136,7 +156,9 @@ export function EmailChannelPage() {
       content: String(data.get('content') ?? ''),
       parentEmailId: selectedRootId ?? undefined,
       replyToEmailId: visibleMessages.at(-1)?.message_id,
+      attachments,
     })
+    setSelectedAttachments([])
     event.currentTarget.reset()
   }
 
@@ -167,6 +189,13 @@ export function EmailChannelPage() {
         onSelectThread={setSelectedRootId}
         selectedThread={selectedThread}
         disabled={disabled}
+        attachments={selectedAttachments}
+        onOpenAttachmentPicker={() => setIsPickerOpen(true)}
+        onRemoveAttachment={(participantDocId) =>
+          setSelectedAttachments((current) =>
+            current.filter((selection) => selection.participant_doc_id !== participantDocId),
+          )
+        }
         onSubmit={submit}
         openingAttachmentIds={openingAttachmentIds}
         onOpenAttachment={openAttachment}
@@ -193,6 +222,14 @@ export function EmailChannelPage() {
           }}
         />
       ) : null}
+      <AttachmentPickerDialog
+        open={isPickerOpen}
+        onOpenChange={setIsPickerOpen}
+        documents={documentsQuery.data ?? []}
+        isLoading={documentsQuery.isLoading}
+        initialSelection={selectedAttachments}
+        onConfirm={setSelectedAttachments}
+      />
       {attachmentOpenMutation.isError ? (
         <p className="text-xs text-red-600" role="alert">
           Unable to record the attachment opening. Please try again.
