@@ -54,6 +54,43 @@ export function sortAttachmentPreviewPages<T extends EmailAttachmentContent>(
   })
 }
 
+/**
+ * Builds a compact page label from an attachment's contents, e.g. "p.1",
+ * "p.1–3", or "p.1, 3, 5". Returns null when no page is available.
+ */
+export function formatAttachmentPageLabel(
+  contents: readonly EmailAttachmentContent[],
+): string | null {
+  const pages = contents
+    .map((content) => content.page)
+    .filter((page): page is number => page != null)
+    .sort((first, second) => first - second)
+
+  if (pages.length === 0) return null
+
+  const uniquePages = [...new Set(pages)]
+  if (uniquePages.length === 1) {
+    return `p.${uniquePages[0]}`
+  }
+
+  const ranges: string[] = []
+  let rangeStart = uniquePages[0]
+  let previous = uniquePages[0]
+  for (let index = 1; index < uniquePages.length; index++) {
+    const current = uniquePages[index]
+    if (current === previous + 1) {
+      previous = current
+      continue
+    }
+    ranges.push(rangeStart === previous ? `${rangeStart}` : `${rangeStart}–${previous}`)
+    rangeStart = current
+    previous = current
+  }
+  ranges.push(rangeStart === previous ? `${rangeStart}` : `${rangeStart}–${previous}`)
+
+  return `p.${ranges.join(', ')}`
+}
+
 export interface EmailWorkflow {
   workflowVersionId: string
   workflowName: string
