@@ -1,7 +1,8 @@
 import '@livekit/components-styles'
 
-import { LiveKitRoom, VideoConference } from '@livekit/components-react'
+import { LiveKitRoom } from '@livekit/components-react'
 import { PhoneOff } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../../components/ui/button'
 import type { AgentCallConnectionDetails } from '../../../shared/api/agent-call'
@@ -12,13 +13,19 @@ import {
   readStoredValue,
   type CallPrejoinChoices,
 } from './types'
+import { AiAgentHeader } from './ai-agent-header'
+import { ChatSidebar } from './chat-sidebar'
+import { NetworkStatus } from './network-status'
+import { RoomParticipant } from './room-participant'
+import { TranscriptionViewer } from './transcription-viewer'
 
 export function CallMeetingRoomPage() {
   const { participantId } = useSimulationRun()
   const { roomId } = useParams()
   const navigate = useNavigate()
   const connection = readStoredValue<AgentCallConnectionDetails>(CALL_CONNECTION_STORAGE_KEY)
-  const choices = readStoredValue<CallPrejoinChoices>(CALL_PREJOIN_STORAGE_KEY)
+  const storedChoices = readStoredValue<CallPrejoinChoices>(CALL_PREJOIN_STORAGE_KEY)
+  const [choices, setChoices] = useState(storedChoices)
   const callPath = `/simulation/${encodeURIComponent(participantId)}/call`
 
   function leaveCall() {
@@ -27,22 +34,17 @@ export function CallMeetingRoomPage() {
     navigate(callPath)
   }
 
+  useEffect(() => {
+    if (choices) localStorage.setItem(CALL_PREJOIN_STORAGE_KEY, JSON.stringify(choices))
+  }, [choices])
+
   if (!roomId || !connection?.serverUrl || !connection.participantToken || !choices) {
     return <CallUnavailableState onBack={leaveCall} />
   }
 
   return (
     <div className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div>
-          <p className="text-sm font-semibold text-foreground">{connection.actorName}</p>
-          <p className="text-xs text-muted-foreground">Room: {connection.roomName}</p>
-        </div>
-        <Button onClick={leaveCall} size="sm" variant="destructive">
-          <PhoneOff />
-          End call
-        </Button>
-      </header>
+      <AiAgentHeader agentLevel={connection.actorLevel} agentName={connection.actorName} onLeave={leaveCall} />
       <LiveKitRoom
         audio={choices.audioEnabled}
         connect
@@ -52,8 +54,20 @@ export function CallMeetingRoomPage() {
         token={connection.participantToken}
         video={choices.videoEnabled}
       >
-        <div className="min-h-0 flex-1 bg-muted p-4">
-          <VideoConference />
+        <div className="flex min-h-0 flex-1 flex-col gap-4 bg-muted p-4 lg:flex-row">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Room: {connection.roomName}</p>
+              <NetworkStatus />
+            </div>
+            <RoomParticipant
+              choices={choices}
+              localParticipantIdentity={connection.participantIdentity}
+              onChoicesChange={(partial) => setChoices((current) => (current ? { ...current, ...partial } : current))}
+            />
+            <TranscriptionViewer actorName={connection.actorName} />
+          </div>
+          <ChatSidebar />
         </div>
       </LiveKitRoom>
     </div>
