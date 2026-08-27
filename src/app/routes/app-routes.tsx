@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ChatChannelPage } from '../../features/simulation_runner/chat-channel-page'
+import { CallMeetingRoomPage } from '../../features/simulation_runner/call/meeting-room-page'
 import {
   CallChannelPage,
   DocumentChannelPage,
@@ -26,6 +27,7 @@ export function AppRoutes() {
             <Route path="chat" element={<ChatChannelPage />} />
             <Route path="email" element={<EmailChannelPage />} />
             <Route path="call" element={<CallChannelPage />} />
+            <Route path="call/:roomId" element={<CallMeetingRoomPage />} />
             <Route path="document" element={<DocumentChannelPage />} />
           </Route>
           <Route path="/timers" element={<TimerManagementPage />} />
