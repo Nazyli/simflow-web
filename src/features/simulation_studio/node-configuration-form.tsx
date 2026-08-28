@@ -15,6 +15,7 @@ import {
 import { Textarea } from '../../components/ui/textarea'
 import { getStudioMasterEmail, type MasterEmailAttachment } from '../../shared/api/master-data'
 import type { NodeDefinition } from '../../shared/types/workflow'
+import { resolveParameterMultiline } from './parameter-field-logic'
 import { MasterPickerField } from './pickers/master-picker-field'
 
 type Configuration = Record<string, unknown>
@@ -472,7 +473,7 @@ function CatalogParameterField({
         label={label}
         value={value}
         required={required}
-        multiline={['body'].includes(name)}
+        multiline={resolveParameterMultiline(name, definition?.parameter_options)}
         picker={picker}
         filterValue={picker.filter_by ? String(configuration[picker.filter_by] ?? '') : undefined}
         onChange={(next) => onChange(next)}
@@ -512,7 +513,7 @@ function CatalogParameterField({
         onChange={onChange}
       />
     )
-  const multiline = ['body'].includes(name)
+  const multiline = resolveParameterMultiline(name, definition?.parameter_options)
   return (
     <TextField
       label={label}

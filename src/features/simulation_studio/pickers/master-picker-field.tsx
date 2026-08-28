@@ -5,6 +5,8 @@ import { Input } from '../../../components/ui/input'
 import { Label } from '../../../components/ui/label'
 import { Textarea } from '../../../components/ui/textarea'
 import type { ParameterPicker } from '../../../shared/types/workflow'
+import { applyPickerSelection, isPickerAppendOne, removePickerValue } from './picker-logic'
+import { pickerAddButtonLabel, pickerSelectButtonLabel } from '../parameter-field-logic'
 import { MasterPickerDialog } from './master-picker-dialog'
 
 export function MasterPickerField({
@@ -32,11 +34,15 @@ export function MasterPickerField({
   const values = Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')
     : []
-  const isAppendOne = picker.value_type === 'array' && picker.selection_mode === 'append_one'
+  const isAppendOne = isPickerAppendOne(picker)
   const select = (record: Record<string, unknown>) => {
-    const raw = record[picker.value_field]
-    const next = raw === null || raw === undefined ? '' : String(raw)
-    onChange(isAppendOne ? (values.includes(next) || !next ? values : [...values, next]) : next)
+    onChange(
+      isAppendOne
+        ? applyPickerSelection(values, record, picker)
+        : record[picker.value_field] === null || record[picker.value_field] === undefined
+          ? ''
+          : String(record[picker.value_field]),
+    )
   }
   return (
     <div className="grid gap-1.5">
@@ -52,7 +58,7 @@ export function MasterPickerField({
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Remove ${item}`}
-                  onClick={() => onChange(values.filter((value) => value !== item))}
+                  onClick={() => onChange(removePickerValue(values, item))}
                 >
                   <X />
                 </Button>
@@ -60,7 +66,7 @@ export function MasterPickerField({
             ))}
           </div>
           <Button type="button" variant="outline" onClick={() => setOpen(true)}>
-            <PackageSearch /> Pick document
+            <PackageSearch /> {pickerAddButtonLabel(label)}
           </Button>
         </div>
       ) : (
@@ -81,7 +87,7 @@ export function MasterPickerField({
             />
           )}
           <Button type="button" variant="outline" onClick={() => setOpen(true)}>
-            <PackageSearch /> Pick
+            <PackageSearch /> {pickerSelectButtonLabel(label)}
           </Button>
         </div>
       )}

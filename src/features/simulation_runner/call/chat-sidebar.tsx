@@ -1,10 +1,9 @@
 import { Send } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useRoomContext } from '@livekit/components-react'
-import { useParams } from 'react-router-dom'
 import { Button } from '../../../components/ui/button'
 import { Input } from '../../../components/ui/input'
-import { getAgentCallHistory } from '../../../shared/api/agent-call'
+import { getCallHistory } from '../../../shared/api/agent-call'
 
 interface ChatMessage {
   id: string
@@ -12,22 +11,37 @@ interface ChatMessage {
   text: string
 }
 
-export function ChatSidebar() {
+export function ChatSidebar({
+  callSessionId,
+  participantId,
+}: {
+  callSessionId: string
+  participantId: string
+}) {
   const room = useRoomContext()
-  const { roomId } = useParams()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
 
   useEffect(() => {
-    if (!roomId) return
+    if (!callSessionId) return
     let active = true
-    void getAgentCallHistory(roomId)
+    void getCallHistory(callSessionId, participantId)
       .then((history) => {
         if (!active) return
+        const ordered = [...history].sort((a, b) => {
+          if (a.spokenAt === b.spokenAt) {
+            return a.callMessageId < b.callMessageId
+              ? -1
+              : a.callMessageId > b.callMessageId
+                ? 1
+                : 0
+          }
+          return a.spokenAt < b.spokenAt ? -1 : 1
+        })
         setMessages(
-          history.map((item) => ({
-            id: item.participantCallId,
-            sender: item.fromActorName,
+          ordered.map((item) => ({
+            id: item.callMessageId,
+            sender: item.senderName,
             text: item.content,
           })),
         )
@@ -38,7 +52,7 @@ export function ChatSidebar() {
     return () => {
       active = false
     }
-  }, [roomId])
+  }, [callSessionId, participantId])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -53,22 +67,26 @@ export function ChatSidebar() {
   }
 
   return (
-    <aside className="flex min-h-0 w-full flex-col rounded-xl border border-border bg-card lg:w-72">
-      <header className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">Call chat</h2>
+    <aside className="border-border bg-card flex min-h-0 w-full flex-col rounded-xl border lg:w-72">
+      <header className="border-border border-b px-4 py-3">
+        <h2 className="text-foreground text-sm font-semibold">Call chat</h2>
       </header>
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 text-sm text-muted-foreground">
+      <div className="text-muted-foreground min-h-0 flex-1 space-y-2 overflow-y-auto p-3 text-sm">
         {messages.length
           ? messages.map((message) => (
               <p key={message.id}>
-                <span className="font-medium text-foreground">{message.sender}: </span>
+                <span className="text-foreground font-medium">{message.sender}: </span>
                 {message.text}
               </p>
             ))
           : 'No messages yet.'}
       </div>
-      <form className="flex gap-2 border-t border-border p-3" onSubmit={submit}>
-        <Input onChange={(event) => setText(event.target.value)} placeholder="Type a message" value={text} />
+      <form className="border-border flex gap-2 border-t p-3" onSubmit={submit}>
+        <Input
+          onChange={(event) => setText(event.target.value)}
+          placeholder="Type a message"
+          value={text}
+        />
         <Button aria-label="Send message" size="icon" type="submit">
           <Send />
         </Button>

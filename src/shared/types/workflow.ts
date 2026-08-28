@@ -60,6 +60,7 @@ export interface ParameterPicker {
 export interface ParameterOption {
   picker?: ParameterPicker
   select?: { id: string; label: string }[]
+  multiline?: boolean
 }
 export interface NodeDefinition {
   node_type: string
