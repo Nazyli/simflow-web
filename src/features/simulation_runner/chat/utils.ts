@@ -16,6 +16,30 @@ export function messageKey(message: ChatMessage): string {
   return message.message_id ?? [message.timestamp, message.content].filter(Boolean).join(':')
 }
 
+export interface MessageLinkSegment {
+  text: string
+  url: string | null
+}
+
+const MESSAGE_URL_PATTERN = /https?:\/\/[^\s]+/g
+
+export function splitMessageLinks(content: string): MessageLinkSegment[] {
+  const segments: MessageLinkSegment[] = []
+  let lastIndex = 0
+  for (const match of content.matchAll(MESSAGE_URL_PATTERN)) {
+    const index = match.index ?? 0
+    if (index > lastIndex) {
+      segments.push({ text: content.slice(lastIndex, index), url: null })
+    }
+    segments.push({ text: match[0], url: match[0] })
+    lastIndex = index + match[0].length
+  }
+  if (lastIndex < content.length) {
+    segments.push({ text: content.slice(lastIndex), url: null })
+  }
+  return segments
+}
+
 export function buildConversations(
   messages: ChatMessage[],
   actorNames: Record<string, string>,

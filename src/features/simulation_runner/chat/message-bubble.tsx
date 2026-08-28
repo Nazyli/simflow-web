@@ -1,5 +1,5 @@
 import type { ChatMessage } from './types'
-import { formatChatTime, isOwnMessage } from './utils'
+import { formatChatTime, isOwnMessage, splitMessageLinks } from './utils'
 
 interface MessageBubbleProps {
   message: ChatMessage
@@ -32,7 +32,21 @@ export function MessageBubble({ message, participantId }: MessageBubbleProps) {
               : 'rounded-bl-md border border-slate-200 bg-white text-slate-800'
           }`}
         >
-          {content}
+          {splitMessageLinks(content).map((segment, index) =>
+            segment.url ? (
+              <a
+                key={index}
+                href={segment.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all underline"
+              >
+                {segment.text}
+              </a>
+            ) : (
+              <span key={index}>{segment.text}</span>
+            ),
+          )}
         </div>
       </div>
     </article>

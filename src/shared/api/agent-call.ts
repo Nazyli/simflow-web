@@ -65,3 +65,28 @@ export function requestParticipantEnd(
     },
   )
 }
+
+export interface CallJoinResult {
+  invitation_id: string
+  participant_id: string
+  execution_id: string
+  node_execution_id: string
+  status: string
+}
+
+export function requestCallJoin(
+  participantId: string,
+  invitationId: string,
+  eventId: string,
+  occurredAt: string,
+) {
+  return apiClient<CallJoinResult>(`/runner/call/join`, {
+    method: 'POST',
+    body: JSON.stringify({
+      participant_id: participantId,
+      invitation_id: invitationId,
+      event_id: eventId,
+      occurred_at: occurredAt,
+    }),
+  })
+}
