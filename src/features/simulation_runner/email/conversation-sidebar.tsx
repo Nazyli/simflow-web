@@ -25,7 +25,11 @@ interface ConversationSidebarProps {
   onSelect: (rootId: string) => void
 }
 
-export function ConversationSidebar({ threads, selectedRootId, onSelect }: ConversationSidebarProps) {
+export function ConversationSidebar({
+  threads,
+  selectedRootId,
+  onSelect,
+}: ConversationSidebarProps) {
   const [search, setSearch] = useState('')
   const filteredThreads = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -40,7 +44,7 @@ export function ConversationSidebar({ threads, selectedRootId, onSelect }: Conve
   }, [threads, search])
 
   return (
-    <aside className="flex shrink-0 flex-col border-b border-[#e8eaed] bg-white lg:w-[320px] lg:border-b-0 lg:border-r">
+    <aside className="flex shrink-0 flex-col border-b border-[#e8eaed] bg-white lg:w-[320px] lg:border-r lg:border-b-0">
       <p className="px-4 pt-3 pb-2 text-[10px] font-bold tracking-wider text-[#9aa0a6] uppercase">
         Inbox
       </p>
@@ -62,7 +66,7 @@ export function ConversationSidebar({ threads, selectedRootId, onSelect }: Conve
               key={thread.rootId}
               type="button"
               onClick={() => onSelect(thread.rootId)}
-              className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors border-b border-[#e8eaed] last:border-b-0 hover:bg-[#f1f3f4] ${
+              className={`flex w-full items-center gap-3 border-b border-[#e8eaed] px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-[#f1f3f4] ${
                 active ? 'bg-[#e8f0fe]' : 'bg-white'
               }`}
             >
@@ -92,7 +96,7 @@ export function ConversationSidebar({ threads, selectedRootId, onSelect }: Conve
                   {unread && (
                     <span
                       aria-label={`${thread.unreadCount} unread email${thread.unreadCount === 1 ? '' : 's'}`}
-                      className="shrink-0 rounded-full bg-[#5b46c5] px-1.5 text-[10px] font-bold leading-4 text-center text-white min-w-[18px]"
+                      className="min-w-[18px] shrink-0 rounded-full bg-[#5b46c5] px-1.5 text-center text-[10px] leading-4 font-bold text-white"
                     >
                       {thread.unreadCount}
                     </span>

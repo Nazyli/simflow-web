@@ -3,8 +3,17 @@ import { FileText, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import type { RuntimeDocumentContent, RuntimeSimulationDocument } from '../../../shared/api/documents'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import type {
+  RuntimeDocumentContent,
+  RuntimeSimulationDocument,
+} from '../../../shared/api/documents'
 
 export interface AttachmentPageSelection {
   participant_doc_content_id: string
@@ -39,7 +48,10 @@ function sortPages<T extends RuntimeDocumentContent>(contents: readonly T[]): T[
 
 function selectionToState(selection: AttachmentSelection[]): Record<string, Set<string>> {
   return Object.fromEntries(
-    selection.map((item) => [item.participant_doc_id, new Set(item.contents.map((page) => page.participant_doc_content_id))]),
+    selection.map((item) => [
+      item.participant_doc_id,
+      new Set(item.contents.map((page) => page.participant_doc_content_id)),
+    ]),
   )
 }
 
@@ -60,8 +72,7 @@ export function AttachmentPickerDialog({
   }, [open])
 
   const totalPages = useMemo(
-    () =>
-      Object.values(selected).reduce((total, pages) => total + pages.size, 0),
+    () => Object.values(selected).reduce((total, pages) => total + pages.size, 0),
     [selected],
   )
 
@@ -84,7 +95,9 @@ export function AttachmentPickerDialog({
     setSelected((current) => ({
       ...current,
       [document.simulation_document_id]: new Set(
-        allSelected ? [] : document.contents.map((content) => content.simulation_document_content_id),
+        allSelected
+          ? []
+          : document.contents.map((content) => content.simulation_document_content_id),
       ),
     }))
   }
@@ -157,10 +170,14 @@ export function AttachmentPickerDialog({
                       <ul className="border-t border-[#e8eaed] px-4 py-2">
                         {pages.map((content) => (
                           <li key={content.simulation_document_content_id}>
-                            <label className="flex cursor-pointer items-center gap-3 rounded-md py-1.5 pl-7 pr-2 hover:bg-[#f6f8fb]">
+                            <label className="flex cursor-pointer items-center gap-3 rounded-md py-1.5 pr-2 pl-7 hover:bg-[#f6f8fb]">
                               <Checkbox
-                                checked={Boolean(selected[docId]?.has(content.simulation_document_content_id))}
-                                onCheckedChange={() => togglePage(docId, content.simulation_document_content_id)}
+                                checked={Boolean(
+                                  selected[docId]?.has(content.simulation_document_content_id),
+                                )}
+                                onCheckedChange={() =>
+                                  togglePage(docId, content.simulation_document_content_id)
+                                }
                               />
                               <span className="text-sm text-[#1a1a2e]">
                                 Page {content.page ?? '—'}

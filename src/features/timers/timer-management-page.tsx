@@ -90,7 +90,10 @@ function ConfigurationValue({ value }: { value: unknown }) {
     return value.length ? (
       <ul className="grid gap-1.5">
         {value.map((item, index) => (
-          <li key={index} className="grid grid-cols-[auto_minmax(0,1fr)] gap-2 text-xs text-slate-600">
+          <li
+            key={index}
+            className="grid grid-cols-[auto_minmax(0,1fr)] gap-2 text-xs text-slate-600"
+          >
             <span className="font-semibold text-slate-400">{index}</span>
             <ConfigurationValue value={item} />
           </li>
@@ -105,8 +108,8 @@ function ConfigurationValue({ value }: { value: unknown }) {
       <dl className="grid gap-2">
         {Object.entries(value).map(([key, nestedValue]) => (
           <div key={key} className="grid gap-1 sm:grid-cols-[minmax(120px,0.35fr)_1fr] sm:gap-3">
-            <dt className="break-words text-xs font-semibold text-slate-500">{key}</dt>
-            <dd className="min-w-0 break-words text-xs text-slate-700">
+            <dt className="text-xs font-semibold break-words text-slate-500">{key}</dt>
+            <dd className="min-w-0 text-xs break-words text-slate-700">
               <ConfigurationValue value={nestedValue} />
             </dd>
           </div>
@@ -316,10 +319,16 @@ export function TimerManagementPage() {
       header: 'Node',
       cell: (timer) => (
         <div className="min-w-[150px]">
-          <span className="block truncate text-xs font-semibold text-slate-700" title={timer.node_name ?? undefined}>
+          <span
+            className="block truncate text-xs font-semibold text-slate-700"
+            title={timer.node_name ?? undefined}
+          >
             {timer.node_name ?? 'Node unavailable'}
           </span>
-          <span className="block truncate font-mono text-[10px] text-slate-400" title={timer.node_type ?? undefined}>
+          <span
+            className="block truncate font-mono text-[10px] text-slate-400"
+            title={timer.node_type ?? undefined}
+          >
             {timer.node_type ?? 'Unknown type'}
           </span>
         </div>
@@ -329,21 +338,31 @@ export function TimerManagementPage() {
     {
       id: 'participant',
       header: 'Participant ID',
-      cell: (timer) => <span className="font-mono text-xs text-slate-600">{timer.participant_id ?? 'Unavailable'}</span>,
+      cell: (timer) => (
+        <span className="font-mono text-xs text-slate-600">
+          {timer.participant_id ?? 'Unavailable'}
+        </span>
+      ),
       filterValue: (timer) => timer.participant_id ?? '',
     },
     {
       id: 'workflow',
       header: 'Workflow',
       cell: (timer) => (
-        <span className="block max-w-[180px] truncate text-xs text-slate-700">{timer.workflow_name ?? 'Unavailable'}</span>
+        <span className="block max-w-[180px] truncate text-xs text-slate-700">
+          {timer.workflow_name ?? 'Unavailable'}
+        </span>
       ),
       filterValue: (timer) => timer.workflow_name ?? '',
     },
     {
       id: 'version',
       header: 'Version',
-      cell: (timer) => <span className="text-xs text-slate-600">{timer.workflow_version ? `v${timer.workflow_version}` : 'Unavailable'}</span>,
+      cell: (timer) => (
+        <span className="text-xs text-slate-600">
+          {timer.workflow_version ? `v${timer.workflow_version}` : 'Unavailable'}
+        </span>
+      ),
       sortValue: (timer) => timer.workflow_version ?? -1,
     },
     {
@@ -584,7 +603,8 @@ function RunNowDialog({
       <DialogContent className="p-6 sm:max-w-[430px]">
         <DialogTitle className="text-base font-bold text-slate-900">Run timer now?</DialogTitle>
         <DialogDescription>
-          This immediately processes the timer event and continues the workflow through its configured path.
+          This immediately processes the timer event and continues the workflow through its
+          configured path.
         </DialogDescription>
         <DialogFooter>
           <DialogButton onClick={onClose}>Keep schedule</DialogButton>
@@ -642,7 +662,9 @@ function TimerDetail({ timer, onClose }: { timer: WorkflowTimer | null; onClose:
             </dd>
           </div>
           <div className="grid gap-2 border-t border-slate-100 pt-3">
-            <dt className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">Node configuration</dt>
+            <dt className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
+              Node configuration
+            </dt>
             <dd className="rounded-lg bg-slate-50 p-3">
               <ConfigurationValue value={timer?.node_configuration} />
             </dd>

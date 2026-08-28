@@ -25,7 +25,7 @@ export function MediaControlBar({
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-2 shadow-sm">
+    <div className="border-border bg-card flex items-center gap-2 rounded-lg border p-2 shadow-sm">
       <Button
         aria-label={choices.audioEnabled ? 'Mute microphone' : 'Enable microphone'}
         onClick={() => void toggleMicrophone()}

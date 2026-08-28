@@ -1,10 +1,6 @@
 import { Check, FileText, LoaderCircle } from 'lucide-react'
 import { isOwnEmail, formatEmailDate } from './utils'
-import {
-  type EmailAttachment,
-  type EmailMessage,
-  formatAttachmentPageLabel,
-} from './types'
+import { type EmailAttachment, type EmailMessage, formatAttachmentPageLabel } from './types'
 
 interface MessageBubbleProps {
   message: EmailMessage
@@ -110,9 +106,7 @@ export function MessageBubble({
                     <FileText className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   )}
                   <span className="truncate">{attachment.file_name ?? 'Attachment'}</span>
-                  {pageLabel ? (
-                    <span className="shrink-0 text-slate-400">{pageLabel}</span>
-                  ) : null}
+                  {pageLabel ? <span className="shrink-0 text-slate-400">{pageLabel}</span> : null}
                   {isOpened ? <span className="text-emerald-700">Opened</span> : null}
                 </button>
               )

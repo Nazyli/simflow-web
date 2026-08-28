@@ -38,15 +38,13 @@ export function SettingsPage() {
       <h1 className="mb-6 text-lg font-semibold text-slate-700">Settings</h1>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-amber-50">
             <Database size={18} className="text-amber-600" />
           </span>
           <div>
             <h2 className="text-sm font-semibold text-slate-700">Reset Demo Data</h2>
-            <p className="text-xs text-slate-400">
-              Re-run migrations and seed all demo workflows
-            </p>
+            <p className="text-xs text-slate-400">Re-run migrations and seed all demo workflows</p>
           </div>
         </div>
 
@@ -88,8 +86,8 @@ export function SettingsPage() {
           <DialogHeader>
             <DialogTitle>Reset Database</DialogTitle>
             <DialogDescription>
-              This will run alembic downgrade, re-migrate to head, and re-seed all demo data.
-              All existing workflow data will be permanently lost.
+              This will run alembic downgrade, re-migrate to head, and re-seed all demo data. All
+              existing workflow data will be permanently lost.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -13,9 +13,7 @@ interface MessageComposerProps {
 }
 
 function formatPages(pages: { page: number | null }[]): string {
-  return pages
-    .map((page) => page.page ?? '—')
-    .join(', ')
+  return pages.map((page) => page.page ?? '—').join(', ')
 }
 
 export function MessageComposer({
@@ -29,10 +27,7 @@ export function MessageComposer({
   const hasTarget = Boolean(target)
 
   return (
-    <form
-      className="border-t border-[#e8eaed] bg-white"
-      onSubmit={onSubmit}
-    >
+    <form className="border-t border-[#e8eaed] bg-white" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2 p-4">
         <div className="flex items-center gap-2 pb-1">
           <span className="text-xs font-medium text-[#5f6368]">Reply to</span>
@@ -46,7 +41,7 @@ export function MessageComposer({
           disabled={!hasTarget || disabled}
           defaultValue={target}
           placeholder={hasTarget ? undefined : 'Select a conversation to reply'}
-          className="min-h-[36px] w-full rounded-lg border border-[#e8eaed] bg-[#f6f8fb] px-3 py-2 text-sm text-[#1a1a2e] outline-none transition-colors focus:border-[#5b46c5] focus:ring-2 focus:ring-violet-100 disabled:bg-[#f1f3f4] disabled:text-[#9aa0a6]"
+          className="min-h-[36px] w-full rounded-lg border border-[#e8eaed] bg-[#f6f8fb] px-3 py-2 text-sm text-[#1a1a2e] transition-colors outline-none focus:border-[#5b46c5] focus:ring-2 focus:ring-violet-100 disabled:bg-[#f1f3f4] disabled:text-[#9aa0a6]"
         />
 
         <input
@@ -55,7 +50,7 @@ export function MessageComposer({
           required
           disabled={disabled}
           placeholder={hasTarget ? 'Subject' : undefined}
-          className="min-h-[36px] w-full rounded-lg border border-[#e8eaed] bg-[#f6f8fb] px-3 py-2 text-sm text-[#1a1a2e] outline-none transition-colors focus:border-[#5b46c5] focus:ring-2 focus:ring-violet-100 disabled:bg-[#f1f3f4] disabled:text-[#9aa0a6]"
+          className="min-h-[36px] w-full rounded-lg border border-[#e8eaed] bg-[#f6f8fb] px-3 py-2 text-sm text-[#1a1a2e] transition-colors outline-none focus:border-[#5b46c5] focus:ring-2 focus:ring-violet-100 disabled:bg-[#f1f3f4] disabled:text-[#9aa0a6]"
         />
 
         <textarea
@@ -63,7 +58,7 @@ export function MessageComposer({
           required
           disabled={disabled}
           placeholder={hasTarget ? 'Write your reply...' : undefined}
-          className="min-h-[80px] w-full resize-y rounded-lg border border-[#e8eaed] bg-[#f6f8fb] px-3 py-2 text-sm text-[#1a1a2e] outline-none transition-colors focus:border-[#5b46c5] focus:ring-2 focus:ring-violet-100 disabled:bg-[#f1f3f4] disabled:text-[#9aa0a6]"
+          className="min-h-[80px] w-full resize-y rounded-lg border border-[#e8eaed] bg-[#f6f8fb] px-3 py-2 text-sm text-[#1a1a2e] transition-colors outline-none focus:border-[#5b46c5] focus:ring-2 focus:ring-violet-100 disabled:bg-[#f1f3f4] disabled:text-[#9aa0a6]"
         />
 
         {attachments.length > 0 ? (
@@ -71,10 +66,12 @@ export function MessageComposer({
             {attachments.map((attachment) => (
               <li
                 key={attachment.participant_doc_id}
-                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 py-1 pl-2.5 pr-1.5 text-xs text-[#1a1a2e]"
+                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 py-1 pr-1.5 pl-2.5 text-xs text-[#1a1a2e]"
               >
                 <FileText size={13} className="shrink-0 text-[#5b46c5]" />
-                <span className="max-w-[220px] truncate font-medium">{attachment.document_name}</span>
+                <span className="max-w-[220px] truncate font-medium">
+                  {attachment.document_name}
+                </span>
                 <span className="text-[#5f6368]">(pages {formatPages(attachment.contents)})</span>
                 <button
                   type="button"
