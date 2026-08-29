@@ -7,11 +7,12 @@ import { useEffect, useMemo, useReducer, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../../components/ui/button'
 import type { CallConnection } from '../../../shared/api/agent-call'
-import { getCallConnection } from '../../../shared/api/agent-call'
+import { getCallConnection, getCallRoomConnection } from '../../../shared/api/agent-call'
 import { useSimulationRun } from '../simulation-run-context'
 import {
   CALL_CONNECTION_STORAGE_KEY,
   CALL_PREJOIN_STORAGE_KEY,
+  defaultCallChoices,
   readStoredValue,
   type CallPrejoinChoices,
 } from './types'
@@ -24,6 +25,7 @@ import { RoomParticipant } from './room-participant'
 import { TranscriptionViewer } from './transcription-viewer'
 
 const REPLACED_EXIT_DELAY_MS = 4000
+const AGENT_POLL_INTERVAL_MS = 2000
 
 export function CallMeetingRoomPage() {
   const { participantId } = useSimulationRun()
@@ -32,7 +34,9 @@ export function CallMeetingRoomPage() {
   const storedConnection = readStoredValue<CallConnection>(CALL_CONNECTION_STORAGE_KEY)
   const storedChoices = readStoredValue<CallPrejoinChoices>(CALL_PREJOIN_STORAGE_KEY)
   const [connection, setConnection] = useState<CallConnection | null>(storedConnection)
-  const [choices, setChoices] = useState(storedChoices)
+  const [choices, setChoices] = useState<CallPrejoinChoices | null>(
+    storedChoices ?? (roomId ? defaultCallChoices(roomId) : null),
+  )
   const [state, dispatch] = useReducer(reduceCallRunnerState, initialCallRunnerState)
 
   const simulationPath = `/simulation/${encodeURIComponent(participantId)}`
@@ -48,10 +52,29 @@ export function CallMeetingRoomPage() {
   }
 
   useEffect(() => {
-    if (storedConnection) {
-      dispatch({ type: 'connection-resolved', connection: storedConnection })
-    } else {
-      dispatch({ type: 'connection-absent' })
+    if (!roomId) {
+      if (storedConnection) {
+        dispatch({ type: 'connection-resolved', connection: storedConnection })
+      } else {
+        dispatch({ type: 'connection-absent' })
+      }
+      return
+    }
+    let active = true
+    getCallRoomConnection(roomId)
+      .then((resolved) => {
+        if (active) dispatch({ type: 'connection-resolved', connection: resolved })
+      })
+      .catch(() => {
+        if (!active) return
+        if (storedConnection) {
+          dispatch({ type: 'connection-resolved', connection: storedConnection })
+        } else {
+          dispatch({ type: 'waiting-for-agent' })
+        }
+      })
+    return () => {
+      active = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -67,6 +90,26 @@ export function CallMeetingRoomPage() {
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase])
+
+  useEffect(() => {
+    if (state.phase !== 'waiting-for-agent' || !roomId) return
+    let active = true
+    const poll = setInterval(() => {
+      if (!active) return
+      getCallRoomConnection(roomId)
+        .then((resolved) => {
+          if (active) dispatch({ type: 'connection-resolved', connection: resolved })
+        })
+        .catch(() => {
+          // Still waiting; keep polling.
+        })
+    }, AGENT_POLL_INTERVAL_MS)
+    return () => {
+      active = false
+      clearInterval(poll)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase, roomId])
 
   useEffect(() => {
     if (choices) localStorage.setItem(CALL_PREJOIN_STORAGE_KEY, JSON.stringify(choices))
@@ -123,6 +166,10 @@ export function CallMeetingRoomPage() {
 
   if (state.phase === 'unavailable') {
     return <CallUnavailableState onBack={exitToSimulation} />
+  }
+
+  if (state.phase === 'waiting-for-agent') {
+    return <CallWaitingForAgentState onBack={exitToSimulation} />
   }
 
   if (state.phase === 'replaced') {
@@ -184,7 +231,9 @@ export function CallMeetingRoomPage() {
               participantName={connection.participantName}
             />
           </div>
-          <ChatSidebar callSessionId={connection.callSessionId} participantId={participantId} />
+          {connection.callSessionId.startsWith('adhoc-') ? null : (
+            <ChatSidebar callSessionId={connection.callSessionId} participantId={participantId} />
+          )}
         </div>
       </LiveKitRoom>
     </div>
@@ -221,6 +270,26 @@ function CallReplacedState({ onBack }: { onBack: () => void }) {
         <p className="text-muted-foreground mt-1 max-w-sm text-sm">
           This call was opened in another device or browser, so this session was closed. Returning
           to the simulation…
+        </p>
+      </div>
+      <Button onClick={onBack} variant="outline">
+        Back to simulation
+      </Button>
+    </div>
+  )
+}
+
+function CallWaitingForAgentState({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="border-border bg-card flex h-full min-h-[420px] flex-col items-center justify-center gap-3 rounded-xl border px-6 text-center shadow-sm">
+      <span className="bg-muted text-muted-foreground grid size-12 place-items-center rounded-full">
+        <PhoneOff className="size-5 animate-pulse" />
+      </span>
+      <div>
+        <h2 className="text-foreground text-sm font-semibold">Waiting for the call to start…</h2>
+        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+          The voice agent is joining the room. This page will connect automatically once it is
+          ready.
         </p>
       </div>
       <Button onClick={onBack} variant="outline">

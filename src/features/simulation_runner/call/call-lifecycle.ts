@@ -44,6 +44,7 @@ export type CallRunnerPhase =
   | 'connected'
   | 'reconnecting'
   | 'awaiting-reconnect'
+  | 'waiting-for-agent'
   | 'replaced'
   | 'ended'
   | 'unavailable'
@@ -78,6 +79,7 @@ export type CallRunnerAction =
   | { type: 'reconnecting' }
   | { type: 'disconnected'; recheck: CallConnection | null }
   | { type: 'disconnected-replaced' }
+  | { type: 'waiting-for-agent' }
   | { type: 'reconnect-accepted'; token: string }
   | { type: 'participant-end-requested'; eventId: string; occurredAt: string }
   | { type: 'participant-end-succeeded' }
@@ -120,6 +122,8 @@ export function reduceCallRunnerState(
     }
     case 'disconnected-replaced':
       return { ...state, phase: 'replaced' }
+    case 'waiting-for-agent':
+      return { ...state, phase: 'waiting-for-agent' }
     case 'reconnect-accepted':
       return {
         ...state,
