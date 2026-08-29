@@ -1,8 +1,8 @@
 import '@livekit/components-styles'
 
 import { LiveKitRoom, StartAudio } from '@livekit/components-react'
-import { VideoPresets, type RoomOptions } from 'livekit-client'
-import { PhoneOff } from 'lucide-react'
+import { DisconnectReason, VideoPresets, type RoomOptions } from 'livekit-client'
+import { MonitorSmartphone, PhoneOff } from 'lucide-react'
 import { useEffect, useMemo, useReducer, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../../components/ui/button'
@@ -22,6 +22,8 @@ import { ChatSidebar } from './chat-sidebar'
 import { NetworkStatus } from './network-status'
 import { RoomParticipant } from './room-participant'
 import { TranscriptionViewer } from './transcription-viewer'
+
+const REPLACED_EXIT_DELAY_MS = 4000
 
 export function CallMeetingRoomPage() {
   const { participantId } = useSimulationRun()
@@ -60,6 +62,13 @@ export function CallMeetingRoomPage() {
   }, [state.navigateTo])
 
   useEffect(() => {
+    if (state.phase !== 'replaced') return
+    const timer = setTimeout(exitToSimulation, REPLACED_EXIT_DELAY_MS)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase])
+
+  useEffect(() => {
     if (choices) localStorage.setItem(CALL_PREJOIN_STORAGE_KEY, JSON.stringify(choices))
   }, [choices])
 
@@ -91,7 +100,11 @@ export function CallMeetingRoomPage() {
     [],
   )
 
-  async function handleDisconnected() {
+  async function handleDisconnected(reason?: DisconnectReason) {
+    if (reason === DisconnectReason.DUPLICATE_IDENTITY) {
+      dispatch({ type: 'disconnected-replaced' })
+      return
+    }
     try {
       const recheck = await getCallConnection(participantId)
       dispatch({ type: 'disconnected', recheck })
@@ -110,6 +123,10 @@ export function CallMeetingRoomPage() {
 
   if (state.phase === 'unavailable') {
     return <CallUnavailableState onBack={exitToSimulation} />
+  }
+
+  if (state.phase === 'replaced') {
+    return <CallReplacedState onBack={exitToSimulation} />
   }
 
   if (!roomId || !connection?.serverUrl || !connection.participantToken || !choices) {
@@ -184,6 +201,26 @@ function CallUnavailableState({ onBack }: { onBack: () => void }) {
         <h2 className="text-foreground text-sm font-semibold">Calling is not configured</h2>
         <p className="text-muted-foreground mt-1 max-w-sm text-sm">
           LiveKit credentials are not available for this simulation yet.
+        </p>
+      </div>
+      <Button onClick={onBack} variant="outline">
+        Back to simulation
+      </Button>
+    </div>
+  )
+}
+
+function CallReplacedState({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="border-border bg-card flex h-full min-h-[420px] flex-col items-center justify-center gap-3 rounded-xl border px-6 text-center shadow-sm">
+      <span className="bg-muted text-muted-foreground grid size-12 place-items-center rounded-full">
+        <MonitorSmartphone className="size-5" />
+      </span>
+      <div>
+        <h2 className="text-foreground text-sm font-semibold">Call joined elsewhere</h2>
+        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+          This call was opened in another device or browser, so this session was closed. Returning
+          to the simulation…
         </p>
       </div>
       <Button onClick={onBack} variant="outline">

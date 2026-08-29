@@ -40,7 +40,13 @@ export function makeParticipantEndRequest(
 }
 
 export type CallRunnerPhase =
-  'connecting' | 'connected' | 'reconnecting' | 'awaiting-reconnect' | 'ended' | 'unavailable'
+  | 'connecting'
+  | 'connected'
+  | 'reconnecting'
+  | 'awaiting-reconnect'
+  | 'replaced'
+  | 'ended'
+  | 'unavailable'
 
 export interface CallRunnerState {
   phase: CallRunnerPhase
@@ -71,6 +77,7 @@ export type CallRunnerAction =
   | { type: 'connection-absent' }
   | { type: 'reconnecting' }
   | { type: 'disconnected'; recheck: CallConnection | null }
+  | { type: 'disconnected-replaced' }
   | { type: 'reconnect-accepted'; token: string }
   | { type: 'participant-end-requested'; eventId: string; occurredAt: string }
   | { type: 'participant-end-succeeded' }
@@ -111,6 +118,8 @@ export function reduceCallRunnerState(
         reconnectToken: action.recheck?.participantToken ?? null,
       }
     }
+    case 'disconnected-replaced':
+      return { ...state, phase: 'replaced' }
     case 'reconnect-accepted':
       return {
         ...state,
