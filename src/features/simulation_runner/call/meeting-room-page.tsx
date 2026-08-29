@@ -1,8 +1,9 @@
 import '@livekit/components-styles'
 
-import { LiveKitRoom } from '@livekit/components-react'
+import { LiveKitRoom, StartAudio } from '@livekit/components-react'
+import { VideoPresets, type RoomOptions } from 'livekit-client'
 import { PhoneOff } from 'lucide-react'
-import { useEffect, useReducer, useState } from 'react'
+import { useEffect, useMemo, useReducer, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../../components/ui/button'
 import type { CallConnection } from '../../../shared/api/agent-call'
@@ -16,6 +17,7 @@ import {
 } from './types'
 import { initialCallRunnerState, reduceCallRunnerState } from './call-lifecycle'
 import { AiAgentHeader } from './ai-agent-header'
+import { CallMediaController } from './call-media-controller'
 import { ChatSidebar } from './chat-sidebar'
 import { NetworkStatus } from './network-status'
 import { RoomParticipant } from './room-participant'
@@ -56,6 +58,38 @@ export function CallMeetingRoomPage() {
     if (state.navigateTo === 'simulation') exitToSimulation()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.navigateTo])
+
+  useEffect(() => {
+    if (choices) localStorage.setItem(CALL_PREJOIN_STORAGE_KEY, JSON.stringify(choices))
+  }, [choices])
+
+  // Room options are memoized once: LiveKitRoom recreates the Room whenever
+  // the serialized options change, so device changes are applied through
+  // switchActiveDevice in CallMediaController instead.
+  const roomOptions = useMemo<RoomOptions>(
+    () => ({
+      adaptiveStream: { pixelDensity: 'screen' },
+      dynacast: true,
+      publishDefaults: {
+        dtx: false,
+        red: true,
+        videoCodec: 'vp9',
+        videoSimulcastLayers: [VideoPresets.h540, VideoPresets.h216],
+      },
+      audioCaptureDefaults: {
+        deviceId: choices?.audioDeviceId ?? undefined,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+      videoCaptureDefaults: {
+        deviceId: choices?.videoDeviceId ?? undefined,
+        resolution: VideoPresets.h720,
+      },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
 
   async function handleDisconnected() {
     try {
@@ -101,19 +135,25 @@ export function CallMeetingRoomPage() {
       ) : null}
       <LiveKitRoom
         key={connection.participantToken}
-        audio={choices.audioEnabled}
         connect
         data-lk-theme="default"
         onDisconnected={handleDisconnected}
+        options={roomOptions}
         serverUrl={connection.serverUrl}
         token={connection.participantToken}
-        video={choices.videoEnabled}
       >
+        <CallMediaController choices={choices} />
         <div className="bg-muted flex min-h-0 flex-1 flex-col gap-4 p-4 lg:flex-row">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <p className="text-muted-foreground text-xs">Room: {connection.roomName}</p>
-              <NetworkStatus />
+              <div className="flex items-center gap-2">
+                <StartAudio
+                  className="text-primary text-xs font-medium underline underline-offset-2"
+                  label="Enable call audio"
+                />
+                <NetworkStatus />
+              </div>
             </div>
             <RoomParticipant
               choices={choices}
@@ -122,7 +162,10 @@ export function CallMeetingRoomPage() {
                 setChoices((current) => (current ? { ...current, ...partial } : current))
               }
             />
-            <TranscriptionViewer actorName={connection.actorName} />
+            <TranscriptionViewer
+              actorName={connection.actorName}
+              participantName={connection.participantName}
+            />
           </div>
           <ChatSidebar callSessionId={connection.callSessionId} participantId={participantId} />
         </div>
