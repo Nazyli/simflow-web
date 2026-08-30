@@ -28,6 +28,9 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
+  /* LiveKit BarVisualizer colors */
+  --lk-fg: #6366f1;
+  --lk-va-bg: #cbd5e1;
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
@@ -55,6 +58,17 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 }
+
+/* LiveKit BarVisualizer - ensure bars are visible even with low/no audio */
+.lk-audio-bar {
+  min-height: 6px !important;
+  background-color: var(--lk-fg) !important;
+}
+
+.lk-audio-bar[data-lk-highlighted="true"] {
+  background-color: var(--lk-fg) !important;
+}
+
 body {
   margin: 0;
 }
@@ -340,4 +354,23 @@ button:disabled {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+.lk-audio-bar-visualizer {
+  background-color: cyan;
+  height: 100px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 10px;
+}
+
+.lk-audio-bar {
+  width: 4px;
+  background-color: #4ade80;
+  transition: height 0.2s ease;
+}
+
+.lk-audio-bar.lk-highlighted {
+  background-color: #d1d5db;
 }

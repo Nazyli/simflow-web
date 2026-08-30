@@ -38,14 +38,14 @@ export function AiAgentHeader({
   }
 
   return (
-    <header className="flex items-center justify-between bg-[#1a1a2e] px-4 py-3">
+    <header className="flex items-center justify-between bg-white border-b border-slate-200 px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-bold text-white shadow-lg">
+        <div className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-lg">
           {agentName.charAt(0).toUpperCase()}
         </div>
         <div>
-          <p className="text-sm font-semibold text-white">{agentName}</p>
-          {level ? <p className="text-xs text-white/50">{level}</p> : null}
+          <p className="text-sm font-semibold text-slate-800">{agentName}</p>
+          {level ? <p className="text-xs text-slate-500">{level}</p> : null}
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -54,8 +54,8 @@ export function AiAgentHeader({
             onClick={onToggleChat}
             size="sm"
             variant="ghost"
-            className={`rounded-full p-2 text-white/70 transition hover:bg-white/10 hover:text-white ${
-              chatOpen ? 'bg-white/10 text-white' : ''
+            className={`rounded-full p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 ${
+              chatOpen ? 'bg-slate-100 text-slate-800' : ''
             }`}
           >
             <MessageSquare className="size-4" />
