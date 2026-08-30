@@ -55,8 +55,6 @@ export function TranscriptionViewer({
 
     if (!latest || latest.text === lastTextRef.current) return
 
-    // Voice agent speech arrives as one accumulating transcript separated by
-    // <br>; show only the newest utterance after the last separator.
     let text = latest.text
     const brPattern = /<br\s*\/?>+/gi
     if (brPattern.test(text)) {
@@ -82,15 +80,17 @@ export function TranscriptionViewer({
 
   const isParticipant = latestSegment.sender === participantName
   return (
-    <p
-      className={`rounded-lg border px-3 py-2 text-sm shadow-sm ${
-        isParticipant
-          ? 'border-green-200 bg-green-50 text-green-900'
-          : 'border-violet-200 bg-violet-50 text-violet-900'
-      }`}
-    >
-      <span className="font-semibold">{latestSegment.sender}: </span>
-      {latestSegment.text}
-    </p>
+    <div className="mx-auto max-w-lg animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <p
+        className={`rounded-xl px-4 py-2.5 text-sm shadow-lg backdrop-blur-md ${
+          isParticipant
+            ? 'bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-500/30'
+            : 'bg-violet-500/20 text-violet-100 ring-1 ring-violet-500/30'
+        }`}
+      >
+        <span className="mr-1.5 font-semibold opacity-80">{latestSegment.sender}:</span>
+        {latestSegment.text}
+      </p>
+    </div>
   )
 }

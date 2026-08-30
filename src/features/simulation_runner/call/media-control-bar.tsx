@@ -67,17 +67,17 @@ function DeviceMenu({
         onClick={onClose}
         type="button"
       />
-      <div className="border-border bg-card absolute bottom-full left-1/2 z-50 mb-2 max-h-48 w-52 -translate-x-1/2 overflow-y-auto rounded-lg border shadow-lg">
+      <div className="border-border bg-[#2d2d44] absolute bottom-full left-1/2 z-50 mb-3 max-h-52 w-56 -translate-x-1/2 overflow-y-auto rounded-xl border border-white/10 shadow-2xl backdrop-blur-md">
         {fullItems.length === 0 ? (
-          <p className="text-muted-foreground px-3 py-2 text-xs">No devices found</p>
+          <p className="px-3 py-2.5 text-xs text-white/50">No devices found</p>
         ) : (
           fullItems.map((device) => {
             const isActive =
               device.deviceId === activeId || (!activeId && device.deviceId === 'default')
             return (
               <button
-                className={`hover:bg-muted flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
-                  isActive ? 'text-primary font-medium' : 'text-foreground'
+                className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition-colors ${
+                  isActive ? 'bg-white/10 font-medium text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'
                 }`}
                 key={device.deviceId}
                 onClick={() => {
@@ -87,7 +87,7 @@ function DeviceMenu({
                 title={device.label}
                 type="button"
               >
-                <span className="w-4 text-center">
+                <span className="w-4 shrink-0 text-center">
                   {isActive ? <Check className="size-3.5" /> : null}
                 </span>
                 <span className="truncate">{device.label}</span>
@@ -118,22 +118,24 @@ export function MediaControlBar({
   const cameras = useMemo(() => devices.filter((device) => device.kind === 'videoinput'), [devices])
 
   return (
-    <div className="relative flex items-center gap-3 rounded-full bg-black/50 px-3 py-2 text-white shadow-lg backdrop-blur-sm">
-      <div className="relative flex items-center gap-1">
+    <div className="relative flex items-center gap-2 rounded-full bg-black/70 px-2 py-1.5 text-white shadow-2xl backdrop-blur-md md:gap-3 md:px-4 md:py-2">
+      <div className="relative flex items-center gap-0.5 md:gap-1">
         <button
           aria-label={choices.audioEnabled ? 'Mute microphone' : 'Enable microphone'}
-          className={`rounded-full p-2.5 transition-all ${
-            choices.audioEnabled ? 'bg-white/15 hover:bg-white/30' : 'bg-red-500 hover:bg-red-600'
+          className={`rounded-full p-2.5 transition-all md:p-3 ${
+            choices.audioEnabled
+              ? 'bg-white/10 hover:bg-white/20'
+              : 'bg-red-500/90 hover:bg-red-500'
           }`}
           onClick={() => onChoicesChange({ audioEnabled: !choices.audioEnabled })}
           title={choices.audioEnabled ? 'Turn off microphone' : 'Turn on microphone'}
           type="button"
         >
-          {choices.audioEnabled ? <Mic className="size-4" /> : <MicOff className="size-4" />}
+          {choices.audioEnabled ? <Mic className="size-4 md:size-5" /> : <MicOff className="size-4 md:size-5" />}
         </button>
         <button
           aria-label="Select microphone device"
-          className="rounded-full p-1.5 opacity-70 transition hover:bg-white/20 hover:opacity-100 disabled:opacity-30"
+          className="rounded-full p-1.5 opacity-60 transition hover:bg-white/15 hover:opacity-100 disabled:opacity-20"
           disabled={microphones.length === 0}
           onClick={() => {
             setMicMenuOpen((open) => !open)
@@ -153,23 +155,25 @@ export function MediaControlBar({
         />
       </div>
 
-      <div className="h-7 w-px bg-white/25" />
+      <div className="h-6 w-px bg-white/20 md:h-8" />
 
-      <div className="relative flex items-center gap-1">
+      <div className="relative flex items-center gap-0.5 md:gap-1">
         <button
           aria-label={choices.videoEnabled ? 'Turn camera off' : 'Turn camera on'}
-          className={`rounded-full p-2.5 transition-all ${
-            choices.videoEnabled ? 'bg-white/15 hover:bg-white/30' : 'bg-red-500 hover:bg-red-600'
+          className={`rounded-full p-2.5 transition-all md:p-3 ${
+            choices.videoEnabled
+              ? 'bg-white/10 hover:bg-white/20'
+              : 'bg-red-500/90 hover:bg-red-500'
           }`}
           onClick={() => onChoicesChange({ videoEnabled: !choices.videoEnabled })}
           title={choices.videoEnabled ? 'Turn off camera' : 'Turn on camera'}
           type="button"
         >
-          {choices.videoEnabled ? <Camera className="size-4" /> : <CameraOff className="size-4" />}
+          {choices.videoEnabled ? <Camera className="size-4 md:size-5" /> : <CameraOff className="size-4 md:size-5" />}
         </button>
         <button
           aria-label="Select camera device"
-          className="rounded-full p-1.5 opacity-70 transition hover:bg-white/20 hover:opacity-100 disabled:opacity-30"
+          className="rounded-full p-1.5 opacity-60 transition hover:bg-white/15 hover:opacity-100 disabled:opacity-20"
           disabled={cameras.length === 0}
           onClick={() => {
             setCameraMenuOpen((open) => !open)

@@ -38,6 +38,7 @@ export function CallMeetingRoomPage() {
     storedChoices ?? (roomId ? defaultCallChoices(roomId) : null),
   )
   const [state, dispatch] = useReducer(reduceCallRunnerState, initialCallRunnerState)
+  const [chatOpen, setChatOpen] = useState(false)
 
   const simulationPath = `/simulation/${encodeURIComponent(participantId)}`
 
@@ -115,9 +116,6 @@ export function CallMeetingRoomPage() {
     if (choices) localStorage.setItem(CALL_PREJOIN_STORAGE_KEY, JSON.stringify(choices))
   }, [choices])
 
-  // Room options are memoized once: LiveKitRoom recreates the Room whenever
-  // the serialized options change, so device changes are applied through
-  // switchActiveDevice in CallMediaController instead.
   const roomOptions = useMemo<RoomOptions>(
     () => ({
       adaptiveStream: { pixelDensity: 'screen' },
@@ -180,23 +178,30 @@ export function CallMeetingRoomPage() {
     return <CallUnavailableState onBack={exitToSimulation} />
   }
 
+  const isAdhoc = connection.callSessionId.startsWith('adhoc-')
+
   return (
-    <div className="border-border bg-card flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border shadow-sm">
+    <div className="bg-[#1a1a2e] relative flex h-full min-h-[420px] flex-col overflow-hidden">
       <AiAgentHeader
         agentTier={connection.actorLevel}
         agentName={connection.actorName}
         callSessionId={connection.callSessionId}
         participantId={participantId}
         onLeave={exitToSimulation}
+        chatOpen={chatOpen}
+        onToggleChat={() => setChatOpen((v) => !v)}
+        showChatToggle={!isAdhoc}
       />
+
       {state.phase === 'awaiting-reconnect' ? (
-        <div className="border-border flex items-center justify-between gap-3 border-b bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="flex items-center justify-between gap-3 bg-amber-500/90 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm">
           <span>The call connection dropped. Rejoin the same room when ready.</span>
-          <Button size="sm" variant="outline" onClick={reconnect}>
+          <Button size="sm" variant="secondary" onClick={reconnect}>
             Reconnect
           </Button>
         </div>
       ) : null}
+
       <LiveKitRoom
         key={connection.participantToken}
         connect
@@ -207,18 +212,19 @@ export function CallMeetingRoomPage() {
         token={connection.participantToken}
       >
         <CallMediaController choices={choices} />
-        <div className="bg-muted flex min-h-0 flex-1 flex-col gap-4 p-4 lg:flex-row">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-muted-foreground text-xs">Room: {connection.roomName}</p>
-              <div className="flex items-center gap-2">
+        <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
+          <div className="relative flex min-h-0 min-w-0 flex-1 flex-col p-3 md:p-4">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="text-xs font-medium text-white/50">{connection.roomName}</p>
+              <div className="flex items-center gap-3">
                 <StartAudio
-                  className="text-primary text-xs font-medium underline underline-offset-2"
-                  label="Enable call audio"
+                  className="text-xs font-medium text-blue-300 underline underline-offset-2 transition hover:text-blue-200"
+                  label="Enable audio"
                 />
                 <NetworkStatus />
               </div>
             </div>
+
             <RoomParticipant
               choices={choices}
               localParticipantIdentity={connection.participantIdentity}
@@ -226,13 +232,19 @@ export function CallMeetingRoomPage() {
                 setChoices((current) => (current ? { ...current, ...partial } : current))
               }
             />
-            <TranscriptionViewer
-              actorName={connection.actorName}
-              participantName={connection.participantName}
-            />
+
+            <div className="pointer-events-none absolute inset-x-3 bottom-20 z-10 md:inset-x-4 md:bottom-24">
+              <TranscriptionViewer
+                actorName={connection.actorName}
+                participantName={connection.participantName}
+              />
+            </div>
           </div>
-          {connection.callSessionId.startsWith('adhoc-') ? null : (
-            <ChatSidebar callSessionId={connection.callSessionId} participantId={participantId} />
+
+          {!isAdhoc && chatOpen && (
+            <div className="border-l border-white/10 lg:w-80">
+              <ChatSidebar callSessionId={connection.callSessionId} participantId={participantId} />
+            </div>
           )}
         </div>
       </LiveKitRoom>
@@ -242,17 +254,17 @@ export function CallMeetingRoomPage() {
 
 function CallUnavailableState({ onBack }: { onBack: () => void }) {
   return (
-    <div className="border-border bg-card flex h-full min-h-[420px] flex-col items-center justify-center gap-3 rounded-xl border px-6 text-center shadow-sm">
-      <span className="bg-muted text-muted-foreground grid size-12 place-items-center rounded-full">
-        <PhoneOff className="size-5" />
+    <div className="bg-[#1a1a2e] flex h-full min-h-[420px] flex-col items-center justify-center gap-4 px-6 text-center">
+      <span className="grid size-16 place-items-center rounded-full bg-white/10 text-white/60">
+        <PhoneOff className="size-7" />
       </span>
       <div>
-        <h2 className="text-foreground text-sm font-semibold">Calling is not configured</h2>
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+        <h2 className="text-lg font-semibold text-white">Calling is not configured</h2>
+        <p className="mt-2 max-w-sm text-sm text-white/50">
           LiveKit credentials are not available for this simulation yet.
         </p>
       </div>
-      <Button onClick={onBack} variant="outline">
+      <Button onClick={onBack} variant="outline" className="mt-2 border-white/20 text-white hover:bg-white/10">
         Back to simulation
       </Button>
     </div>
@@ -261,18 +273,18 @@ function CallUnavailableState({ onBack }: { onBack: () => void }) {
 
 function CallReplacedState({ onBack }: { onBack: () => void }) {
   return (
-    <div className="border-border bg-card flex h-full min-h-[420px] flex-col items-center justify-center gap-3 rounded-xl border px-6 text-center shadow-sm">
-      <span className="bg-muted text-muted-foreground grid size-12 place-items-center rounded-full">
-        <MonitorSmartphone className="size-5" />
+    <div className="bg-[#1a1a2e] flex h-full min-h-[420px] flex-col items-center justify-center gap-4 px-6 text-center">
+      <span className="grid size-16 place-items-center rounded-full bg-white/10 text-white/60">
+        <MonitorSmartphone className="size-7" />
       </span>
       <div>
-        <h2 className="text-foreground text-sm font-semibold">Call joined elsewhere</h2>
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+        <h2 className="text-lg font-semibold text-white">Call joined elsewhere</h2>
+        <p className="mt-2 max-w-sm text-sm text-white/50">
           This call was opened in another device or browser, so this session was closed. Returning
           to the simulation…
         </p>
       </div>
-      <Button onClick={onBack} variant="outline">
+      <Button onClick={onBack} variant="outline" className="mt-2 border-white/20 text-white hover:bg-white/10">
         Back to simulation
       </Button>
     </div>
@@ -281,18 +293,18 @@ function CallReplacedState({ onBack }: { onBack: () => void }) {
 
 function CallWaitingForAgentState({ onBack }: { onBack: () => void }) {
   return (
-    <div className="border-border bg-card flex h-full min-h-[420px] flex-col items-center justify-center gap-3 rounded-xl border px-6 text-center shadow-sm">
-      <span className="bg-muted text-muted-foreground grid size-12 place-items-center rounded-full">
-        <PhoneOff className="size-5 animate-pulse" />
+    <div className="bg-[#1a1a2e] flex h-full min-h-[420px] flex-col items-center justify-center gap-4 px-6 text-center">
+      <span className="grid size-16 place-items-center rounded-full bg-white/10 text-white/60 animate-pulse">
+        <PhoneOff className="size-7" />
       </span>
       <div>
-        <h2 className="text-foreground text-sm font-semibold">Waiting for the call to start…</h2>
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+        <h2 className="text-lg font-semibold text-white">Waiting for the call to start…</h2>
+        <p className="mt-2 max-w-sm text-sm text-white/50">
           The voice agent is joining the room. This page will connect automatically once it is
           ready.
         </p>
       </div>
-      <Button onClick={onBack} variant="outline">
+      <Button onClick={onBack} variant="outline" className="mt-2 border-white/20 text-white hover:bg-white/10">
         Back to simulation
       </Button>
     </div>

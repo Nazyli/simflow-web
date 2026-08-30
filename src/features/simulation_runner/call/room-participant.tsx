@@ -49,72 +49,90 @@ export function RoomParticipant({
       return 0
     })
 
+  const participantCount = cameraTracks.length
+
   return (
-    <section className="bg-muted relative min-h-0 flex-1 space-y-3 overflow-y-auto rounded-xl p-4">
+    <section className="relative min-h-0 flex-1 overflow-hidden rounded-xl">
       <RoomAudioRenderer />
-      <TrackLoop tracks={cameraTracks}>
-        <TrackRefContext.Consumer>
-          {(trackRef) => {
-            if (!trackRef) return null
-            const participant = trackRef.participant
-            const isLocal = participant.identity === localParticipantIdentity
-            const micTrack = microphoneTracks.find(
-              (track) => track.participant.identity === participant.identity,
-            )
-            // Local mute state follows the control bar choices; remote state
-            // comes from the LiveKit publication.
-            const isMicMuted = isLocal
-              ? !choices.audioEnabled
-              : (micTrack?.publication?.isMuted ?? true)
-            const isCameraMuted = isLocal
-              ? !choices.videoEnabled
-              : (trackRef.publication?.isMuted ?? true)
+      <div
+        className={`grid h-full gap-2 md:gap-3 ${
+          participantCount <= 1
+            ? 'grid-cols-1'
+            : participantCount === 2
+              ? 'grid-cols-1 md:grid-cols-2'
+              : participantCount <= 4
+                ? 'grid-cols-2'
+                : 'grid-cols-2 lg:grid-cols-3'
+        }`}
+      >
+        <TrackLoop tracks={cameraTracks}>
+          <TrackRefContext.Consumer>
+            {(trackRef) => {
+              if (!trackRef) return null
+              const participant = trackRef.participant
+              const isLocal = participant.identity === localParticipantIdentity
+              const micTrack = microphoneTracks.find(
+                (track) => track.participant.identity === participant.identity,
+              )
+              const isMicMuted = isLocal
+                ? !choices.audioEnabled
+                : (micTrack?.publication?.isMuted ?? true)
+              const isCameraMuted = isLocal
+                ? !choices.videoEnabled
+                : (trackRef.publication?.isMuted ?? true)
 
-            return (
-              <article className="border-border bg-background relative aspect-video overflow-hidden rounded-lg border shadow-sm">
-                {!isCameraMuted && trackRef.publication ? (
-                  <VideoTrack
-                    className="absolute inset-0 size-full object-cover"
-                    trackRef={trackRef}
-                  />
-                ) : (
-                  <div className="grid size-full place-items-center">
-                    <div className="bg-primary/20 text-primary grid size-20 place-items-center rounded-full text-2xl font-bold">
-                      {getInitials(participant.name || participant.identity)}
+              return (
+                <article className="bg-[#2d2d44] relative overflow-hidden rounded-xl shadow-inner transition-all duration-200">
+                  {!isCameraMuted && trackRef.publication ? (
+                    <VideoTrack
+                      className="absolute inset-0 size-full object-cover"
+                      trackRef={trackRef}
+                    />
+                  ) : (
+                    <div className="flex size-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#2d2d44] to-[#1a1a2e]">
+                      <div className="flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 text-2xl font-bold text-white shadow-lg ring-2 ring-white/10 md:size-24 md:text-3xl">
+                        {getInitials(participant.name || participant.identity)}
+                      </div>
+                      <span className="text-sm font-medium text-white/60">
+                        {participant.name || participant.identity}
+                      </span>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-md bg-black/50 px-2 py-1 text-xs text-white">
-                  {isMicMuted ? (
-                    <MicOff className="size-3.5 text-red-400" />
-                  ) : (
-                    <Mic className="size-3.5 text-green-400" />
-                  )}
-                  {isCameraMuted ? (
-                    <CameraOff className="size-3.5 text-red-400" />
-                  ) : (
-                    <Camera className="size-3.5 text-green-400" />
-                  )}
-                  {micTrack && !isMicMuted ? (
-                    <BarVisualizer barCount={5} className="h-4" track={micTrack} />
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5 rounded-lg bg-black/60 px-2 py-1.5 text-xs text-white backdrop-blur-md md:top-3 md:left-3">
+                    {isMicMuted ? (
+                      <MicOff className="size-3.5 text-red-400" />
+                    ) : (
+                      <Mic className="size-3.5 text-green-400" />
+                    )}
+                    {isCameraMuted ? (
+                      <CameraOff className="size-3.5 text-red-400" />
+                    ) : (
+                      <Camera className="size-3.5 text-green-400" />
+                    )}
+                    {micTrack && !isMicMuted ? (
+                      <BarVisualizer barCount={5} className="h-3.5 w-12" track={micTrack} />
+                    ) : null}
+                    <ParticipantName className="ml-1 max-w-[80px] truncate md:max-w-[120px]" />
+                  </div>
+
+                  {isLocal ? (
+                    <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center md:bottom-4">
+                      <MediaControlBar choices={choices} onChoicesChange={onChoicesChange} />
+                    </div>
                   ) : null}
-                  <ParticipantName />
-                </div>
-
-                {isLocal ? (
-                  <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center">
-                    <MediaControlBar choices={choices} onChoicesChange={onChoicesChange} />
-                  </div>
-                ) : null}
-              </article>
-            )
-          }}
-        </TrackRefContext.Consumer>
-      </TrackLoop>
+                </article>
+              )
+            }}
+          </TrackRefContext.Consumer>
+        </TrackLoop>
+      </div>
       {!cameraTracks.length ? (
-        <div className="text-muted-foreground grid h-full place-items-center text-sm">
-          Waiting for participants…
+        <div className="flex h-full flex-col items-center justify-center gap-3 text-white/40">
+          <div className="grid size-16 place-items-center rounded-full bg-white/5">
+            <Camera className="size-7" />
+          </div>
+          <p className="text-sm font-medium">Waiting for participants…</p>
         </div>
       ) : null}
     </section>

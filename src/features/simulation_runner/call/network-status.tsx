@@ -16,8 +16,14 @@ export function NetworkStatus() {
   }, [])
 
   return (
-    <span className="text-muted-foreground flex items-center gap-1 text-xs">
-      {isOnline ? <Wifi className="size-3.5" /> : <WifiOff className="text-destructive size-3.5" />}
+    <span
+      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium backdrop-blur-sm ${
+        isOnline
+          ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30'
+          : 'bg-red-500/20 text-red-300 ring-1 ring-red-500/30'
+      }`}
+    >
+      {isOnline ? <Wifi className="size-3" /> : <WifiOff className="size-3" />}
       {isOnline ? 'Online' : 'Offline'}
     </span>
   )
