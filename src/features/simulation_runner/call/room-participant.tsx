@@ -64,7 +64,7 @@ export function ParticipantGrid({ choices, localParticipantIdentity }: Participa
   return (
     <section className="relative min-h-0 flex-1">
       <RoomAudioRenderer />
-      <div className={`grid h-full auto-rows-fr gap-3 ${gridClass}`}>
+      <div className={`grid h-full w-full auto-rows-fr place-items-center gap-3 ${gridClass}`}>
         {cameraTracks.map((trackRef) => (
           <ParticipantTile
             key={trackRef.participant.identity}
@@ -101,7 +101,7 @@ function ParticipantTile({
 
   return (
     <article
-      className={`relative min-h-0 overflow-hidden rounded-2xl bg-slate-100 shadow-sm transition-all duration-200 ${
+      className={`relative aspect-video w-full max-h-full overflow-hidden rounded-2xl bg-slate-100 shadow-sm transition-all duration-200 ${
         isLocal ? 'ring-2 ring-indigo-300' : 'ring-1 ring-slate-200'
       }`}
     >

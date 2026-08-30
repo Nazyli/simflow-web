@@ -209,6 +209,7 @@ export function CallMeetingRoomPage() {
       <LiveKitRoom
         key={activeConnection.participantToken}
         connect
+        className="flex min-h-0 flex-1 flex-col"
         data-lk-theme="default"
         style={{ '--lk-bg': 'transparent', backgroundColor: 'transparent' } as CSSProperties}
         onDisconnected={handleDisconnected}
