@@ -1,3 +1,4 @@
+import { AgentAudioVisualizerAura } from '@/components/agent-audio-visualizer-aura'
 import { AgentAudioVisualizerWave } from '@/components/agent-audio-visualizer-wave'
 import { RoomAudioRenderer, useTracks, VideoTrack } from '@livekit/components-react'
 import { Track } from 'livekit-client'
@@ -101,7 +102,7 @@ function ParticipantTile({
 
   return (
     <article
-      className={`relative aspect-video w-full max-h-full overflow-hidden rounded-2xl bg-slate-100 shadow-sm transition-all duration-200 ${
+      className={`relative aspect-video max-h-full w-full overflow-hidden rounded-2xl bg-slate-100 shadow-sm transition-all duration-200 ${
         isLocal ? 'ring-2 ring-indigo-300' : 'ring-1 ring-slate-200'
       }`}
     >
@@ -109,8 +110,20 @@ function ParticipantTile({
         <VideoTrack className="absolute inset-0 size-full object-cover" trackRef={trackRef} />
       ) : (
         <div className="flex size-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-100 to-slate-200">
-          <div className="flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-bold text-white shadow-lg md:size-24 md:text-3xl">
-            {getInitials(participant.name || participant.identity)}
+          <div className="relative flex items-center justify-center">
+            {micTrack && !isMicMuted ? (
+              <AgentAudioVisualizerAura
+                size="md"
+                state="speaking"
+                color="#6366f1"
+                themeMode="light"
+                audioTrack={micTrack}
+                className="pointer-events-none absolute size-20 scale-165 md:size-24"
+              />
+            ) : null}
+            <div className="relative z-10 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-bold text-white shadow-lg md:size-24 md:text-3xl">
+              {getInitials(participant.name || participant.identity)}
+            </div>
           </div>
           <span className="text-sm font-semibold text-slate-600">
             {participant.name || participant.identity}
