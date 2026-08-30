@@ -182,8 +182,6 @@ export function CallMeetingRoomPage() {
     return <CallUnavailableState onBack={exitToSimulation} />
   }
 
-  const isAdhoc = activeConnection.callSessionId.startsWith('adhoc-')
-
   return (
     <div className="bg-background relative flex h-full min-h-[420px] flex-col overflow-hidden">
       <AiAgentHeader
@@ -194,7 +192,7 @@ export function CallMeetingRoomPage() {
         onLeave={exitToSimulation}
         chatOpen={chatOpen}
         onToggleChat={() => setChatOpen((v) => !v)}
-        showChatToggle={!isAdhoc}
+        showChatToggle
       />
 
       {state.phase === 'awaiting-reconnect' ? (
@@ -245,7 +243,7 @@ export function CallMeetingRoomPage() {
               </div>
             </div>
 
-            {!isAdhoc && chatOpen && (
+            {chatOpen && (
               <div className="border-l border-slate-200 lg:w-80">
                 <ChatSidebar callSessionId={activeConnection.callSessionId} participantId={participantId} />
               </div>
