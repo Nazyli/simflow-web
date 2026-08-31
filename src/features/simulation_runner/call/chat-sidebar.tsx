@@ -84,6 +84,10 @@ export function ChatSidebar({
     const message = text.trim()
     if (!message) return
     await room.localParticipant.sendText(message, { topic: 'lk.chat' })
+    setMessages((current) => [
+      ...current,
+      { id: `local-${Date.now()}`, sender: participantName, text: message },
+    ])
     setText('')
   }
 
