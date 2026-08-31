@@ -147,7 +147,7 @@ export function WorkflowListPage() {
           </span>
           <div className="min-w-0">
             <p className="text-[10px] font-bold tracking-wider text-purple-700 uppercase">
-              Scenario Builder
+              Simulation Builder
             </p>
             <h1 className="truncate text-lg font-bold text-slate-900">Workflows</h1>
             <p className="truncate text-xs text-slate-500">

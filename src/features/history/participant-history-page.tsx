@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Ban,
   Check,
@@ -8,10 +8,12 @@ import {
   ListTree,
   PlayCircle,
   Route,
+  Trash2,
   Workflow,
   XCircle,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '../../components/ui/button'
 import {
   Dialog,
@@ -28,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table'
-import { getNodeExecutions, type NodeExecution } from '../../shared/api/executions'
+import { deleteExecution, getNodeExecutions, type NodeExecution } from '../../shared/api/executions'
 import { getExecutionHistory, type ExecutionHistoryItem } from '../../shared/api/sessions'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { DataTable, type DataTableColumn } from '../../shared/components/data-table'
@@ -103,9 +105,11 @@ function StatCard({ status, count }: { status: string; count: number }) {
 }
 
 export function ParticipantHistoryPage() {
+  const queryClient = useQueryClient()
   const [selectedRow, setSelectedRow] = useState<HistoryRow | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [flowOpen, setFlowOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<HistoryRow | null>(null)
   const history = useQuery({
     queryKey: ['participant-history'],
     queryFn: async (): Promise<HistoryRow[]> => {
@@ -117,6 +121,15 @@ export function ParticipantHistoryPage() {
         versionNumber: execution.version_number,
       }))
     },
+  })
+  const removeExecution = useMutation({
+    mutationFn: deleteExecution,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['participant-history'] })
+      setDeleteTarget(null)
+      toast.success('Execution log deleted.')
+    },
+    onError: () => toast.error('Unable to delete the execution log.'),
   })
   const nodeExecutions = useQuery({
     queryKey: ['history-node-executions', selectedRow?.execution.execution_id],
@@ -241,6 +254,14 @@ export function ParticipantHistoryPage() {
             <Route size={12} className="mr-1 inline" />
             Flow
           </button>
+          <button
+            onClick={() => setDeleteTarget(row)}
+            aria-label={`Delete execution ${row.execution.execution_id}`}
+            title="Delete execution log"
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          >
+            <Trash2 size={12} />
+          </button>
         </div>
       ),
     },
@@ -306,6 +327,40 @@ export function ParticipantHistoryPage() {
         }
         currentState={selectedRow?.execution.current_node_id ?? null}
       />
+
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+      >
+        <DialogContent className="p-6 sm:max-w-md">
+          <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
+            <Trash2 className="h-5 w-5 text-red-600" /> Delete execution log?
+          </DialogTitle>
+          <DialogDescription>
+            This permanently deletes the execution, its timeline events, node results, waits,
+            timers, and the simulation session when no other execution uses it. This cannot be
+            undone.
+          </DialogDescription>
+
+          <div className="flex items-center justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={removeExecution.isPending}
+              onClick={() => deleteTarget && removeExecution.mutate(deleteTarget.execution.execution_id)}
+              className="border-0 bg-red-600 text-white hover:bg-red-700"
+            >
+              <Trash2 className="h-3.5 w-3.5" />{' '}
+              {removeExecution.isPending ? 'Deleting…' : 'Delete log'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

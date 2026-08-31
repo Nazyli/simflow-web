@@ -676,7 +676,7 @@ export function SimulationStudioPage() {
         selectedVersion?.status !== 'draft'
       )
         return
-      const nodeType = event.dataTransfer?.getData('application/scenario-builder-node-type')
+      const nodeType = event.dataTransfer?.getData('application/simulation-builder-node-type')
       const definition = definitions.get(nodeType ?? '')
       if (!definition) return
       event.preventDefault()
@@ -690,7 +690,7 @@ export function SimulationStudioPage() {
       if (
         event.target instanceof Element &&
         event.target.closest('.graph') &&
-        event.dataTransfer?.types.includes('application/scenario-builder-node-type')
+        event.dataTransfer?.types.includes('application/simulation-builder-node-type')
       )
         event.preventDefault()
     }
@@ -874,7 +874,7 @@ export function SimulationStudioPage() {
   }
 
   function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: string) {
-    event.dataTransfer.setData('application/scenario-builder-node-type', nodeType)
+    event.dataTransfer.setData('application/simulation-builder-node-type', nodeType)
     event.dataTransfer.setData('text/plain', nodeType)
     event.dataTransfer.effectAllowed = 'move'
   }
@@ -887,7 +887,7 @@ export function SimulationStudioPage() {
   function dropPaletteNode(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
     const definition = definitions.get(
-      event.dataTransfer.getData('application/scenario-builder-node-type'),
+      event.dataTransfer.getData('application/simulation-builder-node-type'),
     )
     if (!definition || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
     addGraphNode.mutate({

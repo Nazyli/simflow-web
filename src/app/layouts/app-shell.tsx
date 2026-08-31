@@ -26,7 +26,7 @@ function Breadcrumb() {
       className="flex items-center gap-2 overflow-hidden text-[0.76rem] whitespace-nowrap text-slate-400 max-[620px]:mr-auto max-[620px]:max-w-[180px]"
       aria-label="Breadcrumb"
     >
-      <span>Scenario Builder</span>
+      <span>Simulation Builder</span>
       <span>/</span>
       <strong className="font-semibold text-slate-600">{title}</strong>
       {segments.length > 1 && (

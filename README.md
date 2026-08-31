@@ -1,6 +1,6 @@
-# Scenario Builder Web
+# Simulation Builder Web
 
-React/Vite interface for configuring and running Scenario Builder workflows.
+React/Vite interface for configuring and running Simulation Builder workflows.
 
 ## Routes
 
