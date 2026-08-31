@@ -41,7 +41,7 @@ function Breadcrumb() {
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
-    <SidebarProvider className="bg-slate-100">
+    <SidebarProvider defaultOpen={false} className="bg-slate-100">
       <AppSidebar items={navigation} />
 
       <SidebarInset className="bg-slate-100">
