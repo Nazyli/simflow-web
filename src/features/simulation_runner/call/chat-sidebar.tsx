@@ -9,6 +9,7 @@ import {
 import { Track } from 'livekit-client'
 import { Button } from '../../../components/ui/button'
 import { Input } from '../../../components/ui/input'
+import { getCallHistory } from '../../../shared/api/agent-call'
 
 interface ChatMessage {
   id: string
@@ -19,9 +20,13 @@ interface ChatMessage {
 const BR_SPLIT_PATTERN = /<br\s*\/?>/gi
 
 export function ChatSidebar({
+  callSessionId,
+  participantId,
   actorName,
   participantName,
 }: {
+  callSessionId: string
+  participantId: string
   actorName: string
   participantName: string
 }) {
@@ -29,6 +34,40 @@ export function ChatSidebar({
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!callSessionId) return
+    let active = true
+    getCallHistory(callSessionId, participantId)
+      .then((history) => {
+        if (!active) return
+        const ordered = [...history].sort((a, b) => {
+          if (a.spokenAt === b.spokenAt) {
+            return a.callMessageId < b.callMessageId
+              ? -1
+              : a.callMessageId > b.callMessageId
+                ? 1
+                : 0
+          }
+          return a.spokenAt < b.spokenAt ? -1 : 1
+        })
+        const baseline: ChatMessage[] = ordered.map((item) => ({
+          id: item.callMessageId,
+          sender: item.senderName,
+          text: item.content,
+        }))
+        setMessages((current) => {
+          const liveTexts = new Set(current.map((message) => message.text))
+          return [...baseline.filter((item) => !liveTexts.has(item.text)), ...current]
+        })
+      })
+      .catch(() => {
+        // No baseline available; live transcription still renders.
+      })
+    return () => {
+      active = false
+    }
+  }, [callSessionId, participantId])
 
   const { audioTrack: agentAudioTrack } = useVoiceAssistant()
   const agentMessages = useTrackTranscription(agentAudioTrack)
