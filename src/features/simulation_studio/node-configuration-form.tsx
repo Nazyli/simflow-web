@@ -753,24 +753,18 @@ function JsonField({
 }
 
 export function EdgeConfigurationForm({
-  priority,
   onSave,
   onDelete,
 }: {
-  priority: number
-  onSave: (priority: number) => void
+  onSave: () => void
   onDelete: () => void
 }) {
-  const [nextPriority, setPriority] = useState(priority)
-  useEffect(() => {
-    setPriority(priority)
-  }, [priority])
   return (
     <form
       className="flex flex-col gap-4"
       onSubmit={(event) => {
         event.preventDefault()
-        onSave(nextPriority)
+        onSave()
       }}
     >
       <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
@@ -779,12 +773,6 @@ export function EdgeConfigurationForm({
           <h3 className="text-sm font-semibold">Edge Inspector</h3>
         </div>
       </div>
-      <TextField
-        label="Priority Order"
-        value={nextPriority}
-        type="number"
-        onChange={(value) => setPriority(Number(value))}
-      />
       <div className="grid gap-2">
         <Button type="submit" className="w-full">
           <Save className="h-4 w-4" /> Save Edge

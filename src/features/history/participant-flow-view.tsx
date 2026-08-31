@@ -168,7 +168,6 @@ export function ParticipantFlowView({
         markerEnd: { type: MarkerType.ArrowClosed, color },
         animated: taken,
         data: {
-          priority: edge.priority,
           label: sourcePort?.label ?? edge.source_port_id,
           style: {
             color,

@@ -4,7 +4,6 @@ import { ButtonEdge, type EdgePathType } from '@/components/button-edge'
 import { Button } from '@/components/ui/button'
 
 type WorkflowEdgeData = {
-  priority: number
   label: string
   style: { color: string; line_style: string; animated: boolean }
   edgeType?: EdgePathType
@@ -26,13 +25,12 @@ export function WorkflowGraphEdge({
   selected,
 }: EdgeProps) {
   const edgeData = data as WorkflowEdgeData
-  const priority = edgeData?.priority ?? 0
   const label = edgeData?.label ?? ''
   const style = edgeData?.style ?? { color: '#94a3b8', line_style: 'solid', animated: false }
   const edgeType = edgeData?.edgeType ?? 'default'
   const onDelete = edgeData?.onDelete
   const stroke = selected ? '#5b46c5' : style.color
-  const labelOffset = priority % 2 === 0 ? -18 : 18
+  const labelOffset = -18
   return (
     <ButtonEdge
       id={id}
@@ -63,10 +61,7 @@ export function WorkflowGraphEdge({
           size="xs"
           className="text-muted-foreground h-auto gap-1 rounded-full px-2 py-0.5 text-[0.65rem]"
         >
-          <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-px text-[0.6rem] font-bold">
-            P{priority}
-          </span>
-          <span className="max-w-[180px] truncate">{label}</span>
+          <span className="text-muted-foreground max-w-[180px] truncate">{label}</span>
         </Button>
         {onDelete && (
           <Button

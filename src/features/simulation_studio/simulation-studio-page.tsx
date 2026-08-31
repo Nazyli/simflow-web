@@ -117,8 +117,17 @@ function edgeToFlow(
   sourcePort: OutputPort | undefined,
   onDelete: (edgeId: string) => void,
   edgeType: EdgePathType = 'default',
+  sourceNode?: ApiNode,
 ): Edge {
   const style = sourcePort?.edge_style ?? { color: '#94a3b8', line_style: 'solid', animated: false }
+  let label = sourcePort?.label ?? edge.source_port_id
+  
+  // Append timeout duration for timeout ports on wait nodes
+  if (edge.source_port_id === 'timeout' && sourceNode?.parameters?.timeout_seconds) {
+    const seconds = sourceNode.parameters.timeout_seconds
+    label = `${label} - ${seconds}s`
+  }
+  
   return {
     id: edge.edge_id,
     type: 'workflow',
@@ -129,8 +138,7 @@ function edgeToFlow(
     markerEnd: { type: MarkerType.ArrowClosed, color: style.color },
     animated: style.animated,
     data: {
-      priority: edge.priority,
-      label: sourcePort?.label ?? edge.source_port_id,
+      label,
       style,
       edgeType,
       onDelete,
@@ -493,16 +501,16 @@ export function SimulationStudioPage() {
     if (apiNodes.length === 0) {
       setNodes([])
       setEdges(
-        apiEdges.map((edge) =>
-          edgeToFlow(
+        apiEdges.map((edge) => {
+          const sourceNode = apiNodes.find((node) => node.node_id === edge.source_node_id)
+          return edgeToFlow(
             edge,
-            apiNodes
-              .find((node) => node.node_id === edge.source_node_id)
-              ?.output_ports.find((port) => port.id === edge.source_port_id),
+            sourceNode?.output_ports.find((port) => port.id === edge.source_port_id),
             deleteEdge,
             edgePathType,
-          ),
-        ),
+            sourceNode,
+          )
+        }),
       )
       return
     }
@@ -580,16 +588,16 @@ export function SimulationStudioPage() {
       }),
     )
     setEdges(
-      apiEdges.map((edge) =>
-        edgeToFlow(
+      apiEdges.map((edge) => {
+        const sourceNode = apiNodes.find((node) => node.node_id === edge.source_node_id)
+        return edgeToFlow(
           edge,
-          apiNodes
-            .find((node) => node.node_id === edge.source_node_id)
-            ?.output_ports.find((port) => port.id === edge.source_port_id),
+          sourceNode?.output_ports.find((port) => port.id === edge.source_port_id),
           deleteEdge,
           edgePathType,
-        ),
-      ),
+          sourceNode,
+        )
+      }),
     )
   }, [
     apiNodes,
@@ -800,20 +808,19 @@ export function SimulationStudioPage() {
       source_port_id: connection.sourceHandle,
       target_node_id: connection.target,
       target_port_id: connection.targetHandle,
-      priority: 0,
       is_valid: true,
     }
     pendingEdgeKeys.current.add(connectionKey)
+    const flowSourceNode = nodes.find((n) => n.id === connection.source)?.data as { apiNode?: ApiNode } | undefined
     setEdges((current) => [
       ...current,
-      edgeToFlow(pendingEdge, sourcePort, deleteEdge, edgePathType),
+      edgeToFlow(pendingEdge, sourcePort, deleteEdge, edgePathType, flowSourceNode?.apiNode),
     ])
     addWorkflowEdge(versionId, {
       source_node_id: connection.source,
       source_port_id: connection.sourceHandle,
       target_node_id: connection.target,
       target_port_id: connection.targetHandle,
-      priority: 0,
     })
       .then((edge) => {
         queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', versionId], (current) =>
@@ -822,9 +829,13 @@ export function SimulationStudioPage() {
             : current,
         )
         setEdges((current) =>
-          current.map((item) =>
-            item.id === pendingEdgeId ? edgeToFlow(edge, sourcePort, deleteEdge) : item,
-          ),
+          current.map((item) => {
+            if (item.id === pendingEdgeId) {
+              const sourceNode = apiNodes.find((n) => n.node_id === edge.source_node_id)
+              return edgeToFlow(edge, sourcePort, deleteEdge, edgePathType, sourceNode)
+            }
+            return item
+          }),
         )
       })
       .catch((error: unknown) => {
@@ -911,7 +922,7 @@ export function SimulationStudioPage() {
     })
   }
 
-  function saveStructuredEdge(priority: number) {
+  function saveStructuredEdge() {
     if (!selectedEdge) return
     persistEdge.mutate({
       id: selectedEdge.edge_id,
@@ -920,7 +931,6 @@ export function SimulationStudioPage() {
         source_port_id: selectedEdge.source_port_id,
         target_node_id: selectedEdge.target_node_id,
         target_port_id: selectedEdge.target_port_id,
-        priority,
       },
     })
   }
@@ -1405,7 +1415,6 @@ export function SimulationStudioPage() {
 
                 {selectedEdge && (
                   <EdgeConfigurationForm
-                    priority={selectedEdge.priority}
                     onSave={saveStructuredEdge}
                     onDelete={() => removeEdge.mutate(selectedEdge.edge_id)}
                   />

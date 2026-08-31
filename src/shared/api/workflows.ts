@@ -52,7 +52,6 @@ export interface ApiEdge {
   source_port_id: string
   target_node_id: string
   target_port_id: string
-  priority: number
   is_valid: boolean
 }
 export type ApiNodePayload = Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'>
