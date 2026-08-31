@@ -1,11 +1,3 @@
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '../../components/ui/dialog'
-import { Button } from '../../components/ui/button'
 import { useQuery } from '@tanstack/react-query'
 import {
   Background,
@@ -21,6 +13,7 @@ import {
 import { CircleAlert, Route } from 'lucide-react'
 import dagre from 'dagre'
 import { useEffect, useMemo, useState } from 'react'
+import { type EdgePathType } from '../../components/button-edge'
 import { getNodeExecutions } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
 import { getGraph, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
@@ -66,40 +59,34 @@ function dagLayout(
   return positions
 }
 
-export function ParticipantFlowView({
-  open,
-  onClose,
+export function ParticipantFlowCanvas({
   versionId,
   executionId,
-  title,
   currentState,
 }: {
-  open: boolean
-  onClose: () => void
   versionId: string
   executionId: string
-  title: string
   currentState: string | null
 }) {
   const graph = useQuery({
     queryKey: ['graph', versionId],
     queryFn: () => getGraph(versionId),
-    enabled: open && Boolean(versionId),
+    enabled: Boolean(versionId),
   })
   const nodeCatalog = useQuery({
     queryKey: ['node-catalog'],
     queryFn: getNodeCatalog,
-    enabled: open,
   })
   const nodeExecutions = useQuery({
     queryKey: ['node-executions', executionId],
     queryFn: () => getNodeExecutions(executionId),
-    enabled: open && Boolean(executionId),
+    enabled: Boolean(executionId),
   })
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
+  const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
 
   const view = useMemo(() => {
     const apiNodes: ApiNode[] = graph.data?.[0] ?? []
@@ -174,6 +161,7 @@ export function ParticipantFlowView({
             line_style: taken ? 'solid' : 'dashed',
             animated: taken,
           },
+          edgeType: edgePathType,
         },
       }
     })
@@ -185,7 +173,7 @@ export function ParticipantFlowView({
       takenCount: takenEdgeIds.size,
       externalStates: { nodeIds: [...externalNodeIds] },
     }
-  }, [currentState, graph.data, nodeCatalog.data, nodeExecutions.data])
+  }, [currentState, edgePathType, graph.data, nodeCatalog.data, nodeExecutions.data])
 
   useEffect(() => {
     if (graph.isPending || nodeExecutions.isPending) return
@@ -210,104 +198,88 @@ export function ParticipantFlowView({
   const hasWarnings = view.externalStates.nodeIds.length > 0
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent
-        showCloseButton={false}
-        className="flex max-h-[calc(100vh-48px)] w-[min(1120px,calc(100vw-32px))] flex-col gap-0 overflow-hidden p-0 sm:max-w-none"
-      >
-        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 text-[#5b46c5]">
-              <Route size={18} />
-            </span>
-            <div className="min-w-0">
-              <DialogTitle className="truncate text-base font-bold text-slate-900">
-                {title}
-              </DialogTitle>
-              <DialogDescription className="text-xs text-slate-500">
-                Participant path mapped onto the workflow definition
-              </DialogDescription>
+    <div className="flex h-full flex-col">
+      <div className="flex shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-b border-slate-100 px-5 py-2.5 text-[11px] font-medium text-slate-500">
+        <span className="flex items-center gap-1.5">
+          <i className="history-legend-line history-legend-line--path" />
+          Participant path ({view.takenCount})
+        </span>
+        <span className="flex items-center gap-1.5">
+          <i className="history-legend-line" />
+          Workflow definition
+        </span>
+        <span className="flex items-center gap-1.5">
+          <i className="history-legend-node" />
+          Visited node ({view.visitedCount})
+        </span>
+        {currentState && (
+          <span className="flex items-center gap-1.5 text-[#5b46c5]">
+            ● Current state: {currentState}
+          </span>
+        )}
+        <select
+          value={edgePathType}
+          onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
+          className="ml-auto h-7 cursor-pointer rounded-lg border border-slate-200 bg-white px-1.5 text-[11px] font-semibold text-slate-600 transition-colors outline-none hover:bg-slate-50"
+        >
+          <option value="default">Bezier</option>
+          <option value="smoothstep">Smooth</option>
+          <option value="step">Step</option>
+          <option value="straight">Straight</option>
+        </select>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {hasWarnings && (
+          <div className="mx-4 mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+            <CircleAlert size={14} className="mt-0.5 shrink-0" />
+            <div>
+              <strong>States outside the workflow nodes</strong>
+              <p className="mt-0.5 leading-relaxed">
+                {view.externalStates.nodeIds.length > 0 && (
+                  <>
+                    Node reference(s) not present in this version:{' '}
+                    {view.externalStates.nodeIds.join(', ')}.{' '}
+                  </>
+                )}
+                These node executions cannot be mapped onto the flow.
+              </p>
             </div>
           </div>
-          <DialogClose asChild>
-            <Button variant="outline" size="sm">
-              Close
-            </Button>
-          </DialogClose>
-        </div>
-
-        <div className="flex shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-b border-slate-100 px-5 py-2.5 text-[11px] font-medium text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <i className="history-legend-line history-legend-line--path" />
-            Participant path ({view.takenCount})
-          </span>
-          <span className="flex items-center gap-1.5">
-            <i className="history-legend-line" />
-            Workflow definition
-          </span>
-          <span className="flex items-center gap-1.5">
-            <i className="history-legend-node" />
-            Visited node ({view.visitedCount})
-          </span>
-          {currentState && (
-            <span className="ml-auto flex items-center gap-1.5 text-[#5b46c5]">
-              ● Current state: {currentState}
-            </span>
-          )}
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {hasWarnings && (
-            <div className="mx-4 mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
-              <CircleAlert size={14} className="mt-0.5 shrink-0" />
-              <div>
-                <strong>States outside the workflow nodes</strong>
-                <p className="mt-0.5 leading-relaxed">
-                  {view.externalStates.nodeIds.length > 0 && (
-                    <>
-                      Node reference(s) not present in this version:{' '}
-                      {view.externalStates.nodeIds.join(', ')}.{' '}
-                    </>
-                  )}
-                  These node executions cannot be mapped onto the flow.
-                </p>
-              </div>
+        )}
+        <div className="p-4">
+          {pending ? (
+            <LoadingState />
+          ) : view.flowNodes.length === 0 ? (
+            <EmptyState
+              title="No flow data"
+              description="No nodes were recorded for this workflow version."
+            />
+          ) : (
+            <div className="history-flow-canvas">
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                nodeTypes={nodeRenderers}
+                edgeTypes={edgeRenderers}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onInit={setFlowInstance}
+                fitView
+                nodesDraggable
+                nodesConnectable={false}
+                elementsSelectable={false}
+              >
+                <Background color="#cbd5e1" gap={20} size={1} />
+                <Controls
+                  showInteractive={false}
+                  className="border-slate-200 bg-white fill-current text-slate-700 shadow-md"
+                />
+              </ReactFlow>
             </div>
           )}
-          <div className="p-4">
-            {pending ? (
-              <LoadingState />
-            ) : view.flowNodes.length === 0 ? (
-              <EmptyState
-                title="No flow data"
-                description="No nodes were recorded for this workflow version."
-              />
-            ) : (
-              <div className="history-flow-canvas">
-                <ReactFlow
-                  nodes={nodes}
-                  edges={edges}
-                  nodeTypes={nodeRenderers}
-                  edgeTypes={edgeRenderers}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  onInit={setFlowInstance}
-                  fitView
-                  nodesDraggable
-                  nodesConnectable={false}
-                  elementsSelectable={false}
-                >
-                  <Background color="#cbd5e1" gap={20} size={1} />
-                  <Controls
-                    showInteractive={false}
-                    className="border-slate-200 bg-white fill-current text-slate-700 shadow-md"
-                  />
-                </ReactFlow>
-              </div>
-            )}
-          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   )
 }

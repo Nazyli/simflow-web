@@ -13,6 +13,7 @@ import { SimulationStudioPage } from '../../features/simulation_studio/simulatio
 import { WorkflowListPage } from '../../features/simulation_studio/workflow-list-page'
 import { TimerManagementPage } from '../../features/timers/timer-management-page'
 import { ParticipantHistoryPage } from '../../features/history/participant-history-page'
+import { ExecutionDetailPage } from '../../features/history/execution-detail-page'
 import { SettingsPage } from '../../features/settings/settings-page'
 import { AppShell } from '../layouts/app-shell'
 
@@ -34,6 +35,7 @@ export function AppRoutes() {
           </Route>
           <Route path="/timers" element={<TimerManagementPage />} />
           <Route path="/history" element={<ParticipantHistoryPage />} />
+          <Route path="/history/:id" element={<ExecutionDetailPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/studio" replace />} />
         </Routes>

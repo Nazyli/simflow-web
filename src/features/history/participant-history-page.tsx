@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Ban,
-  Check,
   CheckCircle2,
-  Copy,
   Hourglass,
   ListTree,
   PlayCircle,
@@ -13,29 +11,20 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '../../components/ui/button'
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from '../../components/ui/dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../components/ui/table'
-import { deleteExecution, getNodeExecutions, type NodeExecution } from '../../shared/api/executions'
+import { deleteExecution } from '../../shared/api/executions'
 import { getExecutionHistory, type ExecutionHistoryItem } from '../../shared/api/sessions'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { DataTable, type DataTableColumn } from '../../shared/components/data-table'
 import { StatusBadge } from '../../shared/components/status-badge'
-import { ParticipantFlowView } from './participant-flow-view'
 
 interface HistoryRow {
   id: string
@@ -46,16 +35,8 @@ interface HistoryRow {
 
 const HISTORY_STATUSES = ['pending', 'running', 'waiting', 'completed', 'failed', 'cancelled']
 
-const JAKARTA = 'Asia/Jakarta'
-function parseServerTime(value: string | null | undefined) {
-  return value ? new Date(/(?:[zZ]$|[+-]\d{2}:?\d{2}$)/.test(value) ? value : `${value}Z`) : null
-}
-function formatTime(value: string | null | undefined) {
-  const parsed = parseServerTime(value)
-  return parsed ? parsed.toLocaleString([], { timeZone: JAKARTA }) : '—'
-}
 function effectiveStatus(row: HistoryRow) {
-  return row.execution.status
+  return row.execution?.status ?? 'pending'
 }
 
 const STATUS_TONES: Record<string, string> = {
@@ -106,9 +87,7 @@ function StatCard({ status, count }: { status: string; count: number }) {
 
 export function ParticipantHistoryPage() {
   const queryClient = useQueryClient()
-  const [selectedRow, setSelectedRow] = useState<HistoryRow | null>(null)
-  const [detailOpen, setDetailOpen] = useState(false)
-  const [flowOpen, setFlowOpen] = useState(false)
+  const navigate = useNavigate()
   const [deleteTarget, setDeleteTarget] = useState<HistoryRow | null>(null)
   const history = useQuery({
     queryKey: ['participant-history'],
@@ -131,12 +110,10 @@ export function ParticipantHistoryPage() {
     },
     onError: () => toast.error('Unable to delete the execution log.'),
   })
-  const nodeExecutions = useQuery({
-    queryKey: ['history-node-executions', selectedRow?.execution.execution_id],
-    queryFn: () => getNodeExecutions(selectedRow!.execution.execution_id),
-    enabled: detailOpen && Boolean(selectedRow?.execution.execution_id),
-  })
-  const rows = useMemo(() => history.data ?? [], [history.data])
+  const rows = useMemo(
+    () => (history.data ?? []).filter((row): row is HistoryRow & { execution: ExecutionHistoryItem } => Boolean(row.execution)),
+    [history.data],
+  )
   const counts = useMemo(
     () => [
       ...HISTORY_STATUSES.map((status) => ({
@@ -211,7 +188,11 @@ export function ParticipantHistoryPage() {
           className="text-xs text-slate-700 tabular-nums"
           dateTime={row.execution.started_at ?? row.execution.created_at}
         >
-          {formatTime(row.execution.started_at ?? row.execution.created_at)}
+          {new Date(
+            /(?:[zZ]$|[+-]\d{2}:?\d{2}$)/.test(row.execution.started_at ?? row.execution.created_at)
+              ? row.execution.started_at ?? row.execution.created_at
+              : `${row.execution.started_at ?? row.execution.created_at}Z`,
+          ).toLocaleString([], { timeZone: 'Asia/Jakarta' })}
         </time>
       ),
       sortValue: (row) => row.execution.started_at ?? row.execution.created_at,
@@ -219,14 +200,17 @@ export function ParticipantHistoryPage() {
     {
       id: 'completed',
       header: 'Completed at',
-      cell: (row) => (
-        <time
-          className="text-xs text-slate-700 tabular-nums"
-          dateTime={row.execution.completed_at ?? ''}
-        >
-          {formatTime(row.execution.completed_at)}
-        </time>
-      ),
+      cell: (row) => {
+        const val = row.execution.completed_at
+        const parsed = val
+          ? new Date(/(?:[zZ]$|[+-]\d{2}:?\d{2}$)/.test(val) ? val : `${val}Z`)
+          : null
+        return (
+          <time className="text-xs text-slate-700 tabular-nums" dateTime={val ?? ''}>
+            {parsed ? parsed.toLocaleString([], { timeZone: 'Asia/Jakarta' }) : '—'}
+          </time>
+        )
+      },
       sortValue: (row) => row.execution.completed_at ?? '',
     },
     {
@@ -235,20 +219,14 @@ export function ParticipantHistoryPage() {
       cell: (row) => (
         <div className="flex items-center justify-end gap-1.5">
           <button
-            onClick={() => {
-              setSelectedRow(row)
-              setDetailOpen(true)
-            }}
+            onClick={() => navigate(`/history/${row.execution.execution_id}`)}
             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50"
           >
             <ListTree size={12} className="mr-1 inline" />
             Detail
           </button>
           <button
-            onClick={() => {
-              setSelectedRow(row)
-              setFlowOpen(true)
-            }}
+            onClick={() => navigate(`/history/${row.execution.execution_id}?tab=flow`)}
             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50"
           >
             <Route size={12} className="mr-1 inline" />
@@ -308,26 +286,6 @@ export function ParticipantHistoryPage() {
         )}
       </section>
 
-      <NodeExecutionDialog
-        open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-        row={selectedRow}
-        nodeExecutions={nodeExecutions.data ?? []}
-        loading={nodeExecutions.isPending}
-      />
-      <ParticipantFlowView
-        open={flowOpen}
-        onClose={() => setFlowOpen(false)}
-        versionId={selectedRow?.execution.workflow_version_id ?? ''}
-        executionId={selectedRow?.execution.execution_id ?? ''}
-        title={
-          selectedRow
-            ? `${selectedRow.workflowName} · v${selectedRow.versionNumber ?? '—'}`
-            : 'Participant flow'
-        }
-        currentState={selectedRow?.execution.current_node_id ?? null}
-      />
-
       <Dialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => {
@@ -362,125 +320,5 @@ export function ParticipantHistoryPage() {
         </DialogContent>
       </Dialog>
     </main>
-  )
-}
-
-function NodeExecutionDialog({
-  open,
-  onClose,
-  row,
-  nodeExecutions,
-  loading,
-}: {
-  open: boolean
-  onClose: () => void
-  row: HistoryRow | null
-  nodeExecutions: NodeExecution[]
-  loading: boolean
-}) {
-  return (
-    <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="max-w-[min(94vw,80rem)] p-6 sm:max-w-[min(94vw,80rem)]">
-        <DialogTitle className="text-base font-bold text-slate-900">
-          Workflow node execution history
-        </DialogTitle>
-        <DialogDescription>
-          {row ? `${row.workflowName} · ${row.execution.session_id}` : 'Node execution details'}
-        </DialogDescription>
-        {loading ? (
-          <LoadingState />
-        ) : nodeExecutions.length ? (
-          <div className="max-h-[62vh] overflow-auto rounded-lg border border-slate-200">
-            <Table>
-              <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:bg-slate-50 [&_th]:text-[0.66rem] [&_th]:font-bold [&_th]:tracking-[0.06em] [&_th]:uppercase">
-                <TableRow>
-                  <TableHead>Sequence</TableHead>
-                  <TableHead>Node ID</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Selected</TableHead>
-                  <TableHead>Output</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {nodeExecutions.map((item) => (
-                  <TableRow key={item.node_execution_id} className="align-top">
-                    <TableCell className="font-mono text-xs text-slate-600 tabular-nums">
-                      {item.sequence_number}
-                    </TableCell>
-                    <TableCell className="max-w-56 font-mono text-xs break-all whitespace-normal text-slate-700">
-                      {item.node_id}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={item.status} />
-                    </TableCell>
-                    <TableCell>
-                      {item.selected_port ? (
-                        <div className="flex flex-col items-start gap-1">
-                          <span className="inline-flex rounded-md bg-violet-50 px-1.5 py-0.5 font-mono text-[11px] font-bold text-violet-700">
-                            {item.selected_port}
-                          </span>
-                          {item.selected_edge_id && (
-                            <span
-                              className="max-w-44 truncate font-mono text-[10px] text-slate-400"
-                              title={item.selected_edge_id}
-                            >
-                              {item.selected_edge_id}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-slate-300">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="whitespace-normal">
-                      <JsonCell value={item.output_data} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className="rounded-lg border border-slate-200 px-5 py-10 text-center text-sm text-slate-500">
-            No node executions recorded.
-          </div>
-        )}
-        <div className="flex justify-end">
-          <DialogClose asChild>
-            <Button variant="outline" size="sm">
-              Close
-            </Button>
-          </DialogClose>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function JsonCell({ value }: { value: Record<string, unknown> | null }) {
-  const text = JSON.stringify(value ?? {}, null, 2)
-  const [copied, setCopied] = useState(false)
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1500)
-    } catch {
-      /* clipboard unavailable */
-    }
-  }
-  return (
-    <div className="relative min-w-[260px]">
-      <button
-        onClick={copy}
-        className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-md bg-slate-700/80 text-slate-200 transition hover:bg-slate-600"
-        title="Copy output"
-      >
-        {copied ? <Check size={12} /> : <Copy size={12} />}
-      </button>
-      <pre className="max-h-48 overflow-auto rounded-lg bg-slate-900 p-3 pr-9 font-mono text-[11px] leading-relaxed text-slate-100">
-        {text}
-      </pre>
-    </div>
   )
 }
