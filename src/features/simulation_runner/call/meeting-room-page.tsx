@@ -245,7 +245,10 @@ export function CallMeetingRoomPage() {
 
             {chatOpen && (
               <div className="border-l border-slate-200 lg:w-80">
-                <ChatSidebar callSessionId={activeConnection.callSessionId} participantId={participantId} />
+                <ChatSidebar
+                  actorName={activeConnection.actorName}
+                  participantName={activeConnection.participantName}
+                />
               </div>
             )}
           </div>

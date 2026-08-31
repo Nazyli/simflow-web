@@ -1,9 +1,14 @@
 import { Send } from 'lucide-react'
-import { type FormEvent, useEffect, useState } from 'react'
-import { useRoomContext } from '@livekit/components-react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
+import {
+  useLocalParticipant,
+  useRoomContext,
+  useTrackTranscription,
+  useVoiceAssistant,
+} from '@livekit/components-react'
+import { Track } from 'livekit-client'
 import { Button } from '../../../components/ui/button'
 import { Input } from '../../../components/ui/input'
-import { getCallHistory } from '../../../shared/api/agent-call'
 
 interface ChatMessage {
   id: string
@@ -11,58 +16,74 @@ interface ChatMessage {
   text: string
 }
 
+const BR_SPLIT_PATTERN = /<br\s*\/?>/gi
+
 export function ChatSidebar({
-  callSessionId,
-  participantId,
+  actorName,
+  participantName,
 }: {
-  callSessionId: string
-  participantId: string
+  actorName: string
+  participantName: string
 }) {
   const room = useRoomContext()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
+  const listRef = useRef<HTMLDivElement>(null)
+
+  const { audioTrack: agentAudioTrack } = useVoiceAssistant()
+  const agentMessages = useTrackTranscription(agentAudioTrack)
+
+  const { localParticipant, microphoneTrack } = useLocalParticipant()
+  const localTrackRef = microphoneTrack
+    ? {
+        participant: localParticipant,
+        publication: microphoneTrack,
+        source: Track.Source.Microphone,
+      }
+    : undefined
+  const localMessages = useTrackTranscription(localTrackRef)
 
   useEffect(() => {
-    if (!callSessionId) return
-    let active = true
-    void getCallHistory(callSessionId, participantId)
-      .then((history) => {
-        if (!active) return
-        const ordered = [...history].sort((a, b) => {
-          if (a.spokenAt === b.spokenAt) {
-            return a.callMessageId < b.callMessageId
-              ? -1
-              : a.callMessageId > b.callMessageId
-                ? 1
-                : 0
+    function upsert(segments: { id: string; text: string }[] | undefined, sender: string) {
+      for (const segment of segments ?? []) {
+        const parts = segment.text.split(BR_SPLIT_PATTERN).map((part) => part.trim()).filter(Boolean)
+        if (!parts.length) continue
+        const entries =
+          parts.length === 1
+            ? [{ id: segment.id, text: parts[0] }]
+            : parts.map((part, index) => ({ id: `${segment.id}#${index}`, text: part }))
+        setMessages((current) => {
+          let changed = false
+          const next = [...current]
+          for (const entry of entries) {
+            const existingIndex = next.findIndex((message) => message.id === entry.id)
+            if (existingIndex === -1) {
+              next.push({ id: entry.id, sender, text: entry.text })
+              changed = true
+            } else if (next[existingIndex].text !== entry.text) {
+              next[existingIndex] = { ...next[existingIndex], text: entry.text }
+              changed = true
+            }
           }
-          return a.spokenAt < b.spokenAt ? -1 : 1
+          return changed ? next : current
         })
-        setMessages(
-          ordered.map((item) => ({
-            id: item.callMessageId,
-            sender: item.senderName,
-            text: item.content,
-          })),
-        )
-      })
-      .catch(() => {
-        if (active) setMessages([])
-      })
-    return () => {
-      active = false
+      }
     }
-  }, [callSessionId, participantId])
+
+    upsert(agentMessages?.segments, actorName)
+    upsert(localMessages?.segments, participantName)
+  }, [agentMessages?.segments, localMessages?.segments, actorName, participantName])
+
+  useEffect(() => {
+    const list = listRef.current
+    if (list) list.scrollTop = list.scrollHeight
+  }, [messages.length])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const message = text.trim()
     if (!message) return
     await room.localParticipant.sendText(message, { topic: 'lk.chat' })
-    setMessages((current) => [
-      ...current,
-      { id: `${Date.now()}-${message}`, sender: 'You', text: message },
-    ])
     setText('')
   }
 
@@ -71,7 +92,7 @@ export function ChatSidebar({
       <header className="border-b border-slate-200 px-4 py-3">
         <h2 className="text-sm font-semibold text-slate-800">In-call messages</h2>
       </header>
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 text-sm">
+      <div ref={listRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 text-sm">
         {messages.length
           ? messages.map((message) => (
               <div key={message.id} className="rounded-lg bg-slate-100 px-3 py-2">
