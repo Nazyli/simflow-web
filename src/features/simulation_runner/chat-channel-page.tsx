@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   getChatActors,
   getChatMessages,
@@ -8,6 +8,7 @@ import {
   type ChatMessage as ApiChatMessage,
   type ChatWorkflowItem,
 } from '../../shared/api/chat'
+import { eventsUrl } from '../../shared/api/client'
 import { ChatWorkspace } from './chat/chat-workspace'
 import type { ChatActor, ChatMessage, ChatWorkflow } from './chat/types'
 import { useSimulationRun } from './simulation-run-context'
@@ -72,6 +73,54 @@ export function ChatChannelPage() {
 
   const [selectedActor, setSelectedActor] = useState<string | null>(null)
   const [readPendingActors, setReadPendingActors] = useState<ReadonlySet<string>>(new Set())
+
+  const markChatReadRef = useRef(markChatRead)
+  markChatReadRef.current = markChatRead
+
+  useEffect(() => {
+    const pid = participantId.trim()
+    if (!pid || !selectedActor || !effectiveSelected) return
+    const events = new EventSource(eventsUrl(pid))
+    const handleNotification = (event: Event) => {
+      if (!(event instanceof MessageEvent)) return
+      try {
+        const payload = JSON.parse(event.data) as {
+          type?: string
+          message?: {
+            sender_type?: string
+            sender_id?: string
+            workflow_version_id?: string
+            is_read?: boolean
+          }
+        }
+        if (
+          payload.type === 'chat_message' &&
+          payload.message?.sender_type === 'actor' &&
+          payload.message.is_read === false &&
+          payload.message.sender_id === selectedActor &&
+          payload.message.workflow_version_id === effectiveSelected
+        ) {
+          setReadPendingActors((prev) => {
+            if (prev.has(selectedActor)) return prev
+            const next = new Set(prev)
+            next.add(selectedActor)
+            return next
+          })
+          void markChatReadRef.current(effectiveSelected, selectedActor).finally(() =>
+            setReadPendingActors((prev) => {
+              const next = new Set(prev)
+              next.delete(selectedActor)
+              return next
+            }),
+          )
+        }
+      } catch {
+        // Ignore malformed SSE payloads.
+      }
+    }
+    events.addEventListener('notification', handleNotification)
+    return () => events.close()
+  }, [participantId, selectedActor, effectiveSelected])
 
   const chatQuery = useQuery({
     queryKey: ['chat-messages', participantId, effectiveSelected, selectedActor],
