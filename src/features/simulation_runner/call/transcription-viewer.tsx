@@ -80,17 +80,19 @@ export function TranscriptionViewer({
 
   const isParticipant = latestSegment.sender === participantName
   return (
-    <div className="mx-auto max-w-lg animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <p
-        className={`rounded-xl px-4 py-2.5 text-sm shadow-lg backdrop-blur-md ${
-          isParticipant
-            ? 'bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-500/30'
-            : 'bg-violet-500/20 text-violet-100 ring-1 ring-violet-500/30'
-        }`}
-      >
-        <span className="mr-1.5 font-semibold opacity-80">{latestSegment.sender}:</span>
-        {latestSegment.text}
-      </p>
+    <div className="animate-in fade-in slide-in-from-bottom-2 mx-auto max-w-lg duration-300">
+      <div className="rounded-2xl bg-white/95 px-4 py-3 shadow-lg ring-1 ring-slate-200 backdrop-blur-md">
+        <p className="text-sm leading-relaxed text-slate-800">
+          <span
+            className={`mr-2 inline-block rounded-md px-1.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase ${
+              isParticipant ? 'bg-slate-100 text-slate-500' : 'bg-indigo-50 text-indigo-600'
+            }`}
+          >
+            {latestSegment.sender}
+          </span>
+          {latestSegment.text}
+        </p>
+      </div>
     </div>
   )
 }
