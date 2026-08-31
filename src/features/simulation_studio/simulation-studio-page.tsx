@@ -1,9 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { Button } from '../../components/ui/button'
 import { type EdgePathType } from '../../components/button-edge'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Textarea } from '../../components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import {
   Background,
@@ -33,11 +30,9 @@ import {
   ChevronRight,
   Sliders,
   History,
-  FolderKanban,
   Layers,
   X,
   AlertTriangle,
-  Edit3,
   Trash2,
   MapPin,
 } from 'lucide-react'
@@ -49,9 +44,8 @@ import {
   useRef,
   useState,
   type DragEvent,
-  type FormEvent,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import dagre from 'dagre'
 import { ApiError } from '../../shared/api/client'
@@ -61,18 +55,14 @@ import {
   addNode,
   addWorkflowEdge,
   createDraftFromVersion,
-  createVersion,
-  createWorkflow,
   deleteNode,
-  deleteWorkflow,
   deleteWorkflowEdge,
   deleteWorkflowVersion,
   getGraph,
+  getVersionDetail,
   getWorkflowVersions,
-  getWorkflows,
   publishVersion,
   updateNode,
-  updateWorkflow,
   updateWorkflowEdge,
   type ApiEdge,
   type ApiNode,
@@ -80,7 +70,7 @@ import {
 } from '../../shared/api/workflows'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
-import type { Execution, NodeDefinition, OutputPort, Workflow } from '../../shared/types/workflow'
+import type { Execution, NodeDefinition, OutputPort } from '../../shared/types/workflow'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { WorkflowGraphEdge } from './workflow-graph-edge'
 import { WorkflowGraphNode } from './workflow-graph-node'
@@ -174,9 +164,9 @@ function apiErrorMessage(error: unknown): string {
 export function SimulationStudioPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { versionId: urlVersionId } = useParams<{ versionId: string }>()
 
   // State management
-  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null)
   const [versionId, setVersionId] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
@@ -187,8 +177,6 @@ export function SimulationStudioPage() {
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
   const [validationRequested, setValidationRequested] = useState(false)
-  const [workflowPickerOpen, setWorkflowPickerOpen] = useState(false)
-  const [editWorkflowOpen, setEditWorkflowOpen] = useState(false)
 
   // UI Sidebars & Tabs
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true)
@@ -254,11 +242,26 @@ export function SimulationStudioPage() {
   }, [])
 
   // API Queries & Mutations
-  const workflows = useQuery({ queryKey: ['workflows'], queryFn: getWorkflows })
+  const versionDetail = useQuery({
+    queryKey: ['version-detail', urlVersionId],
+    queryFn: () => getVersionDetail(urlVersionId!),
+    enabled: Boolean(urlVersionId),
+    retry: false,
+  })
+  const selectedWorkflow = useMemo(
+    () =>
+      versionDetail.data
+        ? {
+            workflow_id: versionDetail.data.workflow_id,
+            workflow_name: versionDetail.data.workflow_name,
+          }
+        : null,
+    [versionDetail.data],
+  )
   const graph = useQuery({
     queryKey: ['graph', versionId],
     queryFn: () => getGraph(versionId!),
-    enabled: Boolean(versionId),
+    enabled: Boolean(versionId) && versionDetail.isSuccess,
   })
   const nodeCatalog = useQuery({ queryKey: ['node-catalog'], queryFn: getNodeCatalog })
   const versions = useQuery({
@@ -269,59 +272,12 @@ export function SimulationStudioPage() {
   const executions = useQuery({
     queryKey: ['executions', versionId],
     queryFn: () => getExecutions(versionId!),
-    enabled: Boolean(versionId),
+    enabled: Boolean(versionId) && versionDetail.isSuccess,
   })
   const executionTimeline = useQuery({
     queryKey: ['execution-node-executions', selectedExecutionId],
     queryFn: () => getExecutionTrace(selectedExecutionId!),
     enabled: Boolean(selectedExecutionId),
-  })
-
-  const create = useMutation({
-    mutationFn: async (
-      payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'>,
-    ) => {
-      const workflow = await createWorkflow(payload)
-      const version = await createVersion(workflow.workflow_id)
-      return { workflow, version }
-    },
-    onSuccess: ({ workflow, version }) => {
-      setSelectedWorkflow(workflow)
-      setVersionId(version.workflow_version_id)
-      setEditWorkflowOpen(false)
-      queryClient.invalidateQueries({ queryKey: ['workflows'] })
-      queryClient.invalidateQueries({ queryKey: ['workflow-versions', workflow.workflow_id] })
-    },
-    onError: (error) => toast.error(apiErrorMessage(error)),
-  })
-  const update = useMutation({
-    mutationFn: ({
-      id,
-      payload,
-    }: {
-      id: string
-      payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'>
-    }) => updateWorkflow(id, payload),
-    onSuccess: (workflow) => {
-      setSelectedWorkflow(workflow)
-      setEditWorkflowOpen(false)
-      queryClient.invalidateQueries({ queryKey: ['workflows'] })
-    },
-    onError: (error) => toast.error(apiErrorMessage(error)),
-  })
-  const removeWorkflow = useMutation({
-    mutationFn: deleteWorkflow,
-    onSuccess: () => {
-      setSelectedWorkflow(null)
-      setVersionId(null)
-      setSelectedNodeId(null)
-      setSelectedEdgeId(null)
-      setNodes([])
-      setEdges([])
-      setEditWorkflowOpen(false)
-      queryClient.invalidateQueries({ queryKey: ['workflows'] })
-    },
-    onError: (error) => toast.error(apiErrorMessage(error)),
   })
 
   const createDraft = useMutation({
@@ -331,12 +287,10 @@ export function SimulationStudioPage() {
       return createDraftFromVersion(sourceVersion.workflow_version_id)
     },
     onSuccess: (version) => {
-      setVersionId(version.workflow_version_id)
-      setSelectedNodeId(null)
-      setSelectedEdgeId(null)
       queryClient.invalidateQueries({
         queryKey: ['workflow-versions', selectedWorkflow?.workflow_id],
       })
+      navigate(`/studio/${version.workflow_version_id}`)
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
@@ -428,13 +382,7 @@ export function SimulationStudioPage() {
     mutationFn: deleteWorkflowVersion,
     onSuccess: (_result, deletedVersionId) => {
       if (versionId === deletedVersionId) {
-        setVersionId(null)
-        setSelectedNodeId(null)
-        setSelectedEdgeId(null)
-        setSelectedExecutionId(null)
-        setNodes([])
-        setEdges([])
-        localPositions.current.clear()
+        navigate('/studio')
       }
       queryClient.invalidateQueries({
         queryKey: ['workflow-versions', selectedWorkflow?.workflow_id],
@@ -522,21 +470,14 @@ export function SimulationStudioPage() {
   persistNodeRef.current = enqueueNodeSave
   selectedVersionStatusRef.current = selectedVersion?.status
 
-  // Select a workflow automatically only outside the create dialog, which must
-  // keep its selection empty so it remains in create mode.
+  // The URL version param drives the builder; resetting selections keeps the
+  // previous version's graph and inspector from leaking across version switches.
   useEffect(() => {
-    if (!editWorkflowOpen && !selectedWorkflow && workflows.data && workflows.data.length > 0) {
-      setSelectedWorkflow(workflows.data[0])
-    }
-  }, [editWorkflowOpen, workflows.data, selectedWorkflow])
-
-  // Select first version automatically when workflow versions load
-  useEffect(() => {
-    if (versions.data && versions.data.length > 0 && !versionId) {
-      const draft = versions.data.find((v) => v.status === 'draft')
-      setVersionId(draft ? draft.workflow_version_id : versions.data[0].workflow_version_id)
-    }
-  }, [versions.data, versionId])
+    setVersionId(urlVersionId ?? null)
+    setSelectedNodeId(null)
+    setSelectedEdgeId(null)
+    setSelectedExecutionId(null)
+  }, [urlVersionId])
 
   // Automatically focus Inspector tab when node or edge is selected
   useEffect(() => {
@@ -760,18 +701,6 @@ export function SimulationStudioPage() {
       document.removeEventListener('drop', acceptPaletteDrop, true)
     }
   }, [addGraphNode, definitions, flowInstance, selectedVersion?.status, versionId])
-
-  function submitWorkflow(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    const payload = {
-      workflow_name: String(form.get('name')),
-      workflow_desc: String(form.get('description')) || null,
-      workspace_id: null,
-    }
-    if (selectedWorkflow) update.mutate({ id: selectedWorkflow.workflow_id, payload })
-    else create.mutate(payload)
-  }
 
   function connect(connection: Connection) {
     if (
@@ -1000,6 +929,32 @@ export function SimulationStudioPage() {
     setValidationRequested(true)
   }
 
+  if (versionDetail.isPending) {
+    return (
+      <div className="grid h-[calc(100vh-64px)] place-items-center bg-slate-50 p-6">
+        <LoadingState variant="canvas" />
+      </div>
+    )
+  }
+
+  if (versionDetail.isError) {
+    return (
+      <div className="grid h-[calc(100vh-64px)] place-items-center bg-slate-50 p-6">
+        <div className="max-w-sm rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-500" />
+          <h2 className="text-sm font-bold text-slate-900">Workflow version not found</h2>
+          <p className="mt-1 text-xs leading-normal text-slate-500">
+            This version may have been deleted. Go back to the workflow list and open another
+            version.
+          </p>
+          <Button type="button" className="mt-4" onClick={() => navigate('/studio')}>
+            Back to workflows
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="studio-app-container flex h-[calc(100vh-64px)] flex-col overflow-hidden bg-slate-50 text-slate-800">
       {/* Studio Header Bar */}
@@ -1014,30 +969,22 @@ export function SimulationStudioPage() {
             <PanelLeftClose size={16} />
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <span className="rounded border border-purple-200 bg-purple-50 px-2 py-0.5 text-xs font-bold tracking-wider text-purple-700 uppercase">
               Studio
             </span>
-            <button
-              className="flex items-center gap-2 rounded-lg px-2.5 py-1 transition-colors hover:bg-slate-100"
-              type="button"
-              onClick={() => setWorkflowPickerOpen(true)}
-            >
-              <h1 className="text-base font-bold text-slate-900">
-                {selectedWorkflow?.workflow_name ?? 'Select Workflow'}
-              </h1>
-              <ChevronRight className="h-4 w-4 rotate-90 text-slate-400" />
-            </button>
-            {selectedWorkflow && (
-              <button
-                type="button"
-                className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-                onClick={() => setEditWorkflowOpen(true)}
-                title="Edit workflow details"
+            <nav className="flex min-w-0 items-center gap-1.5" aria-label="Studio breadcrumb">
+              <Link
+                to="/studio"
+                className="shrink-0 text-sm font-semibold text-slate-500 transition-colors hover:text-purple-700"
               >
-                <Edit3 className="h-3.5 w-3.5" />
-              </button>
-            )}
+                Workflows
+              </Link>
+              <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+              <h1 className="truncate text-base font-bold text-slate-900">
+                {selectedWorkflow?.workflow_name ?? 'Loading…'}
+              </h1>
+            </nav>
           </div>
 
           <div className="hidden items-center gap-2.5 border-l border-slate-200 pl-3 sm:flex">
@@ -1083,9 +1030,7 @@ export function SimulationStudioPage() {
                 className="cursor-pointer bg-transparent px-2 py-1 text-xs font-medium text-slate-700 focus:outline-none"
                 value={versionId ?? ''}
                 onChange={(event) => {
-                  setVersionId(event.target.value || null)
-                  setSelectedNodeId(null)
-                  setSelectedEdgeId(null)
+                  if (event.target.value) navigate(`/studio/${event.target.value}`)
                 }}
               >
                 <option value="" className="bg-white">
@@ -1143,7 +1088,7 @@ export function SimulationStudioPage() {
 
       {/* Main Studio Workspace Grid */}
       <div className="studio-main-workspace relative flex flex-1 overflow-hidden">
-        {/* Left Sidebar: Node Palette & Workflow List */}
+        {/* Left Sidebar: Node Palette */}
         <aside
           className={`studio-left-sidebar z-10 flex flex-col border-r border-slate-200 bg-white transition-all duration-200 ${leftSidebarOpen ? 'w-72 min-w-[280px]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
         >
@@ -1212,53 +1157,6 @@ export function SimulationStudioPage() {
                   Select or create a version to start editing nodes.
                 </div>
               )}
-            </div>
-
-            {/* Quick Workflows List */}
-            <div className="mt-6 border-t border-slate-200 pt-4">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                  <FolderKanban className="h-3.5 w-3.5 text-purple-600" /> Workflows
-                </h3>
-                <button
-                  type="button"
-                  className="text-xs font-semibold text-purple-600 hover:text-purple-700"
-                  onClick={() => {
-                    setSelectedWorkflow(null)
-                    setVersionId(null)
-                    setEditWorkflowOpen(true)
-                  }}
-                >
-                  + New
-                </button>
-              </div>
-
-              <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
-                {workflows.isPending && <LoadingState />}
-                {workflows.data?.map((wf) => (
-                  <Tooltip key={wf.workflow_id}>
-                    <TooltipTrigger asChild>
-                      <button
-                        className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs transition-colors ${
-                          selectedWorkflow?.workflow_id === wf.workflow_id
-                            ? 'border border-purple-200 bg-purple-50 font-semibold text-purple-900'
-                            : 'text-slate-700 hover:bg-slate-100'
-                        }`}
-                        onClick={() => {
-                          setSelectedWorkflow(wf)
-                          setVersionId(null)
-                        }}
-                      >
-                        <span className="truncate">{wf.workflow_name}</span>
-                        <StatusBadge status={wf.status} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-60">
-                      {wf.workflow_name}
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-              </div>
             </div>
           </div>
         </aside>
@@ -1557,7 +1455,7 @@ export function SimulationStudioPage() {
                               ? 'border-purple-300 bg-purple-50 shadow-xs'
                               : 'border-slate-200 bg-white hover:border-slate-300'
                           }`}
-                          onClick={() => setVersionId(version.workflow_version_id)}
+                          onClick={() => navigate(`/studio/${version.workflow_version_id}`)}
                         >
                           <div className="mb-1 flex items-center justify-between">
                             <span className="text-sm font-semibold text-slate-800">
@@ -1603,124 +1501,6 @@ export function SimulationStudioPage() {
           </div>
         </aside>
       </div>
-
-      {/* Select / Create Workflow Dialog */}
-      <Dialog open={workflowPickerOpen} onOpenChange={setWorkflowPickerOpen}>
-        <DialogContent className="p-6 sm:max-w-lg">
-          <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <FolderKanban className="h-5 w-5 text-purple-600" /> Select Workflow
-          </DialogTitle>
-          <DialogDescription>
-            Choose an existing workflow to edit or create a new simulation workflow.
-          </DialogDescription>
-
-          <Button
-            type="button"
-            className="w-full"
-            onClick={() => {
-              setSelectedWorkflow(null)
-              setVersionId(null)
-              setWorkflowPickerOpen(false)
-              setEditWorkflowOpen(true)
-            }}
-          >
-            <Plus className="h-4 w-4" /> Create New Workflow
-          </Button>
-
-          <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-            {workflows.data?.map((item) => (
-              <button
-                className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${
-                  selectedWorkflow?.workflow_id === item.workflow_id
-                    ? 'border-purple-300 bg-purple-50'
-                    : 'border-slate-200 bg-white hover:border-slate-300'
-                }`}
-                type="button"
-                key={item.workflow_id}
-                onClick={() => {
-                  setSelectedWorkflow(item)
-                  setVersionId(null)
-                  setWorkflowPickerOpen(false)
-                }}
-              >
-                <div>
-                  <strong className="block text-sm font-semibold text-slate-800">
-                    {item.workflow_name}
-                  </strong>
-                  <small className="text-xs leading-normal text-slate-500">
-                    {item.workflow_desc ?? 'No description provided'}
-                  </small>
-                </div>
-                <StatusBadge status={item.status} />
-              </button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit / Create Workflow Modal */}
-      <Dialog open={editWorkflowOpen} onOpenChange={setEditWorkflowOpen}>
-        <DialogContent className="p-6 sm:max-w-md">
-          <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <Edit3 className="h-5 w-5 text-purple-600" />{' '}
-            {selectedWorkflow ? 'Edit Workflow' : 'Create Workflow'}
-          </DialogTitle>
-
-          <form
-            className="flex flex-col gap-4"
-            key={selectedWorkflow?.workflow_id ?? 'new'}
-            onSubmit={submitWorkflow}
-          >
-            <div className="grid gap-1.5">
-              <Label htmlFor="workflow-name" className="text-slate-700">
-                Workflow Name
-              </Label>
-              <Input
-                id="workflow-name"
-                name="name"
-                required
-                defaultValue={selectedWorkflow?.workflow_name ?? ''}
-                placeholder="e.g. Customer Onboarding Engine"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="workflow-desc" className="text-slate-700">
-                Description
-              </Label>
-              <Textarea
-                id="workflow-desc"
-                rows={3}
-                name="description"
-                defaultValue={selectedWorkflow?.workflow_desc ?? ''}
-                placeholder="Describe the purpose of this simulation..."
-              />
-            </div>
-
-            <div className="mt-2 flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setEditWorkflowOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={create.isPending || update.isPending}>
-                <Save className="h-4 w-4" /> {selectedWorkflow ? 'Save Changes' : 'Create Workflow'}
-              </Button>
-            </div>
-
-            {selectedWorkflow && (
-              <div className="mt-2 border-t border-slate-200 pt-4">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="w-full"
-                  disabled={removeWorkflow.isPending}
-                  onClick={() => removeWorkflow.mutate(selectedWorkflow.workflow_id)}
-                >
-                  <Trash2 className="h-4 w-4" /> Delete Workflow
-                </Button>
-              </div>
-            )}
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Execution Log Confirmation */}
       <Dialog

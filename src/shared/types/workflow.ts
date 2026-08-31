@@ -5,6 +5,11 @@ export interface Workflow {
   workspace_id: string | null
   status: string
   active_version_id: string | null
+  versions?: WorkflowVersion[]
+}
+
+export interface VersionDetail extends WorkflowVersion {
+  workflow_name: string
 }
 
 export interface Execution {

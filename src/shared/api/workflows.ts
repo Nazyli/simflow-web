@@ -1,8 +1,10 @@
 import { apiClient } from './client'
-import type { InputPort, OutputPort, Workflow } from '../types/workflow'
+import type { InputPort, OutputPort, VersionDetail, Workflow } from '../types/workflow'
 import type { WorkflowVersion } from '../types/workflow'
 
 export const getWorkflows = () => apiClient<Workflow[]>('/studio/workflows')
+export const getVersionDetail = (versionId: string) =>
+  apiClient<VersionDetail>(`/studio/workflows/versions/${versionId}`)
 export const createWorkflow = (
   payload: Pick<Workflow, 'workflow_name' | 'workflow_desc' | 'workspace_id'>,
 ) => apiClient<Workflow>('/studio/workflows', { method: 'POST', body: JSON.stringify(payload) })

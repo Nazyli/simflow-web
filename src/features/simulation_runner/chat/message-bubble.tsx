@@ -6,6 +6,14 @@ interface MessageBubbleProps {
   participantId: string
 }
 
+function isSameOrigin(url: string): boolean {
+  try {
+    return new URL(url, window.location.origin).origin === window.location.origin
+  } catch {
+    return false
+  }
+}
+
 export function MessageBubble({ message, participantId }: MessageBubbleProps) {
   const own = isOwnMessage(message, participantId)
   const sender = own ? 'You' : message.from || message.actor || 'system'
@@ -34,15 +42,25 @@ export function MessageBubble({ message, participantId }: MessageBubbleProps) {
         >
           {splitMessageLinks(content).map((segment, index) =>
             segment.url ? (
-              <a
-                key={index}
-                href={segment.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="break-all underline"
-              >
-                {segment.text}
-              </a>
+              isSameOrigin(segment.url) ? (
+                <a
+                  key={index}
+                  href={segment.url}
+                  className="break-all underline"
+                >
+                  {segment.text}
+                </a>
+              ) : (
+                <a
+                  key={index}
+                  href={segment.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="break-all underline"
+                >
+                  {segment.text}
+                </a>
+              )
             ) : (
               <span key={index}>{segment.text}</span>
             ),
