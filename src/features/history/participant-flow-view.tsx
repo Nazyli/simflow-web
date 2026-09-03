@@ -10,20 +10,20 @@ import {
   type Node,
   type ReactFlowInstance,
 } from '@xyflow/react'
-import { CircleAlert, Route } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import dagre from 'dagre'
 import { useEffect, useMemo, useState } from 'react'
 import { type EdgePathType } from '../../components/button-edge'
 import { getNodeExecutions } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
-import { getGraph, type ApiEdge, type ApiNode } from '../../shared/api/workflows'
+import { getGraph, type ApiEdge, type ApiNode } from '../../shared/api/simulations'
 import { EmptyState, LoadingState } from '../../shared/components/async-state'
-import type { NodeDefinition } from '../../shared/types/workflow'
-import { WorkflowGraphNode } from '../simulation_studio/workflow-graph-node'
-import { WorkflowGraphEdge } from '../simulation_studio/workflow-graph-edge'
+import type { NodeDefinition } from '../../shared/types/simulation'
+import { SimulationGraphNode } from '../simulation_studio/simulation-graph-node'
+import { SimulationGraphEdge } from '../simulation_studio/simulation-graph-edge'
 
-const nodeRenderers = { workflow: WorkflowGraphNode }
-const edgeRenderers = { workflow: WorkflowGraphEdge }
+const nodeRenderers = { simulation: SimulationGraphNode }
+const edgeRenderers = { simulation: SimulationGraphEdge }
 const MASTER_COLOR = '#94a3b8'
 const PATH_COLOR = '#dc2626'
 
@@ -60,18 +60,18 @@ function dagLayout(
 }
 
 export function ParticipantFlowCanvas({
-  versionId,
+  simulationId,
   executionId,
   currentState,
 }: {
-  versionId: string
+  simulationId: string
   executionId: string
   currentState: string | null
 }) {
   const graph = useQuery({
-    queryKey: ['graph', versionId],
-    queryFn: () => getGraph(versionId),
-    enabled: Boolean(versionId),
+    queryKey: ['graph', simulationId],
+    queryFn: () => getGraph(simulationId),
+    enabled: Boolean(simulationId),
   })
   const nodeCatalog = useQuery({
     queryKey: ['node-catalog'],
@@ -120,7 +120,7 @@ export function ParticipantFlowCanvas({
       const visited = visitedNodeIds.has(node.node_id)
       return {
         id: node.node_id,
-        type: 'workflow',
+        type: 'simulation',
         position:
           node.position_x !== null && node.position_y !== null
             ? { x: node.position_x, y: node.position_y }
@@ -147,7 +147,7 @@ export function ParticipantFlowCanvas({
         ?.output_ports.find((port) => port.id === edge.source_port_id)
       return {
         id: edge.edge_id,
-        type: 'workflow',
+        type: 'simulation',
         source: edge.source_node_id,
         sourceHandle: edge.source_port_id,
         target: edge.target_node_id,
@@ -206,7 +206,7 @@ export function ParticipantFlowCanvas({
         </span>
         <span className="flex items-center gap-1.5">
           <i className="history-legend-line" />
-          Workflow definition
+          Simulation definition
         </span>
         <span className="flex items-center gap-1.5">
           <i className="history-legend-node" />
@@ -234,7 +234,7 @@ export function ParticipantFlowCanvas({
           <div className="mx-4 mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
             <CircleAlert size={14} className="mt-0.5 shrink-0" />
             <div>
-              <strong>States outside the workflow nodes</strong>
+              <strong>States outside the simulation nodes</strong>
               <p className="mt-0.5 leading-relaxed">
                 {view.externalStates.nodeIds.length > 0 && (
                   <>
@@ -253,7 +253,7 @@ export function ParticipantFlowCanvas({
           ) : view.flowNodes.length === 0 ? (
             <EmptyState
               title="No flow data"
-              description="No nodes were recorded for this workflow version."
+              description="No nodes were recorded for this simulation version."
             />
           ) : (
             <div className="history-flow-canvas">

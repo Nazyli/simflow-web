@@ -1,6 +1,6 @@
 import { apiClient } from './client'
 
-export type WorkflowTimer = {
+export type SimulationTimer = {
   timer_id: string
   node_execution_id: string
   session_id: string | null
@@ -10,8 +10,8 @@ export type WorkflowTimer = {
   node_name: string | null
   node_configuration: Record<string, unknown> | null
   participant_id: string | null
-  workflow_name: string | null
-  workflow_version: number | null
+  group_simulation_name: string | null
+  master_simulation: number | null
   status: string
   due_at: string
   attempt_count: number
@@ -22,13 +22,13 @@ export type WorkflowTimer = {
   created_date: string
 }
 
-export const getTimers = () => apiClient<WorkflowTimer[]>('/timers')
+export const getTimers = () => apiClient<SimulationTimer[]>('/timers')
 export const cancelTimer = (timerId: string) =>
-  apiClient<WorkflowTimer>(`/timers/${timerId}/cancel`, { method: 'POST' })
+  apiClient<SimulationTimer>(`/timers/${timerId}/cancel`, { method: 'POST' })
 export const rescheduleTimer = (timerId: string, dueAt: string) =>
-  apiClient<WorkflowTimer>(`/timers/${timerId}/reschedule`, {
+  apiClient<SimulationTimer>(`/timers/${timerId}/reschedule`, {
     method: 'POST',
     body: JSON.stringify({ due_at: dueAt }),
   })
 export const runTimerNow = (timerId: string) =>
-  apiClient<WorkflowTimer>(`/timers/${timerId}/run-now`, { method: 'POST' })
+  apiClient<SimulationTimer>(`/timers/${timerId}/run-now`, { method: 'POST' })

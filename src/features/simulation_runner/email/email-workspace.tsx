@@ -83,7 +83,7 @@ export function EmailWorkspace({
                   <p className="mt-1 text-xs text-[#5f6368]">
                     {threads.length
                       ? 'Choose an email thread from the list to read and reply.'
-                      : 'Email messages from workflow actors will appear here.'}
+                      : 'Email messages from simulation actors will appear here.'}
                   </p>
                 </div>
               </div>

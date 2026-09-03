@@ -14,7 +14,7 @@ import {
 } from '../../components/ui/select'
 import { Textarea } from '../../components/ui/textarea'
 import { getStudioMasterEmail, type MasterEmailAttachment } from '../../shared/api/master-data'
-import type { NodeDefinition } from '../../shared/types/workflow'
+import type { NodeDefinition } from '../../shared/types/simulation'
 import { resolveParameterMultiline } from './parameter-field-logic'
 import { MasterPickerField } from './pickers/master-picker-field'
 

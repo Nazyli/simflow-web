@@ -7,7 +7,7 @@ import {
   PlayCircle,
   Route,
   Trash2,
-  Workflow,
+  Layers,
   XCircle,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -29,7 +29,7 @@ import { StatusBadge } from '../../shared/components/status-badge'
 interface HistoryRow {
   id: string
   execution: ExecutionHistoryItem
-  workflowName: string
+  simulationName: string
   versionNumber: number | null
 }
 
@@ -61,7 +61,7 @@ function StatusIcon({ status }: { status: string }) {
   ) : status === 'active' || status === 'running' ? (
     <PlayCircle size={18} />
   ) : (
-    <Workflow size={18} />
+    <Layers size={18} />
   )
 }
 
@@ -96,7 +96,7 @@ export function ParticipantHistoryPage() {
       return executions.map((execution) => ({
         id: execution.execution_id,
         execution,
-        workflowName: execution.workflow_name ?? 'Workflow unavailable',
+          simulationName: execution.group_simulation_name ?? 'Simulation unavailable',
         versionNumber: execution.version_number,
       }))
     },
@@ -158,17 +158,17 @@ export function ParticipantHistoryPage() {
       filterValue: (row) => row.execution.session_id,
     },
     {
-      id: 'workflow',
-      header: 'Workflow',
+      id: 'simulation',
+      header: 'Simulation',
       cell: (row) => (
         <span
           className="block max-w-48 truncate font-medium text-slate-800"
-          title={row.workflowName}
+          title={row.simulationName}
         >
-          {row.workflowName}
+          {row.simulationName}
         </span>
       ),
-      filterValue: (row) => row.workflowName,
+      filterValue: (row) => row.simulationName,
     },
     {
       id: 'version',
@@ -250,17 +250,17 @@ export function ParticipantHistoryPage() {
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
-            <Workflow size={18} />
+            <Layers size={18} />
           </span>
           <div className="min-w-0">
             <p className="text-[10px] font-bold tracking-wider text-purple-700 uppercase">
               Observability
             </p>
             <h1 className="truncate text-lg font-bold text-slate-900">
-              Workflow execution history
+              Simulation execution history
             </h1>
             <p className="truncate text-xs text-slate-500">
-              Every workflow execution across simulation sessions.
+              Every simulation execution across simulation sessions.
             </p>
           </div>
         </div>
@@ -281,7 +281,7 @@ export function ParticipantHistoryPage() {
           <DataTable rows={rows} columns={columns} selectable={false} />
         ) : (
           <div className="px-5 py-10 text-center text-sm text-slate-500">
-            No workflow executions yet.
+            No simulation executions yet.
           </div>
         )}
       </section>

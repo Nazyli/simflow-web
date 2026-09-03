@@ -3,14 +3,14 @@ import type { EdgeProps } from '@xyflow/react'
 import { ButtonEdge, type EdgePathType } from '@/components/button-edge'
 import { Button } from '@/components/ui/button'
 
-type WorkflowEdgeData = {
+type SimulationEdgeData = {
   label: string
   style: { color: string; line_style: string; animated: boolean }
   edgeType?: EdgePathType
   onDelete?: (edgeId: string) => void
 }
 
-export function WorkflowGraphEdge({
+export function SimulationGraphEdge({
   id,
   source,
   target,
@@ -24,7 +24,7 @@ export function WorkflowGraphEdge({
   data,
   selected,
 }: EdgeProps) {
-  const edgeData = data as WorkflowEdgeData
+  const edgeData = data as SimulationEdgeData
   const label = edgeData?.label ?? ''
   const style = edgeData?.style ?? { color: '#94a3b8', line_style: 'solid', animated: false }
   const edgeType = edgeData?.edgeType ?? 'default'

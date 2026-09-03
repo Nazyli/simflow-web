@@ -44,14 +44,14 @@ export function SettingsPage() {
           </span>
           <div>
             <h2 className="text-sm font-semibold text-slate-700">Reset Demo Data</h2>
-            <p className="text-xs text-slate-400">Re-run migrations and seed all demo workflows</p>
+            <p className="text-xs text-slate-400">Re-run migrations and seed all demo simulations</p>
           </div>
         </div>
 
         <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           <span>
-            This will downgrade, re-migrate, and re-seed the database. All existing workflow data
+            This will downgrade, re-migrate, and re-seed the database. All existing simulation data
             will be lost.
           </span>
         </div>
@@ -87,7 +87,7 @@ export function SettingsPage() {
             <DialogTitle>Reset Database</DialogTitle>
             <DialogDescription>
               This will run alembic downgrade, re-migrate to head, and re-seed all demo data. All
-              existing workflow data will be permanently lost.
+              existing simulation data will be permanently lost.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

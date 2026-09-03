@@ -21,7 +21,7 @@ test('serializes the selected root and direct reply email IDs for a participant 
     'actor-1',
     'Re: Contract',
     'Please review the revision.',
-    'workflow-1',
+    'simulation-1',
     undefined,
     undefined,
     'root-email-1',
@@ -33,7 +33,7 @@ test('serializes the selected root and direct reply email IDs for a participant 
     partner_id: 'actor-1',
     subject: 'Re: Contract',
     content: 'Please review the revision.',
-    workflow_version_id: 'workflow-1',
+    simulation_id: 'simulation-1',
     to: [],
     cc: [],
     parent_email_id: 'root-email-1',
@@ -54,13 +54,13 @@ test('records a runtime attachment open against its participant email scope', as
   await markEmailAttachmentOpened(
     'runtime attachment/1',
     'participant 1',
-    'workflow 1',
+    'simulation 1',
     'participant email/1',
   )
 
   assert.equal(
     request.path,
-    '/runner/email/attachments/runtime%20attachment%2F1/opened?participant_id=participant+1&workflow_version_id=workflow+1&participant_email_id=participant+email%2F1',
+    '/runner/email/attachments/runtime%20attachment%2F1/opened?participant_id=participant+1&simulation_id=simulation+1&participant_email_id=participant+email%2F1',
   )
   assert.equal(request.init.method, 'POST')
 })
@@ -78,7 +78,7 @@ test('opens a runtime email attachment by email_attachment_id', async () => {
   await markEmailAttachmentOpened(
     'runtime attachment/1',
     'participant 1',
-    'workflow 1',
+    'simulation 1',
     'participant email/1',
   )
 

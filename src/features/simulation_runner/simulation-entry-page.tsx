@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { startExecutionBatch } from '../../shared/api/executions'
-import { getPublishedVersions } from '../../shared/api/workflows'
+import { getPublishedSimulations } from '../../shared/api/simulations'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { MultiSelect } from '../../shared/components/multi-select'
 import { formGroupClass, formLabelClass, inputClass } from '../../shared/form-classes'
@@ -17,8 +17,8 @@ export function SimulationEntryPage() {
   const navigate = useNavigate()
   const [participantId, setParticipantId] = useState(() => randomParticipantId())
   const [actorId, setActorId] = useState(() => readActorId())
-  const [versionIds, setVersionIds] = useState<string[]>([])
-  const versions = useQuery({ queryKey: ['published-versions'], queryFn: getPublishedVersions })
+  const [simulationIds, setSimulationIds] = useState<string[]>([])
+  const simulations = useQuery({ queryKey: ['published-simulations'], queryFn: getPublishedSimulations })
   const start = useMutation({
     mutationFn: startExecutionBatch,
     onSuccess: (result) => {
@@ -27,7 +27,7 @@ export function SimulationEntryPage() {
       client.invalidateQueries({ queryKey: ['participant-executions', normalizedParticipantId] })
       client.invalidateQueries({ queryKey: ['notification-activity', normalizedParticipantId] })
       navigate(`/simulation/${encodeURIComponent(normalizedParticipantId)}`)
-      toast.success(`${result.runs.length} workflow simulation(s) ready.`)
+      toast.success(`${result.runs.length} simulation simulation(s) ready.`)
     },
     onError: () => toast.error('Unable to start or resume the selected simulations.'),
   })
@@ -36,7 +36,7 @@ export function SimulationEntryPage() {
     event.preventDefault()
     start.mutate({
       participant_id: participantId.trim(),
-      workflow_version_ids: versionIds,
+      simulation_ids: simulationIds,
       context: { actor_id: actorId.trim() },
     })
   }
@@ -54,7 +54,7 @@ export function SimulationEntryPage() {
             </p>
             <h1 className="truncate text-lg font-bold text-slate-900">Run a simulation</h1>
             <p className="truncate text-xs text-slate-500">
-              Enter the participant persona, select a workflow, then start to open the participant
+              Enter the participant persona, select a simulation, then start to open the participant
               workspace.
             </p>
           </div>
@@ -90,24 +90,24 @@ export function SimulationEntryPage() {
           />
         </div>
         <div className={formGroupClass}>
-          <label className={formLabelClass} htmlFor="runner-version">
-            Workflow versions
+          <label className={formLabelClass} htmlFor="runner-simulation">
+            Simulations
           </label>
           <MultiSelect
-            id="runner-version"
-            options={(versions.data ?? []).map((item) => ({
-              value: item.workflow_version_id,
-              label: `${item.workflow_name} · v${item.version_number}`,
+            id="runner-simulation"
+            options={(simulations.data ?? []).map((item) => ({
+              value: item.simulation_id,
+              label: `${item.group_simulation_name} · ${item.simulation_name}`,
             }))}
-            value={versionIds}
-            onValueChange={setVersionIds}
-            placeholder="Select one or more workflows"
+            value={simulationIds}
+            onValueChange={setSimulationIds}
+            placeholder="Select one or more simulations"
           />
         </div>
         <div className={`${formGroupClass} justify-end`}>
           <button
             type="submit"
-            disabled={!actorId || !participantId.trim() || !versionIds.length || start.isPending}
+            disabled={!actorId || !participantId.trim() || !simulationIds.length || start.isPending}
             className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] disabled:opacity-50"
           >
             <Play size={15} />{' '}
@@ -120,7 +120,7 @@ export function SimulationEntryPage() {
           </div>
         )}
       </form>
-      {versions.isPending && <LoadingState />}
+      {simulations.isPending && <LoadingState />}
     </main>
   )
 }

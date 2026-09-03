@@ -7,7 +7,7 @@ import {
   type ChatActorItem,
   type ChatMarkAsReadResult,
   type ChatMessage,
-  type ChatWorkflowItem,
+  type ChatSimulationItem,
 } from '../../shared/api/chat'
 import { eventsUrl } from '../../shared/api/client'
 import {
@@ -43,11 +43,11 @@ export interface SimulationRunContextValue {
   unreadCounts: Record<Channel, number>
   runnerParticipantId: string
   isChatPending: boolean
-  sendChat: (input: { workflowVersionId: string; target: string; content: string }) => void
-  markChatRead: (workflowVersionId: string, actorId: string) => Promise<ChatMarkAsReadResult>
+  sendChat: (input: { simulationId: string; target: string; content: string }) => void
+  markChatRead: (simulationId: string, actorId: string) => Promise<ChatMarkAsReadResult>
   isEmailPending: boolean
   sendEmail: (input: {
-    workflowVersionId: string
+    simulationId: string
     target: string
     subject: string
     content: string
@@ -55,7 +55,7 @@ export interface SimulationRunContextValue {
     replyToEmailId?: string
     attachments?: ParticipantEmailAttachmentInput[]
   }) => void
-  markEmailThreadRead: (workflowVersionId: string, rootId: string) => Promise<EmailMarkAsReadResult>
+  markEmailThreadRead: (simulationId: string, rootId: string) => Promise<EmailMarkAsReadResult>
   refresh: () => void
 }
 
@@ -91,7 +91,7 @@ export function SimulationRunProvider({
     const refreshRunner = (event: Event) => {
       void client.invalidateQueries({ queryKey: ['notification-activity', streamParticipantId] })
       void client.invalidateQueries({ queryKey: ['participant-executions', streamParticipantId] })
-      void client.invalidateQueries({ queryKey: ['chat-workflows'] })
+      void client.invalidateQueries({ queryKey: ['chat-simulations'] })
       void client.invalidateQueries({ queryKey: ['chat-actors'] })
       void client.invalidateQueries({ queryKey: ['chat-messages'] })
       void client.invalidateQueries({ queryKey: ['email-inbox'] })
@@ -137,31 +137,31 @@ export function SimulationRunProvider({
 
   const chatAction = useMutation({
     mutationFn: ({
-      workflowVersionId,
+      simulationId,
       target,
       content,
     }: {
-      workflowVersionId: string
+      simulationId: string
       target: string
       content: string
-    }) => sendParticipantChat(participantId.trim(), target, content, workflowVersionId),
+    }) => sendParticipantChat(participantId.trim(), target, content, simulationId),
     onSuccess: () => {
       client.invalidateQueries({ queryKey: ['chat-messages'] })
-      client.invalidateQueries({ queryKey: ['chat-workflows'] })
+      client.invalidateQueries({ queryKey: ['chat-simulations'] })
       client.invalidateQueries({ queryKey: ['chat-actors'] })
       client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
       client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
     },
-    onError: () => toast.error('Reply was rejected. Check the requested actor and workflow.'),
+    onError: () => toast.error('Reply was rejected. Check the requested actor and simulation.'),
   })
 
   const messageRead = useMutation({
-    mutationFn: ({ workflowVersionId, actorId }: { workflowVersionId: string; actorId: string }) =>
-      markChatMessageRead(participantId.trim(), workflowVersionId, actorId),
-    onSuccess: ({ count }, { workflowVersionId, actorId }) => {
+    mutationFn: ({ simulationId, actorId }: { simulationId: string; actorId: string }) =>
+      markChatMessageRead(participantId.trim(), simulationId, actorId),
+    onSuccess: ({ count }, { simulationId, actorId }) => {
       const pid = participantId.trim()
       client.setQueryData<ChatMessage[]>(
-        ['chat-messages', pid, workflowVersionId, actorId],
+        ['chat-messages', pid, simulationId, actorId],
         (messages) =>
           messages?.map((message) =>
             message.sender_type === 'actor' && !message.is_read
@@ -169,18 +169,18 @@ export function SimulationRunProvider({
               : message,
           ),
       )
-      client.setQueryData<ChatActorItem[]>(['chat-actors', pid, workflowVersionId], (actors) =>
+      client.setQueryData<ChatActorItem[]>(['chat-actors', pid, simulationId], (actors) =>
         actors?.map((actor) =>
           actor.actor_id === actorId
             ? { ...actor, unread_count: Math.max(0, actor.unread_count - count) }
             : actor,
         ),
       )
-      client.setQueryData<ChatWorkflowItem[]>(['chat-workflows', pid], (workflows) =>
-        workflows?.map((workflow) =>
-          workflow.workflow_version_id === workflowVersionId
-            ? { ...workflow, unread_count: Math.max(0, workflow.unread_count - count) }
-            : workflow,
+      client.setQueryData<ChatSimulationItem[]>(['chat-simulations', pid], (simulations) =>
+        simulations?.map((simulation) =>
+          simulation.simulation_id === simulationId
+            ? { ...simulation, unread_count: Math.max(0, simulation.unread_count - count) }
+            : simulation,
         ),
       )
       client.setQueryData<NotificationActivity>(['notification-activity', pid], (activity) =>
@@ -203,7 +203,7 @@ export function SimulationRunProvider({
 
   const emailAction = useMutation({
     mutationFn: ({
-      workflowVersionId,
+      simulationId,
       target,
       subject,
       content,
@@ -211,7 +211,7 @@ export function SimulationRunProvider({
       replyToEmailId,
       attachments,
     }: {
-      workflowVersionId: string
+      simulationId: string
       target: string
       subject: string
       content: string
@@ -224,7 +224,7 @@ export function SimulationRunProvider({
         target,
         subject,
         content,
-        workflowVersionId,
+        simulationId,
         undefined,
         undefined,
         parentEmailId,
@@ -238,12 +238,12 @@ export function SimulationRunProvider({
       client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
       client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
     },
-    onError: () => toast.error('Email was rejected. Check the requested contact and workflow.'),
+    onError: () => toast.error('Email was rejected. Check the requested contact and simulation.'),
   })
 
   const emailRead = useMutation({
-    mutationFn: ({ workflowVersionId, rootId }: { workflowVersionId: string; rootId: string }) =>
-      markEmailThreadAsRead(participantId.trim(), workflowVersionId, rootId),
+    mutationFn: ({ simulationId, rootId }: { simulationId: string; rootId: string }) =>
+      markEmailThreadAsRead(participantId.trim(), simulationId, rootId),
     onSuccess: () => {
       const pid = participantId.trim()
       client.invalidateQueries({ queryKey: ['email-inbox', pid] })
@@ -266,20 +266,20 @@ export function SimulationRunProvider({
     ]),
   ) as Record<Channel, number>
 
-  const sendChat = (input: { workflowVersionId: string; target: string; content: string }) => {
+  const sendChat = (input: { simulationId: string; target: string; content: string }) => {
     if (!participantId.trim()) {
       toast.error('Choose an active simulation session.')
       return
     }
     chatAction.mutate({
-      workflowVersionId: input.workflowVersionId,
+      simulationId: input.simulationId,
       target: input.target,
       content: input.content,
     })
   }
 
   const sendEmail = (input: {
-    workflowVersionId: string
+    simulationId: string
     target: string
     subject: string
     content: string
@@ -292,7 +292,7 @@ export function SimulationRunProvider({
       return
     }
     emailAction.mutate({
-      workflowVersionId: input.workflowVersionId,
+      simulationId: input.simulationId,
       target: input.target,
       subject: input.subject,
       content: input.content,
@@ -305,7 +305,7 @@ export function SimulationRunProvider({
   const refresh = () => {
     client.invalidateQueries({ queryKey: ['notification-activity', participantId.trim()] })
     client.invalidateQueries({ queryKey: ['participant-executions', participantId.trim()] })
-    client.invalidateQueries({ queryKey: ['chat-workflows'] })
+    client.invalidateQueries({ queryKey: ['chat-simulations'] })
     client.invalidateQueries({ queryKey: ['chat-actors'] })
     client.invalidateQueries({ queryKey: ['chat-messages'] })
     client.invalidateQueries({ queryKey: ['email-inbox'] })
@@ -321,12 +321,12 @@ export function SimulationRunProvider({
         runnerParticipantId,
         isChatPending: chatAction.isPending,
         sendChat,
-        markChatRead: (workflowVersionId, actorId) =>
-          messageRead.mutateAsync({ workflowVersionId, actorId }),
+        markChatRead: (simulationId, actorId) =>
+          messageRead.mutateAsync({ simulationId, actorId }),
         isEmailPending: emailAction.isPending,
         sendEmail,
-        markEmailThreadRead: (workflowVersionId, rootId) =>
-          emailRead.mutateAsync({ workflowVersionId, rootId }),
+        markEmailThreadRead: (simulationId, rootId) =>
+          emailRead.mutateAsync({ simulationId, rootId }),
         refresh,
       }}
     >

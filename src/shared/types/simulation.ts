@@ -1,21 +1,23 @@
-export interface Workflow {
-  workflow_id: string
-  workflow_name: string
-  workflow_desc: string | null
-  workspace_id: string | null
-  status: string
-  active_version_id: string | null
-  versions?: WorkflowVersion[]
+export interface GroupSimulation {
+  group_simulation_id: string
+  group_simulation_name: string
+  group_simulation_desc: string | null
+  created_by?: string | null
+  created_date?: string | null
+  modified_by?: string | null
+  modified_date?: string | null
+  is_deleted?: boolean
+  simulations?: Simulation[]
 }
 
-export interface VersionDetail extends WorkflowVersion {
-  workflow_name: string
+export interface SimulationDetail extends Simulation {
+  group_simulation_name: string
 }
 
 export interface Execution {
   execution_id: string
   session_id: string | null
-  workflow_version_id: string
+  simulation_id: string
   participant_id: string | null
   status: string
   current_node_id: string | null
@@ -24,11 +26,20 @@ export interface Execution {
   completed_at: string | null
 }
 
-export interface WorkflowVersion {
-  workflow_version_id: string
-  workflow_id: string
-  version_number: number
+export interface Simulation {
+  simulation_id: string
+  group_simulation_id: string
+  simulation_name: string
+  simulation_desc: string | null
+  channel_name: string
+  duration: number
   status: string
+  version_number?: number | null
+  created_by?: string | null
+  created_date?: string | null
+  modified_by?: string | null
+  modified_date?: string | null
+  is_deleted?: boolean
 }
 
 export interface EdgeStyle {

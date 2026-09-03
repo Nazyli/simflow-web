@@ -28,7 +28,7 @@ export function DocumentWorkspace({
             doc.title.toLowerCase().includes(q) ||
             doc.summary.toLowerCase().includes(q) ||
             doc.sharedBy.toLowerCase().includes(q) ||
-            (doc.workflowName ?? '').toLowerCase().includes(q),
+            (doc.simulationName ?? '').toLowerCase().includes(q),
         )
       : documents
   }, [documents, search])
@@ -128,7 +128,7 @@ export function DocumentWorkspace({
                   <p className="mt-1 text-xs text-[#5f6368]">
                     {documents.length
                       ? 'Choose a document from the list to preview its contents.'
-                      : 'Documents from workflow simulations will appear here.'}
+                      : 'Documents from simulation simulations will appear here.'}
                   </p>
                 </div>
               </div>
@@ -190,8 +190,8 @@ function DocumentDetail({
 
           {/* Metadata grid */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {doc.workflowName ? (
-              <MetaCard icon={<BookOpen size={14} />} label="Workflow" value={doc.workflowName} />
+            {doc.simulationName ? (
+              <MetaCard icon={<BookOpen size={14} />} label="GroupSimulation" value={doc.simulationName} />
             ) : null}
             {doc.versionNumber != null ? (
               <MetaCard

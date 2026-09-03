@@ -24,7 +24,7 @@ function persistPanelVisible(visible: boolean): void {
 
 export function SimulationInfoPanel({ participantId }: { participantId: string }) {
   const [visible, setVisible] = useState(readPanelVisible)
-  const { activeExecution, activeWorkflow } = useParticipantRuns(participantId, {
+  const { activeExecution, activeSimulation } = useParticipantRuns(participantId, {
     enabled: visible,
   })
   const elapsed = activeExecution
@@ -58,11 +58,11 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
               Participant console
             </span>
             <h1 className="truncate text-lg font-bold text-slate-900">
-              {activeWorkflow?.workflow_name ?? 'Participant workspace'}
+              {activeSimulation?.group_simulation_name ?? 'Participant workspace'}
             </h1>
             <p className="truncate text-xs text-slate-500">
               {activeExecution
-                ? `Version ${activeWorkflow?.version_number ?? '—'} · Session ${activeExecution.session_id}`
+                ? `${activeSimulation?.simulation_name ?? 'Simulation'} · Session ${activeExecution.session_id}`
                 : 'No active simulation for this participant yet.'}
             </p>
           </div>
@@ -118,8 +118,8 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
           <div className="min-w-0 flex-1">
             <strong className="text-sm text-amber-900">Participant action required</strong>
             <p className="mt-0.5 text-xs text-amber-700">
-              Open the workflow that is waiting on the Conversations channel and reply there. The
-              selected workflow scopes your reply; actions sent to the wrong workflow are rejected.
+              Open the simulation that is waiting on the Conversations channel and reply there. The
+              selected simulation scopes your reply; actions sent to the wrong simulation are rejected.
             </p>
           </div>
           <StatusBadge status="waiting" />

@@ -53,34 +53,34 @@ import { deleteExecution, getExecutionTrace, getExecutions } from '../../shared/
 import { getNodeCatalog } from '../../shared/api/node-catalog'
 import {
   addNode,
-  addWorkflowEdge,
-  createDraftFromVersion,
+  addSimulationEdge,
+  createDraftFromSimulation,
   deleteNode,
-  deleteWorkflowEdge,
-  deleteWorkflowVersion,
+  deleteSimulationEdge,
+  deleteSimulation,
   getGraph,
-  getVersionDetail,
-  getWorkflowVersions,
-  publishVersion,
+  getSimulationDetail,
+  getSimulations,
+  publishSimulation,
   updateNode,
-  updateWorkflowEdge,
+  updateSimulationEdge,
   type ApiEdge,
   type ApiNode,
   type ApiNodePayload,
-} from '../../shared/api/workflows'
+} from '../../shared/api/simulations'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
-import type { Execution, NodeDefinition, OutputPort } from '../../shared/types/workflow'
+import type { Execution, NodeDefinition, OutputPort } from '../../shared/types/simulation'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
-import { WorkflowGraphEdge } from './workflow-graph-edge'
-import { WorkflowGraphNode } from './workflow-graph-node'
+import { SimulationGraphEdge } from './simulation-graph-edge'
+import { SimulationGraphNode } from './simulation-graph-node'
 import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
 
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
 
-const workflowNodeRenderers = { workflow: WorkflowGraphNode }
-const workflowEdgeRenderers = { workflow: WorkflowGraphEdge }
+const simulationNodeRenderers = { simulation: SimulationGraphNode }
+const simulationEdgeRenderers = { simulation: SimulationGraphEdge }
 
 function combinedAutosaveStatus(statuses: Iterable<NodeAutosaveStatus>): NodeAutosaveStatus {
   const current = new Set(statuses)
@@ -98,7 +98,7 @@ function nodeToFlow(
 ): Node {
   return {
     id: node.node_id,
-    type: 'workflow',
+    type: 'simulation',
     position: { x: node.position_x ?? 80, y: node.position_y ?? 80 },
     data: {
       label: node.node_name,
@@ -130,7 +130,7 @@ function edgeToFlow(
   
   return {
     id: edge.edge_id,
-    type: 'workflow',
+    type: 'simulation',
     source: edge.source_node_id,
     sourceHandle: edge.source_port_id,
     target: edge.target_node_id,
@@ -172,15 +172,15 @@ function apiErrorMessage(error: unknown): string {
 export function SimulationStudioPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { versionId: urlVersionId } = useParams<{ versionId: string }>()
+  const { simulationId: urlSimulationId } = useParams<{ simulationId: string }>()
 
   // State management
-  const [versionId, setVersionId] = useState<string | null>(null)
+  const [simulationId, setSimulationId] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null)
   const [deleteExecutionTarget, setDeleteExecutionTarget] = useState<string | null>(null)
-  const [deleteVersionTarget, setDeleteVersionTarget] = useState<string | null>(null)
+  const [deleteSimulationTarget, setdeleteSimulationTarget] = useState<string | null>(null)
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
@@ -203,7 +203,7 @@ export function SimulationStudioPage() {
   const nodeAutosaveStatuses = useRef<Map<string, NodeAutosaveStatus>>(new Map())
   const nodeAutosaveQueue = useRef<NodeAutosaveQueue<ApiNodePayload> | null>(null)
   const pendingEdgeKeys = useRef<Set<string>>(new Set())
-  const fittedVersionId = useRef<string | null>(null)
+  const fittedSimulationId = useRef<string | null>(null)
 
   // Stable refs for autosave and version status — kept in sync after mutations are declared below.
   // Using refs avoids adding them as useEffect dependencies (which would cause infinite loops).
@@ -213,7 +213,7 @@ export function SimulationStudioPage() {
       payload: Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'>
     }) => void
   >(() => {})
-  const selectedVersionStatusRef = useRef<string | undefined>(undefined)
+  const selectedSimulationStatusRef = useRef<string | undefined>(undefined)
 
   const updateNodeAutosaveStatus = useCallback((nodeId: string, status: NodeAutosaveStatus) => {
     nodeAutosaveStatuses.current.set(nodeId, status)
@@ -230,8 +230,8 @@ export function SimulationStudioPage() {
 
   const enqueueNodeSave = useCallback(
     ({ id, payload }: { id: string; payload: ApiNodePayload }) => {
-      if (!versionId) return
-      queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', versionId], (current) => {
+      if (!simulationId) return
+      queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', simulationId], (current) => {
         if (!current) return current
         return [
           current[0].map((node) => (node.node_id === id ? { ...node, ...payload } : node)),
@@ -240,7 +240,7 @@ export function SimulationStudioPage() {
       })
       nodeAutosaveQueue.current?.enqueue(id, payload)
     },
-    [queryClient, versionId],
+    [queryClient, simulationId],
   )
 
   const retryFailedNodeSaves = useCallback(() => {
@@ -251,36 +251,36 @@ export function SimulationStudioPage() {
 
   // API Queries & Mutations
   const versionDetail = useQuery({
-    queryKey: ['version-detail', urlVersionId],
-    queryFn: () => getVersionDetail(urlVersionId!),
-    enabled: Boolean(urlVersionId),
+    queryKey: ['version-detail', urlSimulationId],
+    queryFn: () => getSimulationDetail(urlSimulationId!),
+    enabled: Boolean(urlSimulationId),
     retry: false,
   })
-  const selectedWorkflow = useMemo(
+  const selectedGroupSimulation = useMemo(
     () =>
       versionDetail.data
         ? {
-            workflow_id: versionDetail.data.workflow_id,
-            workflow_name: versionDetail.data.workflow_name,
+            group_simulation_id: versionDetail.data.group_simulation_id,
+            group_simulation_name: versionDetail.data.group_simulation_name,
           }
         : null,
     [versionDetail.data],
   )
   const graph = useQuery({
-    queryKey: ['graph', versionId],
-    queryFn: () => getGraph(versionId!),
-    enabled: Boolean(versionId) && versionDetail.isSuccess,
+    queryKey: ['graph', simulationId],
+    queryFn: () => getGraph(simulationId!),
+    enabled: Boolean(simulationId) && versionDetail.isSuccess,
   })
   const nodeCatalog = useQuery({ queryKey: ['node-catalog'], queryFn: getNodeCatalog })
   const versions = useQuery({
-    queryKey: ['workflow-versions', selectedWorkflow?.workflow_id],
-    queryFn: () => getWorkflowVersions(selectedWorkflow!.workflow_id),
-    enabled: Boolean(selectedWorkflow),
+    queryKey: ['simulation-versions', selectedGroupSimulation?.group_simulation_id],
+    queryFn: () => getSimulations(selectedGroupSimulation!.group_simulation_id),
+    enabled: Boolean(selectedGroupSimulation),
   })
   const executions = useQuery({
-    queryKey: ['executions', versionId],
-    queryFn: () => getExecutions(versionId!),
-    enabled: Boolean(versionId) && versionDetail.isSuccess,
+    queryKey: ['executions', simulationId],
+    queryFn: () => getExecutions(simulationId!),
+    enabled: Boolean(simulationId) && versionDetail.isSuccess,
   })
   const executionTimeline = useQuery({
     queryKey: ['execution-node-executions', selectedExecutionId],
@@ -289,25 +289,25 @@ export function SimulationStudioPage() {
   })
 
   const createDraft = useMutation({
-    mutationFn: async (_workflowId: string) => {
-      const sourceVersion = selectedVersion ?? versions.data?.find((v) => v.status === 'published')
+    mutationFn: async (_groupSimulationId: string) => {
+      const sourceVersion = selectedSimulation ?? versions.data?.find((v) => v.status === 'published')
       if (!sourceVersion) throw new Error('Select a published version before creating a draft.')
-      return createDraftFromVersion(sourceVersion.workflow_version_id)
+      return createDraftFromSimulation(sourceVersion.simulation_id)
     },
     onSuccess: (version) => {
       queryClient.invalidateQueries({
-        queryKey: ['workflow-versions', selectedWorkflow?.workflow_id],
+        queryKey: ['simulation-versions', selectedGroupSimulation?.group_simulation_id],
       })
-      navigate(`/studio/${version.workflow_version_id}`)
+      navigate(`/studio/${version.simulation_id}`)
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
   const publish = useMutation({
-    mutationFn: publishVersion,
+    mutationFn: publishSimulation,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['workflows'] })
+      queryClient.invalidateQueries({ queryKey: ['simulations'] })
       queryClient.invalidateQueries({
-        queryKey: ['workflow-versions', selectedWorkflow?.workflow_id],
+        queryKey: ['simulation-versions', selectedGroupSimulation?.group_simulation_id],
       })
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
@@ -321,7 +321,7 @@ export function SimulationStudioPage() {
       definition: NodeDefinition
       position?: { x: number; y: number }
     }) =>
-      addNode(versionId!, {
+      addNode(simulationId!, {
         node_name: `${definition.label} node`,
         node_type: definition.node_type,
         parameters: { ...definition.parameters },
@@ -333,13 +333,13 @@ export function SimulationStudioPage() {
       setSelectedNodeId(node.node_id)
       setActiveRightTab('inspector')
       setRightSidebarOpen(true)
-      queryClient.invalidateQueries({ queryKey: ['graph', versionId] })
+      queryClient.invalidateQueries({ queryKey: ['graph', simulationId] })
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
   const duplicateGraphNode = useMutation({
     mutationFn: (node: ApiNode) =>
-      addNode(versionId!, {
+      addNode(simulationId!, {
         node_name: `${node.node_name} copy`,
         node_type: node.node_type,
         parameters: { ...node.parameters },
@@ -351,7 +351,7 @@ export function SimulationStudioPage() {
       setSelectedNodeId(node.node_id)
       setActiveRightTab('inspector')
       setRightSidebarOpen(true)
-      queryClient.invalidateQueries({ queryKey: ['graph', versionId] })
+      queryClient.invalidateQueries({ queryKey: ['graph', simulationId] })
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
@@ -359,21 +359,21 @@ export function SimulationStudioPage() {
     mutationFn: deleteNode,
     onSuccess: () => {
       setSelectedNodeId(null)
-      queryClient.invalidateQueries({ queryKey: ['graph', versionId] })
+      queryClient.invalidateQueries({ queryKey: ['graph', simulationId] })
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
   const persistEdge = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id' | 'is_valid'> }) =>
-      updateWorkflowEdge(id, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', versionId] }),
+      updateSimulationEdge(id, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', simulationId] }),
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
   const removeEdge = useMutation({
-    mutationFn: deleteWorkflowEdge,
+    mutationFn: deleteSimulationEdge,
     onSuccess: () => {
       setSelectedEdgeId(null)
-      queryClient.invalidateQueries({ queryKey: ['graph', versionId] })
+      queryClient.invalidateQueries({ queryKey: ['graph', simulationId] })
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
@@ -381,22 +381,22 @@ export function SimulationStudioPage() {
     mutationFn: deleteExecution,
     onSuccess: (_result, executionId) => {
       if (selectedExecutionId === executionId) setSelectedExecutionId(null)
-      queryClient.invalidateQueries({ queryKey: ['executions', versionId] })
+      queryClient.invalidateQueries({ queryKey: ['executions', simulationId] })
       toast.success('Execution log deleted.')
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
-  const removeVersion = useMutation({
-    mutationFn: deleteWorkflowVersion,
+  const removeSimulation = useMutation({
+    mutationFn: deleteSimulation,
     onSuccess: (_result, deletedVersionId) => {
-      if (versionId === deletedVersionId) {
+      if (simulationId === deletedVersionId) {
         navigate('/studio')
       }
       queryClient.invalidateQueries({
-        queryKey: ['workflow-versions', selectedWorkflow?.workflow_id],
+        queryKey: ['simulation-versions', selectedGroupSimulation?.group_simulation_id],
       })
-      queryClient.invalidateQueries({ queryKey: ['workflows'] })
-      toast.success('Workflow version deleted.')
+      queryClient.invalidateQueries({ queryKey: ['simulations'] })
+      toast.success('Simulation deleted.')
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
@@ -423,8 +423,8 @@ export function SimulationStudioPage() {
     () => apiEdges.find((edge) => edge.edge_id === selectedEdgeId) ?? null,
     [apiEdges, selectedEdgeId],
   )
-  const selectedVersion = versions.data?.find(
-    (version) => version.workflow_version_id === versionId,
+  const selectedSimulation = versions.data?.find(
+    (version) => version.simulation_id === simulationId,
   )
   const selectedExecution =
     executions.data?.find((execution) => execution.execution_id === selectedExecutionId) ?? null
@@ -450,7 +450,7 @@ export function SimulationStudioPage() {
 
   const rotateNode = useCallback(
     (nodeId: string) => {
-      if (selectedVersion?.status !== 'draft') return
+      if (selectedSimulation?.status !== 'draft') return
       const current = apiNodes.find((item) => item.node_id === nodeId)
       if (!current) return
       const currentRotation = localRotations.current.get(nodeId) ?? current.rotation ?? 0
@@ -471,21 +471,21 @@ export function SimulationStudioPage() {
         },
       })
     },
-    [apiNodes, selectedVersion?.status, setNodes],
+    [apiNodes, selectedSimulation?.status, setNodes],
   )
 
   // Keep stable refs in sync with latest values
   persistNodeRef.current = enqueueNodeSave
-  selectedVersionStatusRef.current = selectedVersion?.status
+  selectedSimulationStatusRef.current = selectedSimulation?.status
 
   // The URL version param drives the builder; resetting selections keeps the
   // previous version's graph and inspector from leaking across version switches.
   useEffect(() => {
-    setVersionId(urlVersionId ?? null)
+    setSimulationId(urlSimulationId ?? null)
     setSelectedNodeId(null)
     setSelectedEdgeId(null)
     setSelectedExecutionId(null)
-  }, [urlVersionId])
+  }, [urlSimulationId])
 
   // Automatically focus Inspector tab when node or edge is selected
   useEffect(() => {
@@ -552,7 +552,7 @@ export function SimulationStudioPage() {
       // Deferred with setTimeout to avoid calling mutate during the render phase.
       const nodesToSave = apiNodes.filter((n) => nodesNeedingLayout.includes(n.node_id))
       setTimeout(() => {
-        if (selectedVersionStatusRef.current !== 'draft') return
+        if (selectedSimulationStatusRef.current !== 'draft') return
         nodesToSave.forEach((node) => {
           const pos = localPositions.current.get(node.node_id)
           if (!pos || !persistNodeRef.current) return
@@ -580,7 +580,7 @@ export function SimulationStudioPage() {
           ...nodeToFlow(
             { ...node, rotation },
             definitions.get(node.node_type),
-            selectedVersion?.status === 'draft',
+            selectedSimulation?.status === 'draft',
             rotateNode,
           ),
           position: cached ?? { x: node.position_x ?? 100, y: node.position_y ?? 100 },
@@ -607,27 +607,27 @@ export function SimulationStudioPage() {
     setEdges,
     deleteEdge,
     rotateNode,
-    selectedVersion?.status,
+    selectedSimulation?.status,
   ])
 
   useEffect(() => {
     if (
       !flowInstance ||
-      !versionId ||
+      !simulationId ||
       apiNodes.length === 0 ||
-      fittedVersionId.current === versionId
+      fittedSimulationId.current === simulationId
     )
       return
-    fittedVersionId.current = versionId
+    fittedSimulationId.current = simulationId
     const frame = requestAnimationFrame(() => flowInstance.fitView({ padding: 0.2, duration: 240 }))
     return () => cancelAnimationFrame(frame)
-  }, [apiNodes.length, flowInstance, versionId])
+  }, [apiNodes.length, flowInstance, simulationId])
 
   useEffect(() => {
     setSelectedExecutionId(null)
     localPositions.current.clear()
     localRotations.current.clear()
-  }, [versionId])
+  }, [simulationId])
 
   // Apply edgePathType to all edges when dropdown changes
   useEffect(() => {
@@ -649,12 +649,12 @@ export function SimulationStudioPage() {
       const target = event.target as HTMLElement | null
       if (target?.matches('input, textarea, select, [contenteditable="true"]')) return
       if (event.key === 'Delete' || event.key === 'Backspace') {
-        if (selectedNodeId && selectedVersion?.status === 'draft') {
+        if (selectedNodeId && selectedSimulation?.status === 'draft') {
           event.preventDefault()
           removeNode.mutate(selectedNodeId)
           return
         }
-        if (selectedEdgeId && selectedVersion?.status === 'draft') {
+        if (selectedEdgeId && selectedSimulation?.status === 'draft') {
           event.preventDefault()
           removeEdge.mutate(selectedEdgeId)
         }
@@ -672,7 +672,7 @@ export function SimulationStudioPage() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [removeEdge, removeNode, selectedEdgeId, selectedNodeId, selectedVersion?.status])
+  }, [removeEdge, removeNode, selectedEdgeId, selectedNodeId, selectedSimulation?.status])
 
   useEffect(() => {
     function acceptPaletteDrop(event: globalThis.DragEvent) {
@@ -680,8 +680,8 @@ export function SimulationStudioPage() {
         !(event.target instanceof Element) ||
         !event.target.closest('.graph') ||
         !flowInstance ||
-        !versionId ||
-        selectedVersion?.status !== 'draft'
+        !simulationId ||
+        selectedSimulation?.status !== 'draft'
       )
         return
       const nodeType = event.dataTransfer?.getData('application/simulation-builder-node-type')
@@ -708,12 +708,12 @@ export function SimulationStudioPage() {
       document.removeEventListener('dragover', allowPaletteDrop, true)
       document.removeEventListener('drop', acceptPaletteDrop, true)
     }
-  }, [addGraphNode, definitions, flowInstance, selectedVersion?.status, versionId])
+  }, [addGraphNode, definitions, flowInstance, selectedSimulation?.status, simulationId])
 
   function connect(connection: Connection) {
     if (
-      !versionId ||
-      selectedVersion?.status !== 'draft' ||
+      !simulationId ||
+      selectedSimulation?.status !== 'draft' ||
       !connection.source ||
       !connection.target ||
       !connection.sourceHandle ||
@@ -816,14 +816,14 @@ export function SimulationStudioPage() {
       ...current,
       edgeToFlow(pendingEdge, sourcePort, deleteEdge, edgePathType, flowSourceNode?.apiNode),
     ])
-    addWorkflowEdge(versionId, {
+    addSimulationEdge(simulationId, {
       source_node_id: connection.source,
       source_port_id: connection.sourceHandle,
       target_node_id: connection.target,
       target_port_id: connection.targetHandle,
     })
       .then((edge) => {
-        queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', versionId], (current) =>
+        queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', simulationId], (current) =>
           current
             ? [current[0], [...current[1].filter((item) => item.edge_id !== edge.edge_id), edge]]
             : current,
@@ -844,12 +844,12 @@ export function SimulationStudioPage() {
       })
       .finally(() => {
         pendingEdgeKeys.current.delete(connectionKey)
-        queryClient.invalidateQueries({ queryKey: ['graph', versionId] })
+        queryClient.invalidateQueries({ queryKey: ['graph', simulationId] })
       })
   }
 
   function applyAutoLayout() {
-    if (!versionId || selectedVersion?.status !== 'draft' || apiNodes.length === 0) return
+    if (!simulationId || selectedSimulation?.status !== 'draft' || apiNodes.length === 0) return
     const layout = new dagre.graphlib.Graph()
     layout.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 200, marginx: 60, marginy: 60 })
     layout.setDefaultEdgeLabel(() => ({}))
@@ -900,7 +900,7 @@ export function SimulationStudioPage() {
     const definition = definitions.get(
       event.dataTransfer.getData('application/simulation-builder-node-type'),
     )
-    if (!definition || !flowInstance || !versionId || selectedVersion?.status !== 'draft') return
+    if (!definition || !flowInstance || !simulationId || selectedSimulation?.status !== 'draft') return
     addGraphNode.mutate({
       definition,
       position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }),
@@ -952,13 +952,13 @@ export function SimulationStudioPage() {
       <div className="grid h-[calc(100vh-64px)] place-items-center bg-slate-50 p-6">
         <div className="max-w-sm rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
           <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-500" />
-          <h2 className="text-sm font-bold text-slate-900">Workflow version not found</h2>
+          <h2 className="text-sm font-bold text-slate-900">Simulation not found</h2>
           <p className="mt-1 text-xs leading-normal text-slate-500">
-            This version may have been deleted. Go back to the workflow list and open another
+            This version may have been deleted. Go back to the simulation list and open another
             version.
           </p>
           <Button type="button" className="mt-4" onClick={() => navigate('/studio')}>
-            Back to workflows
+            Back to simulations
           </Button>
         </div>
       </div>
@@ -988,24 +988,24 @@ export function SimulationStudioPage() {
                 to="/studio"
                 className="shrink-0 text-sm font-semibold text-slate-500 transition-colors hover:text-purple-700"
               >
-                Workflows
+                GroupSimulations
               </Link>
               <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
               <h1 className="truncate text-base font-bold text-slate-900">
-                {selectedWorkflow?.workflow_name ?? 'Loading…'}
+                {selectedGroupSimulation?.group_simulation_name ?? 'Loading…'}
               </h1>
             </nav>
           </div>
 
           <div className="hidden items-center gap-2.5 border-l border-slate-200 pl-3 sm:flex">
-            {selectedVersion ? (
-              <StatusBadge status={selectedVersion.status} />
+            {selectedSimulation ? (
+              <StatusBadge status={selectedSimulation.status} />
             ) : (
               <span
                 className="inline-flex h-5 w-fit items-center rounded-4xl border border-transparent px-2 text-[0.66rem] font-bold capitalize"
                 style={{ color: 'var(--status-draft)', backgroundColor: 'var(--status-draft-bg)' }}
               >
-                No Version
+                No Simulation
               </span>
             )}
             {nodeAutosaveStatus === 'error' ? (
@@ -1034,11 +1034,11 @@ export function SimulationStudioPage() {
 
         {/* Right Header Actions */}
         <div className="flex items-center gap-2">
-          {selectedWorkflow && (
+          {selectedGroupSimulation && (
             <div className="mr-2 hidden items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 p-1 md:flex">
               <select
                 className="cursor-pointer bg-transparent px-2 py-1 text-xs font-medium text-slate-700 focus:outline-none"
-                value={versionId ?? ''}
+                value={simulationId ?? ''}
                 onChange={(event) => {
                   if (event.target.value) navigate(`/studio/${event.target.value}`)
                 }}
@@ -1048,19 +1048,19 @@ export function SimulationStudioPage() {
                 </option>
                 {versions.data?.map((v) => (
                   <option
-                    key={v.workflow_version_id}
-                    value={v.workflow_version_id}
+                    key={v.simulation_id}
+                    value={v.simulation_id}
                     className="bg-white"
                   >
                     v{v.version_number} — {v.status}
                   </option>
                 ))}
               </select>
-              {selectedVersion?.status !== 'draft' && (
+              {selectedSimulation?.status !== 'draft' && (
                 <button
                   type="button"
                   className="flex items-center gap-1 rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
-                  onClick={() => createDraft.mutate(selectedWorkflow.workflow_id)}
+                  onClick={() => createDraft.mutate(selectedGroupSimulation.group_simulation_id)}
                 >
                   <Plus className="h-3 w-3" /> New Draft
                 </button>
@@ -1071,8 +1071,8 @@ export function SimulationStudioPage() {
           <button
             className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:bg-emerald-700 disabled:opacity-50"
             type="button"
-            disabled={!selectedVersion || selectedVersion.status !== 'draft' || publish.isPending}
-            onClick={() => selectedVersion && publish.mutate(selectedVersion.workflow_version_id)}
+            disabled={!selectedSimulation || selectedSimulation.status !== 'draft' || publish.isPending}
+            onClick={() => selectedSimulation && publish.mutate(selectedSimulation.simulation_id)}
           >
             <CheckCircle2 size={14} /> Publish
           </button>
@@ -1125,7 +1125,7 @@ export function SimulationStudioPage() {
                 return (
                   <Fragment key={cat.id}>
                     {catNodes.map((definition) => {
-                      const isDraft = Boolean(versionId && selectedVersion?.status === 'draft')
+                      const isDraft = Boolean(simulationId && selectedSimulation?.status === 'draft')
 
                       return (
                         <Tooltip key={definition.node_type}>
@@ -1161,7 +1161,7 @@ export function SimulationStudioPage() {
                 )
               })}
 
-              {!selectedVersion && (
+              {!selectedSimulation && (
                 <div className="col-span-2 mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                   <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
                   Select or create a version to start editing nodes.
@@ -1229,7 +1229,7 @@ export function SimulationStudioPage() {
                 className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Auto layout"
                 onClick={applyAutoLayout}
-                disabled={!versionId || selectedVersion?.status !== 'draft' || !apiNodes.length}
+                disabled={!simulationId || selectedSimulation?.status !== 'draft' || !apiNodes.length}
                 title="Arrange nodes automatically"
               >
                 <Layers size={15} />
@@ -1295,14 +1295,14 @@ export function SimulationStudioPage() {
             onDrop={dropPaletteNode}
           >
             <ReactFlow
-              nodeTypes={workflowNodeRenderers}
-              edgeTypes={workflowEdgeRenderers}
+              nodeTypes={simulationNodeRenderers}
+              edgeTypes={simulationEdgeRenderers}
               onInit={setFlowInstance}
               nodes={nodes.map((node) => ({
                 ...node,
                 className: invalidNodeIds.has(node.id) ? 'invalid-node' : '',
-                draggable: selectedVersion?.status === 'draft',
-                connectable: selectedVersion?.status === 'draft',
+                draggable: selectedSimulation?.status === 'draft',
+                connectable: selectedSimulation?.status === 'draft',
               }))}
               edges={edges.map((edge) => ({
                 ...edge,
@@ -1329,7 +1329,7 @@ export function SimulationStudioPage() {
                   x: Math.round(node.position.x),
                   y: Math.round(node.position.y),
                 })
-                if (selectedVersion?.status !== 'draft') return
+                if (selectedSimulation?.status !== 'draft') return
                 const current = apiNodes.find((item) => item.node_id === node.id)
                 if (current)
                   enqueueNodeSave({
@@ -1438,33 +1438,33 @@ export function SimulationStudioPage() {
               <div className="space-y-3">
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className="text-xs font-bold tracking-wider text-slate-500 uppercase">
-                    Workflow Versions
+                    GroupSimulation Versions
                   </h3>
-                  {selectedWorkflow && (
+                  {selectedGroupSimulation && (
                     <button
                       type="button"
                       className="flex items-center gap-1 rounded bg-purple-600 px-2.5 py-1 text-xs font-medium text-white shadow-xs hover:bg-purple-700"
-                      onClick={() => createDraft.mutate(selectedWorkflow.workflow_id)}
+                      onClick={() => createDraft.mutate(selectedGroupSimulation.group_simulation_id)}
                     >
                       <Plus className="h-3 w-3" /> Create Draft
                     </button>
                   )}
                 </div>
 
-                {selectedWorkflow &&
+                {selectedGroupSimulation &&
                   (versions.isPending ? (
                     <LoadingState />
                   ) : (
                     <div className="space-y-2">
                       {versions.data?.map((version) => (
                         <div
-                          key={version.workflow_version_id}
+                          key={version.simulation_id}
                           className={`cursor-pointer rounded-xl border p-3 transition-all ${
-                            version.workflow_version_id === versionId
+                            version.simulation_id === simulationId
                               ? 'border-purple-300 bg-purple-50 shadow-xs'
                               : 'border-slate-200 bg-white hover:border-slate-300'
                           }`}
-                          onClick={() => navigate(`/studio/${version.workflow_version_id}`)}
+                          onClick={() => navigate(`/studio/${version.simulation_id}`)}
                         >
                           <div className="mb-1 flex items-center justify-between">
                             <span className="text-sm font-semibold text-slate-800">
@@ -1478,7 +1478,7 @@ export function SimulationStudioPage() {
                                 title="Delete version"
                                 onClick={(event) => {
                                   event.stopPropagation()
-                                  setDeleteVersionTarget(version.workflow_version_id)
+                                  setdeleteSimulationTarget(version.simulation_id)
                                 }}
                                 className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                               >
@@ -1549,16 +1549,16 @@ export function SimulationStudioPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Workflow Version Confirmation */}
+      {/* Delete GroupSimulation Version Confirmation */}
       <Dialog
-        open={Boolean(deleteVersionTarget)}
+        open={Boolean(deleteSimulationTarget)}
         onOpenChange={(open) => {
-          if (!open) setDeleteVersionTarget(null)
+          if (!open) setdeleteSimulationTarget(null)
         }}
       >
         <DialogContent className="p-6 sm:max-w-md">
           <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <Trash2 className="h-5 w-5 text-red-600" /> Delete workflow version?
+            <Trash2 className="h-5 w-5 text-red-600" /> Delete simulation version?
           </DialogTitle>
           <DialogDescription>
             This permanently deletes the version, its nodes, and its edges. This cannot be undone.
@@ -1566,21 +1566,21 @@ export function SimulationStudioPage() {
           </DialogDescription>
 
           <div className="flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setDeleteVersionTarget(null)}>
+            <Button type="button" variant="outline" onClick={() => setdeleteSimulationTarget(null)}>
               Cancel
             </Button>
             <Button
               type="button"
               variant="destructive"
-              disabled={removeVersion.isPending}
+              disabled={removeSimulation.isPending}
               onClick={() => {
-                if (deleteVersionTarget) removeVersion.mutate(deleteVersionTarget)
-                setDeleteVersionTarget(null)
+                if (deleteSimulationTarget) removeSimulation.mutate(deleteSimulationTarget)
+                setdeleteSimulationTarget(null)
               }}
               className="border-0 bg-red-600 text-white hover:bg-red-700"
             >
               <Trash2 className="h-3.5 w-3.5" />{' '}
-              {removeVersion.isPending ? 'Deleting…' : 'Delete version'}
+              {removeSimulation.isPending ? 'Deleting…' : 'Delete version'}
             </Button>
           </div>
         </DialogContent>
@@ -1706,3 +1706,4 @@ function ExecutionHistoryPanel({
     </div>
   )
 }
+

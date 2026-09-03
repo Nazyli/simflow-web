@@ -36,11 +36,11 @@ export function DocumentPreviewDialog({
                 </span>
                 <span className="text-slate-400">·</span>
                 <span>{doc.sharedBy}</span>
-                {doc.workflowName ? (
+                {doc.simulationName ? (
                   <>
                     <span className="text-slate-400">·</span>
                     <span>
-                      {doc.workflowName}
+                      {doc.simulationName}
                       {doc.versionNumber != null ? ` v${doc.versionNumber}` : ''}
                     </span>
                   </>

@@ -29,8 +29,8 @@ export function MessageBubble({ message, participantId }: MessageBubbleProps) {
         <div className={`flex items-baseline gap-2 px-1 ${own ? 'justify-end' : 'justify-start'}`}>
           <span className="text-[10px] font-semibold text-slate-500">{sender}</span>
           <time className="text-[10px] text-slate-400">{formatChatTime(message.timestamp)}</time>
-          {message.workflow_label && (
-            <span className="truncate text-[10px] text-slate-400">| {message.workflow_label}</span>
+          {message.simulation_label && (
+            <span className="truncate text-[10px] text-slate-400">| {message.simulation_label}</span>
           )}
         </div>
         <div

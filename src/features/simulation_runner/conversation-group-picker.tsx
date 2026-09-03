@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { MessageCircleMore } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { submitExecutionAction } from '../../shared/api/executions'
-import type { Execution } from '../../shared/types/workflow'
+import type { Execution } from '../../shared/types/simulation'
 
 type GroupProgress = {
   groups?: unknown

@@ -1,4 +1,4 @@
-import type { ParameterOption, ParameterPicker } from '../../shared/types/workflow'
+import type { ParameterOption, ParameterPicker } from '../../shared/types/simulation'
 
 export function resolveParameterMultiline(
   name: string,

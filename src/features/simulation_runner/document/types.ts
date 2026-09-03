@@ -13,7 +13,7 @@ export interface SimulationDocument {
   title: string
   type: DocumentType
   status: 'unread' | 'read'
-  workflowName: string | null
+  simulationName: string | null
   versionNumber: number | null
   sharedBy: string
   sharedAt: string
@@ -57,7 +57,7 @@ export function mapRuntimeDocument(record: RuntimeSimulationDocument): Simulatio
     title: record.document_name ?? 'Untitled document',
     type: 'document',
     status: record.is_read ? 'read' : 'unread',
-    workflowName: null,
+    simulationName: null,
     versionNumber: null,
     sharedBy: record.owner ?? '',
     sharedAt: record.created_date,

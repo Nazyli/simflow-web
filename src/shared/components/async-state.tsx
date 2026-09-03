@@ -8,7 +8,7 @@ export function LoadingState({
   variant = 'table',
 }: {
   label?: string
-  variant?: 'table' | 'workflow' | 'canvas' | 'runner'
+  variant?: 'table' | 'simulation' | 'canvas' | 'runner'
 }) {
   const rows = variant === 'canvas' ? 1 : variant === 'runner' ? 4 : 3
   const widths = ['w-full', 'w-[84%]', 'w-[68%]']

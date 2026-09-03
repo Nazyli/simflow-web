@@ -51,9 +51,9 @@ export function MessageBubble({
                   You
                 </span>
               )}
-              {message.workflow_label && (
+              {message.simulation_label && (
                 <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600">
-                  {message.workflow_label}
+                  {message.simulation_label}
                 </span>
               )}
               <time className="ml-auto shrink-0 text-xs text-slate-400">

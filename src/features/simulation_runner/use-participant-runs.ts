@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getParticipantExecutions } from '../../shared/api/executions'
-import { type PublishedWorkflowVersion } from '../../shared/api/workflows'
-import type { Execution } from '../../shared/types/workflow'
+import { type PublishedSimulation } from '../../shared/api/simulations'
+import type { Execution } from '../../shared/types/simulation'
 
 export function useParticipantRuns(participantId: string, options?: { enabled?: boolean }) {
   const client = useQueryClient()
@@ -14,9 +14,9 @@ export function useParticipantRuns(participantId: string, options?: { enabled?: 
   const runs = enabled ? (runsQuery.data ?? []) : []
   const activeExecution: Execution | null =
     runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? runs[0] ?? null
-  const activeWorkflow =
-    (client.getQueryData<PublishedWorkflowVersion[]>(['published-versions']) ?? []).find(
-      (item) => item.workflow_version_id === activeExecution?.workflow_version_id,
+  const activeSimulation =
+    (client.getQueryData<PublishedSimulation[]>(['published-simulations']) ?? []).find(
+      (item) => item.simulation_id === activeExecution?.simulation_id,
     ) ?? null
-  return { runs, activeExecution, activeWorkflow }
+  return { runs, activeExecution, activeSimulation }
 }

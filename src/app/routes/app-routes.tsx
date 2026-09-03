@@ -10,7 +10,7 @@ import { SimulationEntryPage } from '../../features/simulation_runner/simulation
 import { SimulationHomePage } from '../../features/simulation_runner/simulation-home-page'
 import { SimulationRunLayout } from '../../features/simulation_runner/simulation-run-layout'
 import { SimulationStudioPage } from '../../features/simulation_studio/simulation-studio-page'
-import { WorkflowListPage } from '../../features/simulation_studio/workflow-list-page'
+import { SimulationListPage } from '../../features/simulation_studio/simulation-list-page'
 import { TimerManagementPage } from '../../features/timers/timer-management-page'
 import { ParticipantHistoryPage } from '../../features/history/participant-history-page'
 import { ExecutionDetailPage } from '../../features/history/execution-detail-page'
@@ -22,8 +22,8 @@ export function AppRoutes() {
     <BrowserRouter>
       <AppShell>
         <Routes>
-          <Route path="/studio" element={<WorkflowListPage />} />
-          <Route path="/studio/:versionId" element={<SimulationStudioPage />} />
+          <Route path="/studio" element={<SimulationListPage />} />
+          <Route path="/studio/:simulationId" element={<SimulationStudioPage />} />
           <Route path="/simulation" element={<SimulationEntryPage />} />
           <Route path="/simulation/:participantId" element={<SimulationRunLayout />}>
             <Route index element={<SimulationHomePage />} />

@@ -34,7 +34,7 @@ export function EmailChannelPage() {
     content: message.content,
     timestamp: message.created_date,
     session_id: message.session_id,
-    workflow_version_id: message.workflow_version_id ?? undefined,
+    simulation_id: message.simulation_id ?? undefined,
     is_unread: message.is_read === false,
     attachments: message.attachments ?? [],
   })
@@ -49,10 +49,10 @@ export function EmailChannelPage() {
     latestCreatedDate: item.latest_created_date,
     unreadCount: item.unread_count,
     messageCount: item.message_count,
-    workflowVersionId: item.workflow_version_id,
+    simulationId: item.simulation_id,
   })
 
-  // Fetch all threads across all workflows (no workflow_version_id filter).
+  // Fetch all threads across all simulations (no simulation_id filter).
   const inboxQuery = useQuery({
     queryKey: ['email-inbox', participantId],
     queryFn: () => getEmailInbox(participantId),
@@ -75,8 +75,8 @@ export function EmailChannelPage() {
 
   const selectedThread = threads.find((t) => t.rootId === selectedRootId) ?? null
 
-  // Fetch messages for the selected thread using its workflow_version_id.
-  const threadVersionId = selectedThread?.workflowVersionId ?? null
+  // Fetch messages for the selected thread using its simulation_id.
+  const threadVersionId = selectedThread?.simulationId ?? null
   const threadMessagesQuery = useQuery({
     queryKey: ['email-thread-messages', participantId, threadVersionId, selectedRootId],
     queryFn: () => getEmailThreadMessages(participantId, threadVersionId!, selectedRootId!),
@@ -147,7 +147,7 @@ export function EmailChannelPage() {
       })),
     }))
     sendEmail({
-      workflowVersionId: threadVersionId,
+      simulationId: threadVersionId,
       target,
       subject: String(data.get('subject') ?? ''),
       content: String(data.get('content') ?? ''),
@@ -198,9 +198,9 @@ export function EmailChannelPage() {
         onOpenAttachment={openAttachment}
         onConversationOpen={(rootId) => {
           const thread = threads.find((t) => t.rootId === rootId)
-          if (thread && thread.unreadCount > 0 && thread.workflowVersionId) {
+          if (thread && thread.unreadCount > 0 && thread.simulationId) {
             setReadPendingThreads((prev) => new Set(prev).add(rootId))
-            void markEmailThreadRead(thread.workflowVersionId, rootId).finally(() =>
+            void markEmailThreadRead(thread.simulationId, rootId).finally(() =>
               setReadPendingThreads((prev) => {
                 const next = new Set(prev)
                 next.delete(rootId)

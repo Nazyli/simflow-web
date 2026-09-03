@@ -1,9 +1,9 @@
 import { Badge } from '@/components/ui/badge'
 
-type WorkflowStatus =
+type SimulationStatus =
   'draft' | 'published' | 'active' | 'waiting' | 'running' | 'failed' | 'completed'
 
-const knownStatuses = new Set<WorkflowStatus>([
+const knownStatuses = new Set<SimulationStatus>([
   'draft',
   'published',
   'active',
@@ -13,7 +13,7 @@ const knownStatuses = new Set<WorkflowStatus>([
   'completed',
 ])
 
-const statusStyles: Record<WorkflowStatus | 'default', { color: string; backgroundColor: string }> =
+const statusStyles: Record<SimulationStatus | 'default', { color: string; backgroundColor: string }> =
   {
     draft: { color: 'var(--status-draft)', backgroundColor: 'var(--status-draft-bg)' },
     published: { color: 'var(--status-published)', backgroundColor: 'var(--status-published-bg)' },
@@ -26,7 +26,7 @@ const statusStyles: Record<WorkflowStatus | 'default', { color: string; backgrou
   }
 
 export function StatusBadge({ status }: { status: string }) {
-  const normalizedStatus = status.toLowerCase() as WorkflowStatus
+  const normalizedStatus = status.toLowerCase() as SimulationStatus
   const statusKey = knownStatuses.has(normalizedStatus) ? normalizedStatus : 'default'
   return (
     <Badge style={statusStyles[statusKey]} className="text-[0.66rem] font-bold capitalize">

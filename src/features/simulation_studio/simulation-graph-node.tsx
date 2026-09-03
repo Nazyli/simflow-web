@@ -8,9 +8,9 @@ import {
   BaseNodeHeader,
   BaseNodeHeaderTitle,
 } from '@/components/base-node'
-import type { InputPort, OutputPort } from '../../shared/types/workflow'
+import type { InputPort, OutputPort } from '../../shared/types/simulation'
 
-type WorkflowNodeData = {
+type SimulationNodeData = {
   label: string
   nodeType: string
   color: string
@@ -55,8 +55,8 @@ function handleOffset(position: Position, index: number, count: number): CSSProp
   return { left: `${fraction}%` }
 }
 
-export function WorkflowGraphNode({ id, data, selected }: NodeProps) {
-  const nodeData = data as WorkflowNodeData
+export function SimulationGraphNode({ id, data, selected }: NodeProps) {
+  const nodeData = data as SimulationNodeData
   const rotation = nodeData.rotation ?? 0
   const inputPos = inputPosition(rotation)
   const outputPos = outputPosition(rotation)

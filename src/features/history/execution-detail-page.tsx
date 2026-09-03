@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, Copy, ListTree, Route, Workflow } from 'lucide-react'
+import { ArrowLeft, Check, Copy, Layers, ListTree, Route } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
@@ -18,15 +18,6 @@ import { getExecutionHistory } from '../../shared/api/sessions'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
 import { ParticipantFlowCanvas } from './participant-flow-view'
-
-const JAKARTA = 'Asia/Jakarta'
-function parseServerTime(value: string | null | undefined) {
-  return value ? new Date(/(?:[zZ]$|[+-]\d{2}:?\d{2}$)/.test(value) ? value : `${value}Z`) : null
-}
-function formatTime(value: string | null | undefined) {
-  const parsed = parseServerTime(value)
-  return parsed ? parsed.toLocaleString([], { timeZone: JAKARTA }) : '—'
-}
 
 export function ExecutionDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -90,7 +81,7 @@ export function ExecutionDetailPage() {
   const data = history.data?.find((item) => item.execution_id === id)
   if (!data) return <ErrorState message="Execution not found." />
   
-  const title = `${data.workflow_name ?? 'Workflow unavailable'} · v${data.version_number ?? '—'}`
+  const title = `${data.group_simulation_name ?? 'Simulation unavailable'} · v${data.version_number ?? '—'}`
   const isFinalStatus = ['completed', 'failed', 'cancelled'].includes(data.status)
 
   return (
@@ -102,7 +93,7 @@ export function ExecutionDetailPage() {
             Back
           </Button>
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
-            <Workflow size={18} />
+            <Layers size={18} />
           </span>
           <div className="min-w-0">
             <h1 className="truncate text-lg font-bold text-slate-900">{title}</h1>
@@ -192,7 +183,7 @@ export function ExecutionDetailPage() {
 
         <TabsContent value="flow" className="mt-3 min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <ParticipantFlowCanvas
-            versionId={data.workflow_version_id}
+            simulationId={data.simulation_id}
             executionId={data.execution_id}
             currentState={data.current_node_id}
           />

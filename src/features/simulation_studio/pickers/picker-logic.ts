@@ -1,4 +1,4 @@
-import type { ParameterPicker } from '../../../shared/types/workflow'
+import type { ParameterPicker } from '../../../shared/types/simulation'
 
 export function applyPickerSelection(
   currentValues: string[],

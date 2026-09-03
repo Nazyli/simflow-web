@@ -3,14 +3,14 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   getChatActors,
   getChatMessages,
-  getChatWorkflows,
+  getChatSimulations,
   type ChatActorItem,
   type ChatMessage as ApiChatMessage,
-  type ChatWorkflowItem,
+  type ChatSimulationItem,
 } from '../../shared/api/chat'
 import { eventsUrl } from '../../shared/api/client'
 import { ChatWorkspace } from './chat/chat-workspace'
-import type { ChatActor, ChatMessage, ChatWorkflow } from './chat/types'
+import type { ChatActor, ChatMessage, ChatSimulation } from './chat/types'
 import { useSimulationRun } from './simulation-run-context'
 
 export function ChatChannelPage() {
@@ -28,13 +28,13 @@ export function ChatChannelPage() {
     content: message.content,
     timestamp: message.created_date,
     session_id: message.session_id,
-    workflow_version_id: message.workflow_version_id ?? undefined,
+    simulation_id: message.simulation_id ?? undefined,
     is_unread: message.is_read === false,
   })
 
-  const toChatWorkflow = (item: ChatWorkflowItem): ChatWorkflow => ({
-    workflowVersionId: item.workflow_version_id,
-    workflowName: item.workflow_name,
+  const toChatSimulation = (item: ChatSimulationItem): ChatSimulation => ({
+    simulationId: item.simulation_id,
+    groupSimulationName: item.group_simulation_name,
     versionNumber: item.version_number,
     status: item.status,
     unreadCount: item.unread_count,
@@ -46,22 +46,21 @@ export function ChatChannelPage() {
     unreadCount: item.unread_count,
   })
 
-  const workflowsQuery = useQuery({
-    queryKey: ['chat-workflows', participantId],
-    queryFn: () => getChatWorkflows(participantId),
+  const simulationsQuery = useQuery({
+    queryKey: ['chat-simulations', participantId],
+    queryFn: () => getChatSimulations(participantId),
     enabled: Boolean(participantId.trim()),
   })
-  const workflows = (workflowsQuery.data ?? []).map(toChatWorkflow).sort((a, b) => {
+  const simulations = (simulationsQuery.data ?? []).map(toChatSimulation).sort((a, b) => {
     const rank = (status: string) => (status === 'waiting' ? 0 : status === 'running' ? 1 : 2)
     return rank(a.status) - rank(b.status)
   })
 
-  const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null)
+  const [selectedSimulation, setSelectedSimulation] = useState<string | null>(null)
   const effectiveSelected =
-    selectedWorkflow ??
-    workflows.find((workflow) => workflow.status === 'waiting' || workflow.status === 'running')
-      ?.workflowVersionId ??
-    workflows[0]?.workflowVersionId ??
+    selectedSimulation ??
+    simulations.find((s) => s.status === 'waiting' || s.status === 'running')?.simulationId ??
+    simulations[0]?.simulationId ??
     null
 
   const actorsQuery = useQuery({
@@ -89,7 +88,7 @@ export function ChatChannelPage() {
           message?: {
             sender_type?: string
             sender_id?: string
-            workflow_version_id?: string
+            simulation_id?: string
             is_read?: boolean
           }
         }
@@ -98,7 +97,7 @@ export function ChatChannelPage() {
           payload.message?.sender_type === 'actor' &&
           payload.message.is_read === false &&
           payload.message.sender_id === selectedActor &&
-          payload.message.workflow_version_id === effectiveSelected
+          payload.message.simulation_id === effectiveSelected
         ) {
           setReadPendingActors((prev) => {
             if (prev.has(selectedActor)) return prev
@@ -135,7 +134,7 @@ export function ChatChannelPage() {
 
   const visibleMessages: ChatMessage[] = (chatQuery.data ?? []).map(toChatMessage)
 
-  const selectedRun = workflows.find((workflow) => workflow.workflowVersionId === effectiveSelected)
+  const selectedRun = simulations.find((s) => s.simulationId === effectiveSelected)
   const canReply = Boolean(
     selectedRun && (selectedRun.status === 'waiting' || selectedRun.status === 'running'),
   )
@@ -146,7 +145,7 @@ export function ChatChannelPage() {
     const data = new FormData(event.currentTarget)
     if (!effectiveSelected || !selectedActor) return
     sendChat({
-      workflowVersionId: effectiveSelected,
+      simulationId: effectiveSelected,
       target: selectedActor,
       content: String(data.get('content') ?? ''),
     })
@@ -159,10 +158,10 @@ export function ChatChannelPage() {
         participantId={runnerParticipantId}
         messages={visibleMessages}
         actors={actors}
-        workflows={workflows}
-        selectedWorkflow={effectiveSelected}
-        onSelectWorkflow={(workflowVersionId) => {
-          setSelectedWorkflow(workflowVersionId)
+        simulations={simulations}
+        selectedSimulation={effectiveSelected}
+        onSelectSimulation={(simulationId) => {
+          setSelectedSimulation(simulationId)
           setSelectedActor(null)
         }}
         selectedActor={selectedActor}

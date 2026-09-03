@@ -4,8 +4,8 @@ export interface ExecutionHistoryItem {
   execution_id: string
   session_id: string
   participant_id: string
-  workflow_name: string | null
-  workflow_version_id: string
+  group_simulation_name: string | null
+  simulation_id: string
   version_number: number | null
   status: string
   current_node_id: string | null

@@ -3,17 +3,17 @@ import { ConversationBody } from './conversation-body'
 import { ConversationHeader } from './conversation-header'
 import { ConversationSidebar } from './conversation-sidebar'
 import { MessageComposer } from './message-composer'
-import { WorkflowSidebar } from './workflow-sidebar'
-import type { ChatActor, ChatMessage, ChatWorkflow } from './types'
+import { SimulationSidebar } from './simulation-sidebar'
+import type { ChatActor, ChatMessage, ChatSimulation } from './types'
 import { buildConversations } from './utils'
 
 export interface ChatWorkspaceProps {
   participantId: string
   messages: ChatMessage[]
   actors: ChatActor[]
-  workflows: ChatWorkflow[]
-  selectedWorkflow: string | null
-  onSelectWorkflow: (workflowVersionId: string) => void
+  simulations: ChatSimulation[]
+  selectedSimulation: string | null
+  onSelectSimulation: (simulationId: string) => void
   selectedActor: string | null
   onSelectActor: (actorId: string) => void
   disabled: boolean
@@ -25,9 +25,9 @@ export function ChatWorkspace({
   participantId,
   messages,
   actors,
-  workflows,
-  selectedWorkflow,
-  onSelectWorkflow,
+  simulations,
+  selectedSimulation,
+  onSelectSimulation,
   selectedActor,
   onSelectActor,
   disabled,
@@ -43,10 +43,10 @@ export function ChatWorkspace({
   return (
     <section className="col-span-full flex min-h-0 min-h-[540px] flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
-        <WorkflowSidebar
-          workflows={workflows}
-          selectedWorkflow={selectedWorkflow}
-          onSelect={onSelectWorkflow}
+        <SimulationSidebar
+          simulations={simulations}
+          selectedSimulation={selectedSimulation}
+          onSelect={onSelectSimulation}
         />
         <ConversationSidebar
           actors={actors}
@@ -74,10 +74,10 @@ export function ChatWorkspace({
             <div className="flex flex-1 items-center justify-center bg-slate-50/70 px-6 text-center">
               <div>
                 <p className="text-sm font-semibold text-slate-700">
-                  {actors.length ? 'Select a conversation' : 'Select a workflow'}
+                  {actors.length ? 'Select a conversation' : 'Select a simulation'}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Choose a workflow, then a conversation to open its messages.
+                  Choose a simulation, then a conversation to open its messages.
                 </p>
               </div>
             </div>

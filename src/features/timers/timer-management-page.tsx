@@ -8,7 +8,7 @@ import {
   getTimers,
   rescheduleTimer,
   runTimerNow,
-  type WorkflowTimer,
+  type SimulationTimer,
 } from '../../shared/api/timers'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { DataTable, type DataTableColumn } from '../../shared/components/data-table'
@@ -47,10 +47,10 @@ function formatClock(value: number) {
     second: '2-digit',
   })
 }
-function canManage(timer: WorkflowTimer) {
+function canManage(timer: SimulationTimer) {
   return timer.status === 'scheduled' || timer.status === 'retry' || timer.status === 'cancelled'
 }
-function isPending(timer: WorkflowTimer) {
+function isPending(timer: SimulationTimer) {
   return timer.status === 'scheduled' || timer.status === 'retry'
 }
 function countdown(value: string, now: number) {
@@ -121,7 +121,7 @@ function ConfigurationValue({ value }: { value: unknown }) {
   }
   return <span className="text-xs text-slate-700">{formatConfigurationScalar(value)}</span>
 }
-function progress(timer: WorkflowTimer, now: number) {
+function progress(timer: SimulationTimer, now: number) {
   const start = parseServerTime(timer.created_date).getTime()
   const due = parseServerTime(timer.due_at).getTime()
   return Math.min(100, Math.max(0, ((now - start) / Math.max(1, due - start)) * 100))
@@ -150,7 +150,7 @@ function StatusIcon({ status }: { status: string }) {
   )
 }
 
-function CountdownCell({ timer, now }: { timer: WorkflowTimer; now: number }) {
+function CountdownCell({ timer, now }: { timer: SimulationTimer; now: number }) {
   const parts = countdown(timer.due_at, now)
   const tone =
     parts.total <= 60 ? 'text-red-600' : parts.total <= 300 ? 'text-amber-600' : 'text-[#5b46c5]'
@@ -190,10 +190,10 @@ function StatCard({ status, count }: { status: string; count: number }) {
 export function TimerManagementPage() {
   const client = useQueryClient()
   const [now, setNow] = useState(Date.now())
-  const [rescheduleTarget, setRescheduleTarget] = useState<WorkflowTimer | null>(null)
-  const [cancelTarget, setCancelTarget] = useState<WorkflowTimer | null>(null)
-  const [runNowTarget, setRunNowTarget] = useState<WorkflowTimer | null>(null)
-  const [detailTarget, setDetailTarget] = useState<WorkflowTimer | null>(null)
+  const [rescheduleTarget, setRescheduleTarget] = useState<SimulationTimer | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<SimulationTimer | null>(null)
+  const [runNowTarget, setRunNowTarget] = useState<SimulationTimer | null>(null)
+  const [detailTarget, setDetailTarget] = useState<SimulationTimer | null>(null)
   const timers = useQuery({ queryKey: ['timers'], queryFn: getTimers, refetchInterval: 5_000 })
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1_000)
@@ -346,24 +346,24 @@ export function TimerManagementPage() {
       filterValue: (timer) => timer.participant_id ?? '',
     },
     {
-      id: 'workflow',
-      header: 'Workflow',
+      id: 'simulation',
+      header: 'Simulation',
       cell: (timer) => (
         <span className="block max-w-[180px] truncate text-xs text-slate-700">
-          {timer.workflow_name ?? 'Unavailable'}
+          {timer.group_simulation_name ?? 'Unavailable'}
         </span>
       ),
-      filterValue: (timer) => timer.workflow_name ?? '',
+      filterValue: (timer) => timer.group_simulation_name ?? '',
     },
     {
       id: 'version',
       header: 'Version',
       cell: (timer) => (
         <span className="text-xs text-slate-600">
-          {timer.workflow_version ? `v${timer.workflow_version}` : 'Unavailable'}
+          {timer.master_simulation ? `v${timer.master_simulation}` : 'Unavailable'}
         </span>
       ),
-      sortValue: (timer) => timer.workflow_version ?? -1,
+      sortValue: (timer) => timer.master_simulation ?? -1,
     },
     {
       id: 'actions',
@@ -517,7 +517,7 @@ function RescheduleDialog({
   onClose,
   onSave,
 }: {
-  timer: WorkflowTimer | null
+  timer: SimulationTimer | null
   isSaving: boolean
   onClose: () => void
   onSave: (dueAt: string) => void
@@ -529,7 +529,7 @@ function RescheduleDialog({
       <DialogContent className="p-6 sm:max-w-[430px]">
         <DialogTitle className="text-base font-bold text-slate-900">Reschedule timer</DialogTitle>
         <DialogDescription>
-          Choose a new date and time for this workflow action. Shown in Jakarta time (GMT+7).
+          Choose a new date and time for this simulation action. Shown in Jakarta time (GMT+7).
         </DialogDescription>
         <label className="grid gap-1.5 text-xs font-semibold text-slate-700">
           New execution time
@@ -561,7 +561,7 @@ function CancelDialog({
   onClose,
   onConfirm,
 }: {
-  timer: WorkflowTimer | null
+  timer: SimulationTimer | null
   isSaving: boolean
   onClose: () => void
   onConfirm: () => void
@@ -573,7 +573,7 @@ function CancelDialog({
           Cancel scheduled timer?
         </DialogTitle>
         <DialogDescription>
-          This prevents the workflow action from running at{' '}
+          This prevents the simulation action from running at{' '}
           {timer ? formatTime(timer.due_at) : 'the scheduled time'}.
         </DialogDescription>
         <DialogFooter>
@@ -593,7 +593,7 @@ function RunNowDialog({
   onClose,
   onConfirm,
 }: {
-  timer: WorkflowTimer | null
+  timer: SimulationTimer | null
   isSaving: boolean
   onClose: () => void
   onConfirm: () => void
@@ -603,7 +603,7 @@ function RunNowDialog({
       <DialogContent className="p-6 sm:max-w-[430px]">
         <DialogTitle className="text-base font-bold text-slate-900">Run timer now?</DialogTitle>
         <DialogDescription>
-          This immediately processes the timer event and continues the workflow through its
+          This immediately processes the timer event and continues the simulation through its
           configured path.
         </DialogDescription>
         <DialogFooter>
@@ -617,7 +617,7 @@ function RunNowDialog({
   )
 }
 
-function TimerDetail({ timer, onClose }: { timer: WorkflowTimer | null; onClose: () => void }) {
+function TimerDetail({ timer, onClose }: { timer: SimulationTimer | null; onClose: () => void }) {
   return (
     <Dialog open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="p-6 sm:max-w-[480px]">

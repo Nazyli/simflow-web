@@ -11,8 +11,8 @@ export interface EmailMessage {
   content: string
   timestamp: string
   action_type: string
-  workflow_label?: string
-  workflow_version_id?: string
+  simulation_label?: string
+  simulation_id?: string
   is_unread?: boolean
   attachments: EmailAttachment[]
 }
@@ -91,9 +91,9 @@ export function formatAttachmentPageLabel(
   return `p.${ranges.join(', ')}`
 }
 
-export interface EmailWorkflow {
-  workflowVersionId: string
-  workflowName: string
+export interface EmailSimulation {
+  simulationId: string
+  groupSimulationName: string
   versionNumber: number
   status: string
   unreadCount: number
@@ -109,5 +109,5 @@ export interface EmailInboxThread {
   latestCreatedDate: string
   unreadCount: number
   messageCount: number
-  workflowVersionId: string | null
+  simulationId: string | null
 }

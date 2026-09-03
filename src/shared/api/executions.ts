@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { Execution } from '../types/workflow'
+import type { Execution } from '../types/simulation'
 
 export interface NodeExecution {
   node_execution_id: string
@@ -17,14 +17,10 @@ export interface ExecutionTrace {
   payload: Record<string, unknown>
   created_at: string
 }
-export const getExecutions = (workflowVersionId: string) =>
-  apiClient<Execution[]>(
-    `/runner/executions?workflow_version_id=${encodeURIComponent(workflowVersionId)}`,
-  )
+export const getExecutions = (simulationId: string) =>
+  apiClient<Execution[]>(`/runner/executions?simulation_id=${encodeURIComponent(simulationId)}`)
 export const getParticipantExecutions = (participantId: string) =>
-  apiClient<Execution[]>(
-    `/runner/sessions/executions?participant_id=${encodeURIComponent(participantId)}`,
-  )
+  apiClient<Execution[]>(`/runner/sessions/executions?participant_id=${encodeURIComponent(participantId)}`)
 export interface BatchExecutionRun extends Execution {
   outcome: 'created' | 'resumed' | 'archived'
 }
@@ -34,7 +30,7 @@ export interface BatchExecutionResponse {
 }
 export const startExecutionBatch = (payload: {
   participant_id: string
-  workflow_version_ids: string[]
+  simulation_ids: string[]
   context?: Record<string, unknown>
 }) =>
   apiClient<BatchExecutionResponse>('/runner/executions/batch', {

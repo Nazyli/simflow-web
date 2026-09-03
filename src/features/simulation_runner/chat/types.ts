@@ -9,8 +9,8 @@ export interface ChatMessage {
   content: string
   timestamp: string
   action_type: string
-  workflow_label?: string
-  workflow_version_id?: string
+  simulation_label?: string
+  simulation_id?: string
   is_unread?: boolean
 }
 
@@ -22,9 +22,9 @@ export interface ChatConversation {
   unreadCount: number
 }
 
-export interface ChatWorkflow {
-  workflowVersionId: string
-  workflowName: string
+export interface ChatSimulation {
+  simulationId: string
+  groupSimulationName: string
   versionNumber: number
   status: string
   unreadCount: number

@@ -34,7 +34,7 @@ export interface EmailMessage {
   content: string
   to: string[]
   cc: string[]
-  workflow_version_id: string | null
+  simulation_id: string | null
   parent_email_id: string | null
   reply_to_email_id: string | null
   master_email_id: string | null
@@ -44,9 +44,9 @@ export interface EmailMessage {
   attachments: RuntimeEmailAttachment[]
 }
 
-export interface EmailWorkflowItem {
-  workflow_version_id: string
-  workflow_name: string
+export interface EmailSimulationItem {
+  simulation_id: string
+  group_simulation_name: string
   version_number: number
   status: string
   unread_count: number
@@ -63,7 +63,7 @@ export interface EmailInboxThreadItem {
   latest_created_date: string
   unread_count: number
   message_count: number
-  workflow_version_id: string | null
+  simulation_id: string | null
 }
 
 export interface EmailMarkAsReadResult {
@@ -80,24 +80,24 @@ export interface ParticipantEmailAttachmentInput {
   contents: ParticipantEmailAttachmentContentInput[]
 }
 
-export const getEmailWorkflows = (participantId: string) =>
-  apiClient<EmailWorkflowItem[]>(
-    `/runner/email/workflows?participant_id=${encodeURIComponent(participantId)}`,
+export const getEmailSimulations = (participantId: string) =>
+  apiClient<EmailSimulationItem[]>(
+    `/runner/email/master_group_simulations?participant_id=${encodeURIComponent(participantId)}`,
   )
 
-export const getEmailInbox = (participantId: string, workflowVersionId?: string) => {
+export const getEmailInbox = (participantId: string, simulationId?: string) => {
   const params = new URLSearchParams({ participant_id: participantId })
-  if (workflowVersionId) params.set('workflow_version_id', workflowVersionId)
+  if (simulationId) params.set('simulation_id', simulationId)
   return apiClient<EmailInboxThreadItem[]>(`/runner/email/inbox?${params.toString()}`)
 }
 
 export const getEmailThreadMessages = (
   participantId: string,
-  workflowVersionId: string,
+  simulationId: string,
   rootId: string,
 ) =>
   apiClient<EmailMessage[]>(
-    `/runner/email/thread-messages?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}&root_id=${encodeURIComponent(rootId)}`,
+    `/runner/email/thread-messages?participant_id=${encodeURIComponent(participantId)}&simulation_id=${encodeURIComponent(simulationId)}&root_id=${encodeURIComponent(rootId)}`,
   )
 
 export const sendParticipantEmail = (
@@ -105,7 +105,7 @@ export const sendParticipantEmail = (
   partnerId: string,
   subject: string,
   content: string,
-  workflowVersionId: string,
+  simulationId: string,
   to?: string[],
   cc?: string[],
   parentEmailId?: string,
@@ -118,7 +118,7 @@ export const sendParticipantEmail = (
       partner_id: partnerId,
       subject,
       content,
-      workflow_version_id: workflowVersionId,
+      simulation_id: simulationId,
       to: to ?? [],
       cc: cc ?? [],
       ...(parentEmailId ? { parent_email_id: parentEmailId } : {}),
@@ -129,23 +129,23 @@ export const sendParticipantEmail = (
 
 export const markEmailThreadAsRead = (
   participantId: string,
-  workflowVersionId: string,
+  simulationId: string,
   rootId: string,
 ) =>
   apiClient<EmailMarkAsReadResult>(
-    `/runner/email/mark-thread-read?participant_id=${encodeURIComponent(participantId)}&workflow_version_id=${encodeURIComponent(workflowVersionId)}&root_id=${encodeURIComponent(rootId)}`,
+    `/runner/email/mark-thread-read?participant_id=${encodeURIComponent(participantId)}&simulation_id=${encodeURIComponent(simulationId)}&root_id=${encodeURIComponent(rootId)}`,
     { method: 'POST' },
   )
 
 export const markEmailAttachmentOpened = (
   attachmentId: string,
   participantId: string,
-  workflowVersionId: string,
+  simulationId: string,
   participantEmailId: string,
 ) => {
   const params = new URLSearchParams({
     participant_id: participantId,
-    workflow_version_id: workflowVersionId,
+    simulation_id: simulationId,
     participant_email_id: participantEmailId,
   })
   return apiClient<RuntimeEmailAttachment>(
