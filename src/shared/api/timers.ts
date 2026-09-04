@@ -1,7 +1,7 @@
 import { apiClient } from './client'
 
-export type SimulationTimer = {
-  timer_id: string
+export type TransParticipantTimer = {
+  participant_timer_id: string
   node_execution_id: string
   session_id: string | null
   execution_id: string | null
@@ -22,13 +22,13 @@ export type SimulationTimer = {
   created_date: string
 }
 
-export const getTimers = () => apiClient<SimulationTimer[]>('/timers')
-export const cancelTimer = (timerId: string) =>
-  apiClient<SimulationTimer>(`/timers/${timerId}/cancel`, { method: 'POST' })
-export const rescheduleTimer = (timerId: string, dueAt: string) =>
-  apiClient<SimulationTimer>(`/timers/${timerId}/reschedule`, {
+export const getTimers = () => apiClient<TransParticipantTimer[]>('/timers')
+export const cancelTimer = (participantTimerId: string) =>
+  apiClient<TransParticipantTimer>(`/timers/${participantTimerId}/cancel`, { method: 'POST' })
+export const rescheduleTimer = (participantTimerId: string, dueAt: string) =>
+  apiClient<TransParticipantTimer>(`/timers/${participantTimerId}/reschedule`, {
     method: 'POST',
     body: JSON.stringify({ due_at: dueAt }),
   })
-export const runTimerNow = (timerId: string) =>
-  apiClient<SimulationTimer>(`/timers/${timerId}/run-now`, { method: 'POST' })
+export const runTimerNow = (participantTimerId: string) =>
+  apiClient<TransParticipantTimer>(`/timers/${participantTimerId}/run-now`, { method: 'POST' })

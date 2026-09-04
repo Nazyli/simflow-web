@@ -8,7 +8,7 @@ import {
   getTimers,
   rescheduleTimer,
   runTimerNow,
-  type SimulationTimer,
+  type TransParticipantTimer,
 } from '../../shared/api/timers'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
 import { DataTable, type DataTableColumn } from '../../shared/components/data-table'
@@ -47,10 +47,10 @@ function formatClock(value: number) {
     second: '2-digit',
   })
 }
-function canManage(timer: SimulationTimer) {
+function canManage(timer: TransParticipantTimer) {
   return timer.status === 'scheduled' || timer.status === 'retry' || timer.status === 'cancelled'
 }
-function isPending(timer: SimulationTimer) {
+function isPending(timer: TransParticipantTimer) {
   return timer.status === 'scheduled' || timer.status === 'retry'
 }
 function countdown(value: string, now: number) {
@@ -121,7 +121,7 @@ function ConfigurationValue({ value }: { value: unknown }) {
   }
   return <span className="text-xs text-slate-700">{formatConfigurationScalar(value)}</span>
 }
-function progress(timer: SimulationTimer, now: number) {
+function progress(timer: TransParticipantTimer, now: number) {
   const start = parseServerTime(timer.created_date).getTime()
   const due = parseServerTime(timer.due_at).getTime()
   return Math.min(100, Math.max(0, ((now - start) / Math.max(1, due - start)) * 100))
@@ -150,7 +150,7 @@ function StatusIcon({ status }: { status: string }) {
   )
 }
 
-function CountdownCell({ timer, now }: { timer: SimulationTimer; now: number }) {
+function CountdownCell({ timer, now }: { timer: TransParticipantTimer; now: number }) {
   const parts = countdown(timer.due_at, now)
   const tone =
     parts.total <= 60 ? 'text-red-600' : parts.total <= 300 ? 'text-amber-600' : 'text-[#5b46c5]'
@@ -190,10 +190,10 @@ function StatCard({ status, count }: { status: string; count: number }) {
 export function TimerManagementPage() {
   const client = useQueryClient()
   const [now, setNow] = useState(Date.now())
-  const [rescheduleTarget, setRescheduleTarget] = useState<SimulationTimer | null>(null)
-  const [cancelTarget, setCancelTarget] = useState<SimulationTimer | null>(null)
-  const [runNowTarget, setRunNowTarget] = useState<SimulationTimer | null>(null)
-  const [detailTarget, setDetailTarget] = useState<SimulationTimer | null>(null)
+  const [rescheduleTarget, setRescheduleTarget] = useState<TransParticipantTimer | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<TransParticipantTimer | null>(null)
+  const [runNowTarget, setRunNowTarget] = useState<TransParticipantTimer | null>(null)
+  const [detailTarget, setDetailTarget] = useState<TransParticipantTimer | null>(null)
   const timers = useQuery({ queryKey: ['timers'], queryFn: getTimers, refetchInterval: 5_000 })
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1_000)
@@ -227,7 +227,7 @@ export function TimerManagementPage() {
     },
     onError: () => toast.error('Unable to run timer now.'),
   })
-  const rows = (timers.data ?? []).map((timer) => ({ ...timer, id: timer.timer_id }))
+  const rows = (timers.data ?? []).map((timer) => ({ ...timer, id: timer.participant_timer_id }))
   const counts = useMemo(
     () => [
       ...TIMER_STATUSES.map((status) => ({
@@ -459,20 +459,20 @@ export function TimerManagementPage() {
         isSaving={reschedule.isPending}
         onClose={() => setRescheduleTarget(null)}
         onSave={(dueAt) =>
-          rescheduleTarget && reschedule.mutate({ id: rescheduleTarget.timer_id, dueAt })
+          rescheduleTarget && reschedule.mutate({ id: rescheduleTarget.participant_timer_id, dueAt })
         }
       />
       <CancelDialog
         timer={cancelTarget}
         isSaving={cancel.isPending}
         onClose={() => setCancelTarget(null)}
-        onConfirm={() => cancelTarget && cancel.mutate(cancelTarget.timer_id)}
+        onConfirm={() => cancelTarget && cancel.mutate(cancelTarget.participant_timer_id)}
       />
       <RunNowDialog
         timer={runNowTarget}
         isSaving={runNow.isPending}
         onClose={() => setRunNowTarget(null)}
-        onConfirm={() => runNowTarget && runNow.mutate(runNowTarget.timer_id)}
+        onConfirm={() => runNowTarget && runNow.mutate(runNowTarget.participant_timer_id)}
       />
       <TimerDetail timer={detailTarget} onClose={() => setDetailTarget(null)} />
     </main>
@@ -517,7 +517,7 @@ function RescheduleDialog({
   onClose,
   onSave,
 }: {
-  timer: SimulationTimer | null
+  timer: TransParticipantTimer | null
   isSaving: boolean
   onClose: () => void
   onSave: (dueAt: string) => void
@@ -561,7 +561,7 @@ function CancelDialog({
   onClose,
   onConfirm,
 }: {
-  timer: SimulationTimer | null
+  timer: TransParticipantTimer | null
   isSaving: boolean
   onClose: () => void
   onConfirm: () => void
@@ -593,7 +593,7 @@ function RunNowDialog({
   onClose,
   onConfirm,
 }: {
-  timer: SimulationTimer | null
+  timer: TransParticipantTimer | null
   isSaving: boolean
   onClose: () => void
   onConfirm: () => void
@@ -617,7 +617,7 @@ function RunNowDialog({
   )
 }
 
-function TimerDetail({ timer, onClose }: { timer: SimulationTimer | null; onClose: () => void }) {
+function TimerDetail({ timer, onClose }: { timer: TransParticipantTimer | null; onClose: () => void }) {
   return (
     <Dialog open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="p-6 sm:max-w-[480px]">
