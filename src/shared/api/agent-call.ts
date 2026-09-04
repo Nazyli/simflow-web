@@ -1,7 +1,7 @@
 import { apiClient } from './client'
 
 export interface CallConnection {
-  callSessionId: string
+  participantCallSessionId: string
   serverUrl: string
   roomName: string
   participantToken: string
@@ -15,8 +15,8 @@ export interface CallConnection {
 }
 
 export interface CallMessage {
-  callMessageId: string
-  callSessionId: string
+  participantCallId: string
+  participantCallSessionId: string
   groupingCallId: string
   senderId: string
   senderType: string
@@ -28,7 +28,7 @@ export interface CallMessage {
 }
 
 export interface CallParticipantEndResult {
-  callSessionId: string
+  participantCallSessionId: string
   status: string
   eventId: string
   endedAt: string
@@ -47,20 +47,20 @@ export function getCallRoomConnection(roomName: string) {
   )
 }
 
-export function getCallHistory(callSessionId: string, participantId: string) {
+export function getCallHistory(participantCallSessionId: string, participantId: string) {
   return apiClient<CallMessage[]>(
-    `/agent-call/sessions/${encodeURIComponent(callSessionId)}/history?participant_id=${encodeURIComponent(participantId)}`,
+    `/agent-call/participant-call-sessions/${encodeURIComponent(participantCallSessionId)}/history?participant_id=${encodeURIComponent(participantId)}`,
   )
 }
 
 export function requestParticipantEnd(
-  callSessionId: string,
+  participantCallSessionId: string,
   participantId: string,
   eventId: string,
   occurredAt: string,
 ) {
   return apiClient<CallParticipantEndResult>(
-    `/agent-call/sessions/${encodeURIComponent(callSessionId)}/participant-end`,
+    `/agent-call/participant-call-sessions/${encodeURIComponent(participantCallSessionId)}/participant-end`,
     {
       method: 'POST',
       body: JSON.stringify({

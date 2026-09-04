@@ -187,7 +187,7 @@ export function CallMeetingRoomPage() {
       <AiAgentHeader
         agentTier={activeConnection.actorLevel}
         agentName={activeConnection.actorName}
-        callSessionId={activeConnection.callSessionId}
+        participantCallSessionId={activeConnection.participantCallSessionId}
         participantId={participantId}
         onLeave={exitToSimulation}
         chatOpen={chatOpen}
@@ -246,7 +246,7 @@ export function CallMeetingRoomPage() {
             {chatOpen && (
               <div className="border-l border-slate-200 lg:w-80">
                 <ChatSidebar
-                  callSessionId={activeConnection.callSessionId}
+                  participantCallSessionId={activeConnection.participantCallSessionId}
                   participantId={participantId}
                   actorName={activeConnection.actorName}
                   participantName={activeConnection.participantName}

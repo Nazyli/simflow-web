@@ -27,7 +27,7 @@ export interface ParticipantEndRequest {
 }
 
 export function makeParticipantEndRequest(
-  _callSessionId: string,
+  _participantCallSessionId: string,
   participantId: string,
   eventId: string,
   occurredAt: string,
@@ -51,7 +51,7 @@ export type CallRunnerPhase =
 
 export interface CallRunnerState {
   phase: CallRunnerPhase
-  callSessionId: string | null
+  participantCallSessionId: string | null
   connection: CallConnection | null
   reconnectToken: string | null
   eventId: string | null
@@ -63,7 +63,7 @@ export interface CallRunnerState {
 
 export const initialCallRunnerState: CallRunnerState = {
   phase: 'connecting',
-  callSessionId: null,
+  participantCallSessionId: null,
   connection: null,
   reconnectToken: null,
   eventId: null,
@@ -101,7 +101,7 @@ export function reduceCallRunnerState(
       return {
         ...state,
         connection: action.connection,
-        callSessionId: action.connection.callSessionId,
+        participantCallSessionId: action.connection.participantCallSessionId,
         phase: 'connected',
       }
     }

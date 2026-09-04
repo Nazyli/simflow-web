@@ -20,12 +20,12 @@ interface ChatMessage {
 const BR_SPLIT_PATTERN = /<br\s*\/?>/gi
 
 export function ChatSidebar({
-  callSessionId,
+  participantCallSessionId,
   participantId,
   actorName,
   participantName,
 }: {
-  callSessionId: string
+  participantCallSessionId: string
   participantId: string
   actorName: string
   participantName: string
@@ -36,23 +36,23 @@ export function ChatSidebar({
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!callSessionId) return
+    if (!participantCallSessionId) return
     let active = true
-    getCallHistory(callSessionId, participantId)
+    getCallHistory(participantCallSessionId, participantId)
       .then((history) => {
         if (!active) return
         const ordered = [...history].sort((a, b) => {
           if (a.spokenAt === b.spokenAt) {
-            return a.callMessageId < b.callMessageId
+            return a.participantCallId < b.participantCallId
               ? -1
-              : a.callMessageId > b.callMessageId
+              : a.participantCallId > b.participantCallId
                 ? 1
                 : 0
           }
           return a.spokenAt < b.spokenAt ? -1 : 1
         })
         const baseline: ChatMessage[] = ordered.map((item) => ({
-          id: item.callMessageId,
+          id: item.participantCallId,
           sender: item.senderName,
           text: item.content,
         }))
@@ -67,7 +67,7 @@ export function ChatSidebar({
     return () => {
       active = false
     }
-  }, [callSessionId, participantId])
+  }, [participantCallSessionId, participantId])
 
   const { audioTrack: agentAudioTrack } = useVoiceAssistant()
   const agentMessages = useTrackTranscription(agentAudioTrack)

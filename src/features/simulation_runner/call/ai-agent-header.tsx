@@ -5,7 +5,7 @@ import { requestParticipantEnd } from '../../../shared/api/agent-call'
 interface AiAgentHeaderProps {
   agentName: string
   agentTier: string
-  callSessionId?: string
+  participantCallSessionId?: string
   participantId?: string
   onLeave: () => void
   chatOpen?: boolean
@@ -16,7 +16,7 @@ interface AiAgentHeaderProps {
 export function AiAgentHeader({
   agentTier,
   agentName,
-  callSessionId,
+  participantCallSessionId,
   participantId,
   onLeave,
   chatOpen,
@@ -25,11 +25,11 @@ export function AiAgentHeader({
 }: AiAgentHeaderProps) {
   const level = agentTier
   async function endCall() {
-    if (callSessionId && participantId) {
+    if (participantCallSessionId && participantId) {
       const eventId = crypto.randomUUID()
       const occurredAt = new Date().toISOString()
       try {
-        await requestParticipantEnd(callSessionId, participantId, eventId, occurredAt)
+        await requestParticipantEnd(participantCallSessionId, participantId, eventId, occurredAt)
       } catch {
         // Best-effort: the call session is resolved on the backend when the room closes.
       }
