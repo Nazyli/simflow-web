@@ -41,7 +41,7 @@ function sortPages<T extends RuntimeDocumentContent>(contents: readonly T[]): T[
     const secondPage = second.page ?? Number.MAX_SAFE_INTEGER
     return (
       firstPage - secondPage ||
-      first.simulation_document_content_id.localeCompare(second.simulation_document_content_id)
+      first.participant_doc_content_id.localeCompare(second.participant_doc_content_id)
     )
   })
 }
@@ -90,14 +90,14 @@ export function AttachmentPickerDialog({
 
   const toggleDocument = (document: RuntimeSimulationDocument) => {
     const allSelected = document.contents.every((content) =>
-      selected[document.simulation_document_id]?.has(content.simulation_document_content_id),
+      selected[document.participant_doc_id]?.has(content.participant_doc_content_id),
     )
     setSelected((current) => ({
       ...current,
-      [document.simulation_document_id]: new Set(
+      [document.participant_doc_id]: new Set(
         allSelected
           ? []
-          : document.contents.map((content) => content.simulation_document_content_id),
+          : document.contents.map((content) => content.participant_doc_content_id),
       ),
     }))
   }
@@ -105,15 +105,15 @@ export function AttachmentPickerDialog({
   const confirm = () => {
     const next: AttachmentSelection[] = []
     for (const document of documents) {
-      const pages = selected[document.simulation_document_id]
+      const pages = selected[document.participant_doc_id]
       if (!pages?.size) continue
       next.push({
-        participant_doc_id: document.simulation_document_id,
+        participant_doc_id: document.participant_doc_id,
         document_name: document.document_name ?? 'Untitled document',
         contents: sortPages(document.contents)
-          .filter((content) => pages.has(content.simulation_document_content_id))
+          .filter((content) => pages.has(content.participant_doc_content_id))
           .map((content) => ({
-            participant_doc_content_id: content.simulation_document_content_id,
+            participant_doc_content_id: content.participant_doc_content_id,
             page: content.page,
           })),
       })
@@ -145,10 +145,10 @@ export function AttachmentPickerDialog({
           ) : (
             <ul className="flex flex-col gap-3">
               {documents.map((document) => {
-                const docId = document.simulation_document_id
+                const docId = document.participant_doc_id
                 const pages = sortPages(document.contents)
                 const selectedCount = pages.filter((content) =>
-                  selected[docId]?.has(content.simulation_document_content_id),
+                  selected[docId]?.has(content.participant_doc_content_id),
                 ).length
                 const allSelected = pages.length > 0 && selectedCount === pages.length
                 return (
@@ -169,14 +169,14 @@ export function AttachmentPickerDialog({
                     {pages.length > 0 ? (
                       <ul className="border-t border-[#e8eaed] px-4 py-2">
                         {pages.map((content) => (
-                          <li key={content.simulation_document_content_id}>
+                          <li key={content.participant_doc_content_id}>
                             <label className="flex cursor-pointer items-center gap-3 rounded-md py-1.5 pr-2 pl-7 hover:bg-[#f6f8fb]">
                               <Checkbox
                                 checked={Boolean(
-                                  selected[docId]?.has(content.simulation_document_content_id),
+                                  selected[docId]?.has(content.participant_doc_content_id),
                                 )}
                                 onCheckedChange={() =>
-                                  togglePage(docId, content.simulation_document_content_id)
+                                  togglePage(docId, content.participant_doc_content_id)
                                 }
                               />
                               <span className="text-sm text-[#1a1a2e]">

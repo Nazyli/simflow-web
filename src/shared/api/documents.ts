@@ -1,8 +1,8 @@
 import { apiClient } from './client'
 
 export interface RuntimeDocumentContent {
-  simulation_document_content_id: string
-  simulation_document_id: string | null
+  participant_doc_content_id: string
+  participant_doc_id: string | null
   page: number | null
   content: string | null
   content_md: string | null
@@ -10,7 +10,7 @@ export interface RuntimeDocumentContent {
 }
 
 export interface RuntimeSimulationDocument {
-  simulation_document_id: string
+  participant_doc_id: string
   participant_id: string | null
   session_id: string
   execution_id: string | null

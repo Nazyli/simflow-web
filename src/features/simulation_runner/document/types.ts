@@ -53,7 +53,7 @@ export function mapRuntimeDocument(record: RuntimeSimulationDocument): Simulatio
     .filter((text) => text.length > 0)
   const content = pageTexts.join('\n\n')
   return {
-    id: record.simulation_document_id,
+    id: record.participant_doc_id,
     title: record.document_name ?? 'Untitled document',
     type: 'document',
     status: record.is_read ? 'read' : 'unread',
