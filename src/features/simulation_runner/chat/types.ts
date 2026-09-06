@@ -25,7 +25,7 @@ export interface ChatConversation {
 export interface ChatSimulation {
   simulationId: string
   groupSimulationName: string
-  versionNumber: number
+  simulationName: string | null
   status: string
   unreadCount: number
 }

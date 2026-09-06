@@ -81,7 +81,7 @@ export function ExecutionDetailPage() {
   const data = history.data?.find((item) => item.execution_id === id)
   if (!data) return <ErrorState message="Execution not found." />
   
-  const title = `${data.group_simulation_name ?? 'Simulation unavailable'} · v${data.version_number ?? '—'}`
+  const title = `${data.group_simulation_name ?? 'Simulation unavailable'} · ${data.simulation_name ?? '—'}`
   const isFinalStatus = ['completed', 'failed', 'cancelled'].includes(data.status)
 
   return (

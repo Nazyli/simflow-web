@@ -30,7 +30,7 @@ interface HistoryRow {
   id: string
   execution: ExecutionHistoryItem
   simulationName: string
-  versionNumber: number | null
+  simulationVersionName: string | null
 }
 
 const HISTORY_STATUSES = ['pending', 'running', 'waiting', 'completed', 'failed', 'cancelled']
@@ -97,7 +97,7 @@ export function ParticipantHistoryPage() {
         id: execution.execution_id,
         execution,
           simulationName: execution.group_simulation_name ?? 'Simulation unavailable',
-        versionNumber: execution.version_number,
+        simulationVersionName: execution.simulation_name,
       }))
     },
   })
@@ -175,10 +175,10 @@ export function ParticipantHistoryPage() {
       header: 'Version',
       cell: (row) => (
         <span className="inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">
-          v{row.versionNumber ?? '—'}
+          {row.simulationVersionName ?? '—'}
         </span>
       ),
-      sortValue: (row) => row.versionNumber ?? 0,
+      sortValue: (row) => row.simulationVersionName ?? '',
     },
     {
       id: 'started',

@@ -14,7 +14,6 @@ export interface SimulationDocument {
   type: DocumentType
   status: 'unread' | 'read'
   simulationName: string | null
-  versionNumber: number | null
   sharedBy: string
   sharedAt: string
   pageCount: number
@@ -58,7 +57,6 @@ export function mapRuntimeDocument(record: RuntimeSimulationDocument): Simulatio
     type: 'document',
     status: record.is_read ? 'read' : 'unread',
     simulationName: null,
-    versionNumber: null,
     sharedBy: record.owner ?? '',
     sharedAt: record.created_date,
     pageCount: record.contents.length,

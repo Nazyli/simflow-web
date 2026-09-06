@@ -35,7 +35,7 @@ export function ChatChannelPage() {
   const toChatSimulation = (item: ChatSimulationItem): ChatSimulation => ({
     simulationId: item.simulation_id,
     groupSimulationName: item.group_simulation_name,
-    versionNumber: item.version_number,
+    simulationName: item.simulation_name,
     status: item.status,
     unreadCount: item.unread_count,
   })

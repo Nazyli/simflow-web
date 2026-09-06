@@ -1,4 +1,4 @@
-import { FileText, ExternalLink, Calendar, BookOpen, Eye, Search } from 'lucide-react'
+import { FileText, ExternalLink, BookOpen, Eye, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { inputClass } from '../../../shared/form-classes'
 import { DOCUMENT_STATUS_META, DOCUMENT_TYPE_META, type SimulationDocument } from './types'
@@ -192,13 +192,6 @@ function DocumentDetail({
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {doc.simulationName ? (
               <MetaCard icon={<BookOpen size={14} />} label="GroupSimulation" value={doc.simulationName} />
-            ) : null}
-            {doc.versionNumber != null ? (
-              <MetaCard
-                icon={<Calendar size={14} />}
-                label="Version"
-                value={`v${doc.versionNumber}`}
-              />
             ) : null}
             <MetaCard icon={<FileText size={14} />} label="Pages" value={`${doc.pageCount}`} />
             <MetaCard icon={<Eye size={14} />} label="Opened" value={`${doc.openCount}×`} />

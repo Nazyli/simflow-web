@@ -34,7 +34,7 @@ export function SimulationSidebar({ simulations, selectedSimulation, onSelect }:
               </span>
               <span className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs text-slate-500">
-                  Version {simulation.versionNumber}
+                  {simulation.simulationName ?? 'Unknown version'}
                 </span>
                 {simulation.unreadCount > 0 && (
                   <span

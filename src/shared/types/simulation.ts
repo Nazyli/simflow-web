@@ -34,7 +34,6 @@ export interface Simulation {
   channel_name: string
   duration: number
   status: string
-  version_number?: number | null
   created_by?: string | null
   created_date?: string | null
   modified_by?: string | null

@@ -11,7 +11,8 @@ export type TransParticipantTimer = {
   node_configuration: Record<string, unknown> | null
   participant_id: string | null
   group_simulation_name: string | null
-  master_simulation: number | null
+  simulation_name: string | null
+  master_simulation?: string | null
   status: string
   due_at: string
   attempt_count: number

@@ -356,14 +356,14 @@ export function TimerManagementPage() {
       filterValue: (timer) => timer.group_simulation_name ?? '',
     },
     {
-      id: 'version',
-      header: 'Version',
+      id: 'simulation',
+      header: 'Simulation',
       cell: (timer) => (
         <span className="text-xs text-slate-600">
-          {timer.master_simulation ? `v${timer.master_simulation}` : 'Unavailable'}
+          {timer.simulation_name ?? timer.master_simulation ?? 'Unavailable'}
         </span>
       ),
-      sortValue: (timer) => timer.master_simulation ?? -1,
+      sortValue: (timer) => timer.simulation_name ?? timer.master_simulation ?? '',
     },
     {
       id: 'actions',

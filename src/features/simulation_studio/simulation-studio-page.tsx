@@ -1052,7 +1052,7 @@ export function SimulationStudioPage() {
                     value={v.simulation_id}
                     className="bg-white"
                   >
-                    v{v.version_number} — {v.status}
+                    {v.simulation_name} — {v.status}
                   </option>
                 ))}
               </select>
@@ -1468,7 +1468,7 @@ export function SimulationStudioPage() {
                         >
                           <div className="mb-1 flex items-center justify-between">
                             <span className="text-sm font-semibold text-slate-800">
-                              Version {version.version_number}
+                              {version.simulation_name}
                             </span>
                             <span className="flex shrink-0 items-center gap-1.5">
                               <StatusBadge status={version.status} />

@@ -94,7 +94,7 @@ export function formatAttachmentPageLabel(
 export interface EmailSimulation {
   simulationId: string
   groupSimulationName: string
-  versionNumber: number
+  simulationName: string | null
   status: string
   unreadCount: number
 }
