@@ -356,7 +356,7 @@ export function TimerManagementPage() {
       filterValue: (timer) => timer.group_simulation_name ?? '',
     },
     {
-      id: 'simulation',
+      id: 'simulation_name',
       header: 'Simulation',
       cell: (timer) => (
         <span className="text-xs text-slate-600">
