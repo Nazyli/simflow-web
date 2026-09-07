@@ -81,6 +81,9 @@ export function SimulationRunProvider({
     queryKey: ['notification-activity', participantId],
     queryFn: () => getNotificationActivity(participantId),
     enabled: Boolean(participantId.trim()),
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   })
   const activity = activityQuery.data ?? { activity_chat: [], activity_email: [] }
 
@@ -131,8 +134,20 @@ export function SimulationRunProvider({
         // Ignore malformed SSE payloads while still refreshing server state.
       }
     }
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void client.invalidateQueries({ queryKey: ['notification-activity', streamParticipantId] })
+      }
+    }
     events.addEventListener('notification', refreshRunner)
-    return () => events.close()
+    events.onerror = () => {
+      void client.invalidateQueries({ queryKey: ['notification-activity', streamParticipantId] })
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      events.close()
+    }
   }, [client, participantId])
 
   const chatAction = useMutation({
@@ -197,6 +212,7 @@ export function SimulationRunProvider({
             }
           : activity,
       )
+      client.invalidateQueries({ queryKey: ['notification-activity', pid] })
       client.invalidateQueries({ queryKey: ['participant-executions', pid] })
     },
   })
@@ -244,8 +260,22 @@ export function SimulationRunProvider({
   const emailRead = useMutation({
     mutationFn: ({ simulationId, rootId }: { simulationId: string; rootId: string }) =>
       markEmailThreadAsRead(participantId.trim(), simulationId, rootId),
-    onSuccess: () => {
+    onSuccess: ({ count }) => {
       const pid = participantId.trim()
+      client.setQueryData<NotificationActivity>(['notification-activity', pid], (activity) => {
+        if (!activity) return activity
+        let remaining = count
+        const nextEmail = activity.activity_email
+          .map((item) => {
+            if (remaining <= 0) return item
+            const nextCount = Math.max(0, item.unread_count - remaining)
+            remaining -= item.unread_count - nextCount
+            return { ...item, unread_count: nextCount }
+          })
+          .filter((item) => item.unread_count > 0)
+        return { ...activity, activity_email: nextEmail }
+      })
+      client.invalidateQueries({ queryKey: ['notification-activity', pid] })
       client.invalidateQueries({ queryKey: ['email-inbox', pid] })
       client.invalidateQueries({ queryKey: ['participant-executions', pid] })
     },
