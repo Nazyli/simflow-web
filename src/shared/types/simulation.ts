@@ -39,6 +39,8 @@ export interface Simulation {
   modified_by?: string | null
   modified_date?: string | null
   is_deleted?: boolean
+  execution_count?: number
+  is_locked?: boolean
 }
 
 export interface EdgeStyle {

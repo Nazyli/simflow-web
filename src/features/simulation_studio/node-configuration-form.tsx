@@ -42,6 +42,7 @@ export function NodeConfigurationForm({
   onDuplicate,
   onDelete,
   graphNodes = [],
+  readonly = false,
 }: {
   node: {
     node_id?: string
@@ -55,6 +56,7 @@ export function NodeConfigurationForm({
   onDuplicate: () => void
   onDelete: () => void
   graphNodes?: GraphNode[]
+  readonly?: boolean
 }) {
   const [name, setName] = useState(node.node_name)
   const [configuration, setConfiguration] = useState<Configuration>({
@@ -97,6 +99,11 @@ export function NodeConfigurationForm({
 
   return (
     <form className="flex flex-col gap-4" onSubmit={submit}>
+      {readonly && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-normal text-amber-800">
+          Read-only — this simulation has been used and cannot be edited. Duplicate it to make changes.
+        </div>
+      )}
       <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
         <div className="flex items-center gap-2">
           <Sliders className="h-4 w-4 text-purple-600" />
@@ -170,14 +177,14 @@ export function NodeConfigurationForm({
       ) : null}
       {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="grid gap-2">
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={readonly}>
           <Save className="h-4 w-4" /> Save Node
         </Button>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" className="flex-1" onClick={onDuplicate}>
+          <Button type="button" variant="outline" className="flex-1" onClick={onDuplicate} disabled={readonly}>
             <Copy className="h-3.5 w-3.5" /> Duplicate
           </Button>
-          <Button type="button" variant="destructive" className="flex-1" onClick={onDelete}>
+          <Button type="button" variant="destructive" className="flex-1" onClick={onDelete} disabled={readonly}>
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </Button>
         </div>
@@ -755,9 +762,11 @@ function JsonField({
 export function EdgeConfigurationForm({
   onSave,
   onDelete,
+  readonly = false,
 }: {
   onSave: () => void
   onDelete: () => void
+  readonly?: boolean
 }) {
   return (
     <form
@@ -767,6 +776,11 @@ export function EdgeConfigurationForm({
         onSave()
       }}
     >
+      {readonly && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-normal text-amber-800">
+          Read-only — this simulation has been used and cannot be edited. Duplicate it to make changes.
+        </div>
+      )}
       <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
         <div className="flex items-center gap-2">
           <GitBranch className="h-4 w-4 text-purple-600" />
@@ -774,10 +788,10 @@ export function EdgeConfigurationForm({
         </div>
       </div>
       <div className="grid gap-2">
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={readonly}>
           <Save className="h-4 w-4" /> Save Edge
         </Button>
-        <Button type="button" variant="destructive" className="w-full" onClick={onDelete}>
+        <Button type="button" variant="destructive" className="w-full" onClick={onDelete} disabled={readonly}>
           <Trash2 className="h-4 w-4" /> Delete Edge
         </Button>
       </div>

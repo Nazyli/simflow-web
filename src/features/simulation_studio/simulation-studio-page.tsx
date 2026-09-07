@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Copy,
+  Lock,
   Maximize,
   Minus,
   PanelLeftClose,
@@ -254,6 +255,9 @@ export function SimulationStudioPage() {
         : null,
     [versionDetail.data],
   )
+  const isLocked = Boolean(versionDetail.data?.is_locked)
+  const executionCount = versionDetail.data?.execution_count ?? 0
+  const lockedMessage = 'Simulation has been used and cannot be edited. Duplicate it to make changes.'
   const graph = useQuery({
     queryKey: ['graph', simulationId],
     queryFn: () => getGraph(simulationId!),
@@ -386,9 +390,47 @@ export function SimulationStudioPage() {
   })
   const removeEdgeRef = useRef(removeEdge)
   removeEdgeRef.current = removeEdge
-  const deleteEdge = useCallback((edgeId: string) => {
-    removeEdgeRef.current.mutate(edgeId)
-  }, [])
+  const deleteEdge = useCallback(
+    (edgeId: string) => {
+      if (isLocked) {
+        toast.error(lockedMessage)
+        return
+      }
+      removeEdgeRef.current.mutate(edgeId)
+    },
+    [isLocked, lockedMessage],
+  )
+
+  const handleDuplicateNode = useCallback(
+    (node: ApiNode) => {
+      if (isLocked) {
+        toast.error(lockedMessage)
+        return
+      }
+      duplicateGraphNode.mutate(node)
+    },
+    [isLocked, lockedMessage, duplicateGraphNode],
+  )
+  const handleDeleteNode = useCallback(
+    (nodeId: string) => {
+      if (isLocked) {
+        toast.error(lockedMessage)
+        return
+      }
+      removeNode.mutate(nodeId)
+    },
+    [isLocked, lockedMessage, removeNode],
+  )
+  const handleDeleteEdge = useCallback(
+    (edgeId: string) => {
+      if (isLocked) {
+        toast.error(lockedMessage)
+        return
+      }
+      removeEdge.mutate(edgeId)
+    },
+    [isLocked, lockedMessage, removeEdge],
+  )
 
   const apiNodes = graph.data?.[0] ?? emptyNodes
   const apiEdges = graph.data?.[1] ?? emptyEdges
@@ -434,6 +476,10 @@ export function SimulationStudioPage() {
 
   const rotateNode = useCallback(
     (nodeId: string) => {
+      if (isLocked) {
+        toast.error(lockedMessage)
+        return
+      }
       const current = apiNodes.find((item) => item.node_id === nodeId)
       if (!current) return
       const currentRotation = localRotations.current.get(nodeId) ?? current.rotation ?? 0
@@ -454,7 +500,41 @@ export function SimulationStudioPage() {
         },
       })
     },
-    [apiNodes, setNodes],
+    [apiNodes, isLocked, lockedMessage, setNodes],
+  )
+
+  const handleNodesChange = useCallback(
+    (changes: Parameters<typeof onNodesChange>[0]) => {
+      if (isLocked) {
+        const hasMutation = changes.some((c) => c.type === 'position' || c.type === 'remove' || c.type === 'add')
+        if (hasMutation) {
+          // silently block drag/position mutations to avoid toast spam during drag
+          const onlySelect = changes.filter((c) => c.type === 'select')
+          if (onlySelect.length) onNodesChange(onlySelect as Parameters<typeof onNodesChange>[0])
+          return
+        }
+        const filtered = changes.filter((c) => c.type === 'select' || c.type === 'dimensions')
+        if (filtered.length) onNodesChange(filtered as Parameters<typeof onNodesChange>[0])
+        return
+      }
+      onNodesChange(changes)
+    },
+    [isLocked, onNodesChange],
+  )
+
+  const handleEdgesChange = useCallback(
+    (changes: Parameters<typeof onEdgesChange>[0]) => {
+      if (isLocked) {
+        const onlySelect = changes.filter((c) => c.type === 'select')
+        if (onlySelect.length) {
+          onEdgesChange(onlySelect as Parameters<typeof onEdgesChange>[0])
+        }
+        // block all other edge mutations silently; connect/delete will show toast via their handlers
+        return
+      }
+      onEdgesChange(changes)
+    },
+    [isLocked, onEdgesChange],
   )
 
   // Keep stable refs in sync with latest values
@@ -531,24 +611,26 @@ export function SimulationStudioPage() {
 
       // Persist auto-layout positions for all versions — every version is now editable.
       // Deferred with setTimeout to avoid calling mutate during the render phase.
-      const nodesToSave = apiNodes.filter((n) => nodesNeedingLayout.includes(n.node_id))
-      setTimeout(() => {
-        nodesToSave.forEach((node) => {
-          const pos = localPositions.current.get(node.node_id)
-          if (!pos || !persistNodeRef.current) return
-          persistNodeRef.current({
-            id: node.node_id,
-            payload: {
-              node_name: node.node_name,
-              node_type: node.node_type,
-              parameters: node.parameters,
-              rotation: node.rotation ?? 0,
-              position_x: pos.x,
-              position_y: pos.y,
-            },
+      if (!isLocked) {
+        const nodesToSave = apiNodes.filter((n) => nodesNeedingLayout.includes(n.node_id))
+        setTimeout(() => {
+          nodesToSave.forEach((node) => {
+            const pos = localPositions.current.get(node.node_id)
+            if (!pos || !persistNodeRef.current) return
+            persistNodeRef.current({
+              id: node.node_id,
+              payload: {
+                node_name: node.node_name,
+                node_type: node.node_type,
+                parameters: node.parameters,
+                rotation: node.rotation ?? 0,
+                position_x: pos.x,
+                position_y: pos.y,
+              },
+            })
           })
-        })
-      }, 0)
+        }, 0)
+      }
     }
 
     // Build React Flow nodes using cached positions
@@ -557,7 +639,7 @@ export function SimulationStudioPage() {
         const cached = localPositions.current.get(node.node_id)
         const rotation = localRotations.current.get(node.node_id) ?? node.rotation
         return {
-          ...nodeToFlow({ ...node, rotation }, definitions.get(node.node_type), true, rotateNode),
+          ...nodeToFlow({ ...node, rotation }, definitions.get(node.node_type), !isLocked, rotateNode),
           position: cached ?? { x: node.position_x ?? 100, y: node.position_y ?? 100 },
         }
       }),
@@ -574,7 +656,7 @@ export function SimulationStudioPage() {
         )
       }),
     )
-  }, [apiNodes, apiEdges, definitions, setNodes, setEdges, deleteEdge, rotateNode])
+  }, [apiNodes, apiEdges, definitions, isLocked, setNodes, setEdges, deleteEdge, rotateNode])
 
   useEffect(() => {
     if (
@@ -615,6 +697,10 @@ export function SimulationStudioPage() {
       const target = event.target as HTMLElement | null
       if (target?.matches('input, textarea, select, [contenteditable="true"]')) return
       if (event.key === 'Delete' || event.key === 'Backspace') {
+        if (isLocked) {
+          toast.error(lockedMessage)
+          return
+        }
         if (selectedNodeId) {
           event.preventDefault()
           removeNode.mutate(selectedNodeId)
@@ -638,7 +724,7 @@ export function SimulationStudioPage() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [removeEdge, removeNode, selectedEdgeId, selectedNodeId])
+  }, [isLocked, lockedMessage, removeEdge, removeNode, selectedEdgeId, selectedNodeId])
 
   useEffect(() => {
     function acceptPaletteDrop(event: globalThis.DragEvent) {
@@ -649,6 +735,10 @@ export function SimulationStudioPage() {
         !simulationId
       )
         return
+      if (isLocked) {
+        toast.error(lockedMessage)
+        return
+      }
       const nodeType = event.dataTransfer?.getData('application/simulation-builder-node-type')
       const definition = definitions.get(nodeType ?? '')
       if (!definition) return
@@ -660,6 +750,7 @@ export function SimulationStudioPage() {
       })
     }
     function allowPaletteDrop(event: globalThis.DragEvent) {
+      if (isLocked) return
       if (
         event.target instanceof Element &&
         event.target.closest('.graph') &&
@@ -673,9 +764,13 @@ export function SimulationStudioPage() {
       document.removeEventListener('dragover', allowPaletteDrop, true)
       document.removeEventListener('drop', acceptPaletteDrop, true)
     }
-  }, [addGraphNode, definitions, flowInstance, simulationId])
+  }, [addGraphNode, definitions, flowInstance, isLocked, lockedMessage, simulationId])
 
   function connect(connection: Connection) {
+    if (isLocked) {
+      toast.error(lockedMessage)
+      return
+    }
     if (
       !simulationId ||
       !connection.source ||
@@ -814,6 +909,10 @@ export function SimulationStudioPage() {
   }
 
   function applyAutoLayout() {
+    if (isLocked) {
+      toast.error(lockedMessage)
+      return
+    }
     if (!simulationId || apiNodes.length === 0) return
     const layout = new dagre.graphlib.Graph()
     layout.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 200, marginx: 60, marginy: 60 })
@@ -850,18 +949,28 @@ export function SimulationStudioPage() {
   }
 
   function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: string) {
+    if (isLocked) {
+      event.preventDefault()
+      toast.error(lockedMessage)
+      return
+    }
     event.dataTransfer.setData('application/simulation-builder-node-type', nodeType)
     event.dataTransfer.setData('text/plain', nodeType)
     event.dataTransfer.effectAllowed = 'move'
   }
 
   function allowCanvasDrop(event: DragEvent<HTMLDivElement>) {
+    if (isLocked) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
   }
 
   function dropPaletteNode(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
+    if (isLocked) {
+      toast.error(lockedMessage)
+      return
+    }
     const definition = definitions.get(
       event.dataTransfer.getData('application/simulation-builder-node-type'),
     )
@@ -873,6 +982,10 @@ export function SimulationStudioPage() {
   }
 
   function saveStructuredNode(name: string, parameters: Record<string, unknown>) {
+    if (isLocked) {
+      toast.error(lockedMessage)
+      return
+    }
     if (!selectedNode) return
     enqueueNodeSave({
       id: selectedNode.node_id,
@@ -888,6 +1001,10 @@ export function SimulationStudioPage() {
   }
 
   function saveStructuredEdge() {
+    if (isLocked) {
+      toast.error(lockedMessage)
+      return
+    }
     if (!selectedEdge) return
     persistEdge.mutate({
       id: selectedEdge.edge_id,
@@ -972,6 +1089,19 @@ export function SimulationStudioPage() {
                 No Simulation
               </span>
             )}
+            {isLocked && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
+                    title={`Used ${executionCount} time${executionCount === 1 ? '' : 's'}`}
+                  >
+                    <Lock className="h-3 w-3" /> Locked • Used {executionCount} times
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Simulation has been used and cannot be edited. Duplicate it to make changes.</TooltipContent>
+              </Tooltip>
+            )}
             {nodeAutosaveStatus === 'error' ? (
               <button
                 type="button"
@@ -1026,6 +1156,16 @@ export function SimulationStudioPage() {
             </div>
           )}
 
+          {isLocked && (
+            <button
+              type="button"
+              className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-amber-700"
+              onClick={() => openDuplicateDialog()}
+              title="Duplicate this locked simulation to make changes"
+            >
+              <Copy size={14} /> Duplicate to Edit
+            </button>
+          )}
           <button
             className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:bg-emerald-700 disabled:opacity-50"
             type="button"
@@ -1084,7 +1224,7 @@ export function SimulationStudioPage() {
                 return (
                   <Fragment key={cat.id}>
                     {catNodes.map((definition) => {
-                      const isEditable = Boolean(simulationId)
+                      const isEditable = Boolean(simulationId) && !isLocked
 
                       return (
                         <Tooltip key={definition.node_type}>
@@ -1092,7 +1232,13 @@ export function SimulationStudioPage() {
                             <div
                               draggable={isEditable}
                               onDragStart={(event) => startPaletteDrag(event, definition.node_type)}
-                              onClick={() => isEditable && addGraphNode.mutate({ definition })}
+                              onClick={() => {
+                                if (isLocked) {
+                                  toast.error(lockedMessage)
+                                  return
+                                }
+                                if (isEditable) addGraphNode.mutate({ definition })
+                              }}
                               style={{
                                 borderColor: `${definition.color}55`,
                                 backgroundColor: `${definition.color}0d`,
@@ -1120,7 +1266,24 @@ export function SimulationStudioPage() {
                 )
               })}
 
-              {!selectedSimulation && (
+              {isLocked && (
+                <div className="col-span-2 mt-3 flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                  <span className="flex items-center gap-2 font-semibold">
+                    <Lock className="h-4 w-4 text-amber-600" /> Locked — read-only
+                  </span>
+                  <span className="leading-normal">
+                    This simulation has been used {executionCount} time{executionCount === 1 ? '' : 's'} and cannot be edited.
+                  </span>
+                  <button
+                    type="button"
+                    className="mt-1 inline-flex items-center justify-center gap-1 rounded-md bg-amber-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+                    onClick={() => openDuplicateDialog()}
+                  >
+                    <Copy className="h-3 w-3" /> Duplicate to Edit
+                  </button>
+                </div>
+              )}
+              {!selectedSimulation && !isLocked && (
                 <div className="col-span-2 mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                   <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
                   Select or create a version to start editing nodes.
@@ -1257,11 +1420,14 @@ export function SimulationStudioPage() {
               nodeTypes={simulationNodeRenderers}
               edgeTypes={simulationEdgeRenderers}
               onInit={setFlowInstance}
+              nodesDraggable={!isLocked}
+              nodesConnectable={!isLocked}
+              elementsSelectable={true}
               nodes={nodes.map((node) => ({
                 ...node,
                 className: invalidNodeIds.has(node.id) ? 'invalid-node' : '',
-                draggable: true,
-                connectable: true,
+                draggable: !isLocked,
+                connectable: !isLocked,
               }))}
               edges={edges.map((edge) => ({
                 ...edge,
@@ -1270,9 +1436,11 @@ export function SimulationStudioPage() {
                   apiEdges.find((apiEdge) => apiEdge.edge_id === edge.id)?.is_valid === false
                     ? 'invalid-edge'
                     : '',
+                selectable: true,
+                deletable: !isLocked,
               }))}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
+              onNodesChange={handleNodesChange}
+              onEdgesChange={handleEdgesChange}
               onConnect={connect}
               onNodeClick={(_, node) => {
                 setSelectedNodeId(node.id)
@@ -1283,6 +1451,10 @@ export function SimulationStudioPage() {
                 setSelectedNodeId(null)
               }}
               onNodeDragStop={(_, node) => {
+                if (isLocked) {
+                  toast.error(lockedMessage)
+                  return
+                }
                 // Immediately update local cache so refetch doesn't undo the drag
                 localPositions.current.set(node.id, {
                   x: Math.round(node.position.x),
@@ -1366,15 +1538,17 @@ export function SimulationStudioPage() {
                     definition={definitions.get(selectedNode.node_type)}
                     graphNodes={apiNodes}
                     onSave={saveStructuredNode}
-                    onDuplicate={() => duplicateGraphNode.mutate(selectedNode)}
-                    onDelete={() => removeNode.mutate(selectedNode.node_id)}
+                    onDuplicate={() => handleDuplicateNode(selectedNode)}
+                    onDelete={() => handleDeleteNode(selectedNode.node_id)}
+                    readonly={isLocked}
                   />
                 )}
 
                 {selectedEdge && (
                   <EdgeConfigurationForm
                     onSave={saveStructuredEdge}
-                    onDelete={() => removeEdge.mutate(selectedEdge.edge_id)}
+                    onDelete={() => handleDeleteEdge(selectedEdge.edge_id)}
+                    readonly={isLocked}
                   />
                 )}
 
@@ -1425,8 +1599,16 @@ export function SimulationStudioPage() {
                           onClick={() => navigate(`/studio/${version.simulation_id}`)}
                         >
                           <div className="mb-1 flex items-center justify-between">
-                            <span className="text-sm font-semibold text-slate-800">
+                            <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                               {version.simulation_name}
+                              {version.is_locked && (
+                                <span
+                                  className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
+                                  title={`Used ${version.execution_count ?? 0} times`}
+                                >
+                                  <Lock className="h-3 w-3" /> Locked
+                                </span>
+                              )}
                             </span>
                             <span className="flex items-center gap-0.5">
                               <button
@@ -1456,7 +1638,9 @@ export function SimulationStudioPage() {
                             </span>
                           </div>
                           <p className="text-xs text-slate-500">
-                            Created: {new Date().toLocaleDateString()}
+                            {version.is_locked
+                              ? `Locked • Used ${version.execution_count ?? 0} times`
+                              : `Created: ${new Date().toLocaleDateString()}`}
                           </p>
                         </div>
                       ))}

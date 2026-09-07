@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { FolderKanban, Layers, Pencil, Plus, Save, Trash2 } from 'lucide-react'
+import { FolderKanban, Layers, Lock, Pencil, Plus, Save, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -196,6 +196,8 @@ export function SimulationListPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {groups.data.map((group) => {
             const sims = group.simulations ?? []
+            const lockedCount = sims.filter((s) => s.is_locked).length
+            const primarySim = sims[0]
             return (
               <article
                 key={group.group_simulation_id}
@@ -220,8 +222,21 @@ export function SimulationListPage() {
                   </p>
                   <div className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-[11px] font-medium text-slate-500">
                     <span className="text-xs text-slate-400">
-                      {sims[0]?.simulation_name ?? 'No versions yet'}
+                      {primarySim?.simulation_name ?? 'No versions yet'}
                     </span>
+                    {primarySim?.is_locked && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
+                        title={`Used ${primarySim.execution_count ?? 0} time${(primarySim.execution_count ?? 0) === 1 ? '' : 's'}`}
+                      >
+                        <Lock className="h-3 w-3" /> Locked • Used {primarySim.execution_count ?? 0}
+                      </span>
+                    )}
+                    {!primarySim?.is_locked && lockedCount > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                        <Lock className="h-3 w-3" /> {lockedCount} locked
+                      </span>
+                    )}
                   </div>
                 </button>
                 <footer className="flex items-center justify-between border-t border-slate-100 px-4 py-2">
@@ -281,8 +296,16 @@ export function SimulationListPage() {
                 }`}
                 onClick={() => navigate(`/studio/${simulation.simulation_id}`)}
               >
-                <span className="text-sm font-semibold text-slate-800">
+                <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                   {simulation.simulation_name}
+                  {simulation.is_locked && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
+                      title={`Used ${simulation.execution_count ?? 0} times`}
+                    >
+                      <Lock className="h-3 w-3" /> Locked • {simulation.execution_count ?? 0}
+                    </span>
+                  )}
                 </span>
                 {simulation.simulation_id === pickerBest?.simulation_id && (
                   <span className="text-[10px] font-bold tracking-wider text-purple-600 uppercase">
