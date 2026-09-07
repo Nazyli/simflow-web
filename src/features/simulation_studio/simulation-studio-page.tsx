@@ -60,6 +60,7 @@ import {
   getSimulations,
   updateNode,
   updateSimulationEdge,
+  validateSimulation,
   type ApiEdge,
   type ApiNode,
   type ApiNodePayload,
@@ -175,6 +176,8 @@ export function SimulationStudioPage() {
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
   const [validationRequested, setValidationRequested] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [validating, setValidating] = useState(false)
 
   // UI Sidebars & Tabs
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true)
@@ -470,7 +473,6 @@ export function SimulationStudioPage() {
     [selectedSimulation, versions.data],
   )
 
-  const validationErrors: string[] = []
   const invalidNodeIds = useMemo(() => new Set<string>(), [])
   const invalidEdgeIds = useMemo(() => new Set<string>(), [])
 
@@ -1017,8 +1019,22 @@ export function SimulationStudioPage() {
     })
   }
 
-  function validateGraph() {
-    setValidationRequested(true)
+  async function validateGraph() {
+    if (!simulationId) {
+      toast.error('No simulation selected.')
+      return
+    }
+    try {
+      setValidating(true)
+      const res = await validateSimulation(simulationId)
+      setValidationErrors(res.errors)
+      setValidationRequested(true)
+      if (res.valid) toast.success('Graph is valid')
+    } catch (e) {
+      toast.error(apiErrorMessage(e))
+    } finally {
+      setValidating(false)
+    }
   }
 
   if (versionDetail.isPending) {
@@ -1169,11 +1185,11 @@ export function SimulationStudioPage() {
           <button
             className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:bg-emerald-700 disabled:opacity-50"
             type="button"
-            disabled={!selectedSimulation}
+            disabled={!selectedSimulation || validating}
             onClick={validateGraph}
             title="Validate graph"
           >
-            <CheckCircle2 size={14} /> Validate
+            <CheckCircle2 size={14} /> {validating ? 'Validating…' : 'Validate'}
           </button>
 
           <button
@@ -1384,29 +1400,49 @@ export function SimulationStudioPage() {
                 type="button"
                 className={`inline-flex items-center justify-center gap-1 rounded-lg p-1.5 px-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${validationRequested ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-100'}`}
                 onClick={validateGraph}
+                disabled={validating || !simulationId}
                 title="Validate Graph Structure"
               >
-                <ClipboardCheck size={15} /> Validate
+                <ClipboardCheck size={15} /> {validating ? 'Validating…' : 'Validate'}
               </button>
             </div>
           </div>
 
-          {/* Graph Validation Floating Error Drawer */}
-          {validationErrors.length > 0 && (
-            <div className="animate-slide-up absolute right-4 bottom-4 left-4 z-20 rounded-xl border border-red-200 bg-red-50 p-4 text-red-900 shadow-xl backdrop-blur-md md:right-auto md:max-w-md">
+          {/* Graph Validation Floating Drawer */}
+          {validationRequested && (
+            <div
+              className={`animate-slide-up absolute right-4 bottom-4 left-4 z-20 rounded-xl border p-4 shadow-xl backdrop-blur-md md:right-auto md:max-w-md ${validationErrors.length > 0 ? 'border-red-200 bg-red-50 text-red-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'}`}
+            >
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-red-700">
-                  <AlertTriangle className="h-4 w-4 text-red-600" /> Graph Validation Errors
+                <h3
+                  className={`flex items-center gap-2 text-sm font-bold ${validationErrors.length > 0 ? 'text-red-700' : 'text-emerald-700'}`}
+                >
+                  {validationErrors.length > 0 ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4 text-red-600" /> Graph Validation Errors
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Graph is valid
+                    </>
+                  )}
                 </h3>
-                <button className="text-red-500 hover:text-red-800" onClick={() => setValidationRequested(false)}>
+                <button
+                  className={validationErrors.length > 0 ? 'text-red-500 hover:text-red-800' : 'text-emerald-500 hover:text-emerald-800'}
+                  onClick={() => setValidationRequested(false)}
+                >
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <ul className="max-h-36 list-disc space-y-1 overflow-y-auto pl-4 text-xs text-red-700">
-                {validationErrors.map((err, i) => (
-                  <li key={i}>{err}</li>
-                ))}
-              </ul>
+              {validationErrors.length > 0 ? (
+                <ul className="max-h-36 list-disc space-y-1 overflow-y-auto pl-4 text-xs text-red-700">
+                  {validationErrors.map((err, i) => (
+                    <li key={i}>{err}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-emerald-700">No validation errors found. The graph is ready to run.</p>
+              )}
             </div>
           )}
 

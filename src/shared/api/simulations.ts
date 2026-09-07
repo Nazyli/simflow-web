@@ -62,9 +62,11 @@ export const getPublishedSimulations = () =>
   apiClient<PublishedSimulation[]>('/studio/simulations/published')
 export const deleteSimulation = (simulationId: string) =>
   apiClient<void>(`/studio/simulations/${encodeURIComponent(simulationId)}`, { method: 'DELETE' })
+export const validateSimulation = (simulationId: string) =>
+  apiClient<{ valid: boolean; errors: string[] }>(`/studio/simulations/${encodeURIComponent(simulationId)}/validate`)
+
 /** @deprecated publish/validate endpoint removed; graph is validated on node/edge mutations. */
-export const publishSimulation = (simulationId: string) =>
-  duplicateSimulation(simulationId)
+export const publishSimulation = (simulationId: string) => duplicateSimulation(simulationId)
 export interface ApiNode {
   node_id: string
   node_name: string
