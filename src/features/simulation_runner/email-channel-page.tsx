@@ -73,6 +73,12 @@ export function EmailChannelPage() {
     enabled: Boolean(participantId.trim()),
   })
 
+  const handleOpenPicker = () => {
+    void queryClient.invalidateQueries({ queryKey: ['runner-documents', participantId] })
+    void queryClient.invalidateQueries({ queryKey: ['documents', participantId] })
+    setIsPickerOpen(true)
+  }
+
   const selectedThread = threads.find((t) => t.rootId === selectedRootId) ?? null
 
   // Fetch messages for the selected thread using its simulation_id.
@@ -187,7 +193,7 @@ export function EmailChannelPage() {
         selectedThread={selectedThread}
         disabled={disabled}
         attachments={selectedAttachments}
-        onOpenAttachmentPicker={() => setIsPickerOpen(true)}
+        onOpenAttachmentPicker={handleOpenPicker}
         onRemoveAttachment={(participantDocId) =>
           setSelectedAttachments((current) =>
             current.filter((selection) => selection.participant_doc_id !== participantDocId),

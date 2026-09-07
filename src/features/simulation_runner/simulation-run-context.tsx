@@ -100,6 +100,8 @@ export function SimulationRunProvider({
       void client.invalidateQueries({ queryKey: ['email-inbox'] })
       void client.invalidateQueries({ queryKey: ['email-messages'] })
       void client.invalidateQueries({ queryKey: ['email-thread-messages'] })
+      void client.invalidateQueries({ queryKey: ['runner-documents', streamParticipantId] })
+      void client.invalidateQueries({ queryKey: ['documents', streamParticipantId] })
       if (!(event instanceof MessageEvent)) return
       try {
         const payload = JSON.parse(event.data) as {
