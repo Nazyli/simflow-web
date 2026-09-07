@@ -44,7 +44,9 @@ export function SettingsPage() {
           </span>
           <div>
             <h2 className="text-sm font-semibold text-slate-700">Reset Demo Data</h2>
-            <p className="text-xs text-slate-400">Re-run migrations and seed all demo simulations</p>
+            <p className="text-xs text-slate-400">
+              Re-run migrations and seed all demo simulations
+            </p>
           </div>
         </div>
 

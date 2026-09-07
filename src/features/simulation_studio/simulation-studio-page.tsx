@@ -1,5 +1,8 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Label } from '../../components/ui/label'
+import { Textarea } from '../../components/ui/textarea'
 import { type EdgePathType } from '../../components/button-edge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import {
@@ -19,6 +22,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   CheckCircle2,
   ClipboardCheck,
+  Copy,
   Maximize,
   Minus,
   PanelLeftClose,
@@ -46,14 +50,13 @@ import { getNodeCatalog } from '../../shared/api/node-catalog'
 import {
   addNode,
   addSimulationEdge,
-  createDraftFromSimulation,
+  duplicateSimulation,
   deleteNode,
   deleteSimulationEdge,
   deleteSimulation,
   getGraph,
   getSimulationDetail,
   getSimulations,
-  publishSimulation,
   updateNode,
   updateSimulationEdge,
   type ApiEdge,
@@ -138,16 +141,6 @@ function edgeToFlow(
   }
 }
 
-function publishErrors(error: Error | null): string[] {
-  if (!(error instanceof ApiError)) return []
-  try {
-    const info = JSON.parse(error.message).info
-    return typeof info?.message === 'string' ? [info.message] : []
-  } catch {
-    return []
-  }
-}
-
 function apiErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     try {
@@ -173,6 +166,10 @@ export function SimulationStudioPage() {
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null)
   const [deleteExecutionTarget, setDeleteExecutionTarget] = useState<string | null>(null)
   const [deleteSimulationTarget, setdeleteSimulationTarget] = useState<string | null>(null)
+  const [duplicateOpen, setDuplicateOpen] = useState(false)
+  const [duplicateSourceId, setDuplicateSourceId] = useState<string | null>(null)
+  const [duplicateName, setDuplicateName] = useState('')
+  const [duplicateDesc, setDuplicateDesc] = useState('')
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
@@ -280,26 +277,22 @@ export function SimulationStudioPage() {
   })
 
   const createDraft = useMutation({
-    mutationFn: async (_groupSimulationId: string) => {
-      const sourceVersion = selectedSimulation ?? versions.data?.[0]
-      if (!sourceVersion) throw new Error('No version available to duplicate.')
-      return createDraftFromSimulation(sourceVersion.simulation_id)
-    },
+    mutationFn: async (payload: {
+      sourceId: string
+      simulation_name: string
+      simulation_desc: string | null
+    }) =>
+      duplicateSimulation(payload.sourceId, {
+        simulation_name: payload.simulation_name,
+        simulation_desc: payload.simulation_desc,
+      }),
     onSuccess: (version) => {
       queryClient.invalidateQueries({
         queryKey: ['simulation-versions', selectedGroupSimulation?.group_simulation_id],
       })
       navigate(`/studio/${version.simulation_id}`)
-    },
-    onError: (error) => toast.error(apiErrorMessage(error)),
-  })
-  const publish = useMutation({
-    mutationFn: publishSimulation,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['simulations'] })
-      queryClient.invalidateQueries({
-        queryKey: ['simulation-versions', selectedGroupSimulation?.group_simulation_id],
-      })
+      setDuplicateOpen(false)
+      toast.success(`Duplicated to "${version.simulation_name}".`)
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
@@ -419,25 +412,25 @@ export function SimulationStudioPage() {
   )
   const selectedExecution =
     executions.data?.find((execution) => execution.execution_id === selectedExecutionId) ?? null
-  const validationErrors = useMemo(() => publishErrors(publish.error), [publish.error])
-  const invalidNodeIds = useMemo(
-    () =>
-      new Set(
-        validationErrors.flatMap((error) =>
-          [...error.matchAll(/Node '([^']+)'/g)].map((match) => match[1]),
-        ),
-      ),
-    [validationErrors],
+
+  const openDuplicateDialog = useCallback(
+    (sourceOverride?: { simulation_id: string; simulation_name: string; simulation_desc: string | null }) => {
+      const source = sourceOverride ?? selectedSimulation ?? versions.data?.[0]
+      if (!source) {
+        toast.error('No version available to duplicate.')
+        return
+      }
+      setDuplicateSourceId(source.simulation_id)
+      setDuplicateName(`${source.simulation_name} (Copy)`)
+      setDuplicateDesc(source.simulation_desc ?? '')
+      setDuplicateOpen(true)
+    },
+    [selectedSimulation, versions.data],
   )
-  const invalidEdgeIds = useMemo(
-    () =>
-      new Set(
-        validationErrors.flatMap((error) =>
-          [...error.matchAll(/Edge '([^']+)'/g)].map((match) => match[1]),
-        ),
-      ),
-    [validationErrors],
-  )
+
+  const validationErrors: string[] = []
+  const invalidNodeIds = useMemo(() => new Set<string>(), [])
+  const invalidEdgeIds = useMemo(() => new Set<string>(), [])
 
   const rotateNode = useCallback(
     (nodeId: string) => {
@@ -1026,7 +1019,7 @@ export function SimulationStudioPage() {
               <button
                 type="button"
                 className="flex items-center gap-1 rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
-                onClick={() => createDraft.mutate(selectedGroupSimulation.group_simulation_id)}
+                onClick={() => openDuplicateDialog()}
               >
                 <Plus className="h-3 w-3" /> Duplicate
               </button>
@@ -1036,8 +1029,8 @@ export function SimulationStudioPage() {
           <button
             className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:bg-emerald-700 disabled:opacity-50"
             type="button"
-            disabled={!selectedSimulation || publish.isPending}
-            onClick={() => selectedSimulation && publish.mutate(selectedSimulation.simulation_id)}
+            disabled={!selectedSimulation}
+            onClick={validateGraph}
             title="Validate graph"
           >
             <CheckCircle2 size={14} /> Validate
@@ -1242,7 +1235,7 @@ export function SimulationStudioPage() {
                 <h3 className="flex items-center gap-2 text-sm font-bold text-red-700">
                   <AlertTriangle className="h-4 w-4 text-red-600" /> Graph Validation Errors
                 </h3>
-                <button className="text-red-500 hover:text-red-800" onClick={() => publish.reset()}>
+                <button className="text-red-500 hover:text-red-800" onClick={() => setValidationRequested(false)}>
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -1409,9 +1402,7 @@ export function SimulationStudioPage() {
                     <button
                       type="button"
                       className="flex items-center gap-1 rounded bg-purple-600 px-2.5 py-1 text-xs font-medium text-white shadow-xs hover:bg-purple-700"
-                      onClick={() =>
-                        createDraft.mutate(selectedGroupSimulation.group_simulation_id)
-                      }
+                      onClick={() => openDuplicateDialog()}
                     >
                       <Plus className="h-3 w-3" /> Duplicate
                     </button>
@@ -1437,18 +1428,32 @@ export function SimulationStudioPage() {
                             <span className="text-sm font-semibold text-slate-800">
                               {version.simulation_name}
                             </span>
-                            <button
-                              type="button"
-                              aria-label="Delete version"
-                              title="Delete version"
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                setdeleteSimulationTarget(version.simulation_id)
-                              }}
-                              className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            <span className="flex items-center gap-0.5">
+                              <button
+                                type="button"
+                                aria-label="Duplicate version"
+                                title="Duplicate version"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  openDuplicateDialog(version)
+                                }}
+                                className="rounded-md p-1 text-slate-400 transition hover:bg-purple-50 hover:text-purple-600"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Delete version"
+                                title="Delete version"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  setdeleteSimulationTarget(version.simulation_id)
+                                }}
+                                className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
                           </div>
                           <p className="text-xs text-slate-500">
                             Created: {new Date().toLocaleDateString()}
@@ -1547,6 +1552,91 @@ export function SimulationStudioPage() {
               {removeSimulation.isPending ? 'Deleting…' : 'Delete version'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Duplicate Simulation Dialog */}
+      <Dialog
+        open={duplicateOpen}
+        onOpenChange={(open) => {
+          if (!open) setDuplicateOpen(false)
+        }}
+      >
+        <DialogContent className="p-6 sm:max-w-md">
+          <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
+            <Copy className="h-5 w-5 text-purple-600" /> Duplicate simulation
+          </DialogTitle>
+          <DialogDescription>
+            Create a copy of this version. You can rename it and update the description before
+            duplicating.
+          </DialogDescription>
+
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              const trimmed = duplicateName.trim()
+              if (!trimmed) {
+                toast.error('Simulation name is required.')
+                return
+              }
+              if (!duplicateSourceId) {
+                toast.error('No source simulation selected.')
+                return
+              }
+              createDraft.mutate({
+                sourceId: duplicateSourceId,
+                simulation_name: trimmed,
+                simulation_desc: duplicateDesc.trim() ? duplicateDesc.trim() : null,
+              })
+            }}
+            className="flex flex-col gap-4"
+          >
+            <div className="grid gap-1.5">
+              <Label htmlFor="duplicate-name" className="text-slate-700">
+                Simulation name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="duplicate-name"
+                value={duplicateName}
+                onChange={(event) => setDuplicateName(event.target.value)}
+                placeholder="e.g. Main Flow (Copy)"
+                required
+                maxLength={128}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="duplicate-desc" className="text-slate-700">
+                Description <span className="text-xs text-slate-400">(optional)</span>
+              </Label>
+              <Textarea
+                id="duplicate-desc"
+                value={duplicateDesc}
+                onChange={(event) => setDuplicateDesc(event.target.value)}
+                placeholder="Describe the purpose of this simulation..."
+                rows={3}
+                maxLength={1024}
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDuplicateOpen(false)}
+                disabled={createDraft.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createDraft.isPending || !duplicateName.trim()}
+                className="bg-purple-600 text-white hover:bg-purple-700"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                {createDraft.isPending ? 'Duplicating…' : 'Duplicate'}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

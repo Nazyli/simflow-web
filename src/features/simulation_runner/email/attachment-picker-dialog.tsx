@@ -95,9 +95,7 @@ export function AttachmentPickerDialog({
     setSelected((current) => ({
       ...current,
       [document.participant_doc_id]: new Set(
-        allSelected
-          ? []
-          : document.contents.map((content) => content.participant_doc_content_id),
+        allSelected ? [] : document.contents.map((content) => content.participant_doc_content_id),
       ),
     }))
   }

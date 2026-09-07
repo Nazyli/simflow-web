@@ -459,7 +459,8 @@ export function TimerManagementPage() {
         isSaving={reschedule.isPending}
         onClose={() => setRescheduleTarget(null)}
         onSave={(dueAt) =>
-          rescheduleTarget && reschedule.mutate({ id: rescheduleTarget.participant_timer_id, dueAt })
+          rescheduleTarget &&
+          reschedule.mutate({ id: rescheduleTarget.participant_timer_id, dueAt })
         }
       />
       <CancelDialog
@@ -617,7 +618,13 @@ function RunNowDialog({
   )
 }
 
-function TimerDetail({ timer, onClose }: { timer: TransParticipantTimer | null; onClose: () => void }) {
+function TimerDetail({
+  timer,
+  onClose,
+}: {
+  timer: TransParticipantTimer | null
+  onClose: () => void
+}) {
   return (
     <Dialog open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="p-6 sm:max-w-[480px]">

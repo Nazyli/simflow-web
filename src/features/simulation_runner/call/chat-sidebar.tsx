@@ -85,7 +85,10 @@ export function ChatSidebar({
   useEffect(() => {
     function upsert(segments: { id: string; text: string }[] | undefined, sender: string) {
       for (const segment of segments ?? []) {
-        const parts = segment.text.split(BR_SPLIT_PATTERN).map((part) => part.trim()).filter(Boolean)
+        const parts = segment.text
+          .split(BR_SPLIT_PATTERN)
+          .map((part) => part.trim())
+          .filter(Boolean)
         if (!parts.length) continue
         const entries =
           parts.length === 1
@@ -136,18 +139,18 @@ export function ChatSidebar({
         <h2 className="text-sm font-semibold text-slate-800">In-call messages</h2>
       </header>
       <div ref={listRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 text-sm">
-        {messages.length
-          ? messages.map((message) => (
-              <div key={message.id} className="rounded-lg bg-slate-100 px-3 py-2">
-                <span className="text-xs font-medium text-indigo-600">{message.sender}</span>
-                <p className="mt-0.5 text-slate-700">{message.text}</p>
-              </div>
-            ))
-          : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-400">
-              <p className="text-xs">No messages yet</p>
+        {messages.length ? (
+          messages.map((message) => (
+            <div key={message.id} className="rounded-lg bg-slate-100 px-3 py-2">
+              <span className="text-xs font-medium text-indigo-600">{message.sender}</span>
+              <p className="mt-0.5 text-slate-700">{message.text}</p>
             </div>
-          )}
+          ))
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-400">
+            <p className="text-xs">No messages yet</p>
+          </div>
+        )}
       </div>
       <form className="flex gap-2 border-t border-slate-200 p-3" onSubmit={submit}>
         <Input

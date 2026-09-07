@@ -24,12 +24,12 @@ export function ExecutionDetailPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const defaultTab = searchParams.get('tab') === 'flow' ? 'flow' : 'detail'
-  
+
   // Polling state - MUST be before useQuery calls
   const [pollInterval, setPollInterval] = useState(60)
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [timeLeft, setTimeLeft] = useState(pollInterval)
-  
+
   const queryClient = useQueryClient()
 
   const history = useQuery({
@@ -52,7 +52,7 @@ export function ExecutionDetailPage() {
     }
 
     setTimeLeft(pollInterval)
-    
+
     const intervalId = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ['history-node-executions', id] })
     }, pollInterval * 1000)
@@ -80,7 +80,7 @@ export function ExecutionDetailPage() {
 
   const data = history.data?.find((item) => item.execution_id === id)
   if (!data) return <ErrorState message="Execution not found." />
-  
+
   const title = `${data.group_simulation_name ?? 'Simulation unavailable'} · ${data.simulation_name ?? '—'}`
   const isFinalStatus = ['completed', 'failed', 'cancelled'].includes(data.status)
 
@@ -134,7 +134,9 @@ export function ExecutionDetailPage() {
                           cy="18"
                         />
                       </svg>
-                      <span className="absolute text-[10px] font-bold text-slate-700">{timeLeft}s</span>
+                      <span className="absolute text-[10px] font-bold text-slate-700">
+                        {timeLeft}s
+                      </span>
                     </div>
                     <Input
                       type="number"
@@ -169,7 +171,11 @@ export function ExecutionDetailPage() {
         </div>
       </header>
 
-      <Tabs defaultValue={defaultTab} onValueChange={(value) => setActiveTab(value)} className="flex h-[calc(100vh-180px)] flex-col">
+      <Tabs
+        defaultValue={defaultTab}
+        onValueChange={(value) => setActiveTab(value)}
+        className="flex h-[calc(100vh-180px)] flex-col"
+      >
         <TabsList className="shrink-0">
           <TabsTrigger value="flow">
             <Route size={14} />
@@ -181,7 +187,10 @@ export function ExecutionDetailPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="flow" className="mt-3 min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <TabsContent
+          value="flow"
+          className="mt-3 min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+        >
           <ParticipantFlowCanvas
             simulationId={data.simulation_id}
             executionId={data.execution_id}
@@ -189,7 +198,10 @@ export function ExecutionDetailPage() {
           />
         </TabsContent>
 
-        <TabsContent value="detail" className="mt-3 min-h-0 flex-1 overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <TabsContent
+          value="detail"
+          className="mt-3 min-h-0 flex-1 overflow-auto rounded-xl border border-slate-200 bg-white shadow-sm"
+        >
           <NodeExecutionTable
             nodeExecutions={nodeExecutions.data ?? []}
             loading={nodeExecutions.isPending}

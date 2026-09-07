@@ -67,7 +67,7 @@ function DeviceMenu({
         onClick={onClose}
         type="button"
       />
-      <div className="border-slate-200 bg-white absolute bottom-full left-1/2 z-50 mb-3 max-h-52 w-56 -translate-x-1/2 overflow-y-auto rounded-xl border shadow-xl backdrop-blur-md">
+      <div className="absolute bottom-full left-1/2 z-50 mb-3 max-h-52 w-56 -translate-x-1/2 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl backdrop-blur-md">
         {fullItems.length === 0 ? (
           <p className="px-3 py-2.5 text-xs text-slate-500">No devices found</p>
         ) : (
@@ -77,7 +77,9 @@ function DeviceMenu({
             return (
               <button
                 className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition-colors ${
-                  isActive ? 'bg-slate-100 font-medium text-slate-800' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-800'
+                  isActive
+                    ? 'bg-slate-100 font-medium text-slate-800'
+                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-800'
                 }`}
                 key={device.deviceId}
                 onClick={() => {

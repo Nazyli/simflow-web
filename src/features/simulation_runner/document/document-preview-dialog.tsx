@@ -39,9 +39,7 @@ export function DocumentPreviewDialog({
                 {doc.simulationName ? (
                   <>
                     <span className="text-slate-400">·</span>
-                    <span>
-                      {doc.simulationName}
-                    </span>
+                    <span>{doc.simulationName}</span>
                   </>
                 ) : null}
               </div>

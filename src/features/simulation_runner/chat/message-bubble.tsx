@@ -30,7 +30,9 @@ export function MessageBubble({ message, participantId }: MessageBubbleProps) {
           <span className="text-[10px] font-semibold text-slate-500">{sender}</span>
           <time className="text-[10px] text-slate-400">{formatChatTime(message.timestamp)}</time>
           {message.simulation_label && (
-            <span className="truncate text-[10px] text-slate-400">| {message.simulation_label}</span>
+            <span className="truncate text-[10px] text-slate-400">
+              | {message.simulation_label}
+            </span>
           )}
         </div>
         <div
@@ -43,11 +45,7 @@ export function MessageBubble({ message, participantId }: MessageBubbleProps) {
           {splitMessageLinks(content).map((segment, index) =>
             segment.url ? (
               isSameOrigin(segment.url) ? (
-                <a
-                  key={index}
-                  href={segment.url}
-                  className="break-all underline"
-                >
+                <a key={index} href={segment.url} className="break-all underline">
                   {segment.text}
                 </a>
               ) : (

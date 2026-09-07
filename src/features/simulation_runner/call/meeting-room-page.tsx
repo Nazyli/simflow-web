@@ -178,7 +178,12 @@ export function CallMeetingRoomPage() {
   const activeConnection = state.connection ?? connection
   const effectiveChoices = choices ?? (roomId ? defaultCallChoices(roomId) : null)
 
-  if (!roomId || !activeConnection?.serverUrl || !activeConnection.participantToken || !effectiveChoices) {
+  if (
+    !roomId ||
+    !activeConnection?.serverUrl ||
+    !activeConnection.participantToken ||
+    !effectiveChoices
+  ) {
     return <CallUnavailableState onBack={exitToSimulation} />
   }
 
@@ -258,9 +263,12 @@ export function CallMeetingRoomPage() {
           {/* Bottom control bar - always visible */}
           <div className="border-t border-slate-200 bg-white px-4 py-3">
             <div className="flex items-center justify-center">
-              <MediaControlBar choices={effectiveChoices} onChoicesChange={(partial) =>
-                setChoices((current) => (current ? { ...current, ...partial } : current))
-              } />
+              <MediaControlBar
+                choices={effectiveChoices}
+                onChoicesChange={(partial) =>
+                  setChoices((current) => (current ? { ...current, ...partial } : current))
+                }
+              />
             </div>
           </div>
         </div>
@@ -311,7 +319,7 @@ function CallReplacedState({ onBack }: { onBack: () => void }) {
 function CallWaitingForAgentState({ onBack }: { onBack: () => void }) {
   return (
     <div className="bg-background flex h-full min-h-[420px] flex-col items-center justify-center gap-4 px-6 text-center">
-      <span className="grid size-16 place-items-center rounded-full bg-slate-100 text-slate-400 animate-pulse">
+      <span className="grid size-16 animate-pulse place-items-center rounded-full bg-slate-100 text-slate-400">
         <PhoneOff className="size-7" />
       </span>
       <div>

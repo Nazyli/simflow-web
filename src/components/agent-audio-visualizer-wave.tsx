@@ -1,33 +1,33 @@
-'use client';
+'use client'
 
-import { useMemo, type ComponentProps } from 'react';
-import { type VariantProps, cva } from 'class-variance-authority';
-import { type AgentState, type TrackReferenceOrPlaceholder } from '@livekit/components-react';
+import { useMemo, type ComponentProps } from 'react'
+import { type VariantProps, cva } from 'class-variance-authority'
+import { type AgentState, type TrackReferenceOrPlaceholder } from '@livekit/components-react'
 
-import { ReactShaderToy } from '@/components/react-shader-toy';
-import { useAgentAudioVisualizerWave } from '@/hooks/use-agent-audio-visualizer-wave';
-import { cn } from '@/lib/utils';
-import { LocalAudioTrack, RemoteAudioTrack } from 'livekit-client';
+import { ReactShaderToy } from '@/components/react-shader-toy'
+import { useAgentAudioVisualizerWave } from '@/hooks/use-agent-audio-visualizer-wave'
+import { cn } from '@/lib/utils'
+import { LocalAudioTrack, RemoteAudioTrack } from 'livekit-client'
 
-const DEFAULT_COLOR = '#1FD5F9';
+const DEFAULT_COLOR = '#1FD5F9'
 
 function hexToRgb(hexColor: string) {
   try {
-    const rgbColor = hexColor.match(/^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/);
+    const rgbColor = hexColor.match(/^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/)
 
     if (rgbColor) {
-      const [, r, g, b] = rgbColor;
-      const color = [r, g, b].map((c = '00') => parseInt(c, 16) / 255);
+      const [, r, g, b] = rgbColor
+      const color = [r, g, b].map((c = '00') => parseInt(c, 16) / 255)
 
-      return color;
+      return color
     }
   } catch {
     console.error(
       `Invalid hex color '${hexColor}'.\nFalling back to default color '${DEFAULT_COLOR}'.`,
-    );
+    )
   }
 
-  return hexToRgb(DEFAULT_COLOR);
+  return hexToRgb(DEFAULT_COLOR)
 }
 
 const shaderSource = `
@@ -145,54 +145,54 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   float alpha = line * uMix;
 
   fragColor = vec4(color * uMix, alpha);
-}`;
+}`
 
 interface WaveShaderProps {
   /**
    * Class name
    * @default ''
    */
-  className?: string;
+  className?: string
   /**
    * Speed of the oscilloscope
    * @default 10
    */
-  speed?: number;
+  speed?: number
   /**
    * Amplitude of the oscilloscope
    * @default 0.02
    */
-  amplitude?: number;
+  amplitude?: number
   /**
    * Frequency of the oscilloscope
    * @default 20.0
    */
-  frequency?: number;
+  frequency?: number
   /**
    * Color of the oscilloscope in hexidecimal format.
    * @default '#1FD5F9'
    */
-  color?: `#${string}`;
+  color?: `#${string}`
   /**
    * Hue shift amount applied toward the outside of the wave. Center remains at the base color.
    * @default 0.05
    */
-  colorShift?: number;
+  colorShift?: number
   /**
    * Mix of the oscilloscope
    * @default 1.0
    */
-  mix?: number;
+  mix?: number
   /**
    * Line width of the oscilloscope in pixels
    * @default 2.0
    */
-  lineWidth?: number;
+  lineWidth?: number
   /**
    * Blur of the oscilloscope in pixels
    * @default 0.5
    */
-  blur?: number;
+  blur?: number
 }
 
 function WaveShader({
@@ -208,7 +208,7 @@ function WaveShader({
   className,
   ...props
 }: WaveShaderProps & ComponentProps<'div'>) {
-  const rgbColor = useMemo(() => hexToRgb(color), [color]);
+  const rgbColor = useMemo(() => hexToRgb(color), [color])
 
   return (
     <div ref={ref} className={className} {...props}>
@@ -226,18 +226,18 @@ function WaveShader({
           uColorShift: { type: '1f', value: colorShift },
         }}
         onError={(error) => {
-          console.error('Shader error:', error);
+          console.error('Shader error:', error)
         }}
         onWarning={(warning) => {
-          console.warn('Shader warning:', warning);
+          console.warn('Shader warning:', warning)
         }}
         style={{ width: '100%', height: '100%' }}
       />
     </div>
-  );
+  )
 }
 
-WaveShader.displayName = 'WaveShader';
+WaveShader.displayName = 'WaveShader'
 
 export const AgentAudioVisualizerWaveVariants = cva(['aspect-square'], {
   variants: {
@@ -252,51 +252,51 @@ export const AgentAudioVisualizerWaveVariants = cva(['aspect-square'], {
   defaultVariants: {
     size: 'lg',
   },
-});
+})
 
 export interface AgentAudioVisualizerWaveProps {
   /**
    * The size of the visualizer.
    * @defaultValue 'lg'
    */
-  size?: 'icon' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'icon' | 'sm' | 'md' | 'lg' | 'xl'
   /**
    * The agent state.
    * @defaultValue 'speaking'
    */
-  state?: AgentState;
+  state?: AgentState
   /**
    * The color of the wave in hexidecimal format.
    * @defaultValue '#1FD5F9'
    */
-  color?: `#${string}`;
+  color?: `#${string}`
   /**
    * The color shift of the wave. Higher values increase hue variation toward the edges.
    * @defaultValue 0.05
    */
-  colorShift?: number;
+  colorShift?: number
   /**
    * The line width of the wave in pixels.
    * @defaultValue 2.0
    */
-  lineWidth?: number;
+  lineWidth?: number
   /**
    * The blur of the wave in pixels.
    * @defaultValue 0.5
    */
-  blur?: number;
+  blur?: number
   /**
    * The audio track to visualize. Can be a local/remote audio track or a track reference.
    */
-  audioTrack?: LocalAudioTrack | RemoteAudioTrack | TrackReferenceOrPlaceholder;
+  audioTrack?: LocalAudioTrack | RemoteAudioTrack | TrackReferenceOrPlaceholder
   /**
    * Externally supplied scalar volume. When provided, this overrides audioTrack volume data.
    */
-  volume?: number;
+  volume?: number
   /**
    * Additional CSS class names to apply to the container.
    */
-  className?: string;
+  className?: string
 }
 
 /**
@@ -335,22 +335,22 @@ export function AgentAudioVisualizerWave({
   VariantProps<typeof AgentAudioVisualizerWaveVariants>) {
   const _lineWidth = useMemo(() => {
     if (lineWidth !== undefined) {
-      return lineWidth;
+      return lineWidth
     }
     switch (size) {
       case 'icon':
       case 'sm':
-        return 2;
+        return 2
       default:
-        return 1;
+        return 1
     }
-  }, [lineWidth, size]);
+  }, [lineWidth, size])
 
   const { speed, amplitude, frequency, opacity } = useAgentAudioVisualizerWave({
     state,
     audioTrack,
     volume,
-  });
+  })
 
   return (
     <WaveShader
@@ -371,5 +371,5 @@ export function AgentAudioVisualizerWave({
       )}
       {...props}
     />
-  );
+  )
 }

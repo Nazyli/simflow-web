@@ -321,8 +321,7 @@ export function SimulationRunProvider({
         runnerParticipantId,
         isChatPending: chatAction.isPending,
         sendChat,
-        markChatRead: (simulationId, actorId) =>
-          messageRead.mutateAsync({ simulationId, actorId }),
+        markChatRead: (simulationId, actorId) => messageRead.mutateAsync({ simulationId, actorId }),
         isEmailPending: emailAction.isPending,
         sendEmail,
         markEmailThreadRead: (simulationId, rootId) =>

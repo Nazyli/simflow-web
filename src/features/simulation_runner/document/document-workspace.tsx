@@ -191,7 +191,11 @@ function DocumentDetail({
           {/* Metadata grid */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {doc.simulationName ? (
-              <MetaCard icon={<BookOpen size={14} />} label="GroupSimulation" value={doc.simulationName} />
+              <MetaCard
+                icon={<BookOpen size={14} />}
+                label="GroupSimulation"
+                value={doc.simulationName}
+              />
             ) : null}
             <MetaCard icon={<FileText size={14} />} label="Pages" value={`${doc.pageCount}`} />
             <MetaCard icon={<Eye size={14} />} label="Opened" value={`${doc.openCount}×`} />

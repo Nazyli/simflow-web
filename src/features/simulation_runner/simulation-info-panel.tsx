@@ -119,7 +119,8 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
             <strong className="text-sm text-amber-900">Participant action required</strong>
             <p className="mt-0.5 text-xs text-amber-700">
               Open the simulation that is waiting on the Conversations channel and reply there. The
-              selected simulation scopes your reply; actions sent to the wrong simulation are rejected.
+              selected simulation scopes your reply; actions sent to the wrong simulation are
+              rejected.
             </p>
           </div>
           <StatusBadge status="waiting" />

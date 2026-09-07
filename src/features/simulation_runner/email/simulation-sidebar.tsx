@@ -8,7 +8,11 @@ interface SimulationSidebarProps {
   onSelect: (simulationId: string) => void
 }
 
-export function SimulationSidebar({ simulations, selectedSimulation, onSelect }: SimulationSidebarProps) {
+export function SimulationSidebar({
+  simulations,
+  selectedSimulation,
+  onSelect,
+}: SimulationSidebarProps) {
   return (
     <aside className="flex shrink-0 gap-1 overflow-x-auto border-b border-slate-200 bg-white p-2 lg:w-[220px] lg:flex-col lg:overflow-y-auto lg:border-r lg:border-b-0 lg:p-2">
       <p className="hidden px-2 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase lg:block">
@@ -29,7 +33,9 @@ export function SimulationSidebar({ simulations, selectedSimulation, onSelect }:
           >
             <span className="min-w-0 flex-1">
               <span className="flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-semibold">{simulation.groupSimulationName}</span>
+                <span className="truncate text-sm font-semibold">
+                  {simulation.groupSimulationName}
+                </span>
                 <StatusBadge status={simulation.status} />
               </span>
               <span className="flex items-center justify-between gap-2">

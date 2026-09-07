@@ -14,12 +14,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '../../components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '../../components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { deleteExecution } from '../../shared/api/executions'
 import { getExecutionHistory, type ExecutionHistoryItem } from '../../shared/api/sessions'
 import { ErrorState, LoadingState } from '../../shared/components/async-state'
@@ -96,7 +91,7 @@ export function ParticipantHistoryPage() {
       return executions.map((execution) => ({
         id: execution.execution_id,
         execution,
-          simulationName: execution.group_simulation_name ?? 'Simulation unavailable',
+        simulationName: execution.group_simulation_name ?? 'Simulation unavailable',
         simulationVersionName: execution.simulation_name,
       }))
     },
@@ -111,7 +106,10 @@ export function ParticipantHistoryPage() {
     onError: () => toast.error('Unable to delete the execution log.'),
   })
   const rows = useMemo(
-    () => (history.data ?? []).filter((row): row is HistoryRow & { execution: ExecutionHistoryItem } => Boolean(row.execution)),
+    () =>
+      (history.data ?? []).filter((row): row is HistoryRow & { execution: ExecutionHistoryItem } =>
+        Boolean(row.execution),
+      ),
     [history.data],
   )
   const counts = useMemo(
@@ -190,7 +188,7 @@ export function ParticipantHistoryPage() {
         >
           {new Date(
             /(?:[zZ]$|[+-]\d{2}:?\d{2}$)/.test(row.execution.started_at ?? row.execution.created_at)
-              ? row.execution.started_at ?? row.execution.created_at
+              ? (row.execution.started_at ?? row.execution.created_at)
               : `${row.execution.started_at ?? row.execution.created_at}Z`,
           ).toLocaleString([], { timeZone: 'Asia/Jakarta' })}
         </time>
@@ -310,7 +308,9 @@ export function ParticipantHistoryPage() {
               type="button"
               variant="destructive"
               disabled={removeExecution.isPending}
-              onClick={() => deleteTarget && removeExecution.mutate(deleteTarget.execution.execution_id)}
+              onClick={() =>
+                deleteTarget && removeExecution.mutate(deleteTarget.execution.execution_id)
+              }
               className="border-0 bg-red-600 text-white hover:bg-red-700"
             >
               <Trash2 className="h-3.5 w-3.5" />{' '}
