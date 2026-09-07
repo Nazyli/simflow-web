@@ -1,12 +1,22 @@
 import { apiClient } from './client'
-import type { GroupSimulation, InputPort, OutputPort, Simulation, SimulationDetail } from '../types/simulation'
+import type {
+  GroupSimulation,
+  InputPort,
+  OutputPort,
+  Simulation,
+  SimulationDetail,
+} from '../types/simulation'
 
 export const getGroupSimulations = () => apiClient<GroupSimulation[]>('/studio/group-simulations')
 export const getSimulationDetail = (simulationId: string) =>
   apiClient<SimulationDetail>(`/studio/simulations/${encodeURIComponent(simulationId)}`)
 export const createGroupSimulation = (
   payload: Pick<GroupSimulation, 'group_simulation_name' | 'group_simulation_desc'>,
-) => apiClient<GroupSimulation>('/studio/group-simulations', { method: 'POST', body: JSON.stringify(payload) })
+) =>
+  apiClient<GroupSimulation>('/studio/group-simulations', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 export const updateGroupSimulation = (
   groupSimulationId: string,
   payload: Pick<GroupSimulation, 'group_simulation_name' | 'group_simulation_desc'>,
@@ -16,19 +26,28 @@ export const updateGroupSimulation = (
     body: JSON.stringify(payload),
   })
 export const deleteGroupSimulation = (groupSimulationId: string) =>
-  apiClient<void>(`/studio/group-simulations/${encodeURIComponent(groupSimulationId)}`, { method: 'DELETE' })
+  apiClient<void>(`/studio/group-simulations/${encodeURIComponent(groupSimulationId)}`, {
+    method: 'DELETE',
+  })
 export const createSimulation = (
   groupSimulationId: string,
   payload: Pick<Simulation, 'simulation_name' | 'simulation_desc' | 'channel_name' | 'duration'>,
 ) =>
-  apiClient<Simulation>(`/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
+  apiClient<Simulation>(
+    `/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  )
 export const createDraftFromSimulation = (simulationId: string) =>
-  apiClient<Simulation>(`/studio/simulations/${encodeURIComponent(simulationId)}/draft`, { method: 'POST' })
+  apiClient<Simulation>(`/studio/simulations/${encodeURIComponent(simulationId)}/draft`, {
+    method: 'POST',
+  })
 export const getSimulations = (groupSimulationId: string) =>
-  apiClient<Simulation[]>(`/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`)
+  apiClient<Simulation[]>(
+    `/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`,
+  )
 export interface PublishedSimulation extends Simulation {
   group_simulation_name: string
 }
@@ -37,7 +56,9 @@ export const getPublishedSimulations = () =>
 export const deleteSimulation = (simulationId: string) =>
   apiClient<void>(`/studio/simulations/${encodeURIComponent(simulationId)}`, { method: 'DELETE' })
 export const publishSimulation = (simulationId: string) =>
-  apiClient<Simulation>(`/studio/simulations/${encodeURIComponent(simulationId)}/publish`, { method: 'POST' })
+  apiClient<Simulation>(`/studio/simulations/${encodeURIComponent(simulationId)}/publish`, {
+    method: 'POST',
+  })
 export interface ApiNode {
   node_id: string
   node_name: string

@@ -1,11 +1,8 @@
 import { Badge } from '@/components/ui/badge'
 
-type SimulationStatus =
-  'draft' | 'published' | 'active' | 'waiting' | 'running' | 'failed' | 'completed'
+type SimulationStatus = 'active' | 'waiting' | 'running' | 'failed' | 'completed'
 
 const knownStatuses = new Set<SimulationStatus>([
-  'draft',
-  'published',
   'active',
   'waiting',
   'running',
@@ -13,17 +10,17 @@ const knownStatuses = new Set<SimulationStatus>([
   'completed',
 ])
 
-const statusStyles: Record<SimulationStatus | 'default', { color: string; backgroundColor: string }> =
-  {
-    draft: { color: 'var(--status-draft)', backgroundColor: 'var(--status-draft-bg)' },
-    published: { color: 'var(--status-published)', backgroundColor: 'var(--status-published-bg)' },
-    active: { color: 'var(--status-active)', backgroundColor: 'var(--status-active-bg)' },
-    waiting: { color: 'var(--status-waiting)', backgroundColor: 'var(--status-waiting-bg)' },
-    running: { color: 'var(--status-running)', backgroundColor: 'var(--status-running-bg)' },
-    failed: { color: 'var(--status-failed)', backgroundColor: 'var(--status-failed-bg)' },
-    completed: { color: 'var(--status-completed)', backgroundColor: 'var(--status-completed-bg)' },
-    default: { color: 'var(--color-text-muted)', backgroundColor: '#f1f5f9' },
-  }
+const statusStyles: Record<
+  SimulationStatus | 'default',
+  { color: string; backgroundColor: string }
+> = {
+  active: { color: 'var(--status-active)', backgroundColor: 'var(--status-active-bg)' },
+  waiting: { color: 'var(--status-waiting)', backgroundColor: 'var(--status-waiting-bg)' },
+  running: { color: 'var(--status-running)', backgroundColor: 'var(--status-running-bg)' },
+  failed: { color: 'var(--status-failed)', backgroundColor: 'var(--status-failed-bg)' },
+  completed: { color: 'var(--status-completed)', backgroundColor: 'var(--status-completed-bg)' },
+  default: { color: 'var(--color-text-muted)', backgroundColor: '#f1f5f9' },
+}
 
 export function StatusBadge({ status }: { status: string }) {
   const normalizedStatus = status.toLowerCase() as SimulationStatus

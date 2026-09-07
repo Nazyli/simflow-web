@@ -65,7 +65,7 @@
   background-color: var(--lk-fg) !important;
 }
 
-.lk-audio-bar[data-lk-highlighted="true"] {
+.lk-audio-bar[data-lk-highlighted='true'] {
   background-color: var(--lk-fg) !important;
 }
 
@@ -148,10 +148,6 @@ button {
   --color-border-strong: #c6d2df;
   --color-primary: #5b46c5;
   --color-primary-hover: #4b38ac;
-  --status-draft: #b45309;
-  --status-draft-bg: #fffbeb;
-  --status-published: #047857;
-  --status-published-bg: #ecfdf5;
   --status-active: #047857;
   --status-active-bg: #ecfdf5;
   --status-waiting: #c2410c;

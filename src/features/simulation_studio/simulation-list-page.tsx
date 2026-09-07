@@ -4,12 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '../../components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '../../components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
@@ -22,7 +17,6 @@ import {
   updateGroupSimulation,
 } from '../../shared/api/simulations'
 import { EmptyState, ErrorState, LoadingState } from '../../shared/components/async-state'
-import { StatusBadge } from '../../shared/components/status-badge'
 import type { GroupSimulation, Simulation } from '../../shared/types/simulation'
 
 function apiErrorMessage(error: unknown): string {
@@ -40,10 +34,7 @@ function apiErrorMessage(error: unknown): string {
 
 function bestSimulation(group: GroupSimulation): Simulation | undefined {
   const sims = group.simulations ?? []
-  return (
-    sims.find((s) => s.status === 'draft') ??
-    sims[0]
-  )
+  return sims[0]
 }
 
 export function SimulationListPage() {
@@ -57,9 +48,16 @@ export function SimulationListPage() {
 
   const create = useMutation({
     mutationFn: async (
-      payload: Pick<GroupSimulation, 'group_simulation_name' | 'group_simulation_desc'> & { simulation_name: string; channel_name: string; duration: number },
+      payload: Pick<GroupSimulation, 'group_simulation_name' | 'group_simulation_desc'> & {
+        simulation_name: string
+        channel_name: string
+        duration: number
+      },
     ) => {
-      const group = await createGroupSimulation({ group_simulation_name: payload.group_simulation_name, group_simulation_desc: payload.group_simulation_desc })
+      const group = await createGroupSimulation({
+        group_simulation_name: payload.group_simulation_name,
+        group_simulation_desc: payload.group_simulation_desc,
+      })
       const simulation = await createSimulation(group.group_simulation_id, {
         simulation_name: payload.simulation_name,
         simulation_desc: null,
@@ -104,7 +102,12 @@ export function SimulationListPage() {
 
   const bootstrapSimulation = useMutation({
     mutationFn: (groupSimulationId: string) =>
-      createSimulation(groupSimulationId, { simulation_name: 'Simulation 1', simulation_desc: null, channel_name: 'chat', duration: 60 }),
+      createSimulation(groupSimulationId, {
+        simulation_name: 'Simulation 1',
+        simulation_desc: null,
+        channel_name: 'chat',
+        duration: 60,
+      }),
     onSuccess: (simulation) => {
       queryClient.invalidateQueries({ queryKey: ['group-simulations'] })
       navigate(`/studio/${simulation.simulation_id}`)
@@ -134,9 +137,18 @@ export function SimulationListPage() {
     const channelName = String(form.get('channel_name') || 'chat')
     const duration = Number(form.get('duration') || 60)
     if (formGroup && formGroup !== 'new') {
-      update.mutate({ id: formGroup.group_simulation_id, payload: { group_simulation_name: groupName, group_simulation_desc: groupDesc } })
+      update.mutate({
+        id: formGroup.group_simulation_id,
+        payload: { group_simulation_name: groupName, group_simulation_desc: groupDesc },
+      })
     } else {
-      create.mutate({ group_simulation_name: groupName, group_simulation_desc: groupDesc, simulation_name: simulationName, channel_name: channelName, duration })
+      create.mutate({
+        group_simulation_name: groupName,
+        group_simulation_desc: groupDesc,
+        simulation_name: simulationName,
+        channel_name: channelName,
+        duration,
+      })
     }
   }
 
@@ -184,7 +196,6 @@ export function SimulationListPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {groups.data.map((group) => {
             const sims = group.simulations ?? []
-            const draftSimulation = sims.find((s) => s.status === 'draft')
             return (
               <article
                 key={group.group_simulation_id}
@@ -199,17 +210,18 @@ export function SimulationListPage() {
                     <h2 className="truncate text-sm font-bold text-slate-900">
                       {group.group_simulation_name}
                     </h2>
-                    <StatusBadge status={sims[0]?.status ?? 'draft'} />
+                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                      <Layers className="h-3 w-3" />
+                      {sims.length} simulation{sims.length === 1 ? '' : 's'}
+                    </span>
                   </div>
                   <p className="line-clamp-2 min-h-8 text-xs leading-normal text-slate-500">
                     {group.group_simulation_desc || 'No description provided.'}
                   </p>
                   <div className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-[11px] font-medium text-slate-500">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5">
-                      <Layers className="h-3 w-3" />
-                      {sims.length} simulation{sims.length === 1 ? '' : 's'}
+                    <span className="text-xs text-slate-400">
+                      {sims[0]?.simulation_name ?? 'No versions yet'}
                     </span>
-                    {draftSimulation && <span>{draftSimulation.simulation_name} draft</span>}
                   </div>
                 </button>
                 <footer className="flex items-center justify-between border-t border-slate-100 px-4 py-2">
@@ -253,8 +265,8 @@ export function SimulationListPage() {
             <Layers className="h-5 w-5 text-purple-600" /> Choose a simulation
           </DialogTitle>
           <DialogDescription>
-            {pickerGroup?.group_simulation_name} has {pickerGroup?.simulations?.length ?? 0} simulations.
-            Pick the one you want to open in the builder.
+            {pickerGroup?.group_simulation_name} has {pickerGroup?.simulations?.length ?? 0}{' '}
+            simulations. Pick the one you want to open in the builder.
           </DialogDescription>
 
           <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
@@ -272,14 +284,11 @@ export function SimulationListPage() {
                 <span className="text-sm font-semibold text-slate-800">
                   {simulation.simulation_name}
                 </span>
-                <span className="flex shrink-0 items-center gap-1.5">
-                  {simulation.simulation_id === pickerBest?.simulation_id && (
-                    <span className="text-[10px] font-bold tracking-wider text-purple-600 uppercase">
-                      Default
-                    </span>
-                  )}
-                  <StatusBadge status={simulation.status} />
-                </span>
+                {simulation.simulation_id === pickerBest?.simulation_id && (
+                  <span className="text-[10px] font-bold tracking-wider text-purple-600 uppercase">
+                    Default
+                  </span>
+                )}
               </button>
             ))}
           </div>

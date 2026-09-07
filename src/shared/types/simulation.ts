@@ -33,7 +33,7 @@ export interface Simulation {
   simulation_desc: string | null
   channel_name: string
   duration: number
-  status: string
+  status?: string
   created_by?: string | null
   created_date?: string | null
   modified_by?: string | null

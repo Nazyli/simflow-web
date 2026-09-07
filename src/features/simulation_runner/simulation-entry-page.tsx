@@ -18,7 +18,10 @@ export function SimulationEntryPage() {
   const [participantId, setParticipantId] = useState(() => randomParticipantId())
   const [actorId, setActorId] = useState(() => readActorId())
   const [simulationIds, setSimulationIds] = useState<string[]>([])
-  const simulations = useQuery({ queryKey: ['published-simulations'], queryFn: getPublishedSimulations })
+  const simulations = useQuery({
+    queryKey: ['published-simulations'],
+    queryFn: getPublishedSimulations,
+  })
   const start = useMutation({
     mutationFn: startExecutionBatch,
     onSuccess: (result) => {

@@ -36,15 +36,7 @@ import {
   Trash2,
   MapPin,
 } from 'lucide-react'
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type DragEvent,
-} from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import dagre from 'dagre'
@@ -121,13 +113,13 @@ function edgeToFlow(
 ): Edge {
   const style = sourcePort?.edge_style ?? { color: '#94a3b8', line_style: 'solid', animated: false }
   let label = sourcePort?.label ?? edge.source_port_id
-  
+
   // Append timeout duration for timeout ports on wait nodes
   if (edge.source_port_id === 'timeout' && sourceNode?.parameters?.timeout_seconds) {
     const seconds = sourceNode.parameters.timeout_seconds
     label = `${label} - ${seconds}s`
   }
-  
+
   return {
     id: edge.edge_id,
     type: 'simulation',
@@ -205,15 +197,14 @@ export function SimulationStudioPage() {
   const pendingEdgeKeys = useRef<Set<string>>(new Set())
   const fittedSimulationId = useRef<string | null>(null)
 
-  // Stable refs for autosave and version status — kept in sync after mutations are declared below.
-  // Using refs avoids adding them as useEffect dependencies (which would cause infinite loops).
+  // Stable ref for autosave — kept in sync after mutations are declared below.
+  // Using ref avoids adding it as useEffect dependency (which would cause infinite loops).
   const persistNodeRef = useRef<
     (args: {
       id: string
       payload: Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'>
     }) => void
   >(() => {})
-  const selectedSimulationStatusRef = useRef<string | undefined>(undefined)
 
   const updateNodeAutosaveStatus = useCallback((nodeId: string, status: NodeAutosaveStatus) => {
     nodeAutosaveStatuses.current.set(nodeId, status)
@@ -290,8 +281,8 @@ export function SimulationStudioPage() {
 
   const createDraft = useMutation({
     mutationFn: async (_groupSimulationId: string) => {
-      const sourceVersion = selectedSimulation ?? versions.data?.find((v) => v.status === 'published')
-      if (!sourceVersion) throw new Error('Select a published version before creating a draft.')
+      const sourceVersion = selectedSimulation ?? versions.data?.[0]
+      if (!sourceVersion) throw new Error('No version available to duplicate.')
       return createDraftFromSimulation(sourceVersion.simulation_id)
     },
     onSuccess: (version) => {
@@ -450,7 +441,6 @@ export function SimulationStudioPage() {
 
   const rotateNode = useCallback(
     (nodeId: string) => {
-      if (selectedSimulation?.status !== 'draft') return
       const current = apiNodes.find((item) => item.node_id === nodeId)
       if (!current) return
       const currentRotation = localRotations.current.get(nodeId) ?? current.rotation ?? 0
@@ -471,12 +461,11 @@ export function SimulationStudioPage() {
         },
       })
     },
-    [apiNodes, selectedSimulation?.status, setNodes],
+    [apiNodes, setNodes],
   )
 
   // Keep stable refs in sync with latest values
   persistNodeRef.current = enqueueNodeSave
-  selectedSimulationStatusRef.current = selectedSimulation?.status
 
   // The URL version param drives the builder; resetting selections keeps the
   // previous version's graph and inspector from leaking across version switches.
@@ -547,12 +536,10 @@ export function SimulationStudioPage() {
         localPositions.current.set(nodeId, pos)
       })
 
-      // Persist auto-layout positions only for editable drafts. Published versions
-      // remain read-only even when their stored positions are missing.
+      // Persist auto-layout positions for all versions — every version is now editable.
       // Deferred with setTimeout to avoid calling mutate during the render phase.
       const nodesToSave = apiNodes.filter((n) => nodesNeedingLayout.includes(n.node_id))
       setTimeout(() => {
-        if (selectedSimulationStatusRef.current !== 'draft') return
         nodesToSave.forEach((node) => {
           const pos = localPositions.current.get(node.node_id)
           if (!pos || !persistNodeRef.current) return
@@ -577,12 +564,7 @@ export function SimulationStudioPage() {
         const cached = localPositions.current.get(node.node_id)
         const rotation = localRotations.current.get(node.node_id) ?? node.rotation
         return {
-          ...nodeToFlow(
-            { ...node, rotation },
-            definitions.get(node.node_type),
-            selectedSimulation?.status === 'draft',
-            rotateNode,
-          ),
+          ...nodeToFlow({ ...node, rotation }, definitions.get(node.node_type), true, rotateNode),
           position: cached ?? { x: node.position_x ?? 100, y: node.position_y ?? 100 },
         }
       }),
@@ -599,16 +581,7 @@ export function SimulationStudioPage() {
         )
       }),
     )
-  }, [
-    apiNodes,
-    apiEdges,
-    definitions,
-    setNodes,
-    setEdges,
-    deleteEdge,
-    rotateNode,
-    selectedSimulation?.status,
-  ])
+  }, [apiNodes, apiEdges, definitions, setNodes, setEdges, deleteEdge, rotateNode])
 
   useEffect(() => {
     if (
@@ -649,12 +622,12 @@ export function SimulationStudioPage() {
       const target = event.target as HTMLElement | null
       if (target?.matches('input, textarea, select, [contenteditable="true"]')) return
       if (event.key === 'Delete' || event.key === 'Backspace') {
-        if (selectedNodeId && selectedSimulation?.status === 'draft') {
+        if (selectedNodeId) {
           event.preventDefault()
           removeNode.mutate(selectedNodeId)
           return
         }
-        if (selectedEdgeId && selectedSimulation?.status === 'draft') {
+        if (selectedEdgeId) {
           event.preventDefault()
           removeEdge.mutate(selectedEdgeId)
         }
@@ -672,7 +645,7 @@ export function SimulationStudioPage() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [removeEdge, removeNode, selectedEdgeId, selectedNodeId, selectedSimulation?.status])
+  }, [removeEdge, removeNode, selectedEdgeId, selectedNodeId])
 
   useEffect(() => {
     function acceptPaletteDrop(event: globalThis.DragEvent) {
@@ -680,8 +653,7 @@ export function SimulationStudioPage() {
         !(event.target instanceof Element) ||
         !event.target.closest('.graph') ||
         !flowInstance ||
-        !simulationId ||
-        selectedSimulation?.status !== 'draft'
+        !simulationId
       )
         return
       const nodeType = event.dataTransfer?.getData('application/simulation-builder-node-type')
@@ -708,12 +680,11 @@ export function SimulationStudioPage() {
       document.removeEventListener('dragover', allowPaletteDrop, true)
       document.removeEventListener('drop', acceptPaletteDrop, true)
     }
-  }, [addGraphNode, definitions, flowInstance, selectedSimulation?.status, simulationId])
+  }, [addGraphNode, definitions, flowInstance, simulationId])
 
   function connect(connection: Connection) {
     if (
       !simulationId ||
-      selectedSimulation?.status !== 'draft' ||
       !connection.source ||
       !connection.target ||
       !connection.sourceHandle ||
@@ -811,7 +782,8 @@ export function SimulationStudioPage() {
       is_valid: true,
     }
     pendingEdgeKeys.current.add(connectionKey)
-    const flowSourceNode = nodes.find((n) => n.id === connection.source)?.data as { apiNode?: ApiNode } | undefined
+    const flowSourceNode = nodes.find((n) => n.id === connection.source)?.data as
+      { apiNode?: ApiNode } | undefined
     setEdges((current) => [
       ...current,
       edgeToFlow(pendingEdge, sourcePort, deleteEdge, edgePathType, flowSourceNode?.apiNode),
@@ -849,7 +821,7 @@ export function SimulationStudioPage() {
   }
 
   function applyAutoLayout() {
-    if (!simulationId || selectedSimulation?.status !== 'draft' || apiNodes.length === 0) return
+    if (!simulationId || apiNodes.length === 0) return
     const layout = new dagre.graphlib.Graph()
     layout.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 200, marginx: 60, marginy: 60 })
     layout.setDefaultEdgeLabel(() => ({}))
@@ -900,7 +872,7 @@ export function SimulationStudioPage() {
     const definition = definitions.get(
       event.dataTransfer.getData('application/simulation-builder-node-type'),
     )
-    if (!definition || !flowInstance || !simulationId || selectedSimulation?.status !== 'draft') return
+    if (!definition || !flowInstance || !simulationId) return
     addGraphNode.mutate({
       definition,
       position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }),
@@ -999,12 +971,11 @@ export function SimulationStudioPage() {
 
           <div className="hidden items-center gap-2.5 border-l border-slate-200 pl-3 sm:flex">
             {selectedSimulation ? (
-              <StatusBadge status={selectedSimulation.status} />
+              <span className="inline-flex h-5 items-center rounded-4xl border border-slate-200 bg-slate-50 px-2 text-[0.66rem] font-semibold text-slate-600">
+                {selectedSimulation.simulation_name}
+              </span>
             ) : (
-              <span
-                className="inline-flex h-5 w-fit items-center rounded-4xl border border-transparent px-2 text-[0.66rem] font-bold capitalize"
-                style={{ color: 'var(--status-draft)', backgroundColor: 'var(--status-draft-bg)' }}
-              >
+              <span className="inline-flex h-5 w-fit items-center rounded-4xl border border-slate-200 bg-slate-50 px-2 text-[0.66rem] font-semibold text-slate-500">
                 No Simulation
               </span>
             )}
@@ -1047,34 +1018,29 @@ export function SimulationStudioPage() {
                   Select version...
                 </option>
                 {versions.data?.map((v) => (
-                  <option
-                    key={v.simulation_id}
-                    value={v.simulation_id}
-                    className="bg-white"
-                  >
-                    {v.simulation_name} — {v.status}
+                  <option key={v.simulation_id} value={v.simulation_id} className="bg-white">
+                    {v.simulation_name}
                   </option>
                 ))}
               </select>
-              {selectedSimulation?.status !== 'draft' && (
-                <button
-                  type="button"
-                  className="flex items-center gap-1 rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
-                  onClick={() => createDraft.mutate(selectedGroupSimulation.group_simulation_id)}
-                >
-                  <Plus className="h-3 w-3" /> New Draft
-                </button>
-              )}
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
+                onClick={() => createDraft.mutate(selectedGroupSimulation.group_simulation_id)}
+              >
+                <Plus className="h-3 w-3" /> Duplicate
+              </button>
             </div>
           )}
 
           <button
             className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:bg-emerald-700 disabled:opacity-50"
             type="button"
-            disabled={!selectedSimulation || selectedSimulation.status !== 'draft' || publish.isPending}
+            disabled={!selectedSimulation || publish.isPending}
             onClick={() => selectedSimulation && publish.mutate(selectedSimulation.simulation_id)}
+            title="Validate graph"
           >
-            <CheckCircle2 size={14} /> Publish
+            <CheckCircle2 size={14} /> Validate
           </button>
 
           <button
@@ -1125,21 +1091,21 @@ export function SimulationStudioPage() {
                 return (
                   <Fragment key={cat.id}>
                     {catNodes.map((definition) => {
-                      const isDraft = Boolean(simulationId && selectedSimulation?.status === 'draft')
+                      const isEditable = Boolean(simulationId)
 
                       return (
                         <Tooltip key={definition.node_type}>
                           <TooltipTrigger asChild>
                             <div
-                              draggable={isDraft}
+                              draggable={isEditable}
                               onDragStart={(event) => startPaletteDrag(event, definition.node_type)}
-                              onClick={() => isDraft && addGraphNode.mutate({ definition })}
+                              onClick={() => isEditable && addGraphNode.mutate({ definition })}
                               style={{
                                 borderColor: `${definition.color}55`,
                                 backgroundColor: `${definition.color}0d`,
                               }}
                               className={`palette-card-item cursor-grab rounded-lg border px-2 py-1.5 text-center transition-all active:cursor-grabbing ${
-                                isDraft
+                                isEditable
                                   ? 'border-slate-200 opacity-100 hover:scale-[1.02] hover:shadow-md'
                                   : 'cursor-not-allowed opacity-50'
                               }`}
@@ -1229,7 +1195,7 @@ export function SimulationStudioPage() {
                 className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Auto layout"
                 onClick={applyAutoLayout}
-                disabled={!simulationId || selectedSimulation?.status !== 'draft' || !apiNodes.length}
+                disabled={!simulationId || !apiNodes.length}
                 title="Arrange nodes automatically"
               >
                 <Layers size={15} />
@@ -1301,8 +1267,8 @@ export function SimulationStudioPage() {
               nodes={nodes.map((node) => ({
                 ...node,
                 className: invalidNodeIds.has(node.id) ? 'invalid-node' : '',
-                draggable: selectedSimulation?.status === 'draft',
-                connectable: selectedSimulation?.status === 'draft',
+                draggable: true,
+                connectable: true,
               }))}
               edges={edges.map((edge) => ({
                 ...edge,
@@ -1329,7 +1295,6 @@ export function SimulationStudioPage() {
                   x: Math.round(node.position.x),
                   y: Math.round(node.position.y),
                 })
-                if (selectedSimulation?.status !== 'draft') return
                 const current = apiNodes.find((item) => item.node_id === node.id)
                 if (current)
                   enqueueNodeSave({
@@ -1444,9 +1409,11 @@ export function SimulationStudioPage() {
                     <button
                       type="button"
                       className="flex items-center gap-1 rounded bg-purple-600 px-2.5 py-1 text-xs font-medium text-white shadow-xs hover:bg-purple-700"
-                      onClick={() => createDraft.mutate(selectedGroupSimulation.group_simulation_id)}
+                      onClick={() =>
+                        createDraft.mutate(selectedGroupSimulation.group_simulation_id)
+                      }
                     >
-                      <Plus className="h-3 w-3" /> Create Draft
+                      <Plus className="h-3 w-3" /> Duplicate
                     </button>
                   )}
                 </div>
@@ -1470,21 +1437,18 @@ export function SimulationStudioPage() {
                             <span className="text-sm font-semibold text-slate-800">
                               {version.simulation_name}
                             </span>
-                            <span className="flex shrink-0 items-center gap-1.5">
-                              <StatusBadge status={version.status} />
-                              <button
-                                type="button"
-                                aria-label="Delete version"
-                                title="Delete version"
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  setdeleteSimulationTarget(version.simulation_id)
-                                }}
-                                className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </span>
+                            <button
+                              type="button"
+                              aria-label="Delete version"
+                              title="Delete version"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                setdeleteSimulationTarget(version.simulation_id)
+                              }}
+                              className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
                           </div>
                           <p className="text-xs text-slate-500">
                             Created: {new Date().toLocaleDateString()}
@@ -1706,4 +1670,3 @@ function ExecutionHistoryPanel({
     </div>
   )
 }
-
