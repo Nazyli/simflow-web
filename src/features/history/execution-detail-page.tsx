@@ -55,6 +55,8 @@ export function ExecutionDetailPage() {
 
     const intervalId = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ['history-node-executions', id] })
+      queryClient.invalidateQueries({ queryKey: ['node-executions', id] })
+      queryClient.invalidateQueries({ queryKey: ['participant-history', 'detail', id] })
     }, pollInterval * 1000)
 
     const countdownId = setInterval(() => {
