@@ -217,7 +217,7 @@ export function ParticipantHistoryPage() {
       cell: (row) => (
         <div className="flex items-center justify-end gap-1.5">
           <button
-            onClick={() => navigate(`/history/${row.execution.execution_id}`)}
+            onClick={() => navigate(`/simulation/${row.execution.participant_id}`)}
             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50"
           >
             <ListTree size={12} className="mr-1 inline" />

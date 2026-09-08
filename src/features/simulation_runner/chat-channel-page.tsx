@@ -90,14 +90,14 @@ export function ChatChannelPage() {
   const actors: ChatActor[] = useMemo(() => {
     const fetchedIds = new Set(fetchedActors.map((a) => a.actorId))
     const extra = optimisticActors.filter((a) => !fetchedIds.has(a.actorId))
-    return [...fetchedActors, ...extra]
+    return [...extra, ...fetchedActors]
   }, [fetchedActors, optimisticActors])
 
   const handleStartNewChat = (actor: ChatActor) => {
     setOptimisticActors((prev) => {
       if (prev.some((a) => a.actorId === actor.actorId)) return prev
       if (fetchedActors.some((a) => a.actorId === actor.actorId)) return prev
-      return [...prev, actor]
+      return [actor, ...prev]
     })
     setSelectedActor(actor.actorId)
   }
