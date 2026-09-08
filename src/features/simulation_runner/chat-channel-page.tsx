@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import {
   getChatActors,
   getChatMessages,
@@ -68,7 +68,39 @@ export function ChatChannelPage() {
     queryFn: () => getChatActors(participantId, effectiveSelected!),
     enabled: Boolean(participantId.trim() && effectiveSelected),
   })
-  const actors = (actorsQuery.data ?? []).map(toChatActor)
+  const fetchedActors = (actorsQuery.data ?? []).map(toChatActor)
+
+  const [optimisticActors, setOptimisticActors] = useState<ChatActor[]>([])
+
+  // Clear optimistic when simulation changes.
+  useEffect(() => {
+    setOptimisticActors([])
+  }, [effectiveSelected])
+
+  // Prune optimistic that now exist in fetched (deduplicate after real row created).
+  useEffect(() => {
+    if (!fetchedActors.length || !optimisticActors.length) return
+    const fetchedIds = new Set(fetchedActors.map((a) => a.actorId))
+    const stillOptimistic = optimisticActors.filter((a) => !fetchedIds.has(a.actorId))
+    if (stillOptimistic.length !== optimisticActors.length) {
+      setOptimisticActors(stillOptimistic)
+    }
+  }, [fetchedActors, optimisticActors])
+
+  const actors: ChatActor[] = useMemo(() => {
+    const fetchedIds = new Set(fetchedActors.map((a) => a.actorId))
+    const extra = optimisticActors.filter((a) => !fetchedIds.has(a.actorId))
+    return [...fetchedActors, ...extra]
+  }, [fetchedActors, optimisticActors])
+
+  const handleStartNewChat = (actor: ChatActor) => {
+    setOptimisticActors((prev) => {
+      if (prev.some((a) => a.actorId === actor.actorId)) return prev
+      if (fetchedActors.some((a) => a.actorId === actor.actorId)) return prev
+      return [...prev, actor]
+    })
+    setSelectedActor(actor.actorId)
+  }
 
   const [selectedActor, setSelectedActor] = useState<string | null>(null)
   const [readPendingActors, setReadPendingActors] = useState<ReadonlySet<string>>(new Set())
@@ -105,15 +137,16 @@ export function ChatChannelPage() {
             next.add(selectedActor)
             return next
           })
-           void markChatReadRef.current(effectiveSelected, selectedActor)
-             .catch(() => undefined)
-             .finally(() =>
-               setReadPendingActors((prev) => {
-                 const next = new Set(prev)
-                 next.delete(selectedActor)
-                 return next
-               }),
-             )
+          void markChatReadRef
+            .current(effectiveSelected, selectedActor)
+            .catch(() => undefined)
+            .finally(() =>
+              setReadPendingActors((prev) => {
+                const next = new Set(prev)
+                next.delete(selectedActor)
+                return next
+              }),
+            )
         }
       } catch {
         // Ignore malformed SSE payloads.
@@ -168,6 +201,7 @@ export function ChatChannelPage() {
         }}
         selectedActor={selectedActor}
         onSelectActor={setSelectedActor}
+        onStartNewChat={handleStartNewChat}
         disabled={disabled}
         onSubmit={submit}
         onConversationOpen={(actorId) => {

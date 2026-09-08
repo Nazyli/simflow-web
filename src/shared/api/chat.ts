@@ -59,3 +59,12 @@ export const markChatMessageRead = (participantId: string, simulationId: string,
     `/runner/chat/mark-as-read?participant_id=${encodeURIComponent(participantId)}&simulation_id=${encodeURIComponent(simulationId)}&actor_id=${encodeURIComponent(actorId)}`,
     { method: 'POST' },
   )
+
+export interface MasterActorItem {
+  actor_id: string
+  actor_name: string
+  actor_email?: string | null
+  actor_position?: string | null
+}
+
+export const getMasterActors = () => apiClient<MasterActorItem[]>('/studio/master-data/actors')

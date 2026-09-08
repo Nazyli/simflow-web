@@ -17,3 +17,13 @@ export const getStudioMasterData = (endpoint: string) =>
 
 export const getStudioMasterEmail = (emailId: string) =>
   apiClient<MasterEmailDetail>(`/studio/master-data/emails/${encodeURIComponent(emailId)}`)
+
+export interface MasterActor {
+  actor_id: string
+  actor_name: string
+  actor_email?: string | null
+  actor_position?: string | null
+  [key: string]: unknown
+}
+
+export const getMasterActors = () => apiClient<MasterActor[]>('/studio/master-data/actors')

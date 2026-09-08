@@ -16,6 +16,7 @@ export interface ChatWorkspaceProps {
   onSelectSimulation: (simulationId: string) => void
   selectedActor: string | null
   onSelectActor: (actorId: string) => void
+  onStartNewChat?: (actor: ChatActor) => void
   disabled: boolean
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onConversationOpen?: (actorId: string) => void
@@ -30,14 +31,27 @@ export function ChatWorkspace({
   onSelectSimulation,
   selectedActor,
   onSelectActor,
+  onStartNewChat,
   disabled,
   onSubmit,
   onConversationOpen,
 }: ChatWorkspaceProps) {
   const actorNames = Object.fromEntries(actors.map((actor) => [actor.actorId, actor.actorName]))
   const conversations = buildConversations(messages, actorNames, participantId)
+  // Ensure optimistic actors with no messages still appear as selectable conversations
   const activeConversation = selectedActor
-    ? (conversations.find((conversation) => conversation.actor === selectedActor) ?? null)
+    ? (conversations.find((conversation) => conversation.actor === selectedActor) ??
+      (() => {
+        const optimistic = actors.find((a) => a.actorId === selectedActor)
+        if (!optimistic) return null
+        return {
+          actor: optimistic.actorId,
+          actorName: optimistic.actorName,
+          messages: [] as ChatMessage[],
+          lastMessage: null,
+          unreadCount: 0,
+        }
+      })())
     : null
 
   return (
@@ -55,6 +69,7 @@ export function ChatWorkspace({
             onSelectActor(actor)
             onConversationOpen?.(actor)
           }}
+          onStartNewChat={onStartNewChat}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {activeConversation ? (

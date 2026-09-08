@@ -219,6 +219,12 @@ export function SimulationRunProvider({
       )
       client.invalidateQueries({ queryKey: ['notification-activity', pid] })
       client.invalidateQueries({ queryKey: ['participant-executions', pid] })
+      client.invalidateQueries({ queryKey: ['chat-simulations', pid] })
+      client.invalidateQueries({ queryKey: ['chat-actors', pid, simulationId] })
+      client.invalidateQueries({ queryKey: ['chat-actors'] })
+      client.invalidateQueries({ queryKey: ['chat-simulations'] })
+      client.invalidateQueries({ queryKey: ['chat-messages', pid, simulationId, actorId] })
+      client.invalidateQueries({ queryKey: ['chat-messages'] })
     },
   })
 
