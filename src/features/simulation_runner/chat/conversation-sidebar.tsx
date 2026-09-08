@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { inputClass } from '../../../shared/form-classes'
-import { getMasterActors } from '../../../shared/api/chat'
+import { getMasterActors } from '../../../shared/api/master-data'
 import type { ChatActor } from './types'
 
 interface ConversationSidebarProps {
