@@ -175,6 +175,9 @@ export function SimulationRunProvider({
   const messageRead = useMutation({
     mutationFn: ({ simulationId, actorId }: { simulationId: string; actorId: string }) =>
       markChatMessageRead(participantId.trim(), simulationId, actorId),
+    onError: () => {
+      // Mark-as-read is idempotent; 422 when no wait is active must not surface as error.
+    },
     onSuccess: ({ count }, { simulationId, actorId }) => {
       const pid = participantId.trim()
       client.setQueryData<ChatMessage[]>(
@@ -353,7 +356,8 @@ export function SimulationRunProvider({
         runnerParticipantId,
         isChatPending: chatAction.isPending,
         sendChat,
-        markChatRead: (simulationId, actorId) => messageRead.mutateAsync({ simulationId, actorId }),
+        markChatRead: (simulationId, actorId) =>
+          messageRead.mutateAsync({ simulationId, actorId }).catch(() => ({ status: 'success', count: 0 })),
         isEmailPending: emailAction.isPending,
         sendEmail,
         markEmailThreadRead: (simulationId, rootId) =>

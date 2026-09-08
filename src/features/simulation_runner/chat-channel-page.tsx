@@ -105,13 +105,15 @@ export function ChatChannelPage() {
             next.add(selectedActor)
             return next
           })
-          void markChatReadRef.current(effectiveSelected, selectedActor).finally(() =>
-            setReadPendingActors((prev) => {
-              const next = new Set(prev)
-              next.delete(selectedActor)
-              return next
-            }),
-          )
+           void markChatReadRef.current(effectiveSelected, selectedActor)
+             .catch(() => undefined)
+             .finally(() =>
+               setReadPendingActors((prev) => {
+                 const next = new Set(prev)
+                 next.delete(selectedActor)
+                 return next
+               }),
+             )
         }
       } catch {
         // Ignore malformed SSE payloads.
@@ -173,13 +175,15 @@ export function ChatChannelPage() {
           const actor = actors.find((item) => item.actorId === actorId)
           if (actor && actor.unreadCount > 0) {
             setReadPendingActors((prev) => new Set(prev).add(actorId))
-            void markChatRead(effectiveSelected, actorId).finally(() =>
-              setReadPendingActors((prev) => {
-                const next = new Set(prev)
-                next.delete(actorId)
-                return next
-              }),
-            )
+            void markChatRead(effectiveSelected, actorId)
+              .catch(() => undefined)
+              .finally(() =>
+                setReadPendingActors((prev) => {
+                  const next = new Set(prev)
+                  next.delete(actorId)
+                  return next
+                }),
+              )
           }
         }}
       />

@@ -449,6 +449,46 @@ function CatalogParameterField({
   const picker = definition?.parameter_options?.[name]?.picker
   if (name === 'groups')
     return <ConversationGroupGroupsField value={value} required={required} onChange={onChange} />
+  if (name === 'default_group_id') {
+    const groupOptions = Array.isArray(configuration.groups)
+      ? (configuration.groups as unknown[]).filter(
+          (item): item is { id: string; label: string } =>
+            typeof item === 'object' &&
+            item !== null &&
+            typeof (item as { id?: unknown }).id === 'string' &&
+            typeof (item as { label?: unknown }).label === 'string' &&
+            (item as { id: string }).id.trim() !== '' &&
+            (item as { label: string }).label.trim() !== '',
+        )
+      : []
+    const hasOptions = groupOptions.length > 0
+    return (
+      <div className="grid gap-1.5">
+        <Label htmlFor={name} className="capitalize">
+          {label}
+        </Label>
+        <Select
+          name={name}
+          required={required}
+          value={typeof value === 'string' && value ? value : undefined}
+          onValueChange={(next) => onChange(next)}
+          disabled={!hasOptions}
+        >
+          <SelectTrigger id={name} className="w-full">
+            <SelectValue placeholder={hasOptions ? `Select ${label}` : 'Add groups first'} />
+          </SelectTrigger>
+          <SelectContent>
+            {groupOptions.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {!hasOptions && <p className="text-xs text-slate-500">Add groups first</p>}
+      </div>
+    )
+  }
   if (select)
     return (
       <div className="grid gap-1.5">
