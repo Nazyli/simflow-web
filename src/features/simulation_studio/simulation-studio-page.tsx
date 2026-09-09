@@ -13,11 +13,14 @@ import {
   ReactFlow,
   useEdgesState,
   useNodesState,
+  useReactFlow,
+  useViewport,
   type Connection,
   type Edge,
   type Node,
   type ReactFlowInstance,
 } from '@xyflow/react'
+import { Slider } from '../../components/ui/slider'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   CheckCircle2,
@@ -73,6 +76,45 @@ import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
 
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
+
+const STUDIO_MIN_ZOOM = 0.1
+const STUDIO_MAX_ZOOM = 4
+const STUDIO_ZOOM_SLIDER_MIN = 10 // 0.1 * 100
+const STUDIO_ZOOM_SLIDER_MAX = 400 // 4 * 100
+
+function ZoomSliderPanel() {
+  const { zoom } = useViewport()
+  const { zoomTo } = useReactFlow()
+  const percent = Math.round(zoom * 100)
+  const clamped = Math.min(STUDIO_ZOOM_SLIDER_MAX, Math.max(STUDIO_ZOOM_SLIDER_MIN, percent))
+
+  return (
+    <div
+      className="absolute bottom-[12px] left-[72px] z-10 flex h-9 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-slate-700 shadow-md sm:px-3"
+      aria-label="Zoom slider"
+    >
+      <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">
+        ZOOM
+      </span>
+      <Slider
+        value={[clamped]}
+        min={STUDIO_ZOOM_SLIDER_MIN}
+        max={STUDIO_ZOOM_SLIDER_MAX}
+        step={1}
+        onValueChange={(vals) => {
+          const next = (vals[0] ?? 100) / 100
+          const clampedNext = Math.min(STUDIO_MAX_ZOOM, Math.max(STUDIO_MIN_ZOOM, next))
+          zoomTo(clampedNext)
+        }}
+        className="w-20 sm:w-28 lg:w-36"
+        aria-label="Zoom level"
+      />
+      <span className="w-9 shrink-0 text-right text-xs font-medium tabular-nums text-slate-700 sm:w-10">
+        {clamped}%
+      </span>
+    </div>
+  )
+}
 
 const simulationNodeRenderers = { simulation: SimulationGraphNode }
 const simulationEdgeRenderers = { simulation: SimulationGraphEdge }
@@ -707,23 +749,38 @@ export function SimulationStudioPage() {
   }, [apiNodes, apiEdges, definitions, isLocked, setNodes, setEdges, deleteEdge, rotateNode])
 
   useEffect(() => {
-    if (
-      !flowInstance ||
-      !simulationId ||
-      apiNodes.length === 0 ||
-      fittedSimulationId.current === simulationId
-    )
-      return
-    fittedSimulationId.current = simulationId
-    const frame = requestAnimationFrame(() => flowInstance.fitView({ padding: 0.2, duration: 240 }))
-    return () => cancelAnimationFrame(frame)
-  }, [apiNodes.length, flowInstance, simulationId])
-
-  useEffect(() => {
     setSelectedExecutionId(null)
     localPositions.current.clear()
     localRotations.current.clear()
+    fittedSimulationId.current = null
   }, [simulationId])
+
+  // Center on Start node once per simulationId at zoom 1, after final dagre/localPositions resolve.
+  // Uses setCenter with zoom 1 so slider stays 100%; waits for nodes+flowInstance ready; fallback first node.
+  // Keeps defaultViewport zoom 1 and auto-fitView disabled; manual Fit View via toolbar/Controls tetap tersedia.
+  useEffect(() => {
+    if (!flowInstance || !simulationId || apiNodes.length === 0 || nodes.length === 0) return
+    if (fittedSimulationId.current === simulationId) return
+    const startNode =
+      apiNodes.find((n) => n.node_type === 'start') ??
+      apiNodes.find((n) => (n.category as string) === 'trigger') ??
+      apiNodes[0]
+    if (!startNode) return
+    const flowNode = nodes.find((n) => n.id === startNode.node_id) as
+      | (Node & { measured?: { width?: number; height?: number } })
+      | undefined
+    const cached = localPositions.current.get(startNode.node_id)
+    const pos = flowNode?.position ?? cached ?? { x: startNode.position_x ?? 0, y: startNode.position_y ?? 0 }
+    const measuredW = flowNode?.measured?.width ?? 200
+    const measuredH = flowNode?.measured?.height ?? 90
+    const halfW = measuredW > 0 ? measuredW / 2 : 75
+    const halfH = measuredH > 0 ? measuredH / 2 : 40
+    const cx = pos.x + halfW
+    const cy = pos.y + halfH
+    fittedSimulationId.current = simulationId
+    const frame = requestAnimationFrame(() => flowInstance.setCenter(cx, cy, { zoom: 1, duration: 240 }))
+    return () => cancelAnimationFrame(frame)
+  }, [apiNodes, nodes, flowInstance, simulationId])
 
   // Apply edgePathType to all edges when dropdown changes
   useEffect(() => {
@@ -1493,8 +1550,8 @@ export function SimulationStudioPage() {
               nodesDraggable={!isLocked}
               nodesConnectable={!isLocked}
               elementsSelectable={true}
-              minZoom={0.1}
-              maxZoom={4}
+              minZoom={STUDIO_MIN_ZOOM}
+              maxZoom={STUDIO_MAX_ZOOM}
               nodes={nodes.map((node) => ({
                 ...node,
                 className: invalidNodeIds.has(node.id) ? 'invalid-node' : '',
@@ -1543,10 +1600,12 @@ export function SimulationStudioPage() {
                     },
                   })
               }}
-              fitView
+              defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+              fitView={false}
             >
               <Background color="#cbd5e1" gap={20} size={1} />
               <Controls className="border-slate-200 bg-white fill-current text-slate-700 shadow-md" />
+              <ZoomSliderPanel />
               <MiniMap
                 className="border-slate-200 bg-white shadow-md"
                 maskColor="rgba(241, 245, 249, 0.7)"
