@@ -2,6 +2,7 @@ import { Mail, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { inputClass } from '../../../shared/form-classes'
 import type { EmailInboxThread } from './types'
+import { isHtmlContent, stripHtmlToText } from './sanitize'
 import { formatEmailDate } from './utils'
 
 const AVATAR_COLORS = [
@@ -91,7 +92,11 @@ export function ConversationSidebar({
                 </span>
                 <span className="flex items-center justify-between gap-2">
                   <span className="truncate text-xs text-[#5f6368]">
-                    {thread.latestContent || 'No preview'}
+                    {thread.latestContent
+                      ? isHtmlContent(thread.latestContent)
+                        ? (stripHtmlToText(thread.latestContent) || 'No preview')
+                        : thread.latestContent
+                      : 'No preview'}
                   </span>
                   {unread && (
                     <span

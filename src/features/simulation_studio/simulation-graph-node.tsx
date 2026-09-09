@@ -88,8 +88,8 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
             style={handleOffset(inputPos, index, nodeData.inputPorts.length)}
           />
         ))}
-        <BaseNodeHeader className="mb-0 flex-col items-start justify-start gap-0.5 py-1">
-          <span className="flex w-full flex-row items-center justify-end gap-1">
+        <BaseNodeHeader className="mb-0 flex-col items-start justify-start gap-0 py-1">
+          <span className="flex w-full flex-row items-center justify-end gap-1 leading-none">
             <CircleDot
               size={11}
               aria-hidden="true"
@@ -97,13 +97,13 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
               style={{ color: nodeData.color }}
             />
             <span
-              className="text-right font-mono text-[10px] leading-tight font-medium tracking-wide uppercase"
+              className="text-right font-mono text-[10px] leading-none font-medium tracking-wide uppercase"
               style={{ color: nodeData.color }}
             >
               {nodeData.nodeType}
             </span>
           </span>
-          <span className="w-full text-left text-[13px] leading-snug font-semibold break-words whitespace-normal text-slate-800">
+          <span className="-mt-px w-full text-left text-[13px] leading-tight font-semibold break-words whitespace-normal text-slate-800">
             {nodeData.label}
           </span>
         </BaseNodeHeader>

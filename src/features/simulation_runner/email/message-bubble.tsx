@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { Check, FileText, LoaderCircle } from 'lucide-react'
 import { isOwnEmail, formatEmailDate } from './utils'
+import { isHtmlContent, sanitizeEmailHtml } from './sanitize'
 import { type EmailAttachment, type EmailMessage, formatAttachmentPageLabel } from './types'
 
 interface MessageBubbleProps {
@@ -23,6 +25,11 @@ export function MessageBubble({
   const bgColor = avatarColor(message, participantId)
 
   const senderName = message.from || message.actor || 'Unknown'
+
+  const renderedBody = useMemo(() => {
+    if (!isHtmlContent(message.content)) return null
+    return sanitizeEmailHtml(message.content)
+  }, [message.content])
 
   return (
     <article className="border-t border-slate-200 bg-white">
@@ -76,9 +83,16 @@ export function MessageBubble({
 
       {/* Body */}
       <div className="px-5 py-4">
-        <p className="text-[13px] leading-[1.7] whitespace-pre-wrap text-slate-700">
-          {message.content}
-        </p>
+        {renderedBody ? (
+          <div
+            className="text-[13px] leading-[1.7] break-words text-slate-700 [&_a]:text-indigo-600 [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-slate-200 [&_blockquote]:pl-3 [&_blockquote]:text-slate-600 [&_h1]:text-base [&_h1]:font-semibold [&_h2]:text-[15px] [&_h2]:font-semibold [&_h3]:text-sm [&_h3]:font-semibold [&_li]:ml-4 [&_li]:list-disc [&_ol_li]:list-decimal [&_p]:mb-3 [&_p:last-child]:mb-0 [&_table]:w-full [&_table]:text-xs [&_td]:border [&_td]:border-slate-200 [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-2 [&_th]:py-1"
+            dangerouslySetInnerHTML={{ __html: renderedBody }}
+          />
+        ) : (
+          <p className="text-[13px] leading-[1.7] whitespace-pre-wrap text-slate-700">
+            {message.content}
+          </p>
+        )}
       </div>
       {message.attachments.length ? (
         <div className="border-t border-slate-100 px-5 py-3">

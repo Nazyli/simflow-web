@@ -1,4 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { SafeHtml } from '@/shared/safe-html'
+import { isHtmlContent } from '@/shared/html'
 import { sortAttachmentPreviewPages, type EmailAttachment } from './types'
 
 interface AttachmentPreviewDialogProps {
@@ -26,9 +28,15 @@ export function AttachmentPreviewDialog({
           {pages.map((page) => (
             <article
               key={page.participant_attachment_email_id}
-              className="mx-auto mb-6 min-h-[720px] max-w-[680px] bg-white p-6 text-sm leading-7 whitespace-pre-wrap text-slate-700 shadow-sm sm:p-10"
+              className="mx-auto mb-6 min-h-[720px] max-w-[680px] bg-white p-6 text-sm leading-7 text-slate-700 shadow-sm sm:p-10"
             >
-              {page.content}
+              {!page.content ? (
+                <p className="text-slate-400">No content</p>
+              ) : isHtmlContent(page.content) ? (
+                <SafeHtml html={page.content} />
+              ) : (
+                <div className="whitespace-pre-wrap">{page.content}</div>
+              )}
             </article>
           ))}
         </div>

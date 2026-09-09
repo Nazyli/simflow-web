@@ -1,5 +1,6 @@
 import { FileText, ExternalLink, BookOpen, Eye, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { isHtmlContent, stripHtmlToText } from '../../../shared/html'
 import { inputClass } from '../../../shared/form-classes'
 import { DOCUMENT_STATUS_META, DOCUMENT_TYPE_META, type SimulationDocument } from './types'
 import { formatDocumentDate } from './types'
@@ -220,9 +221,16 @@ function DocumentDetail({
               </button>
             </div>
             <div className="max-h-[420px] overflow-y-auto p-4">
-              <pre className="font-sans text-[13px] leading-7 whitespace-pre-wrap text-slate-600">
-                {doc.content.length > 1200 ? `${doc.content.slice(0, 1200)}\n\n…` : doc.content}
-              </pre>
+              {(() => {
+                const excerpt = isHtmlContent(doc.content)
+                  ? stripHtmlToText(doc.content)
+                  : doc.content
+                return (
+                  <pre className="font-sans text-[13px] leading-7 whitespace-pre-wrap text-slate-600">
+                    {excerpt.length > 1200 ? `${excerpt.slice(0, 1200)}\n\n…` : excerpt}
+                  </pre>
+                )
+              })()}
             </div>
           </div>
         </div>

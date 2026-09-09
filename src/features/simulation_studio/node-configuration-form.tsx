@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Copy, GitBranch, Plus, Save, Sliders, Trash2, X } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
@@ -65,11 +65,87 @@ export function NodeConfigurationForm({
   })
   const [error, setError] = useState<string | null>(null)
 
+  const onSaveRef = useRef(onSave)
+  onSaveRef.current = onSave
+  const latestRef = useRef({
+    name,
+    configuration,
+    readonly,
+    nodeType: node.node_type,
+    definition,
+    graphNodes,
+  })
+  latestRef.current = {
+    name,
+    configuration,
+    readonly,
+    nodeType: node.node_type,
+    definition,
+    graphNodes,
+  }
+  const savedSnapshot = useRef<{ name: string; configuration: string } | null>(null)
+  if (savedSnapshot.current === null) {
+    savedSnapshot.current = {
+      name: node.node_name,
+      configuration: stableStringify({ ...definition?.parameters, ...node.configuration }),
+    }
+  }
+
   useEffect(() => {
+    // Adopt external updates (drag/rotate autosaves, server refresh) only while
+    // there are no unsaved local edits, so in-progress typing is never clobbered.
+    const snapshot = savedSnapshot.current
+    if (!snapshot) return
+    if (name !== snapshot.name || stableStringify(configuration) !== snapshot.configuration) return
+    const nextConfiguration = { ...definition?.parameters, ...node.configuration }
+    const nextConfigurationKey = stableStringify(nextConfiguration)
+    if (node.node_name === name && nextConfigurationKey === snapshot.configuration) return
     setName(node.node_name)
-    setConfiguration({ ...definition?.parameters, ...node.configuration })
+    setConfiguration(nextConfiguration)
     setError(null)
-  }, [node, definition])
+    savedSnapshot.current = { name: node.node_name, configuration: nextConfigurationKey }
+  }, [node, definition, name, configuration])
+
+  useEffect(() => {
+    // Debounced autosave: persist shortly after the user stops typing.
+    if (readonly) return
+    const snapshot = savedSnapshot.current
+    if (!snapshot) return
+    if (name === snapshot.name && stableStringify(configuration) === snapshot.configuration) return
+    if (validateNodeForm(node.node_type, name, configuration, definition, graphNodes) !== null)
+      return
+    const timer = setTimeout(() => {
+      savedSnapshot.current = { name, configuration: stableStringify(configuration) }
+      setError(null)
+      onSaveRef.current(name, configuration)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [readonly, node.node_type, name, configuration, definition, graphNodes])
+
+  useEffect(() => {
+    // Flush pending edits when the form unmounts (e.g. selecting another node).
+    return () => {
+      const latest = latestRef.current
+      const snapshot = savedSnapshot.current
+      if (!snapshot || latest.readonly) return
+      if (
+        latest.name === snapshot.name &&
+        stableStringify(latest.configuration) === snapshot.configuration
+      )
+        return
+      if (
+        validateNodeForm(
+          latest.nodeType,
+          latest.name,
+          latest.configuration,
+          latest.definition,
+          latest.graphNodes,
+        ) !== null
+      )
+        return
+      onSaveRef.current(latest.name, latest.configuration)
+    }
+  }, [])
 
   function change(key: string, value: unknown) {
     setConfiguration((current) => ({ ...current, [key]: value }))
@@ -77,23 +153,19 @@ export function NodeConfigurationForm({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const required = Object.entries(definition?.validation_rules ?? {})
-      .filter(([, rule]) => isRequired(rule as Record<string, unknown>, configuration))
-      .map(([key]) => key)
-    const missing = required.filter((key) => isMissing(configuration[key]))
-    if (missing.length) {
-      setError(`Required parameter: ${missing.join(', ')}`)
-      return
-    }
-    const attachmentOpenError = validateAttachmentOpenConfiguration(
+    const validationError = validateNodeForm(
       node.node_type,
+      name,
       configuration,
+      definition,
       graphNodes,
     )
-    if (attachmentOpenError) {
-      setError(attachmentOpenError)
+    if (validationError) {
+      setError(validationError)
       return
     }
+    setError(null)
+    savedSnapshot.current = { name, configuration: stableStringify(configuration) }
     onSave(name, configuration)
   }
 
@@ -101,7 +173,8 @@ export function NodeConfigurationForm({
     <form className="flex flex-col gap-4" onSubmit={submit}>
       {readonly && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-normal text-amber-800">
-          Read-only — this simulation has been used and cannot be edited. Duplicate it to make changes.
+          Read-only — this simulation has been used and cannot be edited. Duplicate it to make
+          changes.
         </div>
       )}
       <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
@@ -180,11 +253,28 @@ export function NodeConfigurationForm({
         <Button type="submit" className="w-full" disabled={readonly}>
           <Save className="h-4 w-4" /> Save Node
         </Button>
+        {!readonly && (
+          <p className="text-center text-[11px] text-slate-400">
+            Changes save automatically when you stop typing.
+          </p>
+        )}
         <div className="flex gap-2">
-          <Button type="button" variant="outline" className="flex-1" onClick={onDuplicate} disabled={readonly}>
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={onDuplicate}
+            disabled={readonly}
+          >
             <Copy className="h-3.5 w-3.5" /> Duplicate
           </Button>
-          <Button type="button" variant="destructive" className="flex-1" onClick={onDelete} disabled={readonly}>
+          <Button
+            type="button"
+            variant="destructive"
+            className="flex-1"
+            onClick={onDelete}
+            disabled={readonly}
+          >
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </Button>
         </div>
@@ -200,6 +290,33 @@ function isMissing(value: unknown): boolean {
     value === undefined ||
     (Array.isArray(value) && value.length === 0)
   )
+}
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(',')}]`
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableStringify(entryValue)}`)
+    return `{${entries.join(',')}}`
+  }
+  return JSON.stringify(value) ?? String(value)
+}
+
+function validateNodeForm(
+  nodeType: string,
+  name: string,
+  configuration: Configuration,
+  definition: NodeDefinition | undefined,
+  graphNodes: GraphNode[],
+): string | null {
+  if (!name.trim()) return 'Node name is required.'
+  const required = Object.entries(definition?.validation_rules ?? {})
+    .filter(([, rule]) => isRequired(rule as Record<string, unknown>, configuration))
+    .map(([key]) => key)
+  const missing = required.filter((key) => isMissing(configuration[key]))
+  if (missing.length) return `Required parameter: ${missing.join(', ')}`
+  return validateAttachmentOpenConfiguration(nodeType, configuration, graphNodes)
 }
 
 function stringArray(value: unknown): string[] {
@@ -818,7 +935,8 @@ export function EdgeConfigurationForm({
     >
       {readonly && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-normal text-amber-800">
-          Read-only — this simulation has been used and cannot be edited. Duplicate it to make changes.
+          Read-only — this simulation has been used and cannot be edited. Duplicate it to make
+          changes.
         </div>
       )}
       <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
@@ -831,7 +949,13 @@ export function EdgeConfigurationForm({
         <Button type="submit" className="w-full" disabled={readonly}>
           <Save className="h-4 w-4" /> Save Edge
         </Button>
-        <Button type="button" variant="destructive" className="w-full" onClick={onDelete} disabled={readonly}>
+        <Button
+          type="button"
+          variant="destructive"
+          className="w-full"
+          onClick={onDelete}
+          disabled={readonly}
+        >
           <Trash2 className="h-4 w-4" /> Delete Edge
         </Button>
       </div>

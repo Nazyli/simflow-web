@@ -1,4 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { SafeHtml } from '@/shared/safe-html'
+import { isHtmlContent } from '@/shared/html'
 import { DOCUMENT_STATUS_META, DOCUMENT_TYPE_META, type SimulationDocument } from './types'
 
 interface DocumentPreviewDialogProps {
@@ -50,8 +52,12 @@ export function DocumentPreviewDialog({
           <div className="mx-auto flex max-w-[680px] flex-col gap-5">
             {doc.pages.map((page, index) => (
               <section key={index}>
-                <article className="min-h-[720px] bg-white p-6 text-sm leading-7 whitespace-pre-wrap text-slate-700 shadow-sm sm:p-10">
-                  {page}
+                <article className="min-h-[720px] bg-white p-6 text-sm leading-7 text-slate-700 shadow-sm sm:p-10">
+                  {isHtmlContent(page) ? (
+                    <SafeHtml html={page} />
+                  ) : (
+                    <div className="whitespace-pre-wrap">{page}</div>
+                  )}
                 </article>
                 {doc.pages.length > 1 ? (
                   <p className="mt-2 text-center text-[11px] text-slate-400">

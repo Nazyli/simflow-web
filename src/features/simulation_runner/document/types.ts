@@ -1,4 +1,5 @@
 import type { RuntimeSimulationDocument } from '../../../shared/api/documents'
+import { isHtmlContent, stripHtmlToText } from '../../../shared/html'
 
 /**
  * Document channel local model.
@@ -51,6 +52,7 @@ export function mapRuntimeDocument(record: RuntimeSimulationDocument): Simulatio
     .map((page) => page.content ?? '')
     .filter((text) => text.length > 0)
   const content = pageTexts.join('\n\n')
+  const summarySource = isHtmlContent(content) ? stripHtmlToText(content) : content
   return {
     id: record.participant_doc_id,
     title: record.document_name ?? 'Untitled document',
@@ -63,7 +65,9 @@ export function mapRuntimeDocument(record: RuntimeSimulationDocument): Simulatio
     openCount: record.counter,
     openedAt: record.opened_at,
     summary:
-      content.length > SUMMARY_MAX_LENGTH ? `${content.slice(0, SUMMARY_MAX_LENGTH)}…` : content,
+      summarySource.length > SUMMARY_MAX_LENGTH
+        ? `${summarySource.slice(0, SUMMARY_MAX_LENGTH)}…`
+        : summarySource,
     content,
     pages: pageTexts.length > 0 ? pageTexts : [''],
   }
