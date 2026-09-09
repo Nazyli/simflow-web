@@ -30,8 +30,6 @@ import {
   Play,
   Plus,
   Save,
-  Undo2,
-  Redo2,
   ChevronRight,
   Sliders,
   History,
@@ -87,6 +85,40 @@ function combinedAutosaveStatus(statuses: Iterable<NodeAutosaveStatus>): NodeAut
   return 'saved'
 }
 
+function deriveNodeSummary(parameters: Record<string, unknown>): string | null {
+  if (!parameters || typeof parameters !== 'object') return null
+  for (const [, value] of Object.entries(parameters)) {
+    if (value == null) continue
+    if (typeof value === 'string') {
+      const t = value.trim()
+      if (t) return t.length > 48 ? `${t.slice(0, 48)}…` : t
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+    if (Array.isArray(value) && value.length > 0) {
+      const parts = value
+        .map((item) => {
+          if (typeof item === 'string') return item.trim()
+          if (typeof item === 'number' && Number.isFinite(item)) return String(item)
+          if (item && typeof item === 'object') {
+            const record = item as Record<string, unknown>
+            for (const key of ['label', 'name', 'id']) {
+              const field = record[key]
+              if (typeof field === 'string' && field.trim()) return field.trim()
+            }
+          }
+          return ''
+        })
+        .filter(Boolean)
+      if (parts.length > 0) {
+        const joined = parts.join(', ')
+        return joined.length > 48 ? `${joined.slice(0, 48)}…` : joined
+      }
+      return `${value.length} item${value.length > 1 ? 's' : ''}`
+    }
+  }
+  return null
+}
+
 function nodeToFlow(
   node: ApiNode,
   definition: NodeDefinition | undefined,
@@ -104,6 +136,8 @@ function nodeToFlow(
       inputPorts: node.input_ports,
       outputPorts: node.output_ports,
       rotation: node.rotation ?? 0,
+      summary: deriveNodeSummary(node.parameters),
+      category: node.category ?? definition?.category ?? null,
       editable,
       onRotate,
     },
@@ -260,7 +294,8 @@ export function SimulationStudioPage() {
   )
   const isLocked = Boolean(versionDetail.data?.is_locked)
   const executionCount = versionDetail.data?.execution_count ?? 0
-  const lockedMessage = 'Simulation has been used and cannot be edited. Duplicate it to make changes.'
+  const lockedMessage =
+    'Simulation has been used and cannot be edited. Duplicate it to make changes.'
   const graph = useQuery({
     queryKey: ['graph', simulationId],
     queryFn: () => getGraph(simulationId!),
@@ -459,7 +494,11 @@ export function SimulationStudioPage() {
     executions.data?.find((execution) => execution.execution_id === selectedExecutionId) ?? null
 
   const openDuplicateDialog = useCallback(
-    (sourceOverride?: { simulation_id: string; simulation_name: string; simulation_desc: string | null }) => {
+    (sourceOverride?: {
+      simulation_id: string
+      simulation_name: string
+      simulation_desc: string | null
+    }) => {
       const source = sourceOverride ?? selectedSimulation ?? versions.data?.[0]
       if (!source) {
         toast.error('No version available to duplicate.')
@@ -508,7 +547,9 @@ export function SimulationStudioPage() {
   const handleNodesChange = useCallback(
     (changes: Parameters<typeof onNodesChange>[0]) => {
       if (isLocked) {
-        const hasMutation = changes.some((c) => c.type === 'position' || c.type === 'remove' || c.type === 'add')
+        const hasMutation = changes.some(
+          (c) => c.type === 'position' || c.type === 'remove' || c.type === 'add',
+        )
         if (hasMutation) {
           // silently block drag/position mutations to avoid toast spam during drag
           const onlySelect = changes.filter((c) => c.type === 'select')
@@ -641,7 +682,12 @@ export function SimulationStudioPage() {
         const cached = localPositions.current.get(node.node_id)
         const rotation = localRotations.current.get(node.node_id) ?? node.rotation
         return {
-          ...nodeToFlow({ ...node, rotation }, definitions.get(node.node_type), !isLocked, rotateNode),
+          ...nodeToFlow(
+            { ...node, rotation },
+            definitions.get(node.node_type),
+            !isLocked,
+            rotateNode,
+          ),
           position: cached ?? { x: node.position_x ?? 100, y: node.position_y ?? 100 },
         }
       }),
@@ -1115,7 +1161,9 @@ export function SimulationStudioPage() {
                     <Lock className="h-3 w-3" /> Locked • Used {executionCount} times
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>Simulation has been used and cannot be edited. Duplicate it to make changes.</TooltipContent>
+                <TooltipContent>
+                  Simulation has been used and cannot be edited. Duplicate it to make changes.
+                </TooltipContent>
               </Tooltip>
             )}
             {nodeAutosaveStatus === 'error' ? (
@@ -1288,7 +1336,8 @@ export function SimulationStudioPage() {
                     <Lock className="h-4 w-4 text-amber-600" /> Locked — read-only
                   </span>
                   <span className="leading-normal">
-                    This simulation has been used {executionCount} time{executionCount === 1 ? '' : 's'} and cannot be edited.
+                    This simulation has been used {executionCount} time
+                    {executionCount === 1 ? '' : 's'} and cannot be edited.
                   </span>
                   <button
                     type="button"
@@ -1313,27 +1362,6 @@ export function SimulationStudioPage() {
         <section className="studio-canvas-area relative flex flex-1 flex-col bg-slate-100/70">
           {/* Floating Canvas Glassmorphism Toolbar */}
           <div className="floating-canvas-toolbar absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/90 p-1.5 shadow-md backdrop-blur-md">
-            <div className="flex items-center gap-1 border-r border-slate-200 pr-1.5">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Undo"
-                disabled
-                title="Undo (Ctrl+Z)"
-              >
-                <Undo2 size={15} />
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label="Redo"
-                disabled
-                title="Redo (Ctrl+Y)"
-              >
-                <Redo2 size={15} />
-              </button>
-            </div>
-
             <div className="flex items-center gap-1 border-r border-slate-200 px-1">
               <button
                 type="button"
@@ -1428,7 +1456,11 @@ export function SimulationStudioPage() {
                   )}
                 </h3>
                 <button
-                  className={validationErrors.length > 0 ? 'text-red-500 hover:text-red-800' : 'text-emerald-500 hover:text-emerald-800'}
+                  className={
+                    validationErrors.length > 0
+                      ? 'text-red-500 hover:text-red-800'
+                      : 'text-emerald-500 hover:text-emerald-800'
+                  }
                   onClick={() => setValidationRequested(false)}
                 >
                   <X className="h-4 w-4" />
@@ -1441,7 +1473,9 @@ export function SimulationStudioPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs text-emerald-700">No validation errors found. The graph is ready to run.</p>
+                <p className="text-xs text-emerald-700">
+                  No validation errors found. The graph is ready to run.
+                </p>
               )}
             </div>
           )}
@@ -1459,6 +1493,8 @@ export function SimulationStudioPage() {
               nodesDraggable={!isLocked}
               nodesConnectable={!isLocked}
               elementsSelectable={true}
+              minZoom={0.1}
+              maxZoom={4}
               nodes={nodes.map((node) => ({
                 ...node,
                 className: invalidNodeIds.has(node.id) ? 'invalid-node' : '',

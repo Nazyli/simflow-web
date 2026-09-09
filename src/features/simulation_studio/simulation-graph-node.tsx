@@ -2,12 +2,7 @@ import type { CSSProperties } from 'react'
 import { NodeResizer, NodeToolbar, Position, type NodeProps } from '@xyflow/react'
 import { CircleDot, RotateCw } from 'lucide-react'
 import { BaseHandle } from '@/components/base-handle'
-import {
-  BaseNode,
-  BaseNodeContent,
-  BaseNodeHeader,
-  BaseNodeHeaderTitle,
-} from '@/components/base-node'
+import { BaseNode, BaseNodeContent, BaseNodeHeader } from '@/components/base-node'
 import type { InputPort, OutputPort } from '../../shared/types/simulation'
 
 type SimulationNodeData = {
@@ -17,6 +12,8 @@ type SimulationNodeData = {
   inputPorts: InputPort[]
   outputPorts: OutputPort[]
   rotation: number
+  summary?: string | null
+  category?: string | null
   editable?: boolean
   onRotate?: (nodeId: string) => void
 }
@@ -78,7 +75,7 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
         )}
       </NodeToolbar>
       <BaseNode
-        className="min-w-[190px]"
+        className="w-[220px]"
         style={{ borderColor: nodeData.color, boxShadow: `0 0 0 1px ${nodeData.color}22` }}
       >
         {nodeData.inputPorts.map((port, index) => (
@@ -91,23 +88,32 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
             style={handleOffset(inputPos, index, nodeData.inputPorts.length)}
           />
         ))}
-        <BaseNodeHeader>
-          <CircleDot
-            size={14}
-            aria-hidden="true"
-            className="shrink-0"
-            style={{ color: nodeData.color }}
-          />
-          <BaseNodeHeaderTitle
-            className="text-xs font-bold tracking-wider uppercase"
-            style={{ color: nodeData.color }}
-          >
-            {nodeData.nodeType}
-          </BaseNodeHeaderTitle>
+        <BaseNodeHeader className="mb-0 flex-col items-start justify-start gap-0.5 py-1">
+          <span className="flex w-full flex-row items-center justify-end gap-1">
+            <CircleDot
+              size={11}
+              aria-hidden="true"
+              className="shrink-0"
+              style={{ color: nodeData.color }}
+            />
+            <span
+              className="text-right font-mono text-[10px] leading-tight font-medium tracking-wide uppercase"
+              style={{ color: nodeData.color }}
+            >
+              {nodeData.nodeType}
+            </span>
+          </span>
+          <span className="w-full text-left text-[13px] leading-snug font-semibold break-words whitespace-normal text-slate-800">
+            {nodeData.label}
+          </span>
         </BaseNodeHeader>
-        <BaseNodeContent>
-          <strong className="text-sm leading-tight font-semibold">{nodeData.label}</strong>
-        </BaseNodeContent>
+        {nodeData.summary && (
+          <BaseNodeContent className="border-t border-slate-100 pt-1 text-left">
+            <p className="text-muted-foreground line-clamp-2 text-xs leading-normal break-words">
+              {nodeData.summary}
+            </p>
+          </BaseNodeContent>
+        )}
         {nodeData.outputPorts.map((port, index) => (
           <BaseHandle
             key={port.id}

@@ -41,6 +41,8 @@ export function MasterPickerDialog({
   endpoint,
   displayFields,
   filter,
+  valueField,
+  selected,
   onSelect,
 }: {
   open: boolean
@@ -51,6 +53,8 @@ export function MasterPickerDialog({
   endpoint?: string
   displayFields: string[]
   filter?: { field: string; value: string }
+  valueField: string
+  selected?: string | string[]
   onSelect: (record: Record<string, unknown>) => void
 }) {
   const [query, setQuery] = useState('')
@@ -58,10 +62,16 @@ export function MasterPickerDialog({
     queryKey: ['master', resource, endpoint ?? ''],
     queryFn: () => getStudioMasterData(endpoint ?? `/studio/master-data/${resource}`),
   })
+  const selectedSet = useMemo(() => {
+    if (selected === undefined) return null
+    const list = Array.isArray(selected) ? selected : [selected]
+    const nonEmpty = list.filter((item) => item !== '')
+    return nonEmpty.length > 0 ? new Set(nonEmpty) : null
+  }, [selected])
   const rows = useMemo(() => {
     const source = records.data ?? []
     const q = query.trim().toLowerCase()
-    return source.filter((record) => {
+    const filtered = source.filter((record) => {
       if (filter?.value) {
         const recordValue = record[filter.field]
         if (String(recordValue ?? '') !== filter.value) return false
@@ -73,7 +83,15 @@ export function MasterPickerDialog({
           .includes(q),
       )
     })
-  }, [records.data, query, filter, displayFields])
+    if (!selectedSet) return filtered
+    const pinned: typeof filtered = []
+    const rest: typeof filtered = []
+    for (const record of filtered) {
+      if (selectedSet.has(String(record[valueField] ?? ''))) pinned.push(record)
+      else rest.push(record)
+    }
+    return [...pinned, ...rest]
+  }, [records.data, query, filter, displayFields, valueField, selectedSet])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -129,15 +147,17 @@ export function MasterPickerDialog({
                   </TableCell>
                 </TableRow>
               ) : (
-                rows.map((record) => (
-                  <TableRow
-                    key={JSON.stringify(record)}
-                    className="cursor-pointer"
-                    onClick={() => {
-                      onSelect(record)
-                      onOpenChange(false)
-                    }}
-                  >
+                rows.map((record) => {
+                  const isSelected = selectedSet?.has(String(record[valueField] ?? '')) ?? false
+                  return (
+                    <TableRow
+                      key={JSON.stringify(record)}
+                      className={isSelected ? 'bg-accent cursor-pointer' : 'cursor-pointer'}
+                      onClick={() => {
+                        onSelect(record)
+                        onOpenChange(false)
+                      }}
+                    >
                     {displayFields.map((field, index) => (
                       <TableCell
                         key={field}
@@ -148,8 +168,9 @@ export function MasterPickerDialog({
                         <span className="line-clamp-2">{displayValue(record, field)}</span>
                       </TableCell>
                     ))}
-                  </TableRow>
-                ))
+                    </TableRow>
+                  )
+                })
               )}
             </TableBody>
           </Table>

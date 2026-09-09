@@ -99,6 +99,8 @@ export function MasterPickerField({
         endpoint={picker.endpoint}
         displayFields={picker.display_fields}
         filter={filter}
+        valueField={picker.value_field}
+        selected={isAppendOne ? values : String(value ?? '')}
         onSelect={select}
       />
     </div>
