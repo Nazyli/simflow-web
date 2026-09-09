@@ -227,7 +227,15 @@ export function TimerManagementPage() {
     },
     onError: () => toast.error('Unable to run timer now.'),
   })
-  const rows = (timers.data ?? []).map((timer) => ({ ...timer, id: timer.participant_timer_id }))
+  const rows = useMemo(
+    () =>
+      [...(timers.data ?? [])]
+        .map((timer) => ({ ...timer, id: timer.participant_timer_id }))
+        .sort((a, b) =>
+          String(b.created_date).localeCompare(String(a.created_date), undefined, { numeric: true }),
+        ),
+    [timers.data],
+  )
   const counts = useMemo(
     () => [
       ...TIMER_STATUSES.map((status) => ({
@@ -265,6 +273,16 @@ export function TimerManagementPage() {
         </time>
       ),
       sortValue: (timer) => timer.due_at,
+    },
+    {
+      id: 'created',
+      header: 'Created at',
+      cell: (timer) => (
+        <time className="text-xs text-slate-700 tabular-nums" dateTime={timer.created_date}>
+          {formatTime(timer.created_date)}
+        </time>
+      ),
+      sortValue: (timer) => timer.created_date,
     },
     {
       id: 'timeout',
