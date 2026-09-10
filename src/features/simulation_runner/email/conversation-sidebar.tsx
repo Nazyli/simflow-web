@@ -94,7 +94,7 @@ export function ConversationSidebar({
                   <span className="truncate text-xs text-[#5f6368]">
                     {thread.latestContent
                       ? isHtmlContent(thread.latestContent)
-                        ? (stripHtmlToText(thread.latestContent) || 'No preview')
+                        ? stripHtmlToText(thread.latestContent) || 'No preview'
                         : thread.latestContent
                       : 'No preview'}
                   </span>

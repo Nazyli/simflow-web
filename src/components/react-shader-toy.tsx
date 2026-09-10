@@ -359,7 +359,7 @@ type TextureParams = {
   flipY?: number
 }
 
-export interface ReactShaderToyProps {
+interface ReactShaderToyProps {
   /** Fragment shader GLSL code. */
   fs: string
 

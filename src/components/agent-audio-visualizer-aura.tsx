@@ -335,7 +335,7 @@ function AuraShader({
 
 AuraShader.displayName = 'AuraShader'
 
-export const AgentAudioVisualizerAuraVariants = cva(['aspect-square'], {
+const AgentAudioVisualizerAuraVariants = cva(['aspect-square'], {
   variants: {
     size: {
       icon: 'h-[24px] gap-[2px]',

@@ -26,7 +26,7 @@ export interface SimulationDocument {
 }
 
 /** Visual metadata derived from document type. */
-export interface DocumentTypeMeta {
+interface DocumentTypeMeta {
   label: string
   color: string
   bg: string

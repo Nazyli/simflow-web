@@ -239,7 +239,7 @@ function WaveShader({
 
 WaveShader.displayName = 'WaveShader'
 
-export const AgentAudioVisualizerWaveVariants = cva(['aspect-square'], {
+const AgentAudioVisualizerWaveVariants = cva(['aspect-square'], {
   variants: {
     size: {
       icon: 'h-[24px]',

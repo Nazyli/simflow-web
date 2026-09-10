@@ -2,12 +2,12 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
-  isPickerAppendOne,
   pickerAddButtonLabel,
   resolveParameterMultiline,
 } from '../src/features/simulation_studio/parameter-field-logic.ts'
 import {
   applyPickerSelection,
+  isPickerAppendOne,
   removePickerValue,
 } from '../src/features/simulation_studio/pickers/picker-logic.ts'
 

@@ -49,8 +49,6 @@ export const duplicateSimulation = (
     body: JSON.stringify(payload ?? {}),
   })
 
-export const createDraftFromSimulation = (simulationId: string) =>
-  duplicateSimulation(simulationId)
 export const getSimulations = (groupSimulationId: string) =>
   apiClient<Simulation[]>(
     `/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`,
@@ -63,10 +61,10 @@ export const getPublishedSimulations = () =>
 export const deleteSimulation = (simulationId: string) =>
   apiClient<void>(`/studio/simulations/${encodeURIComponent(simulationId)}`, { method: 'DELETE' })
 export const validateSimulation = (simulationId: string) =>
-  apiClient<{ valid: boolean; errors: string[] }>(`/studio/simulations/${encodeURIComponent(simulationId)}/validate`)
+  apiClient<{ valid: boolean; errors: string[] }>(
+    `/studio/simulations/${encodeURIComponent(simulationId)}/validate`,
+  )
 
-/** @deprecated publish/validate endpoint removed; graph is validated on node/edge mutations. */
-export const publishSimulation = (simulationId: string) => duplicateSimulation(simulationId)
 export interface ApiNode {
   node_id: string
   node_name: string

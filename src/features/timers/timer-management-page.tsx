@@ -232,7 +232,9 @@ export function TimerManagementPage() {
       [...(timers.data ?? [])]
         .map((timer) => ({ ...timer, id: timer.participant_timer_id }))
         .sort((a, b) =>
-          String(b.created_date).localeCompare(String(a.created_date), undefined, { numeric: true }),
+          String(b.created_date).localeCompare(String(a.created_date), undefined, {
+            numeric: true,
+          }),
         ),
     [timers.data],
   )

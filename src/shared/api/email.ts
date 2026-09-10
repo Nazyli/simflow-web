@@ -1,6 +1,6 @@
 import { apiClient } from './client'
 
-export interface RuntimeEmailAttachmentContent {
+interface RuntimeEmailAttachmentContent {
   participant_attachment_email_id: string
   email_attachment_id: string
   participant_doc_content_id: string | null
@@ -44,7 +44,7 @@ export interface EmailMessage {
   attachments: RuntimeEmailAttachment[]
 }
 
-export interface EmailSimulationItem {
+interface EmailSimulationItem {
   simulation_id: string
   group_simulation_name: string
   simulation_name: string | null

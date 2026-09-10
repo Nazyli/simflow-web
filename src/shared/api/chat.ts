@@ -59,5 +59,3 @@ export const markChatMessageRead = (participantId: string, simulationId: string,
     `/runner/chat/mark-as-read?participant_id=${encodeURIComponent(participantId)}&simulation_id=${encodeURIComponent(simulationId)}&actor_id=${encodeURIComponent(actorId)}`,
     { method: 'POST' },
   )
-
-

@@ -158,16 +158,16 @@ export function MasterPickerDialog({
                         onOpenChange(false)
                       }}
                     >
-                    {displayFields.map((field, index) => (
-                      <TableCell
-                        key={field}
-                        className={
-                          index === 0 ? 'max-w-xs font-medium' : 'text-muted-foreground max-w-xs'
-                        }
-                      >
-                        <span className="line-clamp-2">{displayValue(record, field)}</span>
-                      </TableCell>
-                    ))}
+                      {displayFields.map((field, index) => (
+                        <TableCell
+                          key={field}
+                          className={
+                            index === 0 ? 'max-w-xs font-medium' : 'text-muted-foreground max-w-xs'
+                          }
+                        >
+                          <span className="line-clamp-2">{displayValue(record, field)}</span>
+                        </TableCell>
+                      ))}
                     </TableRow>
                   )
                 })

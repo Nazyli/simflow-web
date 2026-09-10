@@ -109,7 +109,7 @@ function ZoomSliderPanel() {
         className="w-20 sm:w-28 lg:w-36"
         aria-label="Zoom level"
       />
-      <span className="w-9 shrink-0 text-right text-xs font-medium tabular-nums text-slate-700 sm:w-10">
+      <span className="w-9 shrink-0 text-right text-xs font-medium text-slate-700 tabular-nums sm:w-10">
         {clamped}%
       </span>
     </div>
@@ -767,10 +767,10 @@ export function SimulationStudioPage() {
       apiNodes[0]
     if (!startNode) return
     const flowNode = nodes.find((n) => n.id === startNode.node_id) as
-      | (Node & { measured?: { width?: number; height?: number } })
-      | undefined
+      (Node & { measured?: { width?: number; height?: number } }) | undefined
     const cached = localPositions.current.get(startNode.node_id)
-    const pos = flowNode?.position ?? cached ?? { x: startNode.position_x ?? 0, y: startNode.position_y ?? 0 }
+    const pos = flowNode?.position ??
+      cached ?? { x: startNode.position_x ?? 0, y: startNode.position_y ?? 0 }
     const measuredW = flowNode?.measured?.width ?? 200
     const measuredH = flowNode?.measured?.height ?? 90
     const halfW = measuredW > 0 ? measuredW / 2 : 75
@@ -778,7 +778,9 @@ export function SimulationStudioPage() {
     const cx = pos.x + halfW
     const cy = pos.y + halfH
     fittedSimulationId.current = simulationId
-    const frame = requestAnimationFrame(() => flowInstance.setCenter(cx, cy, { zoom: 1, duration: 240 }))
+    const frame = requestAnimationFrame(() =>
+      flowInstance.setCenter(cx, cy, { zoom: 1, duration: 240 }),
+    )
     return () => cancelAnimationFrame(frame)
   }, [apiNodes, nodes, flowInstance, simulationId])
 

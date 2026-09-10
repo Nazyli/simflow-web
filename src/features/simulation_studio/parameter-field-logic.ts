@@ -1,14 +1,10 @@
-import type { ParameterOption, ParameterPicker } from '../../shared/types/simulation'
+import type { ParameterOption } from '../../shared/types/simulation'
 
 export function resolveParameterMultiline(
   name: string,
   parameterOptions?: Record<string, ParameterOption>,
 ): boolean {
   return Boolean(parameterOptions?.[name]?.multiline)
-}
-
-export function isPickerAppendOne(picker: ParameterPicker): boolean {
-  return picker.value_type === 'array' && picker.selection_mode === 'append_one'
 }
 
 export function pickerAddButtonLabel(label: string): string {

@@ -12,10 +12,6 @@ export function isOwnMessage(message: ChatMessage, participantId: string): boole
   return message.from ? message.from === participantId : message.actor === participantId
 }
 
-export function messageKey(message: ChatMessage): string {
-  return message.message_id ?? [message.timestamp, message.content].filter(Boolean).join(':')
-}
-
 export interface MessageLinkSegment {
   text: string
   url: string | null

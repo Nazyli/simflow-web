@@ -363,7 +363,9 @@ export function SimulationRunProvider({
         isChatPending: chatAction.isPending,
         sendChat,
         markChatRead: (simulationId, actorId) =>
-          messageRead.mutateAsync({ simulationId, actorId }).catch(() => ({ status: 'success', count: 0 })),
+          messageRead
+            .mutateAsync({ simulationId, actorId })
+            .catch(() => ({ status: 'success', count: 0 })),
         isEmailPending: emailAction.isPending,
         sendEmail,
         markEmailThreadRead: (simulationId, rootId) =>
