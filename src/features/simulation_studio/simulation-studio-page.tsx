@@ -943,7 +943,7 @@ export function SimulationStudioPage() {
       toast.error('The target input port has reached its connection limit.')
       return
     }
-    if (targetNode?.node_type !== 'conversation_group') {
+    if (targetNode?.node_type !== 'conversation_group' && targetNode?.node_type !== 'loop') {
       const adjacency = new Map<string, string[]>()
       apiEdges.forEach((edge) =>
         adjacency.set(edge.source_node_id, [
