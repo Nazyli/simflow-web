@@ -1,4 +1,5 @@
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api/v1'
+const viteEnv = (import.meta as ImportMeta & { env?: { VITE_API_BASE_URL?: string } }).env
+const apiBaseUrl = viteEnv ? (viteEnv.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api/v1') : ''
 
 interface ApiInfo {
   code: number

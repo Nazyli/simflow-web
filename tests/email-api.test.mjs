@@ -134,5 +134,5 @@ test('loads the selected source email detail for an attachment picker', async ()
   await getStudioMasterEmail('WELCOME EMAIL/1')
 
   assert.equal(request.path, '/studio/master-data/emails/WELCOME%20EMAIL%2F1')
-  assert.equal(request.init, undefined)
+  assert.deepEqual(request.init, { headers: { 'Content-Type': 'application/json' } })
 })

@@ -4,7 +4,7 @@ import test from 'node:test'
 import {
   getCallConnection,
   getCallHistory,
-  requestCallJoin,
+  getCallRoomConnection,
   requestParticipantEnd,
 } from '../src/shared/api/agent-call.ts'
 
@@ -54,7 +54,7 @@ test('loads call history by session and participant', async () => {
 
   assert.equal(
     requests[0].path,
-    '/agent-call/sessions/call-session-1/history?participant_id=participant-1',
+    '/agent-call/participant-call-sessions/call-session-1/history?participant_id=participant-1',
   )
 })
 
@@ -89,7 +89,10 @@ test('posts a stable participant end request', async () => {
     '2026-08-28T10:00:00.123Z',
   )
 
-  assert.equal(requests[0].path, '/agent-call/sessions/call-session-1/participant-end')
+  assert.equal(
+    requests[0].path,
+    '/agent-call/participant-call-sessions/call-session-1/participant-end',
+  )
   assert.equal(requests[0].method, 'POST')
   assert.deepEqual(requests[0].body, {
     participant_id: 'participant-1',
@@ -98,7 +101,7 @@ test('posts a stable participant end request', async () => {
   })
 })
 
-test('posts a stable call invitation join request', async () => {
+test('resolves the room connection for the agent-ready flow', async () => {
   const requests = []
   globalThis.fetch = async (path, init) => {
     requests.push({
@@ -111,31 +114,13 @@ test('posts a stable call invitation join request', async () => {
       json: async () => ({
         status: 'success',
         info: { code: 200, message: 'ok' },
-        data: {
-          invitation_id: 'participant-1_version-1_ab12',
-          participant_id: 'participant-1',
-          execution_id: 'execution-1',
-          node_execution_id: 'node-execution-1',
-          status: 'joined',
-        },
+        data: { roomName: 'simflow_call-session-1', status: 'active' },
       }),
     }
   }
 
-  const result = await requestCallJoin(
-    'participant-1',
-    'participant-1_version-1_ab12',
-    'join-event-1',
-    '2026-08-29T10:05:00.123Z',
-  )
+  const result = await getCallRoomConnection('simflow_call-session-1')
 
-  assert.equal(requests[0].path, '/runner/call/join')
-  assert.equal(requests[0].method, 'POST')
-  assert.deepEqual(requests[0].body, {
-    participant_id: 'participant-1',
-    invitation_id: 'participant-1_version-1_ab12',
-    event_id: 'join-event-1',
-    occurred_at: '2026-08-29T10:05:00.123Z',
-  })
-  assert.equal(result.status, 'joined')
+  assert.equal(requests[0].path, '/agent-call/room-connection?room_name=simflow_call-session-1')
+  assert.equal(result.status, 'active')
 })
