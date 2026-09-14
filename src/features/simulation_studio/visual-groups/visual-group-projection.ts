@@ -32,6 +32,10 @@ export interface ProjectedWorkflowEdge extends ApiEdge {
   hidden: boolean
   sourceGroupId?: string
   targetGroupId?: string
+  visualSourceNodeId?: string
+  visualTargetNodeId?: string
+  visualSourceHandleId?: string
+  visualTargetHandleId?: string
 }
 
 export function projectWorkflowEdges(
@@ -62,6 +66,22 @@ export function projectWorkflowEdges(
       targetGroupId:
         targetGroup?.isCollapsed && !isInternalCollapsedEdge
           ? targetGroup.visualGroupId
+          : undefined,
+      visualSourceNodeId:
+        sourceGroup?.isCollapsed && !isInternalCollapsedEdge
+          ? sourceGroup.visualGroupId
+          : undefined,
+      visualSourceHandleId:
+        sourceGroup?.isCollapsed && !isInternalCollapsedEdge
+          ? 'visual-group-source'
+          : undefined,
+      visualTargetNodeId:
+        targetGroup?.isCollapsed && !isInternalCollapsedEdge
+          ? targetGroup.visualGroupId
+          : undefined,
+      visualTargetHandleId:
+        targetGroup?.isCollapsed && !isInternalCollapsedEdge
+          ? 'visual-group-target'
           : undefined,
     }
   })

@@ -212,6 +212,10 @@ function edgeToFlow(
     hidden?: boolean
     sourceRect?: Rect
     targetRect?: Rect
+    sourceNodeId?: string
+    targetNodeId?: string
+    sourceHandleId?: string
+    targetHandleId?: string
   },
 ): Edge {
   const style = sourcePort?.edgeStyle ?? { color: '#94a3b8', lineStyle: 'solid', animated: false }
@@ -227,10 +231,10 @@ function edgeToFlow(
     id: edge.edgeId,
     type: 'simulation',
     hidden: visualProjection?.hidden ?? false,
-    source: edge.sourceNodeId,
-    sourceHandle: edge.sourcePortId,
-    target: edge.targetNodeId,
-    targetHandle: edge.targetPortId,
+    source: visualProjection?.sourceNodeId ?? edge.sourceNodeId,
+    sourceHandle: visualProjection?.sourceHandleId ?? edge.sourcePortId,
+    target: visualProjection?.targetNodeId ?? edge.targetNodeId,
+    targetHandle: visualProjection?.targetHandleId ?? edge.targetPortId,
     markerEnd: { type: MarkerType.ArrowClosed, color: style.color },
     animated: style.animated,
     data: {
@@ -952,6 +956,10 @@ export function SimulationStudioPage() {
                   height: targetGroup.isCollapsed ? 32 : targetGroup.height,
                 }
               : undefined,
+            sourceNodeId: edge.visualSourceNodeId,
+            targetNodeId: edge.visualTargetNodeId,
+            sourceHandleId: edge.visualSourceHandleId,
+            targetHandleId: edge.visualTargetHandleId,
           },
         )
       }),

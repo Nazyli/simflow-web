@@ -1,4 +1,4 @@
-import { NodeResizer, NodeToolbar, Position, type NodeProps } from '@xyflow/react'
+import { Handle, NodeResizer, NodeToolbar, Position, type NodeProps } from '@xyflow/react'
 import { ChevronDown, ChevronRight, Layers3, Palette, Pencil, Trash2, Ungroup } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { VisualGroupNode } from './visual-group-types'
@@ -77,6 +77,20 @@ export function SimulationVisualGroupNode({ id, data, selected }: NodeProps<Visu
         className="visual-group-node h-full w-full overflow-visible rounded-xl border-2 bg-white/60 shadow-sm backdrop-blur-[1px]"
         style={{ borderColor: group.style.color, borderStyle }}
       >
+        <Handle
+          id="visual-group-target"
+          type="target"
+          position={Position.Left}
+          isConnectable={false}
+          className="!pointer-events-none !opacity-0"
+        />
+        <Handle
+          id="visual-group-source"
+          type="source"
+          position={Position.Right}
+          isConnectable={false}
+          className="!pointer-events-none !opacity-0"
+        />
         <div
           className="visual-group-header flex h-8 cursor-grab items-center gap-2 rounded-t-[10px] px-3 text-xs font-semibold text-slate-700"
           style={{ backgroundColor: `${group.style.color}18` }}

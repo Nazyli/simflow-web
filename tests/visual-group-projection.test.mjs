@@ -82,5 +82,15 @@ test('hides internal collapsed edges but keeps boundary-crossing edges visible',
   assert.equal(projected.find((edge) => edge.edgeId === 'edge-internal').hidden, true)
   assert.equal(projected.find((edge) => edge.edgeId === 'edge-in').hidden, false)
   assert.equal(projected.find((edge) => edge.edgeId === 'edge-in').targetGroupId, 'group-1')
+  assert.equal(projected.find((edge) => edge.edgeId === 'edge-in').visualTargetNodeId, 'group-1')
+  assert.equal(
+    projected.find((edge) => edge.edgeId === 'edge-in').visualTargetHandleId,
+    'visual-group-target',
+  )
   assert.equal(projected.find((edge) => edge.edgeId === 'edge-out').sourceGroupId, 'group-1')
+  assert.equal(projected.find((edge) => edge.edgeId === 'edge-out').visualSourceNodeId, 'group-1')
+  assert.equal(
+    projected.find((edge) => edge.edgeId === 'edge-out').visualSourceHandleId,
+    'visual-group-source',
+  )
 })
