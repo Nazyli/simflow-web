@@ -15,7 +15,11 @@ import {
 import { Textarea } from '../../components/ui/textarea'
 import { getStudioMasterEmail, type MasterEmailAttachment } from '../../shared/api/master-data'
 import type { NodeDefinition } from '../../shared/types/simulation'
-import { resolveParameterMultiline } from './parameter-field-logic'
+import {
+  isNumericParameter,
+  parseNumericParameter,
+  resolveParameterMultiline,
+} from './parameter-field-logic'
 import { MasterPickerField } from './pickers/master-picker-field'
 
 type Configuration = Record<string, unknown>
@@ -233,6 +237,9 @@ export function NodeConfigurationForm({
                 definition.validationRules[key] as Record<string, unknown>,
                 configuration,
               )}
+              validationRule={
+                definition.validationRules[key] as Record<string, unknown> | undefined
+              }
               definition={definition}
               configuration={configuration}
               onChange={(value) => change(key, value)}
@@ -546,6 +553,7 @@ function CatalogParameterField({
   name,
   value,
   defaultValue,
+  validationRule,
   required,
   definition,
   configuration,
@@ -554,6 +562,7 @@ function CatalogParameterField({
   name: string
   value: unknown
   defaultValue: unknown
+  validationRule?: Record<string, unknown>
   required: boolean
   definition?: NodeDefinition
   configuration: Configuration
@@ -656,14 +665,21 @@ function CatalogParameterField({
         </Label>
       </div>
     )
-  if (typeof defaultValue === 'number')
+  if (isNumericParameter(defaultValue, validationRule))
     return (
       <TextField
         label={label}
         value={value}
-        onChange={(next) => onChange(Number(next))}
+        onChange={(next) => onChange(parseNumericParameter(next))}
         required={required}
         type="number"
+        min={typeof validationRule?.minimum === 'number' ? validationRule.minimum : undefined}
+        max={typeof validationRule?.maximum === 'number' ? validationRule.maximum : undefined}
+        step={
+          validationRule?.type === 'integer' || typeof validationRule?.minimum === 'number'
+            ? 1
+            : undefined
+        }
       />
     )
   if (typeof defaultValue === 'object')
@@ -842,6 +858,9 @@ function TextField({
   placeholder,
   type = 'text',
   multiline = false,
+  min,
+  max,
+  step,
 }: {
   label: string
   value: unknown
@@ -850,6 +869,9 @@ function TextField({
   placeholder?: string
   type?: string
   multiline?: boolean
+  min?: number
+  max?: number
+  step?: number
 }) {
   return (
     <div className="grid gap-1.5">
@@ -864,6 +886,9 @@ function TextField({
       ) : (
         <Input
           type={type}
+          min={min}
+          max={max}
+          step={step}
           required={required}
           placeholder={placeholder}
           value={String(value ?? '')}
