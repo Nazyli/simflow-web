@@ -77,11 +77,179 @@ body {
   .studio-app-container,
   .timer-management-page,
   .history-page,
-  .simulation-runner-page
+  .simulation-runner-page,
+  .documentation-page
 ) {
   padding: 0 !important;
   margin: 0 !important;
   max-width: none !important;
+}
+
+.documentation-page {
+  min-height: calc(100vh - 7rem);
+  padding: 1.5rem;
+}
+
+@media (max-width: 620px) {
+  .documentation-page {
+    padding: 0.75rem;
+  }
+}
+
+.documentation-article {
+  width: 100%;
+  max-width: none;
+  color: var(--color-text);
+  font-size: 0.96rem;
+  line-height: 1.75;
+}
+.documentation-article > :not(.mermaid-diagram) {
+  max-width: 74ch;
+}
+.documentation-article h1,
+.documentation-article h2,
+.documentation-article h3,
+.documentation-article h4,
+.documentation-article h5,
+.documentation-article h6 {
+  color: #172033;
+  font-weight: 700;
+  line-height: 1.25;
+  scroll-margin-top: 84px;
+}
+.documentation-article h1 {
+  margin: 0 0 1.4rem;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  letter-spacing: -0.035em;
+}
+.documentation-article h2 {
+  margin: 2.35rem 0 0.75rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid #e5eaf0;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+.documentation-article h3 {
+  margin: 1.8rem 0 0.55rem;
+  font-size: 1.08rem;
+}
+.documentation-article p {
+  margin: 0 0 1rem;
+}
+.documentation-article a {
+  color: #5946c5;
+  text-decoration: underline;
+  text-decoration-color: #c4b5fd;
+  text-underline-offset: 3px;
+}
+.documentation-article a:hover {
+  color: #4338a5;
+  text-decoration-color: #8b5cf6;
+}
+.documentation-article strong {
+  color: #26324a;
+  font-weight: 700;
+}
+.documentation-article code {
+  border-radius: 0.3rem;
+  background: #f1f3f7;
+  padding: 0.12rem 0.35rem;
+  color: #4c3d9a;
+  font-size: 0.88em;
+}
+.documentation-article pre {
+  margin: 1.15rem 0 1.35rem;
+  overflow-x: auto;
+  border: 1px solid #dbe3ec;
+  border-radius: 0.7rem;
+  background: #172033;
+  padding: 1rem 1.1rem;
+  color: #e2e8f0;
+  line-height: 1.6;
+}
+.documentation-article .mermaid-diagram {
+  width: 100%;
+  margin: 1.35rem 0 1.6rem;
+  overflow-x: auto;
+  border: 1px solid #dbe3ec;
+  border-radius: 0.7rem;
+  background: #ffffff;
+  padding: 1.25rem;
+}
+.documentation-article .mermaid-diagram svg {
+  display: block;
+  width: 100%;
+  min-width: 560px;
+  height: auto;
+  margin: 0 auto;
+}
+.documentation-article .mermaid-diagram[data-mermaid-error='true'] {
+  background: #172033;
+  color: #e2e8f0;
+}
+.documentation-article pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: 0.82rem;
+}
+.documentation-article ul,
+.documentation-article ol {
+  margin: 0 0 1rem;
+  padding-left: 1.45rem;
+}
+.documentation-article li {
+  margin: 0.35rem 0;
+  padding-left: 0.25rem;
+}
+.documentation-article blockquote {
+  margin: 1.2rem 0;
+  border-left: 3px solid #c4b5fd;
+  background: #faf9ff;
+  padding: 0.75rem 1rem;
+  color: #596579;
+}
+.documentation-article blockquote p:last-child {
+  margin-bottom: 0;
+}
+.documentation-article hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid #e5eaf0;
+}
+.documentation-article table {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  max-width: 100%;
+  margin: 1.15rem 0 1.35rem;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+.documentation-article th,
+.documentation-article td {
+  border: 1px solid #dbe3ec;
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+.documentation-article th {
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 700;
+}
+.documentation-article img {
+  max-width: 100%;
+}
+@media (max-width: 620px) {
+  .documentation-article {
+    font-size: 0.92rem;
+  }
+  .documentation-article h2 {
+    margin-top: 1.9rem;
+  }
 }
 header {
   display: flex;

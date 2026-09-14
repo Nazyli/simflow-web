@@ -1,4 +1,4 @@
-import { Clock3, Layers, Play, Settings, Users } from 'lucide-react'
+import { BookOpen, Clock3, Layers, Play, Settings, Users } from 'lucide-react'
 import { type PropsWithChildren } from 'react'
 import { useLocation } from 'react-router-dom'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
@@ -9,6 +9,7 @@ const navigation = [
   { label: 'Runner', path: '/simulation', icon: Play },
   { label: 'Participant History', path: '/history', icon: Users },
   { label: 'Timers', path: '/timers', icon: Clock3 },
+  { label: 'Documentation', path: '/documentation', icon: BookOpen },
   { label: 'Settings', path: '/settings', icon: Settings },
 ]
 

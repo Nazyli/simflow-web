@@ -15,6 +15,7 @@ import { TimerManagementPage } from '../../features/timers/timer-management-page
 import { ParticipantHistoryPage } from '../../features/history/participant-history-page'
 import { ExecutionDetailPage } from '../../features/history/execution-detail-page'
 import { SettingsPage } from '../../features/settings/settings-page'
+import { DocumentationPage } from '../../features/documentation/documentation-page'
 import { AppShell } from '../layouts/app-shell'
 
 export function AppRoutes() {
@@ -36,6 +37,8 @@ export function AppRoutes() {
           <Route path="/timers" element={<TimerManagementPage />} />
           <Route path="/history" element={<ParticipantHistoryPage />} />
           <Route path="/history/:id" element={<ExecutionDetailPage />} />
+          <Route path="/documentation" element={<Navigate to="/documentation/00-index" replace />} />
+          <Route path="/documentation/:slug" element={<DocumentationPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/studio" replace />} />
         </Routes>
