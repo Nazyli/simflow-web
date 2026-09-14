@@ -70,7 +70,7 @@ import {
 import { replaceVisualGroups } from '../../shared/api/visual-groups'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
-import type { Execution, NodeDefinition, OutputPort } from '../../shared/types/simulation'
+import type { Execution, NodeDefinition, OutputPort, VisualGroup } from '../../shared/types/simulation'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { SimulationGraphEdge } from './simulation-graph-edge'
 import { SimulationGraphNode } from './simulation-graph-node'
@@ -81,6 +81,7 @@ import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
 
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
+const emptyVisualGroups: VisualGroup[] = []
 
 const STUDIO_MIN_ZOOM = 0.1
 const STUDIO_MAX_ZOOM = 4
@@ -525,7 +526,7 @@ export function SimulationStudioPage() {
 
   const apiNodes = graph.data?.nodes ?? emptyNodes
   const apiEdges = graph.data?.edges ?? emptyEdges
-  const apiVisualGroups = graph.data?.visualGroups ?? []
+  const apiVisualGroups = graph.data?.visualGroups ?? emptyVisualGroups
   const saveVisualGroups = useCallback(
     async (groups: typeof apiVisualGroups) => {
       if (!simulationId) return
