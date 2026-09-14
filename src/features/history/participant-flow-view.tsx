@@ -89,8 +89,8 @@ export function ParticipantFlowCanvas({
   const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
 
   const view = useMemo(() => {
-    const apiNodes: ApiNode[] = graph.data?.[0] ?? []
-    const apiEdges: ApiEdge[] = graph.data?.[1] ?? []
+    const apiNodes: ApiNode[] = graph.data?.nodes ?? []
+    const apiEdges: ApiEdge[] = graph.data?.edges ?? []
     const definitions = new Map(
       (nodeCatalog.data?.nodes ?? []).map((definition: NodeDefinition) => [
         definition.nodeType,

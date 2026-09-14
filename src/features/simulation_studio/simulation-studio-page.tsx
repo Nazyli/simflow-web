@@ -65,13 +65,18 @@ import {
   type ApiEdge,
   type ApiNode,
   type ApiNodePayload,
+  type SimulationGraph,
 } from '../../shared/api/simulations'
+import { replaceVisualGroups } from '../../shared/api/visual-groups'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
 import type { Execution, NodeDefinition, OutputPort } from '../../shared/types/simulation'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { SimulationGraphEdge } from './simulation-graph-edge'
 import { SimulationGraphNode } from './simulation-graph-node'
+import { SimulationVisualGroupNode } from './visual-groups/simulation-visual-group-node'
+import { useVisualGroups } from './visual-groups/use-visual-groups'
+import { parentToAbsolutePosition, shouldDetachChild, type Rect } from './visual-groups/visual-group-layout'
 import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
 
 const emptyNodes: ApiNode[] = []
@@ -116,7 +121,10 @@ function ZoomSliderPanel() {
   )
 }
 
-const simulationNodeRenderers = { simulation: SimulationGraphNode }
+const simulationNodeRenderers = {
+  simulation: SimulationGraphNode,
+  visualGroup: SimulationVisualGroupNode,
+}
 const simulationEdgeRenderers = { simulation: SimulationGraphEdge }
 
 function combinedAutosaveStatus(statuses: Iterable<NodeAutosaveStatus>): NodeAutosaveStatus {
@@ -271,6 +279,7 @@ export function SimulationStudioPage() {
   const localRotations = useRef<Map<string, number>>(new Map())
   const nodeAutosaveStatuses = useRef<Map<string, NodeAutosaveStatus>>(new Map())
   const nodeAutosaveQueue = useRef<NodeAutosaveQueue<ApiNodePayload> | null>(null)
+  const nodesRef = useRef<Node[]>([])
   const pendingEdgeKeys = useRef<Set<string>>(new Set())
   const fittedSimulationId = useRef<string | null>(null)
 
@@ -299,12 +308,12 @@ export function SimulationStudioPage() {
   const enqueueNodeSave = useCallback(
     ({ id, payload }: { id: string; payload: ApiNodePayload }) => {
       if (!simulationId) return
-      queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', simulationId], (current) => {
+      queryClient.setQueryData<SimulationGraph>(['graph', simulationId], (current) => {
         if (!current) return current
-        return [
-          current[0].map((node) => (node.nodeId === id ? { ...node, ...payload } : node)),
-          current[1],
-        ]
+        return {
+          ...current,
+          nodes: current.nodes.map((node) => (node.nodeId === id ? { ...node, ...payload } : node)),
+        }
       })
       nodeAutosaveQueue.current?.enqueue(id, payload)
     },
@@ -512,8 +521,27 @@ export function SimulationStudioPage() {
     [isLocked, lockedMessage, removeEdge],
   )
 
-  const apiNodes = graph.data?.[0] ?? emptyNodes
-  const apiEdges = graph.data?.[1] ?? emptyEdges
+  const apiNodes = graph.data?.nodes ?? emptyNodes
+  const apiEdges = graph.data?.edges ?? emptyEdges
+  const apiVisualGroups = graph.data?.visualGroups ?? []
+  const saveVisualGroups = useCallback(
+    async (groups: typeof apiVisualGroups) => {
+      if (!simulationId) return
+      const saved = await replaceVisualGroups(simulationId, groups)
+      queryClient.setQueryData<SimulationGraph>(['graph', simulationId], (current) =>
+        current ? { ...current, visualGroups: saved } : current,
+      )
+    },
+    [queryClient, simulationId],
+  )
+  const visualGroupEditor = useVisualGroups({
+    simulationId,
+    initialGroups: apiVisualGroups,
+    editable: Boolean(simulationId) && !isLocked,
+    save: saveVisualGroups,
+  })
+  const visualGroupNodes = visualGroupEditor.groupNodes
+  const projectVisualNodes = visualGroupEditor.projectNodes
   const definitions = useMemo(
     () =>
       new Map(
@@ -532,6 +560,48 @@ export function SimulationStudioPage() {
   const selectedSimulation = versions.data?.find((version) => version.simulationId === simulationId)
   const selectedExecution =
     executions.data?.find((execution) => execution.executionId === selectedExecutionId) ?? null
+  const selectedWorkflowNodeIds = useMemo(
+    () => nodes.filter((node) => node.type === 'simulation' && node.selected).map((node) => node.id),
+    [nodes],
+  )
+
+  const createGroupFromSelection = useCallback(() => {
+    if (!simulationId || isLocked) {
+      if (isLocked) toast.error(lockedMessage)
+      return
+    }
+    if (selectedWorkflowNodeIds.length < 2) {
+      toast.error('Select at least two workflow nodes to create a visual group.')
+      return
+    }
+    const groupById = new Map(
+      visualGroupEditor.groups.map((group) => [group.visualGroupId, group]),
+    )
+    const selectedNodes = nodes
+      .filter((node) => selectedWorkflowNodeIds.includes(node.id))
+      .map((node) => {
+        const group = node.parentId ? groupById.get(node.parentId) : undefined
+        return group
+          ? {
+              ...node,
+              position: parentToAbsolutePosition(node.position, {
+                x: group.positionX,
+                y: group.positionY,
+                width: group.width,
+                height: group.height,
+              }),
+            }
+          : node
+      })
+    void visualGroupEditor.createGroup(selectedNodes, selectedWorkflowNodeIds, { simulationId })
+  }, [
+    isLocked,
+    lockedMessage,
+    nodes,
+    selectedWorkflowNodeIds,
+    simulationId,
+    visualGroupEditor,
+  ])
 
   const openDuplicateDialog = useCallback(
     (sourceOverride?: {
@@ -640,11 +710,15 @@ export function SimulationStudioPage() {
     }
   }, [selectedNodeId, selectedEdgeId])
 
+  useEffect(() => {
+    nodesRef.current = nodes
+  }, [nodes])
+
   // Sync React Flow nodes when graph data loads or changes.
   // Positions are cached in localPositions ref; only new nodes get auto-layout.
   useEffect(() => {
     if (apiNodes.length === 0) {
-      setNodes([])
+      setNodes(visualGroupNodes)
       setEdges(
         apiEdges.map((edge) => {
           const sourceNode = apiNodes.find((node) => node.nodeId === edge.sourceNodeId)
@@ -717,21 +791,23 @@ export function SimulationStudioPage() {
     }
 
     // Build React Flow nodes using cached positions
-    setNodes(
-      apiNodes.map((node) => {
-        const cached = localPositions.current.get(node.nodeId)
-        const rotation = localRotations.current.get(node.nodeId) ?? node.rotation
-        return {
-          ...nodeToFlow(
-            { ...node, rotation },
-            definitions.get(node.nodeType),
-            !isLocked,
-            rotateNode,
-          ),
-          position: cached ?? { x: node.positionX ?? 100, y: node.positionY ?? 100 },
-        }
-      }),
-    )
+    const workflowNodes = apiNodes.map((node) => {
+      const cached = localPositions.current.get(node.nodeId)
+      const rotation = localRotations.current.get(node.nodeId) ?? node.rotation
+      return {
+        ...nodeToFlow(
+          { ...node, rotation },
+          definitions.get(node.nodeType),
+          !isLocked,
+          rotateNode,
+        ),
+        position: cached ?? { x: node.positionX ?? 100, y: node.positionY ?? 100 },
+      }
+    })
+    setNodes([
+      ...visualGroupNodes,
+      ...projectVisualNodes(workflowNodes),
+    ])
     setEdges(
       apiEdges.map((edge) => {
         const sourceNode = apiNodes.find((node) => node.nodeId === edge.sourceNodeId)
@@ -744,7 +820,19 @@ export function SimulationStudioPage() {
         )
       }),
     )
-  }, [apiNodes, apiEdges, definitions, isLocked, setNodes, setEdges, deleteEdge, rotateNode])
+  }, [
+    apiNodes,
+    apiEdges,
+    definitions,
+    isLocked,
+    setNodes,
+    setEdges,
+    deleteEdge,
+    rotateNode,
+    visualGroupNodes,
+    projectVisualNodes,
+    edgePathType,
+  ])
 
   useEffect(() => {
     setSelectedExecutionId(null)
@@ -986,9 +1074,12 @@ export function SimulationStudioPage() {
       targetPortId: connection.targetHandle,
     })
       .then((edge) => {
-        queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', simulationId], (current) =>
+        queryClient.setQueryData<SimulationGraph>(['graph', simulationId], (current) =>
           current
-            ? [current[0], [...current[1].filter((item) => item.edgeId !== edge.edgeId), edge]]
+            ? {
+                ...current,
+                edges: [...current.edges.filter((item) => item.edgeId !== edge.edgeId), edge],
+              }
             : current,
         )
         setEdges((current) =>
@@ -1455,6 +1546,15 @@ export function SimulationStudioPage() {
               >
                 <Layers size={15} />
               </button>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-1 rounded-lg p-1.5 px-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={createGroupFromSelection}
+                disabled={isLocked || selectedWorkflowNodeIds.length < 2}
+                title="Group selected workflow nodes"
+              >
+                <Layers size={15} /> Group
+              </button>
             </div>
 
             <div className="flex items-center gap-1 pl-1">
@@ -1570,6 +1670,11 @@ export function SimulationStudioPage() {
               onEdgesChange={handleEdgesChange}
               onConnect={connect}
               onNodeClick={(_, node) => {
+                if (node.type === 'visualGroup') {
+                  setSelectedNodeId(null)
+                  setSelectedEdgeId(null)
+                  return
+                }
                 setSelectedNodeId(node.id)
                 setSelectedEdgeId(null)
               }}
@@ -1582,10 +1687,101 @@ export function SimulationStudioPage() {
                   toast.error(lockedMessage)
                   return
                 }
+
+                if (node.type === 'visualGroup') {
+                  const group = visualGroupEditor.groups.find(
+                    (item) => item.visualGroupId === node.id,
+                  )
+                  if (!group) return
+                  const nextGroupRect: Rect = {
+                    x: Math.round(node.position.x),
+                    y: Math.round(node.position.y),
+                    width: group.width,
+                    height: group.height,
+                  }
+                  void visualGroupEditor.updateGroup(node.id, {
+                    positionX: nextGroupRect.x,
+                    positionY: nextGroupRect.y,
+                  })
+
+                  nodesRef.current
+                    .filter((child) => child.parentId === node.id)
+                    .forEach((child) => {
+                      const absolute = parentToAbsolutePosition(child.position, nextGroupRect)
+                      localPositions.current.set(child.id, {
+                        x: Math.round(absolute.x),
+                        y: Math.round(absolute.y),
+                      })
+                      const current = apiNodes.find((item) => item.nodeId === child.id)
+                      if (!current) return
+                      enqueueNodeSave({
+                        id: child.id,
+                        payload: {
+                          ...current,
+                          positionX: Math.round(absolute.x),
+                          positionY: Math.round(absolute.y),
+                        },
+                      })
+                    })
+                  return
+                }
+
+                const parentGroup = node.parentId
+                  ? visualGroupEditor.groups.find(
+                      (group) => group.visualGroupId === node.parentId,
+                    )
+                  : undefined
+                const absolutePosition = parentGroup
+                  ? parentToAbsolutePosition(node.position, {
+                      x: parentGroup.positionX,
+                      y: parentGroup.positionY,
+                      width: parentGroup.width,
+                      height: parentGroup.height,
+                    })
+                  : node.position
+                const nodeWidth =
+                  (node as Node & { measured?: { width?: number } }).measured?.width ??
+                  node.width ??
+                  220
+                const nodeHeight =
+                  (node as Node & { measured?: { height?: number } }).measured?.height ??
+                  node.height ??
+                  90
+                if (
+                  parentGroup &&
+                  shouldDetachChild(
+                    {
+                      x: absolutePosition.x,
+                      y: absolutePosition.y,
+                      width: nodeWidth,
+                      height: nodeHeight,
+                    },
+                    {
+                      x: parentGroup.positionX,
+                      y: parentGroup.positionY,
+                      width: parentGroup.width,
+                      height: parentGroup.height,
+                    },
+                  )
+                ) {
+                  void visualGroupEditor.detachMember(parentGroup.visualGroupId, node.id)
+                  setNodes((current) =>
+                    current.map((item) =>
+                      item.id === node.id
+                        ? {
+                            ...item,
+                            parentId: undefined,
+                            hidden: false,
+                            position: absolutePosition,
+                          }
+                        : item,
+                    ),
+                  )
+                }
                 // Immediately update local cache so refetch doesn't undo the drag
                 localPositions.current.set(node.id, {
-                  x: Math.round(node.position.x),
-                  y: Math.round(node.position.y),
+                  x: Math.round(absolutePosition.x),
+                  y: Math.round(absolutePosition.y),
                 })
                 const current = apiNodes.find((item) => item.nodeId === node.id)
                 if (current)
@@ -1593,8 +1789,8 @@ export function SimulationStudioPage() {
                     id: node.id,
                     payload: {
                       ...current,
-                      positionX: Math.round(node.position.x),
-                      positionY: Math.round(node.position.y),
+                      positionX: Math.round(absolutePosition.x),
+                      positionY: Math.round(absolutePosition.y),
                     },
                   })
               }}
