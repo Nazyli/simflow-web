@@ -82,6 +82,7 @@ import {
   shouldDetachChild,
   type Rect,
 } from './visual-groups/visual-group-layout'
+import { projectWorkflowEdges } from './visual-groups/visual-group-projection'
 import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
 
 const emptyNodes: ApiNode[] = []
@@ -207,6 +208,11 @@ function edgeToFlow(
   onDelete: (edgeId: string) => void,
   edgeType: EdgePathType = 'default',
   sourceNode?: ApiNode,
+  visualProjection?: {
+    hidden?: boolean
+    sourceRect?: Rect
+    targetRect?: Rect
+  },
 ): Edge {
   const style = sourcePort?.edgeStyle ?? { color: '#94a3b8', lineStyle: 'solid', animated: false }
   let label = sourcePort?.label ?? edge.sourcePortId
@@ -220,6 +226,7 @@ function edgeToFlow(
   return {
     id: edge.edgeId,
     type: 'simulation',
+    hidden: visualProjection?.hidden ?? false,
     source: edge.sourceNodeId,
     sourceHandle: edge.sourcePortId,
     target: edge.targetNodeId,
@@ -231,6 +238,8 @@ function edgeToFlow(
       style,
       edgeType,
       onDelete,
+      collapsedSourceRect: visualProjection?.sourceRect,
+      collapsedTargetRect: visualProjection?.targetRect,
     },
   }
 }
@@ -902,19 +911,48 @@ export function SimulationStudioPage() {
         onAddToGroup: addWorkflowNodeToGroup,
       },
     }))
+    const visualGroupById = new Map(
+      groupList.map((group) => [group.visualGroupId, group]),
+    )
+    const projectedWorkflowEdges = projectWorkflowEdges(apiEdges, groupList)
     setNodes([
       ...visualGroupNodes,
       ...projectedWorkflowNodes,
     ])
     setEdges(
-      apiEdges.map((edge) => {
+      projectedWorkflowEdges.map((edge) => {
         const sourceNode = apiNodes.find((node) => node.nodeId === edge.sourceNodeId)
+        const sourceGroup = edge.sourceGroupId
+          ? visualGroupById.get(edge.sourceGroupId)
+          : undefined
+        const targetGroup = edge.targetGroupId
+          ? visualGroupById.get(edge.targetGroupId)
+          : undefined
         return edgeToFlow(
           edge,
           sourceNode?.outputPorts.find((port) => port.id === edge.sourcePortId),
           deleteEdge,
           edgePathType,
           sourceNode,
+          {
+            hidden: edge.hidden,
+            sourceRect: sourceGroup
+              ? {
+                  x: sourceGroup.positionX,
+                  y: sourceGroup.positionY,
+                  width: sourceGroup.width,
+                  height: sourceGroup.isCollapsed ? 32 : sourceGroup.height,
+                }
+              : undefined,
+            targetRect: targetGroup
+              ? {
+                  x: targetGroup.positionX,
+                  y: targetGroup.positionY,
+                  width: targetGroup.width,
+                  height: targetGroup.isCollapsed ? 32 : targetGroup.height,
+                }
+              : undefined,
+          },
         )
       }),
     )

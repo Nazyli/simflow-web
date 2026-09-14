@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { projectWorkflowNodes } from '../src/features/simulation_studio/visual-groups/visual-group-projection.ts'
+import {
+  projectWorkflowEdges,
+  projectWorkflowNodes,
+} from '../src/features/simulation_studio/visual-groups/visual-group-projection.ts'
 
 test('projects grouped workflow nodes under visual group nodes without changing graph edges', () => {
   const groups = [
@@ -31,7 +34,7 @@ test('projects grouped workflow nodes under visual group nodes without changing 
   assert.deepEqual(projected[1].position, { x: 700, y: 260 })
 })
 
-test('keeps grouped workflow nodes visible when a group is collapsed', () => {
+test('hides grouped workflow nodes when a group is collapsed', () => {
   const collapsedGroup = {
     visualGroupId: 'group-1',
     simulationId: 'sim-1',
@@ -50,5 +53,34 @@ test('keeps grouped workflow nodes visible when a group is collapsed', () => {
     [collapsedGroup],
   )
 
-  assert.notEqual(projected.hidden, true)
+  assert.equal(projected.hidden, true)
+})
+
+test('hides internal collapsed edges but keeps boundary-crossing edges visible', () => {
+  const groups = [
+    {
+      visualGroupId: 'group-1',
+      simulationId: 'sim-1',
+      groupName: 'Intake',
+      memberNodeIds: ['node-a', 'node-b'],
+      positionX: 100,
+      positionY: 200,
+      width: 360,
+      height: 220,
+      style: { color: '#7c3aed', borderStyle: 'dashed' },
+      isCollapsed: true,
+    },
+  ]
+  const edges = [
+    { edgeId: 'edge-internal', sourceNodeId: 'node-a', targetNodeId: 'node-b' },
+    { edgeId: 'edge-in', sourceNodeId: 'outside', targetNodeId: 'node-a' },
+    { edgeId: 'edge-out', sourceNodeId: 'node-b', targetNodeId: 'outside' },
+  ]
+
+  const projected = projectWorkflowEdges(edges, groups)
+
+  assert.equal(projected.find((edge) => edge.edgeId === 'edge-internal').hidden, true)
+  assert.equal(projected.find((edge) => edge.edgeId === 'edge-in').hidden, false)
+  assert.equal(projected.find((edge) => edge.edgeId === 'edge-in').targetGroupId, 'group-1')
+  assert.equal(projected.find((edge) => edge.edgeId === 'edge-out').sourceGroupId, 'group-1')
 })

@@ -4,6 +4,7 @@ import test from 'node:test'
 import {
   absoluteToParentPosition,
   parentToAbsolutePosition,
+  pointOnRectBoundary,
   shouldDetachChild,
   translateGroupMembers,
 } from '../src/features/simulation_studio/visual-groups/visual-group-layout.ts'
@@ -35,12 +36,15 @@ test('translates only the members of a visual group', () => {
 test('detaches a child when its center is outside the group bounds', () => {
   const group = { x: 100, y: 200, width: 400, height: 240 }
 
-  assert.equal(
-    shouldDetachChild({ x: 20, y: 40, width: 100, height: 80 }, group),
-    true,
+  assert.equal(shouldDetachChild({ x: 20, y: 40, width: 100, height: 80 }, group), true)
+  assert.equal(shouldDetachChild({ x: 200, y: 260, width: 100, height: 80 }, group), false)
+})
+
+test('projects an external edge endpoint onto the nearest group boundary', () => {
+  const boundary = pointOnRectBoundary(
+    { x: 100, y: 200, width: 400, height: 240 },
+    { x: 20, y: 320 },
   )
-  assert.equal(
-    shouldDetachChild({ x: 200, y: 260, width: 100, height: 80 }, group),
-    false,
-  )
+
+  assert.deepEqual(boundary, { x: 100, y: 320, position: 'left' })
 })

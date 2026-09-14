@@ -1,13 +1,16 @@
 import { X } from 'lucide-react'
-import type { EdgeProps } from '@xyflow/react'
+import { Position, type EdgeProps } from '@xyflow/react'
 import { ButtonEdge, type EdgePathType } from '@/components/button-edge'
 import { Button } from '@/components/ui/button'
+import { pointOnRectBoundary, type Rect } from './visual-groups/visual-group-layout'
 
 type SimulationEdgeData = {
   label: string
   style: { color: string; lineStyle: string; animated: boolean }
   edgeType?: EdgePathType
   onDelete?: (edgeId: string) => void
+  collapsedSourceRect?: Rect
+  collapsedTargetRect?: Rect
 }
 
 export function SimulationGraphEdge({
@@ -29,6 +32,12 @@ export function SimulationGraphEdge({
   const style = edgeData?.style ?? { color: '#94a3b8', lineStyle: 'solid', animated: false }
   const edgeType = edgeData?.edgeType ?? 'default'
   const onDelete = edgeData?.onDelete
+  const sourceBoundary = edgeData?.collapsedSourceRect
+    ? pointOnRectBoundary(edgeData.collapsedSourceRect, { x: targetX, y: targetY })
+    : undefined
+  const targetBoundary = edgeData?.collapsedTargetRect
+    ? pointOnRectBoundary(edgeData.collapsedTargetRect, { x: sourceX, y: sourceY })
+    : undefined
   const stroke = selected ? '#5b46c5' : style.color
   const labelOffset = -18
   return (
@@ -36,12 +45,12 @@ export function SimulationGraphEdge({
       id={id}
       source={source}
       target={target}
-      sourceX={sourceX}
-      sourceY={sourceY}
-      sourcePosition={sourcePosition}
-      targetX={targetX}
-      targetY={targetY}
-      targetPosition={targetPosition}
+      sourceX={sourceBoundary?.x ?? sourceX}
+      sourceY={sourceBoundary?.y ?? sourceY}
+      sourcePosition={sourceBoundary?.position ?? sourcePosition ?? Position.Right}
+      targetX={targetBoundary?.x ?? targetX}
+      targetY={targetBoundary?.y ?? targetY}
+      targetPosition={targetBoundary?.position ?? targetPosition ?? Position.Left}
       markerEnd={markerEnd}
       data={{ edgeType }}
       style={{

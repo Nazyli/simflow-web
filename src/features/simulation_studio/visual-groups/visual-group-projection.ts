@@ -1,4 +1,5 @@
 import type { Node } from '@xyflow/react'
+import type { ApiEdge } from '../../../shared/api/simulations'
 import type { VisualGroup } from '../../../shared/types/simulation'
 import { absoluteToParentPosition, type Rect } from './visual-group-layout'
 
@@ -21,8 +22,47 @@ export function projectWorkflowNodes(workflowNodes: Node[], groups: VisualGroup[
       ...node,
       parentId: group.visualGroupId,
       position: absoluteToParentPosition(node.position, parent),
-      hidden: false,
+      hidden: group.isCollapsed,
       zIndex: 1,
+    }
+  })
+}
+
+export interface ProjectedWorkflowEdge extends ApiEdge {
+  hidden: boolean
+  sourceGroupId?: string
+  targetGroupId?: string
+}
+
+export function projectWorkflowEdges(
+  workflowEdges: ApiEdge[],
+  groups: VisualGroup[],
+): ProjectedWorkflowEdge[] {
+  const groupByNodeId = new Map<string, VisualGroup>()
+  groups.forEach((group) =>
+    group.memberNodeIds.forEach((nodeId) => groupByNodeId.set(nodeId, group)),
+  )
+
+  return workflowEdges.map((edge) => {
+    const sourceGroup = groupByNodeId.get(edge.sourceNodeId)
+    const targetGroup = groupByNodeId.get(edge.targetNodeId)
+    const isInternalCollapsedEdge = Boolean(
+      sourceGroup?.isCollapsed &&
+      targetGroup?.isCollapsed &&
+      sourceGroup.visualGroupId === targetGroup.visualGroupId,
+    )
+
+    return {
+      ...edge,
+      hidden: isInternalCollapsedEdge,
+      sourceGroupId:
+        sourceGroup?.isCollapsed && !isInternalCollapsedEdge
+          ? sourceGroup.visualGroupId
+          : undefined,
+      targetGroupId:
+        targetGroup?.isCollapsed && !isInternalCollapsedEdge
+          ? targetGroup.visualGroupId
+          : undefined,
     }
   })
 }

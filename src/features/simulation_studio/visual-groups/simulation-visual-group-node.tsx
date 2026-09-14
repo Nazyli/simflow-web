@@ -22,7 +22,7 @@ export function SimulationVisualGroupNode({ id, data, selected }: NodeProps<Visu
   return (
     <>
       <NodeResizer
-        isVisible={selected && data.editable}
+        isVisible={selected && data.editable && !group.isCollapsed}
         minWidth={180}
         minHeight={100}
         onResizeEnd={(_, params) => data.onResize?.(id, params.width, params.height)}
