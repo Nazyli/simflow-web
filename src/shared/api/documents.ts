@@ -30,11 +30,11 @@ export interface RuntimeSimulationDocument {
 
 export const getDocuments = (participantId: string) =>
   apiClient<RuntimeSimulationDocument[]>(
-    `/runner/documents?participant_id=${encodeURIComponent(participantId)}`,
+    `/runner/documents?participantId=${encodeURIComponent(participantId)}`,
   )
 
 export const openDocument = (participantId: string, documentId: string) =>
   apiClient<RuntimeSimulationDocument>(
-    `/runner/documents/${encodeURIComponent(documentId)}/open?participant_id=${encodeURIComponent(participantId)}`,
+    `/runner/documents/${encodeURIComponent(documentId)}/open?participantId=${encodeURIComponent(participantId)}`,
     { method: 'POST' },
   )

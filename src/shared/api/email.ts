@@ -82,12 +82,12 @@ export interface ParticipantEmailAttachmentInput {
 
 export const getEmailSimulations = (participantId: string) =>
   apiClient<EmailSimulationItem[]>(
-    `/runner/email/master_group_simulations?participant_id=${encodeURIComponent(participantId)}`,
+    `/runner/email/master_group_simulations?participantId=${encodeURIComponent(participantId)}`,
   )
 
 export const getEmailInbox = (participantId: string, simulationId?: string) => {
-  const params = new URLSearchParams({ participant_id: participantId })
-  if (simulationId) params.set('simulation_id', simulationId)
+  const params = new URLSearchParams({ participantId })
+  if (simulationId) params.set('simulationId', simulationId)
   return apiClient<EmailInboxThreadItem[]>(`/runner/email/inbox?${params.toString()}`)
 }
 
@@ -97,7 +97,7 @@ export const getEmailThreadMessages = (
   rootId: string,
 ) =>
   apiClient<EmailMessage[]>(
-    `/runner/email/thread-messages?participant_id=${encodeURIComponent(participantId)}&simulation_id=${encodeURIComponent(simulationId)}&root_id=${encodeURIComponent(rootId)}`,
+    `/runner/email/thread-messages?participantId=${encodeURIComponent(participantId)}&simulationId=${encodeURIComponent(simulationId)}&rootId=${encodeURIComponent(rootId)}`,
   )
 
 export const sendParticipantEmail = (
@@ -112,17 +112,17 @@ export const sendParticipantEmail = (
   replyToEmailId?: string,
   attachments?: ParticipantEmailAttachmentInput[],
 ) =>
-  apiClient<EmailMessage>(`/runner/email?participant_id=${encodeURIComponent(participantId)}`, {
+  apiClient<EmailMessage>(`/runner/email?participantId=${encodeURIComponent(participantId)}`, {
     method: 'POST',
     body: JSON.stringify({
-      partner_id: partnerId,
+      partnerId,
       subject,
       content,
-      simulation_id: simulationId,
+      simulationId,
       to: to ?? [],
       cc: cc ?? [],
-      ...(parentEmailId ? { parent_email_id: parentEmailId } : {}),
-      ...(replyToEmailId ? { reply_to_email_id: replyToEmailId } : {}),
+      ...(parentEmailId ? { parentEmailId } : {}),
+      ...(replyToEmailId ? { replyToEmailId } : {}),
       ...(attachments?.length ? { attachments } : {}),
     }),
   })
@@ -133,7 +133,7 @@ export const markEmailThreadAsRead = (
   rootId: string,
 ) =>
   apiClient<EmailMarkAsReadResult>(
-    `/runner/email/mark-thread-read?participant_id=${encodeURIComponent(participantId)}&simulation_id=${encodeURIComponent(simulationId)}&root_id=${encodeURIComponent(rootId)}`,
+    `/runner/email/mark-thread-read?participantId=${encodeURIComponent(participantId)}&simulationId=${encodeURIComponent(simulationId)}&rootId=${encodeURIComponent(rootId)}`,
     { method: 'POST' },
   )
 
@@ -144,9 +144,9 @@ export const markEmailAttachmentOpened = (
   participantEmailId: string,
 ) => {
   const params = new URLSearchParams({
-    participant_id: participantId,
-    simulation_id: simulationId,
-    participant_email_id: participantEmailId,
+    participantId,
+    simulationId,
+    participantEmailId,
   })
   return apiClient<RuntimeEmailAttachment>(
     `/runner/email/attachments/${encodeURIComponent(attachmentId)}/opened?${params.toString()}`,

@@ -28,16 +28,16 @@ test('serializes the selected root and direct reply email IDs for a participant 
     'direct-reply-email-2',
   )
 
-  assert.equal(request.path, '/runner/email?participant_id=participant%201')
+  assert.equal(request.path, '/runner/email?participantId=participant%201')
   assert.deepEqual(JSON.parse(request.init.body), {
-    partner_id: 'actor-1',
+    partnerId: 'actor-1',
     subject: 'Re: Contract',
     content: 'Please review the revision.',
-    simulation_id: 'simulation-1',
+    simulationId: 'simulation-1',
     to: [],
     cc: [],
-    parent_email_id: 'root-email-1',
-    reply_to_email_id: 'direct-reply-email-2',
+    parentEmailId: 'root-email-1',
+    replyToEmailId: 'direct-reply-email-2',
   })
 })
 
@@ -60,7 +60,7 @@ test('records a runtime attachment open against its participant email scope', as
 
   assert.equal(
     request.path,
-    '/runner/email/attachments/runtime%20attachment%2F1/opened?participant_id=participant+1&simulation_id=simulation+1&participant_email_id=participant+email%2F1',
+    '/runner/email/attachments/runtime%20attachment%2F1/opened?participantId=participant+1&simulationId=simulation+1&participantEmailId=participant+email%2F1',
   )
   assert.equal(request.init.method, 'POST')
 })

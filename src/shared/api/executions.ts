@@ -18,10 +18,10 @@ export interface ExecutionTrace {
   created_at: string
 }
 export const getExecutions = (simulationId: string) =>
-  apiClient<Execution[]>(`/runner/executions?simulation_id=${encodeURIComponent(simulationId)}`)
+  apiClient<Execution[]>(`/runner/executions?simulationId=${encodeURIComponent(simulationId)}`)
 export const getParticipantExecutions = (participantId: string) =>
   apiClient<Execution[]>(
-    `/runner/sessions/executions?participant_id=${encodeURIComponent(participantId)}`,
+    `/runner/sessions/executions?participantId=${encodeURIComponent(participantId)}`,
   )
 export interface BatchExecutionRun extends Execution {
   outcome: 'created' | 'resumed' | 'archived'
