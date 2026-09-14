@@ -48,6 +48,24 @@ export interface EdgeStyle {
   lineStyle: 'solid' | 'dashed' | 'dotted'
   animated: boolean
 }
+
+export interface VisualGroupStyle {
+  color: string
+  borderStyle: 'solid' | 'dashed' | 'dotted'
+}
+
+export interface VisualGroup {
+  visualGroupId: string
+  simulationId: string
+  groupName: string
+  memberNodeIds: string[]
+  positionX: number
+  positionY: number
+  width: number
+  height: number
+  style: VisualGroupStyle
+  isCollapsed: boolean
+}
 export interface InputPort {
   id: string
   label: string

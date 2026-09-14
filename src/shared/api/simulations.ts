@@ -5,6 +5,7 @@ import type {
   OutputPort,
   Simulation,
   SimulationDetail,
+  VisualGroup,
 } from '../types/simulation'
 
 export const getGroupSimulations = () => apiClient<GroupSimulation[]>('/studio/group-simulations')
@@ -85,10 +86,15 @@ export interface ApiEdge {
   targetPortId: string
   isValid: boolean
 }
+export interface SimulationGraph {
+  nodes: ApiNode[]
+  edges: ApiEdge[]
+  visualGroups: VisualGroup[]
+}
 export type ApiNodePayload = Omit<ApiNode, 'nodeId' | 'category' | 'inputPorts' | 'outputPorts'>
 export type ApiEdgePayload = Omit<ApiEdge, 'edgeId' | 'isValid'>
 export const getGraph = (simulationId: string) =>
-  apiClient<[ApiNode[], ApiEdge[]]>(`/studio/simulations/${encodeURIComponent(simulationId)}/graph`)
+  apiClient<SimulationGraph>(`/studio/simulations/${encodeURIComponent(simulationId)}/graph`)
 export const addNode = (simulationId: string, payload: ApiNodePayload) =>
   apiClient<ApiNode>(`/studio/simulations/${encodeURIComponent(simulationId)}/nodes`, {
     method: 'POST',
