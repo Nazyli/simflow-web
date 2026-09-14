@@ -174,6 +174,7 @@ function nodeToFlow(
   definition: NodeDefinition | undefined,
   editable: boolean,
   onRotate: (nodeId: string) => void,
+  onRemoveFromGroup?: (nodeId: string) => void,
 ): Node {
   return {
     id: node.nodeId,
@@ -190,6 +191,7 @@ function nodeToFlow(
       category: node.category ?? definition?.category ?? null,
       editable,
       onRotate,
+      onRemoveFromGroup,
     },
   }
 }
@@ -540,8 +542,52 @@ export function SimulationStudioPage() {
     editable: Boolean(simulationId) && !isLocked,
     save: saveVisualGroups,
   })
+  const groupList = visualGroupEditor.groups
+  const createVisualGroupFromNodes = visualGroupEditor.createGroup
+  const detachVisualGroupMember = visualGroupEditor.detachMember
+  const updateVisualGroup = visualGroupEditor.updateGroup
   const visualGroupNodes = visualGroupEditor.groupNodes
   const projectVisualNodes = visualGroupEditor.projectNodes
+  const detachWorkflowNode = useCallback(
+    (nodeId: string) => {
+      const flowNode = nodesRef.current.find((node) => node.id === nodeId)
+      const group = flowNode?.parentId
+        ? groupList.find((item) => item.visualGroupId === flowNode.parentId)
+        : undefined
+      if (!flowNode || !group) return
+      const groupRect: Rect = {
+        x: group.positionX,
+        y: group.positionY,
+        width: group.width,
+        height: group.height,
+      }
+      const absolutePosition = parentToAbsolutePosition(flowNode.position, groupRect)
+      void detachVisualGroupMember(group.visualGroupId, nodeId)
+      setNodes((current) =>
+        current.map((node) =>
+          node.id === nodeId
+            ? { ...node, parentId: undefined, hidden: false, position: absolutePosition }
+            : node,
+        ),
+      )
+      localPositions.current.set(nodeId, {
+        x: Math.round(absolutePosition.x),
+        y: Math.round(absolutePosition.y),
+      })
+      const current = apiNodes.find((node) => node.nodeId === nodeId)
+      if (current) {
+        enqueueNodeSave({
+          id: nodeId,
+          payload: {
+            ...current,
+            positionX: Math.round(absolutePosition.x),
+            positionY: Math.round(absolutePosition.y),
+          },
+        })
+      }
+    },
+    [apiNodes, detachVisualGroupMember, enqueueNodeSave, groupList, setNodes],
+  )
   const definitions = useMemo(
     () =>
       new Map(
@@ -575,7 +621,7 @@ export function SimulationStudioPage() {
       return
     }
     const groupById = new Map(
-      visualGroupEditor.groups.map((group) => [group.visualGroupId, group]),
+      groupList.map((group) => [group.visualGroupId, group]),
     )
     const selectedNodes = nodes
       .filter((node) => selectedWorkflowNodeIds.includes(node.id))
@@ -593,14 +639,15 @@ export function SimulationStudioPage() {
             }
           : node
       })
-    void visualGroupEditor.createGroup(selectedNodes, selectedWorkflowNodeIds, { simulationId })
+    void createVisualGroupFromNodes(selectedNodes, selectedWorkflowNodeIds, { simulationId })
   }, [
     isLocked,
     lockedMessage,
     nodes,
     selectedWorkflowNodeIds,
     simulationId,
-    visualGroupEditor,
+    createVisualGroupFromNodes,
+    groupList,
   ])
 
   const openDuplicateDialog = useCallback(
@@ -797,16 +844,24 @@ export function SimulationStudioPage() {
       return {
         ...nodeToFlow(
           { ...node, rotation },
-          definitions.get(node.nodeType),
-          !isLocked,
-          rotateNode,
-        ),
+            definitions.get(node.nodeType),
+            !isLocked,
+            rotateNode,
+            detachWorkflowNode,
+          ),
         position: cached ?? { x: node.positionX ?? 100, y: node.positionY ?? 100 },
       }
     })
+    const projectedWorkflowNodes = projectVisualNodes(workflowNodes).map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        parentGroupId: node.parentId,
+      },
+    }))
     setNodes([
       ...visualGroupNodes,
-      ...projectVisualNodes(workflowNodes),
+      ...projectedWorkflowNodes,
     ])
     setEdges(
       apiEdges.map((edge) => {
@@ -829,6 +884,7 @@ export function SimulationStudioPage() {
     setEdges,
     deleteEdge,
     rotateNode,
+    detachWorkflowNode,
     visualGroupNodes,
     projectVisualNodes,
     edgePathType,
@@ -1689,7 +1745,7 @@ export function SimulationStudioPage() {
                 }
 
                 if (node.type === 'visualGroup') {
-                  const group = visualGroupEditor.groups.find(
+                  const group = groupList.find(
                     (item) => item.visualGroupId === node.id,
                   )
                   if (!group) return
@@ -1699,7 +1755,7 @@ export function SimulationStudioPage() {
                     width: group.width,
                     height: group.height,
                   }
-                  void visualGroupEditor.updateGroup(node.id, {
+                  void updateVisualGroup(node.id, {
                     positionX: nextGroupRect.x,
                     positionY: nextGroupRect.y,
                   })
@@ -1727,7 +1783,7 @@ export function SimulationStudioPage() {
                 }
 
                 const parentGroup = node.parentId
-                  ? visualGroupEditor.groups.find(
+                  ? groupList.find(
                       (group) => group.visualGroupId === node.parentId,
                     )
                   : undefined
@@ -1764,7 +1820,7 @@ export function SimulationStudioPage() {
                     },
                   )
                 ) {
-                  void visualGroupEditor.detachMember(parentGroup.visualGroupId, node.id)
+                  void detachVisualGroupMember(parentGroup.visualGroupId, node.id)
                   setNodes((current) =>
                     current.map((item) =>
                       item.id === node.id

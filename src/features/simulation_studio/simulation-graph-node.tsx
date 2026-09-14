@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { NodeResizer, NodeToolbar, Position, type NodeProps } from '@xyflow/react'
-import { CircleDot, RotateCw } from 'lucide-react'
+import { CircleDot, LogOut, RotateCw } from 'lucide-react'
 import { BaseHandle } from '@/components/base-handle'
 import { BaseNode, BaseNodeContent, BaseNodeHeader } from '@/components/base-node'
 import type { InputPort, OutputPort } from '../../shared/types/simulation'
@@ -16,6 +16,8 @@ type SimulationNodeData = {
   category?: string | null
   editable?: boolean
   onRotate?: (nodeId: string) => void
+  parentGroupId?: string
+  onRemoveFromGroup?: (nodeId: string) => void
 }
 
 function inputPosition(rotation: number): Position {
@@ -71,6 +73,16 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
           >
             <RotateCw className="h-3 w-3" />
             {rotation}°
+          </button>
+        )}
+        {nodeData.editable && nodeData.parentGroupId && nodeData.onRemoveFromGroup && (
+          <button
+            type="button"
+            className="nodrag ml-1 inline-flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[0.6rem] font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-100"
+            onClick={() => nodeData.onRemoveFromGroup?.(id)}
+            title="Remove node from visual group"
+          >
+            <LogOut className="h-3 w-3" />
           </button>
         )}
       </NodeToolbar>
