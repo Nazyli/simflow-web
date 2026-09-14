@@ -48,20 +48,20 @@ export function SimulationListPage() {
 
   const create = useMutation({
     mutationFn: async (
-      payload: Pick<GroupSimulation, 'group_simulation_name' | 'group_simulation_desc'> & {
-        simulation_name: string
-        channel_name: string
+      payload: Pick<GroupSimulation, 'groupSimulationName' | 'groupSimulationDesc'> & {
+        simulationName: string
+        channelName: string
         duration: number
       },
     ) => {
       const group = await createGroupSimulation({
-        group_simulation_name: payload.group_simulation_name,
-        group_simulation_desc: payload.group_simulation_desc,
+        groupSimulationName: payload.groupSimulationName,
+        groupSimulationDesc: payload.groupSimulationDesc,
       })
-      const simulation = await createSimulation(group.group_simulation_id, {
-        simulation_name: payload.simulation_name,
-        simulation_desc: null,
-        channel_name: payload.channel_name,
+      const simulation = await createSimulation(group.groupSimulationId, {
+        simulationName: payload.simulationName,
+        simulationDesc: null,
+        channelName: payload.channelName,
         duration: payload.duration,
       })
       return { group, simulation }
@@ -69,7 +69,7 @@ export function SimulationListPage() {
     onSuccess: ({ simulation }) => {
       queryClient.invalidateQueries({ queryKey: ['group-simulations'] })
       setFormGroup(null)
-      navigate(`/studio/${simulation.simulation_id}`)
+      navigate(`/studio/${simulation.simulationId}`)
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
@@ -80,7 +80,7 @@ export function SimulationListPage() {
       payload,
     }: {
       id: string
-      payload: Pick<GroupSimulation, 'group_simulation_name' | 'group_simulation_desc'>
+      payload: Pick<GroupSimulation, 'groupSimulationName' | 'groupSimulationDesc'>
     }) => updateGroupSimulation(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['group-simulations'] })
@@ -103,14 +103,14 @@ export function SimulationListPage() {
   const bootstrapSimulation = useMutation({
     mutationFn: (groupSimulationId: string) =>
       createSimulation(groupSimulationId, {
-        simulation_name: 'Simulation 1',
-        simulation_desc: null,
-        channel_name: 'chat',
+        simulationName: 'Simulation 1',
+        simulationDesc: null,
+        channelName: 'chat',
         duration: 60,
       }),
     onSuccess: (simulation) => {
       queryClient.invalidateQueries({ queryKey: ['group-simulations'] })
-      navigate(`/studio/${simulation.simulation_id}`)
+      navigate(`/studio/${simulation.simulationId}`)
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
@@ -118,11 +118,11 @@ export function SimulationListPage() {
   function openGroup(group: GroupSimulation) {
     const sims = group.simulations ?? []
     if (sims.length === 0) {
-      bootstrapSimulation.mutate(group.group_simulation_id)
+      bootstrapSimulation.mutate(group.groupSimulationId)
       return
     }
     if (sims.length === 1) {
-      navigate(`/studio/${sims[0].simulation_id}`)
+      navigate(`/studio/${sims[0].simulationId}`)
       return
     }
     setPickerGroup(group)
@@ -133,20 +133,20 @@ export function SimulationListPage() {
     const form = new FormData(event.currentTarget)
     const groupName = String(form.get('name'))
     const groupDesc = String(form.get('description')) || null
-    const simulationName = String(form.get('simulation_name') || groupName)
-    const channelName = String(form.get('channel_name') || 'chat')
+    const simulationName = String(form.get('simulationName') || groupName)
+    const channelName = String(form.get('channelName') || 'chat')
     const duration = Number(form.get('duration') || 60)
     if (formGroup && formGroup !== 'new') {
       update.mutate({
-        id: formGroup.group_simulation_id,
-        payload: { group_simulation_name: groupName, group_simulation_desc: groupDesc },
+        id: formGroup.groupSimulationId,
+        payload: { groupSimulationName: groupName, groupSimulationDesc: groupDesc },
       })
     } else {
       create.mutate({
-        group_simulation_name: groupName,
-        group_simulation_desc: groupDesc,
-        simulation_name: simulationName,
-        channel_name: channelName,
+        groupSimulationName: groupName,
+        groupSimulationDesc: groupDesc,
+        simulationName: simulationName,
+        channelName: channelName,
         duration,
       })
     }
@@ -196,11 +196,11 @@ export function SimulationListPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {groups.data.map((group) => {
             const sims = group.simulations ?? []
-            const lockedCount = sims.filter((s) => s.is_locked).length
+            const lockedCount = sims.filter((s) => s.isLocked).length
             const primarySim = sims[0]
             return (
               <article
-                key={group.group_simulation_id}
+                key={group.groupSimulationId}
                 className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm transition-colors hover:border-purple-300 hover:shadow-md"
               >
                 <button
@@ -210,7 +210,7 @@ export function SimulationListPage() {
                 >
                   <div className="flex w-full items-center justify-between gap-2">
                     <h2 className="truncate text-sm font-bold text-slate-900">
-                      {group.group_simulation_name}
+                      {group.groupSimulationName}
                     </h2>
                     <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
                       <Layers className="h-3 w-3" />
@@ -218,21 +218,21 @@ export function SimulationListPage() {
                     </span>
                   </div>
                   <p className="line-clamp-2 min-h-8 text-xs leading-normal text-slate-500">
-                    {group.group_simulation_desc || 'No description provided.'}
+                    {group.groupSimulationDesc || 'No description provided.'}
                   </p>
                   <div className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-[11px] font-medium text-slate-500">
                     <span className="text-xs text-slate-400">
-                      {primarySim?.simulation_name ?? 'No versions yet'}
+                      {primarySim?.simulationName ?? 'No versions yet'}
                     </span>
-                    {primarySim?.is_locked && (
+                    {primarySim?.isLocked && (
                       <span
                         className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
-                        title={`Used ${primarySim.execution_count ?? 0} time${(primarySim.execution_count ?? 0) === 1 ? '' : 's'}`}
+                        title={`Used ${primarySim.executionCount ?? 0} time${(primarySim.executionCount ?? 0) === 1 ? '' : 's'}`}
                       >
-                        <Lock className="h-3 w-3" /> Locked • Used {primarySim.execution_count ?? 0}
+                        <Lock className="h-3 w-3" /> Locked • Used {primarySim.executionCount ?? 0}
                       </span>
                     )}
-                    {!primarySim?.is_locked && lockedCount > 0 && (
+                    {!primarySim?.isLocked && lockedCount > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
                         <Lock className="h-3 w-3" /> {lockedCount} locked
                       </span>
@@ -244,7 +244,7 @@ export function SimulationListPage() {
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      aria-label={`Edit ${group.group_simulation_name}`}
+                      aria-label={`Edit ${group.groupSimulationName}`}
                       title="Edit simulation details"
                       className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
                       onClick={() => setFormGroup(group)}
@@ -253,7 +253,7 @@ export function SimulationListPage() {
                     </button>
                     <button
                       type="button"
-                      aria-label={`Delete ${group.group_simulation_name}`}
+                      aria-label={`Delete ${group.groupSimulationName}`}
                       title="Delete simulation"
                       className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
                       onClick={() => setDeleteTarget(group)}
@@ -280,34 +280,34 @@ export function SimulationListPage() {
             <Layers className="h-5 w-5 text-purple-600" /> Choose a simulation
           </DialogTitle>
           <DialogDescription>
-            {pickerGroup?.group_simulation_name} has {pickerGroup?.simulations?.length ?? 0}{' '}
+            {pickerGroup?.groupSimulationName} has {pickerGroup?.simulations?.length ?? 0}{' '}
             simulations. Pick the one you want to open in the builder.
           </DialogDescription>
 
           <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
             {(pickerGroup?.simulations ?? []).map((simulation) => (
               <button
-                key={simulation.simulation_id}
+                key={simulation.simulationId}
                 type="button"
                 className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${
-                  simulation.simulation_id === pickerBest?.simulation_id
+                  simulation.simulationId === pickerBest?.simulationId
                     ? 'border-purple-300 bg-purple-50'
                     : 'border-slate-200 bg-white hover:border-slate-300'
                 }`}
-                onClick={() => navigate(`/studio/${simulation.simulation_id}`)}
+                onClick={() => navigate(`/studio/${simulation.simulationId}`)}
               >
                 <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                  {simulation.simulation_name}
-                  {simulation.is_locked && (
+                  {simulation.simulationName}
+                  {simulation.isLocked && (
                     <span
                       className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
-                      title={`Used ${simulation.execution_count ?? 0} times`}
+                      title={`Used ${simulation.executionCount ?? 0} times`}
                     >
-                      <Lock className="h-3 w-3" /> Locked • {simulation.execution_count ?? 0}
+                      <Lock className="h-3 w-3" /> Locked • {simulation.executionCount ?? 0}
                     </span>
                   )}
                 </span>
-                {simulation.simulation_id === pickerBest?.simulation_id && (
+                {simulation.simulationId === pickerBest?.simulationId && (
                   <span className="text-[10px] font-bold tracking-wider text-purple-600 uppercase">
                     Default
                   </span>
@@ -333,7 +333,7 @@ export function SimulationListPage() {
 
           <form
             className="flex flex-col gap-4"
-            key={editing?.group_simulation_id ?? 'new'}
+            key={editing?.groupSimulationId ?? 'new'}
             onSubmit={submit}
           >
             <div className="grid gap-1.5">
@@ -344,7 +344,7 @@ export function SimulationListPage() {
                 id="simulation-name"
                 name="name"
                 required
-                defaultValue={editing?.group_simulation_name ?? ''}
+                defaultValue={editing?.groupSimulationName ?? ''}
                 placeholder="e.g. Customer Onboarding"
               />
             </div>
@@ -356,7 +356,7 @@ export function SimulationListPage() {
                 id="simulation-desc"
                 rows={3}
                 name="description"
-                defaultValue={editing?.group_simulation_desc ?? ''}
+                defaultValue={editing?.groupSimulationDesc ?? ''}
                 placeholder="Describe the purpose of this simulation..."
               />
             </div>
@@ -368,7 +368,7 @@ export function SimulationListPage() {
                   </Label>
                   <Input
                     id="sim-name"
-                    name="simulation_name"
+                    name="simulationName"
                     required
                     placeholder="e.g. Main Flow"
                   />
@@ -379,7 +379,7 @@ export function SimulationListPage() {
                   </Label>
                   <Input
                     id="channel-name"
-                    name="channel_name"
+                    name="channelName"
                     defaultValue="chat"
                     placeholder="chat"
                   />
@@ -424,7 +424,7 @@ export function SimulationListPage() {
             <Trash2 className="h-5 w-5 text-red-600" /> Delete simulation group?
           </DialogTitle>
           <DialogDescription>
-            This permanently deletes “{deleteTarget?.group_simulation_name}” and removes it from the
+            This permanently deletes “{deleteTarget?.groupSimulationName}” and removes it from the
             studio. This cannot be undone.
           </DialogDescription>
 
@@ -436,7 +436,7 @@ export function SimulationListPage() {
               type="button"
               variant="destructive"
               disabled={remove.isPending}
-              onClick={() => deleteTarget && remove.mutate(deleteTarget.group_simulation_id)}
+              onClick={() => deleteTarget && remove.mutate(deleteTarget.groupSimulationId)}
               className="border-0 bg-red-600 text-white hover:bg-red-700"
             >
               <Trash2 className="h-3.5 w-3.5" />{' '}

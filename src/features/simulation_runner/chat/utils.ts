@@ -43,8 +43,10 @@ export function buildConversations(
 ): ChatConversation[] {
   const grouped = new Map<string, ChatMessage[]>()
   for (const message of messages) {
-    const sender = message.from || message.actor
-    const counterpart = sender === participantId ? message.to : sender
+    const counterpart =
+      message.senderType === 'participant'
+        ? message.to || message.actor
+        : message.from || message.actor
     if (!counterpart || counterpart === participantId) continue
     const list = grouped.get(counterpart) ?? []
     list.push(message)
@@ -62,7 +64,7 @@ export function buildConversations(
         messages: list,
         lastMessage: list[list.length - 1] ?? null,
         unreadCount: list.filter(
-          (message) => message.is_unread && !isOwnMessage(message, participantId),
+          (message) => message.isUnread && !isOwnMessage(message, participantId),
         ).length,
       }
     })

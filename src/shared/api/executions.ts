@@ -2,20 +2,20 @@ import { apiClient } from './client'
 import type { Execution } from '../types/simulation'
 
 export interface NodeExecution {
-  node_execution_id: string
-  node_id: string
+  nodeExecutionId: string
+  nodeId: string
   status: string
-  selected_port: string | null
-  selected_edge_id: string | null
-  sequence_number: number
-  output_data: Record<string, unknown> | null
+  selectedPort: string | null
+  selectedEdgeId: string | null
+  sequenceNumber: number
+  outputData: Record<string, unknown> | null
 }
 export interface ExecutionTrace {
-  event_id: string
-  node_id: string
-  event_type: string
+  eventId: string
+  nodeId: string
+  eventType: string
   payload: Record<string, unknown>
-  created_at: string
+  createdAt: string
 }
 export const getExecutions = (simulationId: string) =>
   apiClient<Execution[]>(`/runner/executions?simulationId=${encodeURIComponent(simulationId)}`)
@@ -27,12 +27,12 @@ export interface BatchExecutionRun extends Execution {
   outcome: 'created' | 'resumed' | 'archived'
 }
 export interface BatchExecutionResponse {
-  participant_id: string
+  participantId: string
   runs: BatchExecutionRun[]
 }
 export const startExecutionBatch = (payload: {
-  participant_id: string
-  simulation_ids: string[]
+  participantId: string
+  simulationIds: string[]
   context?: Record<string, unknown>
 }) =>
   apiClient<BatchExecutionResponse>('/runner/executions/batch', {
@@ -45,13 +45,13 @@ export const getNodeExecutions = (executionId: string) =>
   apiClient<NodeExecution[]>(`/runner/executions/${executionId}/node-executions`)
 export const getExecutionTrace = async (executionId: string): Promise<ExecutionTrace[]> =>
   (await getNodeExecutions(executionId)).map((item) => ({
-    event_id: item.node_execution_id,
-    node_id: item.node_id,
-    event_type: item.status,
+    eventId: item.nodeExecutionId,
+    nodeId: item.nodeId,
+    eventType: item.status,
     payload: {
-      selected_port: item.selected_port,
-      selected_edge_id: item.selected_edge_id,
-      output_data: item.output_data,
+      selectedPort: item.selectedPort,
+      selectedEdgeId: item.selectedEdgeId,
+      outputData: item.outputData,
     },
-    created_at: '',
+    createdAt: '',
   }))

@@ -123,7 +123,7 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
             title={port.label}
             style={{
               ...handleOffset(outputPos, index, nodeData.outputPorts.length),
-              background: port.edge_style.color,
+              background: port.edgeStyle.color,
             }}
           />
         ))}

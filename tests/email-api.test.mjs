@@ -88,7 +88,7 @@ test('opens a runtime email attachment by email_attachment_id', async () => {
 test('declares the runtime attachment snapshot response contract', async () => {
   const source = await readFile(new URL('../src/shared/api/email.ts', import.meta.url), 'utf8')
 
-  assert.match(source, /email_attachment_id: string/)
+  assert.match(source, /emailAttachmentId: string/)
   assert.match(source, /contents: RuntimeEmailAttachmentContent\[\]/)
   assert.doesNotMatch(source, /^\s*attachment_id: string$/m)
 })
@@ -96,27 +96,27 @@ test('declares the runtime attachment snapshot response contract', async () => {
 test('sorts attachment preview pages in ascending page order', () => {
   const pages = sortAttachmentPreviewPages([
     {
-      participant_attachment_email_id: 'page-2',
-      email_attachment_id: 'runtime-1',
-      participant_doc_content_id: null,
+      participantAttachmentEmailId: 'page-2',
+      emailAttachmentId: 'runtime-1',
+      participantDocContentId: null,
       page: 2,
       content: 'Second page',
-      is_highlight: false,
-      owner_name: 'actor-1',
+      isHighlight: false,
+      ownerName: 'actor-1',
     },
     {
-      participant_attachment_email_id: 'page-1',
-      email_attachment_id: 'runtime-1',
-      participant_doc_content_id: null,
+      participantAttachmentEmailId: 'page-1',
+      emailAttachmentId: 'runtime-1',
+      participantDocContentId: null,
       page: 1,
       content: 'First page',
-      is_highlight: false,
-      owner_name: 'actor-1',
+      isHighlight: false,
+      ownerName: 'actor-1',
     },
   ])
 
   assert.deepEqual(
-    pages.map((page) => page.participant_attachment_email_id),
+    pages.map((page) => page.participantAttachmentEmailId),
     ['page-1', 'page-2'],
   )
 })

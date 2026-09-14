@@ -2,16 +2,17 @@ export interface ChatMessage {
   to: string
   from: string
   actor: string
+  senderType: 'participant' | 'actor' | 'system'
   channel: 'chat'
-  chat_id: string | null
-  message_id?: string
-  session_id?: string
+  chatId: string | null
+  messageId?: string
+  sessionId?: string
   content: string
   timestamp: string
-  action_type: string
-  simulation_label?: string
-  simulation_id?: string
-  is_unread?: boolean
+  actionType: string
+  simulationLabel?: string
+  simulationId?: string
+  isUnread?: boolean
 }
 
 export interface ChatConversation {

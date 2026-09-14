@@ -168,15 +168,15 @@ function nodeToFlow(
   onRotate: (nodeId: string) => void,
 ): Node {
   return {
-    id: node.node_id,
+    id: node.nodeId,
     type: 'simulation',
-    position: { x: node.position_x ?? 80, y: node.position_y ?? 80 },
+    position: { x: node.positionX ?? 80, y: node.positionY ?? 80 },
     data: {
-      label: node.node_name,
-      nodeType: node.node_type,
+      label: node.nodeName,
+      nodeType: node.nodeType,
       color: definition?.color ?? '#64748b',
-      inputPorts: node.input_ports,
-      outputPorts: node.output_ports,
+      inputPorts: node.inputPorts,
+      outputPorts: node.outputPorts,
       rotation: node.rotation ?? 0,
       summary: deriveNodeSummary(node.parameters),
       category: node.category ?? definition?.category ?? null,
@@ -192,22 +192,22 @@ function edgeToFlow(
   edgeType: EdgePathType = 'default',
   sourceNode?: ApiNode,
 ): Edge {
-  const style = sourcePort?.edge_style ?? { color: '#94a3b8', line_style: 'solid', animated: false }
-  let label = sourcePort?.label ?? edge.source_port_id
+  const style = sourcePort?.edgeStyle ?? { color: '#94a3b8', lineStyle: 'solid', animated: false }
+  let label = sourcePort?.label ?? edge.sourcePortId
 
   // Append timeout duration for timeout ports on wait nodes
-  if (edge.source_port_id === 'timeout' && sourceNode?.parameters?.timeout_seconds) {
-    const seconds = sourceNode.parameters.timeout_seconds
+  if (edge.sourcePortId === 'timeout' && sourceNode?.parameters?.timeoutSeconds) {
+    const seconds = sourceNode.parameters.timeoutSeconds
     label = `${label} - ${seconds}s`
   }
 
   return {
-    id: edge.edge_id,
+    id: edge.edgeId,
     type: 'simulation',
-    source: edge.source_node_id,
-    sourceHandle: edge.source_port_id,
-    target: edge.target_node_id,
-    targetHandle: edge.target_port_id,
+    source: edge.sourceNodeId,
+    sourceHandle: edge.sourcePortId,
+    target: edge.targetNodeId,
+    targetHandle: edge.targetPortId,
     markerEnd: { type: MarkerType.ArrowClosed, color: style.color },
     animated: style.animated,
     data: {
@@ -279,7 +279,7 @@ export function SimulationStudioPage() {
   const persistNodeRef = useRef<
     (args: {
       id: string
-      payload: Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'>
+      payload: Omit<ApiNode, 'nodeId' | 'category' | 'inputPorts' | 'outputPorts'>
     }) => void
   >(() => {})
 
@@ -302,7 +302,7 @@ export function SimulationStudioPage() {
       queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', simulationId], (current) => {
         if (!current) return current
         return [
-          current[0].map((node) => (node.node_id === id ? { ...node, ...payload } : node)),
+          current[0].map((node) => (node.nodeId === id ? { ...node, ...payload } : node)),
           current[1],
         ]
       })
@@ -328,14 +328,14 @@ export function SimulationStudioPage() {
     () =>
       versionDetail.data
         ? {
-            group_simulation_id: versionDetail.data.group_simulation_id,
-            group_simulation_name: versionDetail.data.group_simulation_name,
+            groupSimulationId: versionDetail.data.groupSimulationId,
+            groupSimulationName: versionDetail.data.groupSimulationName,
           }
         : null,
     [versionDetail.data],
   )
-  const isLocked = Boolean(versionDetail.data?.is_locked)
-  const executionCount = versionDetail.data?.execution_count ?? 0
+  const isLocked = Boolean(versionDetail.data?.isLocked)
+  const executionCount = versionDetail.data?.executionCount ?? 0
   const lockedMessage =
     'Simulation has been used and cannot be edited. Duplicate it to make changes.'
   const graph = useQuery({
@@ -345,8 +345,8 @@ export function SimulationStudioPage() {
   })
   const nodeCatalog = useQuery({ queryKey: ['node-catalog'], queryFn: getNodeCatalog })
   const versions = useQuery({
-    queryKey: ['simulation-versions', selectedGroupSimulation?.group_simulation_id],
-    queryFn: () => getSimulations(selectedGroupSimulation!.group_simulation_id),
+    queryKey: ['simulation-versions', selectedGroupSimulation?.groupSimulationId],
+    queryFn: () => getSimulations(selectedGroupSimulation!.groupSimulationId),
     enabled: Boolean(selectedGroupSimulation),
   })
   const executions = useQuery({
@@ -363,20 +363,20 @@ export function SimulationStudioPage() {
   const createDraft = useMutation({
     mutationFn: async (payload: {
       sourceId: string
-      simulation_name: string
-      simulation_desc: string | null
+      simulationName: string
+      simulationDesc: string | null
     }) =>
       duplicateSimulation(payload.sourceId, {
-        simulation_name: payload.simulation_name,
-        simulation_desc: payload.simulation_desc,
+        simulationName: payload.simulationName,
+        simulationDesc: payload.simulationDesc,
       }),
     onSuccess: (version) => {
       queryClient.invalidateQueries({
-        queryKey: ['simulation-versions', selectedGroupSimulation?.group_simulation_id],
+        queryKey: ['simulation-versions', selectedGroupSimulation?.groupSimulationId],
       })
-      navigate(`/studio/${version.simulation_id}`)
+      navigate(`/studio/${version.simulationId}`)
       setDuplicateOpen(false)
-      toast.success(`Duplicated to "${version.simulation_name}".`)
+      toast.success(`Duplicated to "${version.simulationName}".`)
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
@@ -390,15 +390,15 @@ export function SimulationStudioPage() {
       position?: { x: number; y: number }
     }) =>
       addNode(simulationId!, {
-        node_name: `${definition.label} node`,
-        node_type: definition.node_type,
+        nodeName: `${definition.label} node`,
+        nodeType: definition.nodeType,
         parameters: { ...definition.parameters },
         rotation: 0,
-        position_x: Math.round(position?.x ?? 180),
-        position_y: Math.round(position?.y ?? 180),
+        positionX: Math.round(position?.x ?? 180),
+        positionY: Math.round(position?.y ?? 180),
       }),
     onSuccess: (node) => {
-      setSelectedNodeId(node.node_id)
+      setSelectedNodeId(node.nodeId)
       setActiveRightTab('inspector')
       setRightSidebarOpen(true)
       queryClient.invalidateQueries({ queryKey: ['graph', simulationId] })
@@ -408,15 +408,15 @@ export function SimulationStudioPage() {
   const duplicateGraphNode = useMutation({
     mutationFn: (node: ApiNode) =>
       addNode(simulationId!, {
-        node_name: `${node.node_name} copy`,
-        node_type: node.node_type,
+        nodeName: `${node.nodeName} copy`,
+        nodeType: node.nodeType,
         parameters: { ...node.parameters },
         rotation: node.rotation ?? 0,
-        position_x: (node.position_x ?? 80) + 60,
-        position_y: (node.position_y ?? 80) + 60,
+        positionX: (node.positionX ?? 80) + 60,
+        positionY: (node.positionY ?? 80) + 60,
       }),
     onSuccess: (node) => {
-      setSelectedNodeId(node.node_id)
+      setSelectedNodeId(node.nodeId)
       setActiveRightTab('inspector')
       setRightSidebarOpen(true)
       queryClient.invalidateQueries({ queryKey: ['graph', simulationId] })
@@ -432,7 +432,7 @@ export function SimulationStudioPage() {
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
   const persistEdge = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edge_id' | 'is_valid'> }) =>
+    mutationFn: ({ id, payload }: { id: string; payload: Omit<ApiEdge, 'edgeId' | 'isValid'> }) =>
       updateSimulationEdge(id, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['graph', simulationId] }),
     onError: (error) => toast.error(apiErrorMessage(error)),
@@ -461,7 +461,7 @@ export function SimulationStudioPage() {
         navigate('/studio')
       }
       queryClient.invalidateQueries({
-        queryKey: ['simulation-versions', selectedGroupSimulation?.group_simulation_id],
+        queryKey: ['simulation-versions', selectedGroupSimulation?.groupSimulationId],
       })
       queryClient.invalidateQueries({ queryKey: ['simulations'] })
       toast.success('Simulation deleted.')
@@ -517,38 +517,36 @@ export function SimulationStudioPage() {
   const definitions = useMemo(
     () =>
       new Map(
-        (nodeCatalog.data?.nodes ?? []).map((definition) => [definition.node_type, definition]),
+        (nodeCatalog.data?.nodes ?? []).map((definition) => [definition.nodeType, definition]),
       ),
     [nodeCatalog.data],
   )
   const selectedNode = useMemo(
-    () => apiNodes.find((node) => node.node_id === selectedNodeId) ?? null,
+    () => apiNodes.find((node) => node.nodeId === selectedNodeId) ?? null,
     [apiNodes, selectedNodeId],
   )
   const selectedEdge = useMemo(
-    () => apiEdges.find((edge) => edge.edge_id === selectedEdgeId) ?? null,
+    () => apiEdges.find((edge) => edge.edgeId === selectedEdgeId) ?? null,
     [apiEdges, selectedEdgeId],
   )
-  const selectedSimulation = versions.data?.find(
-    (version) => version.simulation_id === simulationId,
-  )
+  const selectedSimulation = versions.data?.find((version) => version.simulationId === simulationId)
   const selectedExecution =
-    executions.data?.find((execution) => execution.execution_id === selectedExecutionId) ?? null
+    executions.data?.find((execution) => execution.executionId === selectedExecutionId) ?? null
 
   const openDuplicateDialog = useCallback(
     (sourceOverride?: {
-      simulation_id: string
-      simulation_name: string
-      simulation_desc: string | null
+      simulationId: string
+      simulationName: string
+      simulationDesc: string | null
     }) => {
       const source = sourceOverride ?? selectedSimulation ?? versions.data?.[0]
       if (!source) {
         toast.error('No version available to duplicate.')
         return
       }
-      setDuplicateSourceId(source.simulation_id)
-      setDuplicateName(`${source.simulation_name} (Copy)`)
-      setDuplicateDesc(source.simulation_desc ?? '')
+      setDuplicateSourceId(source.simulationId)
+      setDuplicateName(`${source.simulationName} (Copy)`)
+      setDuplicateDesc(source.simulationDesc ?? '')
       setDuplicateOpen(true)
     },
     [selectedSimulation, versions.data],
@@ -563,7 +561,7 @@ export function SimulationStudioPage() {
         toast.error(lockedMessage)
         return
       }
-      const current = apiNodes.find((item) => item.node_id === nodeId)
+      const current = apiNodes.find((item) => item.nodeId === nodeId)
       if (!current) return
       const currentRotation = localRotations.current.get(nodeId) ?? current.rotation ?? 0
       const next = (currentRotation + 90) % 360
@@ -649,10 +647,10 @@ export function SimulationStudioPage() {
       setNodes([])
       setEdges(
         apiEdges.map((edge) => {
-          const sourceNode = apiNodes.find((node) => node.node_id === edge.source_node_id)
+          const sourceNode = apiNodes.find((node) => node.nodeId === edge.sourceNodeId)
           return edgeToFlow(
             edge,
-            sourceNode?.output_ports.find((port) => port.id === edge.source_port_id),
+            sourceNode?.outputPorts.find((port) => port.id === edge.sourcePortId),
             deleteEdge,
             edgePathType,
             sourceNode,
@@ -665,11 +663,11 @@ export function SimulationStudioPage() {
     // Detect nodes that genuinely lack a position in the API response
     const nodesNeedingLayout: string[] = []
     apiNodes.forEach((node) => {
-      if (node.position_x === null || node.position_y === null) {
-        nodesNeedingLayout.push(node.node_id)
+      if (node.positionX === null || node.positionY === null) {
+        nodesNeedingLayout.push(node.nodeId)
       } else {
         // Update cache with latest API position (API is source of truth for saved positions)
-        localPositions.current.set(node.node_id, { x: node.position_x, y: node.position_y })
+        localPositions.current.set(node.nodeId, { x: node.positionX, y: node.positionY })
       }
     })
 
@@ -678,11 +676,11 @@ export function SimulationStudioPage() {
       const dagreGraph = new dagre.graphlib.Graph()
       dagreGraph.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 200, marginx: 60, marginy: 60 })
       dagreGraph.setDefaultEdgeLabel(() => ({}))
-      const nodeIds = new Set(apiNodes.map((n) => n.node_id))
-      apiNodes.forEach((node) => dagreGraph.setNode(node.node_id, { width: 200, height: 90 }))
+      const nodeIds = new Set(apiNodes.map((n) => n.nodeId))
+      apiNodes.forEach((node) => dagreGraph.setNode(node.nodeId, { width: 200, height: 90 }))
       apiEdges.forEach((edge) => {
-        if (!nodeIds.has(edge.source_node_id) || !nodeIds.has(edge.target_node_id)) return
-        dagreGraph.setEdge(edge.source_node_id, edge.target_node_id)
+        if (!nodeIds.has(edge.sourceNodeId) || !nodeIds.has(edge.targetNodeId)) return
+        dagreGraph.setEdge(edge.sourceNodeId, edge.targetNodeId)
       })
       dagre.layout(dagreGraph)
 
@@ -697,20 +695,20 @@ export function SimulationStudioPage() {
       // Persist auto-layout positions for all versions — every version is now editable.
       // Deferred with setTimeout to avoid calling mutate during the render phase.
       if (!isLocked) {
-        const nodesToSave = apiNodes.filter((n) => nodesNeedingLayout.includes(n.node_id))
+        const nodesToSave = apiNodes.filter((n) => nodesNeedingLayout.includes(n.nodeId))
         setTimeout(() => {
           nodesToSave.forEach((node) => {
-            const pos = localPositions.current.get(node.node_id)
+            const pos = localPositions.current.get(node.nodeId)
             if (!pos || !persistNodeRef.current) return
             persistNodeRef.current({
-              id: node.node_id,
+              id: node.nodeId,
               payload: {
-                node_name: node.node_name,
-                node_type: node.node_type,
+                nodeName: node.nodeName,
+                nodeType: node.nodeType,
                 parameters: node.parameters,
                 rotation: node.rotation ?? 0,
-                position_x: pos.x,
-                position_y: pos.y,
+                positionX: pos.x,
+                positionY: pos.y,
               },
             })
           })
@@ -721,25 +719,25 @@ export function SimulationStudioPage() {
     // Build React Flow nodes using cached positions
     setNodes(
       apiNodes.map((node) => {
-        const cached = localPositions.current.get(node.node_id)
-        const rotation = localRotations.current.get(node.node_id) ?? node.rotation
+        const cached = localPositions.current.get(node.nodeId)
+        const rotation = localRotations.current.get(node.nodeId) ?? node.rotation
         return {
           ...nodeToFlow(
             { ...node, rotation },
-            definitions.get(node.node_type),
+            definitions.get(node.nodeType),
             !isLocked,
             rotateNode,
           ),
-          position: cached ?? { x: node.position_x ?? 100, y: node.position_y ?? 100 },
+          position: cached ?? { x: node.positionX ?? 100, y: node.positionY ?? 100 },
         }
       }),
     )
     setEdges(
       apiEdges.map((edge) => {
-        const sourceNode = apiNodes.find((node) => node.node_id === edge.source_node_id)
+        const sourceNode = apiNodes.find((node) => node.nodeId === edge.sourceNodeId)
         return edgeToFlow(
           edge,
-          sourceNode?.output_ports.find((port) => port.id === edge.source_port_id),
+          sourceNode?.outputPorts.find((port) => port.id === edge.sourcePortId),
           deleteEdge,
           edgePathType,
           sourceNode,
@@ -762,15 +760,15 @@ export function SimulationStudioPage() {
     if (!flowInstance || !simulationId || apiNodes.length === 0 || nodes.length === 0) return
     if (fittedSimulationId.current === simulationId) return
     const startNode =
-      apiNodes.find((n) => n.node_type === 'start') ??
+      apiNodes.find((n) => n.nodeType === 'start') ??
       apiNodes.find((n) => (n.category as string) === 'trigger') ??
       apiNodes[0]
     if (!startNode) return
-    const flowNode = nodes.find((n) => n.id === startNode.node_id) as
+    const flowNode = nodes.find((n) => n.id === startNode.nodeId) as
       (Node & { measured?: { width?: number; height?: number } }) | undefined
-    const cached = localPositions.current.get(startNode.node_id)
+    const cached = localPositions.current.get(startNode.nodeId)
     const pos = flowNode?.position ??
-      cached ?? { x: startNode.position_x ?? 0, y: startNode.position_y ?? 0 }
+      cached ?? { x: startNode.positionX ?? 0, y: startNode.positionY ?? 0 }
     const measuredW = flowNode?.measured?.width ?? 200
     const measuredH = flowNode?.measured?.height ?? 90
     const halfW = measuredW > 0 ? measuredW / 2 : 75
@@ -900,27 +898,27 @@ export function SimulationStudioPage() {
     if (
       apiEdges.some(
         (edge) =>
-          edge.source_node_id === connection.source &&
-          edge.source_port_id === connection.sourceHandle &&
-          edge.target_node_id === connection.target &&
-          edge.target_port_id === connection.targetHandle,
+          edge.sourceNodeId === connection.source &&
+          edge.sourcePortId === connection.sourceHandle &&
+          edge.targetNodeId === connection.target &&
+          edge.targetPortId === connection.targetHandle,
       )
     ) {
       toast.error('That port connection already exists.')
       return
     }
-    const sourceNode = apiNodes.find((node) => node.node_id === connection.source)
-    const targetNode = apiNodes.find((node) => node.node_id === connection.target)
-    const sourcePort = sourceNode?.output_ports.find((port) => port.id === connection.sourceHandle)
-    const targetPort = targetNode?.input_ports.find((port) => port.id === connection.targetHandle)
+    const sourceNode = apiNodes.find((node) => node.nodeId === connection.source)
+    const targetNode = apiNodes.find((node) => node.nodeId === connection.target)
+    const sourcePort = sourceNode?.outputPorts.find((port) => port.id === connection.sourceHandle)
+    const targetPort = targetNode?.inputPorts.find((port) => port.id === connection.targetHandle)
     if (!sourcePort || !targetPort) {
       toast.error('Select a catalog-defined output port and input port.')
       return
     }
     if (
-      sourcePort.data_type !== 'any' &&
-      !targetPort.accepted_data_types.includes('any') &&
-      !targetPort.accepted_data_types.includes(sourcePort.data_type)
+      sourcePort.dataType !== 'any' &&
+      !targetPort.acceptedDataTypes.includes('any') &&
+      !targetPort.acceptedDataTypes.includes(sourcePort.dataType)
     ) {
       toast.error('The selected ports have incompatible data types.')
       return
@@ -928,9 +926,8 @@ export function SimulationStudioPage() {
     if (
       apiEdges.filter(
         (edge) =>
-          edge.source_node_id === connection.source &&
-          edge.source_port_id === connection.sourceHandle,
-      ).length >= sourcePort.max_connections
+          edge.sourceNodeId === connection.source && edge.sourcePortId === connection.sourceHandle,
+      ).length >= sourcePort.maxConnections
     ) {
       toast.error('The source output port has reached its connection limit.')
       return
@@ -938,19 +935,18 @@ export function SimulationStudioPage() {
     if (
       apiEdges.filter(
         (edge) =>
-          edge.target_node_id === connection.target &&
-          edge.target_port_id === connection.targetHandle,
-      ).length >= targetPort.max_connections
+          edge.targetNodeId === connection.target && edge.targetPortId === connection.targetHandle,
+      ).length >= targetPort.maxConnections
     ) {
       toast.error('The target input port has reached its connection limit.')
       return
     }
-    if (targetNode?.node_type !== 'conversation_group' && targetNode?.node_type !== 'loop') {
+    if (targetNode?.nodeType !== 'conversation_group' && targetNode?.nodeType !== 'loop') {
       const adjacency = new Map<string, string[]>()
       apiEdges.forEach((edge) =>
-        adjacency.set(edge.source_node_id, [
-          ...(adjacency.get(edge.source_node_id) ?? []),
-          edge.target_node_id,
+        adjacency.set(edge.sourceNodeId, [
+          ...(adjacency.get(edge.sourceNodeId) ?? []),
+          edge.targetNodeId,
         ]),
       )
       const pending = [connection.target]
@@ -969,12 +965,12 @@ export function SimulationStudioPage() {
     }
     const pendingEdgeId = `pending:${connectionKey}`
     const pendingEdge: ApiEdge = {
-      edge_id: pendingEdgeId,
-      source_node_id: connection.source,
-      source_port_id: connection.sourceHandle,
-      target_node_id: connection.target,
-      target_port_id: connection.targetHandle,
-      is_valid: true,
+      edgeId: pendingEdgeId,
+      sourceNodeId: connection.source,
+      sourcePortId: connection.sourceHandle,
+      targetNodeId: connection.target,
+      targetPortId: connection.targetHandle,
+      isValid: true,
     }
     pendingEdgeKeys.current.add(connectionKey)
     const flowSourceNode = nodes.find((n) => n.id === connection.source)?.data as
@@ -984,21 +980,21 @@ export function SimulationStudioPage() {
       edgeToFlow(pendingEdge, sourcePort, deleteEdge, edgePathType, flowSourceNode?.apiNode),
     ])
     addSimulationEdge(simulationId, {
-      source_node_id: connection.source,
-      source_port_id: connection.sourceHandle,
-      target_node_id: connection.target,
-      target_port_id: connection.targetHandle,
+      sourceNodeId: connection.source,
+      sourcePortId: connection.sourceHandle,
+      targetNodeId: connection.target,
+      targetPortId: connection.targetHandle,
     })
       .then((edge) => {
         queryClient.setQueryData<[ApiNode[], ApiEdge[]]>(['graph', simulationId], (current) =>
           current
-            ? [current[0], [...current[1].filter((item) => item.edge_id !== edge.edge_id), edge]]
+            ? [current[0], [...current[1].filter((item) => item.edgeId !== edge.edgeId), edge]]
             : current,
         )
         setEdges((current) =>
           current.map((item) => {
             if (item.id === pendingEdgeId) {
-              const sourceNode = apiNodes.find((n) => n.node_id === edge.source_node_id)
+              const sourceNode = apiNodes.find((n) => n.nodeId === edge.sourceNodeId)
               return edgeToFlow(edge, sourcePort, deleteEdge, edgePathType, sourceNode)
             }
             return item
@@ -1024,31 +1020,31 @@ export function SimulationStudioPage() {
     const layout = new dagre.graphlib.Graph()
     layout.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 200, marginx: 60, marginy: 60 })
     layout.setDefaultEdgeLabel(() => ({}))
-    apiNodes.forEach((node) => layout.setNode(node.node_id, { width: 200, height: 90 }))
-    apiEdges.forEach((edge) => layout.setEdge(edge.source_node_id, edge.target_node_id))
+    apiNodes.forEach((node) => layout.setNode(node.nodeId, { width: 200, height: 90 }))
+    apiEdges.forEach((edge) => layout.setEdge(edge.sourceNodeId, edge.targetNodeId))
     dagre.layout(layout)
     const positions = new Map<string, { x: number; y: number }>()
     apiNodes.forEach((node) => {
-      const meta = layout.node(node.node_id)
+      const meta = layout.node(node.nodeId)
       if (meta)
-        positions.set(node.node_id, { x: meta.x - meta.width / 2, y: meta.y - meta.height / 2 })
+        positions.set(node.nodeId, { x: meta.x - meta.width / 2, y: meta.y - meta.height / 2 })
     })
     positions.forEach((position, nodeId) => localPositions.current.set(nodeId, position))
     setNodes((current) =>
       current.map((node) => ({ ...node, position: positions.get(node.id) ?? node.position })),
     )
     apiNodes.forEach((node) => {
-      const position = positions.get(node.node_id)
+      const position = positions.get(node.nodeId)
       if (position)
         enqueueNodeSave({
-          id: node.node_id,
+          id: node.nodeId,
           payload: {
-            node_name: node.node_name,
-            node_type: node.node_type,
+            nodeName: node.nodeName,
+            nodeType: node.nodeType,
             parameters: node.parameters,
             rotation: node.rotation ?? 0,
-            position_x: position.x,
-            position_y: position.y,
+            positionX: position.x,
+            positionY: position.y,
           },
         })
     })
@@ -1095,14 +1091,14 @@ export function SimulationStudioPage() {
     }
     if (!selectedNode) return
     enqueueNodeSave({
-      id: selectedNode.node_id,
+      id: selectedNode.nodeId,
       payload: {
-        node_name: name,
-        node_type: selectedNode.node_type,
+        nodeName: name,
+        nodeType: selectedNode.nodeType,
         parameters,
         rotation: selectedNode.rotation ?? 0,
-        position_x: selectedNode.position_x,
-        position_y: selectedNode.position_y,
+        positionX: selectedNode.positionX,
+        positionY: selectedNode.positionY,
       },
     })
   }
@@ -1114,12 +1110,12 @@ export function SimulationStudioPage() {
     }
     if (!selectedEdge) return
     persistEdge.mutate({
-      id: selectedEdge.edge_id,
+      id: selectedEdge.edgeId,
       payload: {
-        source_node_id: selectedEdge.source_node_id,
-        source_port_id: selectedEdge.source_port_id,
-        target_node_id: selectedEdge.target_node_id,
-        target_port_id: selectedEdge.target_port_id,
+        sourceNodeId: selectedEdge.sourceNodeId,
+        sourcePortId: selectedEdge.sourcePortId,
+        targetNodeId: selectedEdge.targetNodeId,
+        targetPortId: selectedEdge.targetPortId,
       },
     })
   }
@@ -1195,7 +1191,7 @@ export function SimulationStudioPage() {
               </Link>
               <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
               <h1 className="truncate text-base font-bold text-slate-900">
-                {selectedGroupSimulation?.group_simulation_name ?? 'Loading…'}
+                {selectedGroupSimulation?.groupSimulationName ?? 'Loading…'}
               </h1>
             </nav>
           </div>
@@ -1203,7 +1199,7 @@ export function SimulationStudioPage() {
           <div className="hidden items-center gap-2.5 border-l border-slate-200 pl-3 sm:flex">
             {selectedSimulation ? (
               <span className="inline-flex h-5 items-center rounded-4xl border border-slate-200 bg-slate-50 px-2 text-[0.66rem] font-semibold text-slate-600">
-                {selectedSimulation.simulation_name}
+                {selectedSimulation.simulationName}
               </span>
             ) : (
               <span className="inline-flex h-5 w-fit items-center rounded-4xl border border-slate-200 bg-slate-50 px-2 text-[0.66rem] font-semibold text-slate-500">
@@ -1264,8 +1260,8 @@ export function SimulationStudioPage() {
                   Select version...
                 </option>
                 {versions.data?.map((v) => (
-                  <option key={v.simulation_id} value={v.simulation_id} className="bg-white">
-                    {v.simulation_name}
+                  <option key={v.simulationId} value={v.simulationId} className="bg-white">
+                    {v.simulationName}
                   </option>
                 ))}
               </select>
@@ -1350,11 +1346,11 @@ export function SimulationStudioPage() {
                       const isEditable = Boolean(simulationId) && !isLocked
 
                       return (
-                        <Tooltip key={definition.node_type}>
+                        <Tooltip key={definition.nodeType}>
                           <TooltipTrigger asChild>
                             <div
                               draggable={isEditable}
-                              onDragStart={(event) => startPaletteDrag(event, definition.node_type)}
+                              onDragStart={(event) => startPaletteDrag(event, definition.nodeType)}
                               onClick={() => {
                                 if (isLocked) {
                                   toast.error(lockedMessage)
@@ -1564,7 +1560,7 @@ export function SimulationStudioPage() {
                 ...edge,
                 className:
                   invalidEdgeIds.has(edge.id) ||
-                  apiEdges.find((apiEdge) => apiEdge.edge_id === edge.id)?.is_valid === false
+                  apiEdges.find((apiEdge) => apiEdge.edgeId === edge.id)?.isValid === false
                     ? 'invalid-edge'
                     : '',
                 selectable: true,
@@ -1591,14 +1587,14 @@ export function SimulationStudioPage() {
                   x: Math.round(node.position.x),
                   y: Math.round(node.position.y),
                 })
-                const current = apiNodes.find((item) => item.node_id === node.id)
+                const current = apiNodes.find((item) => item.nodeId === node.id)
                 if (current)
                   enqueueNodeSave({
                     id: node.id,
                     payload: {
                       ...current,
-                      position_x: Math.round(node.position.x),
-                      position_y: Math.round(node.position.y),
+                      positionX: Math.round(node.position.x),
+                      positionY: Math.round(node.position.y),
                     },
                   })
               }}
@@ -1666,13 +1662,13 @@ export function SimulationStudioPage() {
               <div className="space-y-4">
                 {selectedNode && (
                   <NodeConfigurationForm
-                    key={selectedNode.node_id}
+                    key={selectedNode.nodeId}
                     node={{ ...selectedNode, configuration: selectedNode.parameters }}
-                    definition={definitions.get(selectedNode.node_type)}
+                    definition={definitions.get(selectedNode.nodeType)}
                     graphNodes={apiNodes}
                     onSave={saveStructuredNode}
                     onDuplicate={() => handleDuplicateNode(selectedNode)}
-                    onDelete={() => handleDeleteNode(selectedNode.node_id)}
+                    onDelete={() => handleDeleteNode(selectedNode.nodeId)}
                     readonly={isLocked}
                   />
                 )}
@@ -1680,7 +1676,7 @@ export function SimulationStudioPage() {
                 {selectedEdge && (
                   <EdgeConfigurationForm
                     onSave={saveStructuredEdge}
-                    onDelete={() => handleDeleteEdge(selectedEdge.edge_id)}
+                    onDelete={() => handleDeleteEdge(selectedEdge.edgeId)}
                     readonly={isLocked}
                   />
                 )}
@@ -1723,21 +1719,21 @@ export function SimulationStudioPage() {
                     <div className="space-y-2">
                       {versions.data?.map((version) => (
                         <div
-                          key={version.simulation_id}
+                          key={version.simulationId}
                           className={`cursor-pointer rounded-xl border p-3 transition-all ${
-                            version.simulation_id === simulationId
+                            version.simulationId === simulationId
                               ? 'border-purple-300 bg-purple-50 shadow-xs'
                               : 'border-slate-200 bg-white hover:border-slate-300'
                           }`}
-                          onClick={() => navigate(`/studio/${version.simulation_id}`)}
+                          onClick={() => navigate(`/studio/${version.simulationId}`)}
                         >
                           <div className="mb-1 flex items-center justify-between">
                             <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                              {version.simulation_name}
-                              {version.is_locked && (
+                              {version.simulationName}
+                              {version.isLocked && (
                                 <span
                                   className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
-                                  title={`Used ${version.execution_count ?? 0} times`}
+                                  title={`Used ${version.executionCount ?? 0} times`}
                                 >
                                   <Lock className="h-3 w-3" /> Locked
                                 </span>
@@ -1762,7 +1758,7 @@ export function SimulationStudioPage() {
                                 title="Delete version"
                                 onClick={(event) => {
                                   event.stopPropagation()
-                                  setdeleteSimulationTarget(version.simulation_id)
+                                  setdeleteSimulationTarget(version.simulationId)
                                 }}
                                 className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                               >
@@ -1771,8 +1767,8 @@ export function SimulationStudioPage() {
                             </span>
                           </div>
                           <p className="text-xs text-slate-500">
-                            {version.is_locked
-                              ? `Locked • Used ${version.execution_count ?? 0} times`
+                            {version.isLocked
+                              ? `Locked • Used ${version.executionCount ?? 0} times`
                               : `Created: ${new Date().toLocaleDateString()}`}
                           </p>
                         </div>
@@ -1902,8 +1898,8 @@ export function SimulationStudioPage() {
               }
               createDraft.mutate({
                 sourceId: duplicateSourceId,
-                simulation_name: trimmed,
-                simulation_desc: duplicateDesc.trim() ? duplicateDesc.trim() : null,
+                simulationName: trimmed,
+                simulationDesc: duplicateDesc.trim() ? duplicateDesc.trim() : null,
               })
             }}
             className="flex flex-col gap-4"
@@ -1971,9 +1967,9 @@ function ExecutionHistoryPanel({
   executions: Execution[]
   selectedExecution: Execution | null
   timeline: {
-    event_id: string
-    event_type: string
-    node_id: string | null
+    eventId: string
+    eventType: string
+    nodeId: string | null
     payload: Record<string, unknown>
   }[]
   isLoading: boolean
@@ -1997,26 +1993,26 @@ function ExecutionHistoryPanel({
         {executions.map((execution) => (
           <div
             className={`w-full cursor-pointer rounded-xl border p-2.5 text-left text-xs transition-all ${
-              selectedExecution?.execution_id === execution.execution_id
+              selectedExecution?.executionId === execution.executionId
                 ? 'border-purple-300 bg-purple-50'
                 : 'border-slate-200 bg-white hover:border-slate-300'
             }`}
-            key={execution.execution_id}
+            key={execution.executionId}
             role="button"
             tabIndex={0}
-            onClick={() => onSelect(execution.execution_id)}
+            onClick={() => onSelect(execution.executionId)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault()
-                onSelect(execution.execution_id)
+                onSelect(execution.executionId)
               }
             }}
           >
             <div className="mb-1 flex items-center justify-between">
               <span className="mr-2 truncate font-semibold text-slate-800">
-                {typeof execution.context.participant_id === 'string'
-                  ? execution.context.participant_id
-                  : (execution.participant_id ?? 'Participant unavailable')}
+                {typeof execution.context.participantId === 'string'
+                  ? execution.context.participantId
+                  : (execution.participantId ?? 'Participant unavailable')}
               </span>
               <span className="flex shrink-0 items-center gap-1.5">
                 <StatusBadge status={execution.status} />
@@ -2026,7 +2022,7 @@ function ExecutionHistoryPanel({
                   title="Delete log"
                   onClick={(event) => {
                     event.stopPropagation()
-                    onRequestDelete(execution.execution_id)
+                    onRequestDelete(execution.executionId)
                   }}
                   className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                 >
@@ -2035,7 +2031,7 @@ function ExecutionHistoryPanel({
               </span>
             </div>
             <small className="block font-mono text-[10px] text-slate-500">
-              {execution.execution_id}
+              {execution.executionId}
             </small>
           </div>
         ))}
@@ -2046,7 +2042,7 @@ function ExecutionHistoryPanel({
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-purple-700">Timeline Events</span>
             <span className="text-[10px] text-slate-500">
-              Node: {selectedExecution.current_node_id ?? 'Completed'}
+              Node: {selectedExecution.currentNodeId ?? 'Completed'}
             </span>
           </div>
 
@@ -2054,16 +2050,16 @@ function ExecutionHistoryPanel({
             {timeline.map((event) => (
               <details
                 className={`rounded-lg border bg-slate-50 p-2 text-xs ${
-                  event.event_type === 'execution_failed'
+                  event.eventType === 'execution_failed'
                     ? 'border-red-300 bg-red-50 text-red-700'
                     : 'border-slate-200 text-slate-700'
                 }`}
-                key={event.event_id}
+                key={event.eventId}
               >
                 <summary className="flex cursor-pointer items-center justify-between font-medium hover:text-purple-700">
-                  <span>{event.event_type}</span>
-                  {event.node_id && (
-                    <span className="font-mono text-[10px] text-slate-500">{event.node_id}</span>
+                  <span>{event.eventType}</span>
+                  {event.nodeId && (
+                    <span className="font-mono text-[10px] text-slate-500">{event.nodeId}</span>
                   )}
                 </summary>
                 <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-2 font-mono text-[10px] text-slate-100">

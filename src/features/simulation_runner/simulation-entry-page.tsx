@@ -38,9 +38,9 @@ export function SimulationEntryPage() {
   function begin(event: FormEvent) {
     event.preventDefault()
     start.mutate({
-      participant_id: participantId.trim(),
-      simulation_ids: simulationIds,
-      context: { actor_id: actorId.trim() },
+      participantId: participantId.trim(),
+      simulationIds: simulationIds,
+      context: { actorId: actorId.trim() },
     })
   }
 
@@ -99,8 +99,8 @@ export function SimulationEntryPage() {
           <MultiSelect
             id="runner-simulation"
             options={(simulations.data ?? []).map((item) => ({
-              value: item.simulation_id,
-              label: `${item.group_simulation_name} · ${item.simulation_name}`,
+              value: item.simulationId,
+              label: `${item.groupSimulationName} · ${item.simulationName}`,
             }))}
             value={simulationIds}
             onValueChange={setSimulationIds}

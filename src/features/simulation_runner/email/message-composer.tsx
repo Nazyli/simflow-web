@@ -65,19 +65,19 @@ export function MessageComposer({
           <ul className="flex flex-wrap gap-2" aria-label="Attached documents">
             {attachments.map((attachment) => (
               <li
-                key={attachment.participant_doc_id}
+                key={attachment.participantDocId}
                 className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 py-1 pr-1.5 pl-2.5 text-xs text-[#1a1a2e]"
               >
                 <FileText size={13} className="shrink-0 text-[#5b46c5]" />
                 <span className="max-w-[220px] truncate font-medium">
-                  {attachment.document_name}
+                  {attachment.documentName}
                 </span>
                 <span className="text-[#5f6368]">(pages {formatPages(attachment.contents)})</span>
                 <button
                   type="button"
-                  aria-label={`Remove ${attachment.document_name}`}
+                  aria-label={`Remove ${attachment.documentName}`}
                   disabled={disabled}
-                  onClick={() => onRemoveAttachment(attachment.participant_doc_id)}
+                  onClick={() => onRemoveAttachment(attachment.participantDocId)}
                   className="grid size-4 shrink-0 place-items-center rounded-full text-[#5f6368] transition-colors hover:bg-violet-100 hover:text-[#1a1a2e] disabled:opacity-50"
                 >
                   <X size={12} />

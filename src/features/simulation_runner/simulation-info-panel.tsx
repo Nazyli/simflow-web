@@ -57,11 +57,11 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
               Participant console
             </span>
             <h1 className="truncate text-lg font-bold text-slate-900">
-              {activeSimulation?.group_simulation_name ?? 'Participant workspace'}
+              {activeSimulation?.groupSimulationName ?? 'Participant workspace'}
             </h1>
             <p className="truncate text-xs text-slate-500">
               {activeExecution
-                ? `${activeSimulation?.simulation_name ?? 'Simulation'} · Session ${activeExecution.session_id}`
+                ? `${activeSimulation?.simulationName ?? 'Simulation'} · Session ${activeExecution.sessionId}`
                 : 'No active simulation for this participant yet.'}
             </p>
           </div>

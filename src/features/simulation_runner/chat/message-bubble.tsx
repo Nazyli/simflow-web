@@ -17,7 +17,7 @@ function isSameOrigin(url: string): boolean {
 export function MessageBubble({ message, participantId }: MessageBubbleProps) {
   const own = isOwnMessage(message, participantId)
   const sender = own ? 'You' : message.from || message.actor || 'system'
-  const content = message.content || message.action_type || ''
+  const content = message.content || message.actionType || ''
   return (
     <article className={`flex gap-2 ${own ? 'justify-end' : 'justify-start'}`}>
       {!own && (
@@ -29,10 +29,8 @@ export function MessageBubble({ message, participantId }: MessageBubbleProps) {
         <div className={`flex items-baseline gap-2 px-1 ${own ? 'justify-end' : 'justify-start'}`}>
           <span className="text-[10px] font-semibold text-slate-500">{sender}</span>
           <time className="text-[10px] text-slate-400">{formatChatTime(message.timestamp)}</time>
-          {message.simulation_label && (
-            <span className="truncate text-[10px] text-slate-400">
-              | {message.simulation_label}
-            </span>
+          {message.simulationLabel && (
+            <span className="truncate text-[10px] text-slate-400">| {message.simulationLabel}</span>
           )}
         </div>
         <div

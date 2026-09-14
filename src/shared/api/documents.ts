@@ -1,30 +1,30 @@
 import { apiClient } from './client'
 
 export interface RuntimeDocumentContent {
-  participant_doc_content_id: string
-  participant_doc_id: string | null
+  participantDocContentId: string
+  participantDocId: string | null
   page: number | null
   content: string | null
-  content_md: string | null
-  is_highlight: boolean
+  contentMd: string | null
+  isHighlight: boolean
 }
 
 export interface RuntimeSimulationDocument {
-  participant_doc_id: string
-  participant_id: string | null
-  session_id: string
-  execution_id: string | null
-  participant_folder_id: string | null
-  document_name: string | null
-  document_id: string | null
-  is_highlight: boolean
-  is_read: boolean
+  participantDocId: string
+  participantId: string | null
+  sessionId: string
+  executionId: string | null
+  participantFolderId: string | null
+  documentName: string | null
+  documentId: string | null
+  isHighlight: boolean
+  isRead: boolean
   owner: string | null
-  opened_at: string | null
+  openedAt: string | null
   counter: number
-  created_by: string | null
-  created_date: string
-  modified_date: string | null
+  createdBy: string | null
+  createdDate: string
+  modifiedDate: string | null
   contents: RuntimeDocumentContent[]
 }
 

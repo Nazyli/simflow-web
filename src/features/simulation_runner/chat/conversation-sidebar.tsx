@@ -50,14 +50,14 @@ export function ConversationSidebar({
 
   const availableActors = useMemo(() => {
     const list = masterQuery.data ?? []
-    return list.filter((item) => !actorIdsInSidebar.has(item.actor_id))
+    return list.filter((item) => !actorIdsInSidebar.has(item.actorId))
   }, [masterQuery.data, actorIdsInSidebar])
 
   const filteredMaster = useMemo(() => {
     const query = dialogSearch.trim().toLowerCase()
     if (!query) return availableActors
     return availableActors.filter((item) =>
-      `${item.actor_name} ${item.actor_id}`.toLowerCase().includes(query),
+      `${item.actorName} ${item.actorId}`.toLowerCase().includes(query),
     )
   }, [availableActors, dialogSearch])
 
@@ -208,24 +208,24 @@ export function ConversationSidebar({
               <div className="flex flex-col gap-1 px-2">
                 {filteredMaster.map((item) => (
                   <button
-                    key={item.actor_id}
+                    key={item.actorId}
                     type="button"
-                    onClick={() => handlePick(item.actor_id, item.actor_name)}
+                    onClick={() => handlePick(item.actorId, item.actorName)}
                     className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-slate-50"
                   >
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
-                      {item.actor_name.slice(0, 1).toUpperCase()}
+                      {item.actorName.slice(0, 1).toUpperCase()}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
                         <span className="truncate text-sm font-semibold text-slate-700">
-                          {item.actor_name}
+                          {item.actorName}
                         </span>
                         <span className="shrink-0 rounded-full bg-violet-100 px-1.5 text-[10px] font-semibold text-[#5b46c5]">
-                          {item.actor_id}
+                          {item.actorId}
                         </span>
                       </span>
-                      <span className="truncate text-xs text-slate-500">{item.actor_id}</span>
+                      <span className="truncate text-xs text-slate-500">{item.actorId}</span>
                     </span>
                   </button>
                 ))}

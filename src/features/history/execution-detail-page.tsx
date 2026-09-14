@@ -80,10 +80,10 @@ export function ExecutionDetailPage() {
   if (history.isPending) return <LoadingState />
   if (history.isError) return <ErrorState message="Unable to load execution details." />
 
-  const data = history.data?.find((item) => item.execution_id === id)
+  const data = history.data?.find((item) => item.executionId === id)
   if (!data) return <ErrorState message="Execution not found." />
 
-  const title = `${data.group_simulation_name ?? 'Simulation unavailable'} · ${data.simulation_name ?? '—'}`
+  const title = `${data.groupSimulationName ?? 'Simulation unavailable'} · ${data.simulationName ?? '—'}`
   const isFinalStatus = ['completed', 'failed', 'cancelled'].includes(data.status)
 
   return (
@@ -100,7 +100,7 @@ export function ExecutionDetailPage() {
           <div className="min-w-0">
             <h1 className="truncate text-lg font-bold text-slate-900">{title}</h1>
             <p className="truncate text-xs text-slate-500">
-              {data.participant_id} · {data.session_id}
+              {data.participantId} · {data.sessionId}
             </p>
           </div>
         </div>
@@ -194,9 +194,9 @@ export function ExecutionDetailPage() {
           className="mt-3 min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
         >
           <ParticipantFlowCanvas
-            simulationId={data.simulation_id}
-            executionId={data.execution_id}
-            currentState={data.current_node_id}
+            simulationId={data.simulationId}
+            executionId={data.executionId}
+            currentState={data.currentNodeId}
           />
         </TabsContent>
 
@@ -243,28 +243,28 @@ function NodeExecutionTable({
         </TableHeader>
         <TableBody>
           {nodeExecutions.map((item) => (
-            <TableRow key={item.node_execution_id} className="align-top">
+            <TableRow key={item.nodeExecutionId} className="align-top">
               <TableCell className="font-mono text-xs text-slate-600 tabular-nums">
-                {item.sequence_number}
+                {item.sequenceNumber}
               </TableCell>
               <TableCell className="max-w-56 font-mono text-xs break-all whitespace-normal text-slate-700">
-                {item.node_id}
+                {item.nodeId}
               </TableCell>
               <TableCell>
                 <StatusBadge status={item.status} />
               </TableCell>
               <TableCell>
-                {item.selected_port ? (
+                {item.selectedPort ? (
                   <div className="flex flex-col items-start gap-1">
                     <span className="inline-flex rounded-md bg-violet-50 px-1.5 py-0.5 font-mono text-[11px] font-bold text-violet-700">
-                      {item.selected_port}
+                      {item.selectedPort}
                     </span>
-                    {item.selected_edge_id && (
+                    {item.selectedEdgeId && (
                       <span
                         className="max-w-44 truncate font-mono text-[10px] text-slate-400"
-                        title={item.selected_edge_id}
+                        title={item.selectedEdgeId}
                       >
-                        {item.selected_edge_id}
+                        {item.selectedEdgeId}
                       </span>
                     )}
                   </div>
@@ -273,7 +273,7 @@ function NodeExecutionTable({
                 )}
               </TableCell>
               <TableCell className="whitespace-normal">
-                <JsonCell value={item.output_data} />
+                <JsonCell value={item.outputData} />
               </TableCell>
             </TableRow>
           ))}

@@ -1,5 +1,4 @@
 import { apiClient } from './client'
-import { camelizeJson } from './casing'
 
 export interface CallConnection {
   participantCallSessionId: string
@@ -39,19 +38,19 @@ export interface CallParticipantEndResult {
 export function getCallConnection(participantId: string) {
   return apiClient<CallConnection>(
     `/agent-call/connection?participantId=${encodeURIComponent(participantId)}`,
-  ).then(camelizeJson)
+  )
 }
 
 export function getCallRoomConnection(roomName: string) {
   return apiClient<CallConnection>(
     `/agent-call/room-connection?roomName=${encodeURIComponent(roomName)}`,
-  ).then(camelizeJson)
+  )
 }
 
 export function getCallHistory(participantCallSessionId: string, participantId: string) {
   return apiClient<CallMessage[]>(
     `/agent-call/participant-call-sessions/${encodeURIComponent(participantCallSessionId)}/history?participantId=${encodeURIComponent(participantId)}`,
-  ).then(camelizeJson)
+  )
 }
 
 export function requestParticipantEnd(
@@ -70,5 +69,5 @@ export function requestParticipantEnd(
         occurredAt,
       }),
     },
-  ).then(camelizeJson)
+  )
 }

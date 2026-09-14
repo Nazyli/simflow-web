@@ -85,7 +85,7 @@ export function SimulationRunProvider({
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   })
-  const activity = activityQuery.data ?? { activity_chat: [], activity_email: [] }
+  const activity = activityQuery.data ?? { activityChat: [], activityEmail: [] }
 
   useEffect(() => {
     const streamParticipantId = participantId.trim()
@@ -184,22 +184,22 @@ export function SimulationRunProvider({
         ['chat-messages', pid, simulationId, actorId],
         (messages) =>
           messages?.map((message) =>
-            message.sender_type === 'actor' && !message.is_read
-              ? { ...message, is_read: true, read_at: message.read_at ?? new Date().toISOString() }
+            message.senderType === 'actor' && !message.isRead
+              ? { ...message, isRead: true, readAt: message.readAt ?? new Date().toISOString() }
               : message,
           ),
       )
       client.setQueryData<ChatActorItem[]>(['chat-actors', pid, simulationId], (actors) =>
         actors?.map((actor) =>
-          actor.actor_id === actorId
-            ? { ...actor, unread_count: Math.max(0, actor.unread_count - count) }
+          actor.actorId === actorId
+            ? { ...actor, unreadCount: Math.max(0, actor.unreadCount - count) }
             : actor,
         ),
       )
       client.setQueryData<ChatSimulationItem[]>(['chat-simulations', pid], (simulations) =>
         simulations?.map((simulation) =>
-          simulation.simulation_id === simulationId
-            ? { ...simulation, unread_count: Math.max(0, simulation.unread_count - count) }
+          simulation.simulationId === simulationId
+            ? { ...simulation, unreadCount: Math.max(0, simulation.unreadCount - count) }
             : simulation,
         ),
       )
@@ -207,13 +207,13 @@ export function SimulationRunProvider({
         activity
           ? {
               ...activity,
-              activity_chat: activity.activity_chat
+              activityChat: activity.activityChat
                 .map((item) =>
-                  item.actor_id === actorId
-                    ? { ...item, unread_count: Math.max(0, item.unread_count - count) }
+                  item.actorId === actorId
+                    ? { ...item, unreadCount: Math.max(0, item.unreadCount - count) }
                     : item,
                 )
-                .filter((item) => item.unread_count > 0),
+                .filter((item) => item.unreadCount > 0),
             }
           : activity,
       )
@@ -276,15 +276,15 @@ export function SimulationRunProvider({
       client.setQueryData<NotificationActivity>(['notification-activity', pid], (activity) => {
         if (!activity) return activity
         let remaining = count
-        const nextEmail = activity.activity_email
+        const nextEmail = activity.activityEmail
           .map((item) => {
             if (remaining <= 0) return item
-            const nextCount = Math.max(0, item.unread_count - remaining)
-            remaining -= item.unread_count - nextCount
-            return { ...item, unread_count: nextCount }
+            const nextCount = Math.max(0, item.unreadCount - remaining)
+            remaining -= item.unreadCount - nextCount
+            return { ...item, unreadCount: nextCount }
           })
-          .filter((item) => item.unread_count > 0)
-        return { ...activity, activity_email: nextEmail }
+          .filter((item) => item.unreadCount > 0)
+        return { ...activity, activityEmail: nextEmail }
       })
       client.invalidateQueries({ queryKey: ['notification-activity', pid] })
       client.invalidateQueries({ queryKey: ['email-inbox', pid] })
@@ -297,11 +297,11 @@ export function SimulationRunProvider({
     CHANNELS.map((channel) => [
       channel,
       channel === 'chat'
-        ? activity.activity_chat.reduce((total, item) => total + item.unread_count, 0)
+        ? activity.activityChat.reduce((total, item) => total + item.unreadCount, 0)
         : channel === 'email'
-          ? activity.activity_email.reduce((total, item) => {
-              const emailItem = item as { unread_count?: number }
-              return total + (emailItem.unread_count ?? 0)
+          ? activity.activityEmail.reduce((total, item) => {
+              const emailItem = item as { unreadCount?: number }
+              return total + (emailItem.unreadCount ?? 0)
             }, 0)
           : 0,
     ]),

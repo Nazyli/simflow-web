@@ -11,7 +11,7 @@ export const getGroupSimulations = () => apiClient<GroupSimulation[]>('/studio/g
 export const getSimulationDetail = (simulationId: string) =>
   apiClient<SimulationDetail>(`/studio/simulations/${encodeURIComponent(simulationId)}`)
 export const createGroupSimulation = (
-  payload: Pick<GroupSimulation, 'group_simulation_name' | 'group_simulation_desc'>,
+  payload: Pick<GroupSimulation, 'groupSimulationName' | 'groupSimulationDesc'>,
 ) =>
   apiClient<GroupSimulation>('/studio/group-simulations', {
     method: 'POST',
@@ -19,7 +19,7 @@ export const createGroupSimulation = (
   })
 export const updateGroupSimulation = (
   groupSimulationId: string,
-  payload: Pick<GroupSimulation, 'group_simulation_name' | 'group_simulation_desc'>,
+  payload: Pick<GroupSimulation, 'groupSimulationName' | 'groupSimulationDesc'>,
 ) =>
   apiClient<GroupSimulation>(`/studio/group-simulations/${encodeURIComponent(groupSimulationId)}`, {
     method: 'PUT',
@@ -31,7 +31,7 @@ export const deleteGroupSimulation = (groupSimulationId: string) =>
   })
 export const createSimulation = (
   groupSimulationId: string,
-  payload: Pick<Simulation, 'simulation_name' | 'simulation_desc' | 'channel_name' | 'duration'>,
+  payload: Pick<Simulation, 'simulationName' | 'simulationDesc' | 'channelName' | 'duration'>,
 ) =>
   apiClient<Simulation>(
     `/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`,
@@ -42,7 +42,7 @@ export const createSimulation = (
   )
 export const duplicateSimulation = (
   simulationId: string,
-  payload?: Pick<Simulation, 'simulation_name' | 'simulation_desc'>,
+  payload?: Pick<Simulation, 'simulationName' | 'simulationDesc'>,
 ) =>
   apiClient<Simulation>(`/studio/simulations/${encodeURIComponent(simulationId)}/duplicate`, {
     method: 'POST',
@@ -54,7 +54,7 @@ export const getSimulations = (groupSimulationId: string) =>
     `/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`,
   )
 export interface PublishedSimulation extends Simulation {
-  group_simulation_name: string
+  groupSimulationName: string
 }
 export const getPublishedSimulations = () =>
   apiClient<PublishedSimulation[]>('/studio/simulations/published')
@@ -66,27 +66,27 @@ export const validateSimulation = (simulationId: string) =>
   )
 
 export interface ApiNode {
-  node_id: string
-  node_name: string
-  node_type: string
+  nodeId: string
+  nodeName: string
+  nodeType: string
   parameters: Record<string, unknown>
-  position_x: number | null
-  position_y: number | null
+  positionX: number | null
+  positionY: number | null
   rotation: number
   category: string
-  input_ports: InputPort[]
-  output_ports: OutputPort[]
+  inputPorts: InputPort[]
+  outputPorts: OutputPort[]
 }
 export interface ApiEdge {
-  edge_id: string
-  source_node_id: string
-  source_port_id: string
-  target_node_id: string
-  target_port_id: string
-  is_valid: boolean
+  edgeId: string
+  sourceNodeId: string
+  sourcePortId: string
+  targetNodeId: string
+  targetPortId: string
+  isValid: boolean
 }
-export type ApiNodePayload = Omit<ApiNode, 'node_id' | 'category' | 'input_ports' | 'output_ports'>
-export type ApiEdgePayload = Omit<ApiEdge, 'edge_id' | 'is_valid'>
+export type ApiNodePayload = Omit<ApiNode, 'nodeId' | 'category' | 'inputPorts' | 'outputPorts'>
+export type ApiEdgePayload = Omit<ApiEdge, 'edgeId' | 'isValid'>
 export const getGraph = (simulationId: string) =>
   apiClient<[ApiNode[], ApiEdge[]]>(`/studio/simulations/${encodeURIComponent(simulationId)}/graph`)
 export const addNode = (simulationId: string, payload: ApiNodePayload) =>

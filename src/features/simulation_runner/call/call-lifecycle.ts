@@ -21,9 +21,9 @@ export function classifyCallStatus(status: string | undefined | null): CallStatu
 }
 
 export interface ParticipantEndRequest {
-  participant_id: string
-  event_id: string
-  occurred_at: string
+  participantId: string
+  eventId: string
+  occurredAt: string
 }
 
 export function makeParticipantEndRequest(
@@ -33,9 +33,9 @@ export function makeParticipantEndRequest(
   occurredAt: string,
 ): ParticipantEndRequest {
   return {
-    participant_id: participantId,
-    event_id: eventId,
-    occurred_at: occurredAt,
+    participantId: participantId,
+    eventId: eventId,
+    occurredAt: occurredAt,
   }
 }
 

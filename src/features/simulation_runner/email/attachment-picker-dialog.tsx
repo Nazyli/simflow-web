@@ -16,13 +16,13 @@ import type {
 } from '../../../shared/api/documents'
 
 export interface AttachmentPageSelection {
-  participant_doc_content_id: string
+  participantDocContentId: string
   page: number | null
 }
 
 export interface AttachmentSelection {
-  participant_doc_id: string
-  document_name: string
+  participantDocId: string
+  documentName: string
   contents: AttachmentPageSelection[]
 }
 
@@ -41,7 +41,7 @@ function sortPages<T extends RuntimeDocumentContent>(contents: readonly T[]): T[
     const secondPage = second.page ?? Number.MAX_SAFE_INTEGER
     return (
       firstPage - secondPage ||
-      first.participant_doc_content_id.localeCompare(second.participant_doc_content_id)
+      first.participantDocContentId.localeCompare(second.participantDocContentId)
     )
   })
 }
@@ -49,8 +49,8 @@ function sortPages<T extends RuntimeDocumentContent>(contents: readonly T[]): T[
 function selectionToState(selection: AttachmentSelection[]): Record<string, Set<string>> {
   return Object.fromEntries(
     selection.map((item) => [
-      item.participant_doc_id,
-      new Set(item.contents.map((page) => page.participant_doc_content_id)),
+      item.participantDocId,
+      new Set(item.contents.map((page) => page.participantDocContentId)),
     ]),
   )
 }
@@ -90,12 +90,12 @@ export function AttachmentPickerDialog({
 
   const toggleDocument = (document: RuntimeSimulationDocument) => {
     const allSelected = document.contents.every((content) =>
-      selected[document.participant_doc_id]?.has(content.participant_doc_content_id),
+      selected[document.participantDocId]?.has(content.participantDocContentId),
     )
     setSelected((current) => ({
       ...current,
-      [document.participant_doc_id]: new Set(
-        allSelected ? [] : document.contents.map((content) => content.participant_doc_content_id),
+      [document.participantDocId]: new Set(
+        allSelected ? [] : document.contents.map((content) => content.participantDocContentId),
       ),
     }))
   }
@@ -103,15 +103,15 @@ export function AttachmentPickerDialog({
   const confirm = () => {
     const next: AttachmentSelection[] = []
     for (const document of documents) {
-      const pages = selected[document.participant_doc_id]
+      const pages = selected[document.participantDocId]
       if (!pages?.size) continue
       next.push({
-        participant_doc_id: document.participant_doc_id,
-        document_name: document.document_name ?? 'Untitled document',
+        participantDocId: document.participantDocId,
+        documentName: document.documentName ?? 'Untitled document',
         contents: sortPages(document.contents)
-          .filter((content) => pages.has(content.participant_doc_content_id))
+          .filter((content) => pages.has(content.participantDocContentId))
           .map((content) => ({
-            participant_doc_content_id: content.participant_doc_content_id,
+            participantDocContentId: content.participantDocContentId,
             page: content.page,
           })),
       })
@@ -143,10 +143,10 @@ export function AttachmentPickerDialog({
           ) : (
             <ul className="flex flex-col gap-3">
               {documents.map((document) => {
-                const docId = document.participant_doc_id
+                const docId = document.participantDocId
                 const pages = sortPages(document.contents)
                 const selectedCount = pages.filter((content) =>
-                  selected[docId]?.has(content.participant_doc_content_id),
+                  selected[docId]?.has(content.participantDocContentId),
                 ).length
                 const allSelected = pages.length > 0 && selectedCount === pages.length
                 return (
@@ -158,7 +158,7 @@ export function AttachmentPickerDialog({
                       />
                       <FileText size={16} className="shrink-0 text-[#5b46c5]" />
                       <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#1a1a2e]">
-                        {document.document_name ?? 'Untitled document'}
+                        {document.documentName ?? 'Untitled document'}
                       </span>
                       <span className="text-xs text-[#5f6368]">
                         {selectedCount}/{pages.length} pages
@@ -167,14 +167,14 @@ export function AttachmentPickerDialog({
                     {pages.length > 0 ? (
                       <ul className="border-t border-[#e8eaed] px-4 py-2">
                         {pages.map((content) => (
-                          <li key={content.participant_doc_content_id}>
+                          <li key={content.participantDocContentId}>
                             <label className="flex cursor-pointer items-center gap-3 rounded-md py-1.5 pr-2 pl-7 hover:bg-[#f6f8fb]">
                               <Checkbox
                                 checked={Boolean(
-                                  selected[docId]?.has(content.participant_doc_content_id),
+                                  selected[docId]?.has(content.participantDocContentId),
                                 )}
                                 onCheckedChange={() =>
-                                  togglePage(docId, content.participant_doc_content_id)
+                                  togglePage(docId, content.participantDocContentId)
                                 }
                               />
                               <span className="text-sm text-[#1a1a2e]">

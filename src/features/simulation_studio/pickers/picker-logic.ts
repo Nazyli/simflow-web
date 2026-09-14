@@ -5,7 +5,7 @@ export function applyPickerSelection(
   record: Record<string, unknown>,
   picker: ParameterPicker,
 ): string[] {
-  const raw = record[picker.value_field]
+  const raw = record[picker.valueField]
   const next = raw === null || raw === undefined ? '' : String(raw)
   if (!next) return currentValues
   if (isPickerAppendOne(picker)) {
@@ -15,7 +15,7 @@ export function applyPickerSelection(
 }
 
 export function isPickerAppendOne(picker: ParameterPicker): boolean {
-  return picker.value_type === 'array' && picker.selection_mode === 'append_one'
+  return picker.valueType === 'array' && picker.selectionMode === 'append_one'
 }
 
 export function removePickerValue(currentValues: string[], value: string): string[] {

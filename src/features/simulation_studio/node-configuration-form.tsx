@@ -21,18 +21,18 @@ import { MasterPickerField } from './pickers/master-picker-field'
 type Configuration = Record<string, unknown>
 
 type GraphNode = {
-  node_id: string
-  node_name: string
-  node_type: string
+  nodeId: string
+  nodeName: string
+  nodeType: string
   parameters: Configuration
 }
 
 const attachmentOpenParameterNames = new Set([
-  'source_send_email_node_id',
-  'attachment_selection',
-  'attachment_ids',
-  'completion_mode',
-  'minimum_opened',
+  'sourceSendEmailNodeId',
+  'attachmentSelection',
+  'attachmentIds',
+  'completionMode',
+  'minimumOpened',
 ])
 
 export function NodeConfigurationForm({
@@ -45,11 +45,11 @@ export function NodeConfigurationForm({
   readonly = false,
 }: {
   node: {
-    node_id?: string
-    node_name: string
-    node_type: string
+    nodeId?: string
+    nodeName: string
+    nodeType: string
     configuration: Configuration
-    input_ports?: { id: string; label: string; max_connections?: number }[]
+    inputPorts?: { id: string; label: string; maxConnections?: number }[]
   }
   definition?: NodeDefinition
   onSave: (name: string, configuration: Configuration) => void
@@ -58,7 +58,7 @@ export function NodeConfigurationForm({
   graphNodes?: GraphNode[]
   readonly?: boolean
 }) {
-  const [name, setName] = useState(node.node_name)
+  const [name, setName] = useState(node.nodeName)
   const [configuration, setConfiguration] = useState<Configuration>({
     ...definition?.parameters,
     ...node.configuration,
@@ -71,7 +71,7 @@ export function NodeConfigurationForm({
     name,
     configuration,
     readonly,
-    nodeType: node.node_type,
+    nodeType: node.nodeType,
     definition,
     graphNodes,
   })
@@ -79,14 +79,14 @@ export function NodeConfigurationForm({
     name,
     configuration,
     readonly,
-    nodeType: node.node_type,
+    nodeType: node.nodeType,
     definition,
     graphNodes,
   }
   const savedSnapshot = useRef<{ name: string; configuration: string } | null>(null)
   if (savedSnapshot.current === null) {
     savedSnapshot.current = {
-      name: node.node_name,
+      name: node.nodeName,
       configuration: stableStringify({ ...definition?.parameters, ...node.configuration }),
     }
   }
@@ -99,11 +99,11 @@ export function NodeConfigurationForm({
     if (name !== snapshot.name || stableStringify(configuration) !== snapshot.configuration) return
     const nextConfiguration = { ...definition?.parameters, ...node.configuration }
     const nextConfigurationKey = stableStringify(nextConfiguration)
-    if (node.node_name === name && nextConfigurationKey === snapshot.configuration) return
-    setName(node.node_name)
+    if (node.nodeName === name && nextConfigurationKey === snapshot.configuration) return
+    setName(node.nodeName)
     setConfiguration(nextConfiguration)
     setError(null)
-    savedSnapshot.current = { name: node.node_name, configuration: nextConfigurationKey }
+    savedSnapshot.current = { name: node.nodeName, configuration: nextConfigurationKey }
   }, [node, definition, name, configuration])
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export function NodeConfigurationForm({
     const snapshot = savedSnapshot.current
     if (!snapshot) return
     if (name === snapshot.name && stableStringify(configuration) === snapshot.configuration) return
-    if (validateNodeForm(node.node_type, name, configuration, definition, graphNodes) !== null)
+    if (validateNodeForm(node.nodeType, name, configuration, definition, graphNodes) !== null)
       return
     const timer = setTimeout(() => {
       savedSnapshot.current = { name, configuration: stableStringify(configuration) }
@@ -120,7 +120,7 @@ export function NodeConfigurationForm({
       onSaveRef.current(name, configuration)
     }, 800)
     return () => clearTimeout(timer)
-  }, [readonly, node.node_type, name, configuration, definition, graphNodes])
+  }, [readonly, node.nodeType, name, configuration, definition, graphNodes])
 
   useEffect(() => {
     // Flush pending edits when the form unmounts (e.g. selecting another node).
@@ -154,7 +154,7 @@ export function NodeConfigurationForm({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const validationError = validateNodeForm(
-      node.node_type,
+      node.nodeType,
       name,
       configuration,
       definition,
@@ -183,7 +183,7 @@ export function NodeConfigurationForm({
           <h3 className="text-sm font-semibold">Node Configuration</h3>
         </div>
         <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[0.625rem] font-bold tracking-wider text-slate-500 uppercase">
-          {node.node_type}
+          {node.nodeType}
         </span>
       </div>
       <TextField
@@ -193,17 +193,17 @@ export function NodeConfigurationForm({
         required
         placeholder="e.g. Process Order"
       />
-      {node.input_ports?.length ? (
+      {node.inputPorts?.length ? (
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
           <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
             Input connections
           </p>
           <div className="mt-2 space-y-1.5">
-            {node.input_ports.map((port) => (
+            {node.inputPorts.map((port) => (
               <div key={port.id} className="flex items-center justify-between gap-3 text-xs">
                 <span className="font-medium text-slate-700">{port.label}</span>
                 <span className="rounded-full bg-white px-2 py-0.5 font-semibold text-slate-600 ring-1 ring-slate-200">
-                  Max connections: {port.max_connections ?? 1}
+                  Max connections: {port.maxConnections ?? 1}
                 </span>
               </div>
             ))}
@@ -214,12 +214,12 @@ export function NodeConfigurationForm({
         Object.entries(definition.parameters)
           .filter(
             ([key]) =>
-              node.node_type !== 'wait_for_attachment_open' ||
+              node.nodeType !== 'wait_for_attachment_open' ||
               !attachmentOpenParameterNames.has(key),
           )
           .filter(([key]) =>
             isVisible(
-              definition.validation_rules[key] as Record<string, unknown> | undefined,
+              definition.validationRules[key] as Record<string, unknown> | undefined,
               configuration,
             ),
           )
@@ -230,7 +230,7 @@ export function NodeConfigurationForm({
               value={configuration[key]}
               defaultValue={defaultValue}
               required={isRequired(
-                definition.validation_rules[key] as Record<string, unknown>,
+                definition.validationRules[key] as Record<string, unknown>,
                 configuration,
               )}
               definition={definition}
@@ -241,7 +241,7 @@ export function NodeConfigurationForm({
       ) : (
         <p className="text-xs text-amber-700">Node definition is unavailable from the catalog.</p>
       )}
-      {node.node_type === 'wait_for_attachment_open' ? (
+      {node.nodeType === 'wait_for_attachment_open' ? (
         <AttachmentOpenConfigurationFields
           configuration={configuration}
           graphNodes={graphNodes}
@@ -311,7 +311,7 @@ function validateNodeForm(
   graphNodes: GraphNode[],
 ): string | null {
   if (!name.trim()) return 'Node name is required.'
-  const required = Object.entries(definition?.validation_rules ?? {})
+  const required = Object.entries(definition?.validationRules ?? {})
     .filter(([, rule]) => isRequired(rule as Record<string, unknown>, configuration))
     .map(([key]) => key)
   const missing = required.filter((key) => isMissing(configuration[key]))
@@ -331,23 +331,23 @@ function validateAttachmentOpenConfiguration(
   graphNodes: GraphNode[],
 ): string | null {
   if (nodeType !== 'wait_for_attachment_open') return null
-  const sourceNodeId = configuration.source_send_email_node_id
+  const sourceNodeId = configuration.sourceSendEmailNodeId
   const sourceNode = graphNodes.find(
-    (candidate) => candidate.node_id === sourceNodeId && candidate.node_type === 'send_email',
+    (candidate) => candidate.nodeId === sourceNodeId && candidate.nodeType === 'send_email',
   )
   if (!sourceNode) return 'Choose a source Send Email node.'
-  if (typeof sourceNode.parameters.email_id !== 'string' || !sourceNode.parameters.email_id.trim())
+  if (typeof sourceNode.parameters.emailId !== 'string' || !sourceNode.parameters.emailId.trim())
     return 'The selected Send Email node must have an email template.'
-  const selection = configuration.attachment_selection
-  const attachmentIds = stringArray(configuration.attachment_ids)
+  const selection = configuration.attachmentSelection
+  const attachmentIds = stringArray(configuration.attachmentIds)
   if (selection === 'selected' && !attachmentIds.length)
     return 'Select at least one attachment to monitor.'
   if (selection === 'all' && attachmentIds.length)
     return 'All attachments uses an empty attachment list.'
   if (new Set(attachmentIds).size !== attachmentIds.length)
     return 'An attachment may only be selected once.'
-  if (configuration.completion_mode === 'minimum') {
-    const minimumOpened = Number(configuration.minimum_opened)
+  if (configuration.completionMode === 'minimum') {
+    const minimumOpened = Number(configuration.minimumOpened)
     if (!Number.isInteger(minimumOpened) || minimumOpened < 1)
       return 'Minimum opened attachments must be at least 1.'
     if (selection === 'selected' && minimumOpened > attachmentIds.length)
@@ -365,30 +365,30 @@ function AttachmentOpenConfigurationFields({
   graphNodes: GraphNode[]
   onChange: (patch: Configuration) => void
 }) {
-  const sourceNodes = graphNodes.filter((candidate) => candidate.node_type === 'send_email')
+  const sourceNodes = graphNodes.filter((candidate) => candidate.nodeType === 'send_email')
   const sourceNodeId =
-    typeof configuration.source_send_email_node_id === 'string'
-      ? configuration.source_send_email_node_id
+    typeof configuration.sourceSendEmailNodeId === 'string'
+      ? configuration.sourceSendEmailNodeId
       : ''
-  const sourceNode = sourceNodes.find((candidate) => candidate.node_id === sourceNodeId)
+  const sourceNode = sourceNodes.find((candidate) => candidate.nodeId === sourceNodeId)
   const emailId =
-    typeof sourceNode?.parameters.email_id === 'string' ? sourceNode.parameters.email_id : ''
+    typeof sourceNode?.parameters.emailId === 'string' ? sourceNode.parameters.emailId : ''
   const emailDetail = useQuery({
     queryKey: ['studio-master-email', emailId],
     queryFn: () => getStudioMasterEmail(emailId),
     enabled: Boolean(emailId),
   })
   const attachments = emailDetail.data?.attachments ?? []
-  const attachmentSelection = configuration.attachment_selection === 'all' ? 'all' : 'selected'
-  const attachmentIds = stringArray(configuration.attachment_ids)
-  const completionMode = configuration.completion_mode === 'all' ? 'all' : 'minimum'
-  const minimumOpened = Number(configuration.minimum_opened ?? 1)
+  const attachmentSelection = configuration.attachmentSelection === 'all' ? 'all' : 'selected'
+  const attachmentIds = stringArray(configuration.attachmentIds)
+  const completionMode = configuration.completionMode === 'all' ? 'all' : 'minimum'
+  const minimumOpened = Number(configuration.minimumOpened ?? 1)
 
   function updateAttachment(attachmentId: string, checked: boolean) {
     const next = checked
       ? [...attachmentIds, attachmentId]
       : attachmentIds.filter((candidate) => candidate !== attachmentId)
-    onChange({ attachment_ids: next })
+    onChange({ attachmentIds: next })
   }
 
   return (
@@ -397,19 +397,17 @@ function AttachmentOpenConfigurationFields({
         <Label htmlFor="source-send-email-node">Source email</Label>
         <Select
           value={sourceNodeId}
-          onValueChange={(value) =>
-            onChange({ source_send_email_node_id: value, attachment_ids: [] })
-          }
+          onValueChange={(value) => onChange({ sourceSendEmailNodeId: value, attachmentIds: [] })}
         >
           <SelectTrigger id="source-send-email-node" className="w-full bg-white">
             <SelectValue placeholder="Choose a Send Email node" />
           </SelectTrigger>
           <SelectContent>
             {sourceNodes.map((candidate) => (
-              <SelectItem key={candidate.node_id} value={candidate.node_id}>
-                {candidate.node_name}
-                {typeof candidate.parameters.email_id === 'string'
-                  ? ` (${candidate.parameters.email_id})`
+              <SelectItem key={candidate.nodeId} value={candidate.nodeId}>
+                {candidate.nodeName}
+                {typeof candidate.parameters.emailId === 'string'
+                  ? ` (${candidate.parameters.emailId})`
                   : ''}
               </SelectItem>
             ))}
@@ -426,8 +424,8 @@ function AttachmentOpenConfigurationFields({
           value={attachmentSelection}
           onValueChange={(value) =>
             onChange({
-              attachment_selection: value,
-              attachment_ids: [],
+              attachmentSelection: value,
+              attachmentIds: [],
             })
           }
           disabled={!emailId}
@@ -464,7 +462,7 @@ function AttachmentOpenConfigurationFields({
         <Label htmlFor="completion-mode">Completion</Label>
         <Select
           value={completionMode}
-          onValueChange={(value) => onChange({ completion_mode: value })}
+          onValueChange={(value) => onChange({ completionMode: value })}
           disabled={!emailId}
         >
           <SelectTrigger id="completion-mode" className="w-full bg-white">
@@ -481,7 +479,7 @@ function AttachmentOpenConfigurationFields({
             value={minimumOpened}
             type="number"
             required
-            onChange={(value) => onChange({ minimum_opened: Number(value) })}
+            onChange={(value) => onChange({ minimumOpened: Number(value) })}
           />
         ) : null}
       </div>
@@ -504,15 +502,15 @@ function AttachmentPicker({
     <div className="space-y-2 rounded-md border border-emerald-100 bg-white p-2">
       {attachments.map((attachment) => (
         <label
-          key={attachment.attachment_id}
+          key={attachment.attachmentId}
           className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-emerald-50"
         >
           <Checkbox
-            checked={selectedIds.includes(attachment.attachment_id)}
+            checked={selectedIds.includes(attachment.attachmentId)}
             disabled={disabled}
-            onCheckedChange={(checked) => onChange(attachment.attachment_id, checked === true)}
+            onCheckedChange={(checked) => onChange(attachment.attachmentId, checked === true)}
           />
-          <span>{attachment.document_name}</span>
+          <span>{attachment.documentName}</span>
         </label>
       ))}
     </div>
@@ -522,10 +520,10 @@ function AttachmentPicker({
 function ruleMatches(
   rule: Record<string, unknown> | undefined,
   configuration: Configuration,
-  key: 'visible_when' | 'required_when',
+  key: 'visibleWhen' | 'requiredWhen',
 ): boolean {
   const condition = rule?.[key]
-  if (!condition || typeof condition !== 'object') return key === 'visible_when'
+  if (!condition || typeof condition !== 'object') return key === 'visibleWhen'
   const { field, equals } = condition as Record<string, unknown>
   return typeof field === 'string' && configuration[field] === equals
 }
@@ -534,14 +532,14 @@ function isVisible(
   rule: Record<string, unknown> | undefined,
   configuration: Configuration,
 ): boolean {
-  return ruleMatches(rule, configuration, 'visible_when')
+  return ruleMatches(rule, configuration, 'visibleWhen')
 }
 
 function isRequired(
   rule: Record<string, unknown> | undefined,
   configuration: Configuration,
 ): boolean {
-  return Boolean(rule?.required) || ruleMatches(rule, configuration, 'required_when')
+  return Boolean(rule?.required) || ruleMatches(rule, configuration, 'requiredWhen')
 }
 
 function CatalogParameterField({
@@ -562,11 +560,11 @@ function CatalogParameterField({
   onChange: (value: unknown) => void
 }) {
   const label = name.replaceAll('_', ' ')
-  const select = definition?.parameter_options?.[name]?.select
-  const picker = definition?.parameter_options?.[name]?.picker
+  const select = definition?.parameterOptions?.[name]?.select
+  const picker = definition?.parameterOptions?.[name]?.picker
   if (name === 'groups')
     return <ConversationGroupGroupsField value={value} required={required} onChange={onChange} />
-  if (name === 'default_group_id') {
+  if (name === 'defaultGroupId') {
     const groupOptions = Array.isArray(configuration.groups)
       ? (configuration.groups as unknown[]).filter(
           (item): item is { id: string; label: string } =>
@@ -637,9 +635,9 @@ function CatalogParameterField({
         label={label}
         value={value}
         required={required}
-        multiline={resolveParameterMultiline(name, definition?.parameter_options)}
+        multiline={resolveParameterMultiline(name, definition?.parameterOptions)}
         picker={picker}
-        filterValue={picker.filter_by ? String(configuration[picker.filter_by] ?? '') : undefined}
+        filterValue={picker.filterBy ? String(configuration[picker.filterBy] ?? '') : undefined}
         onChange={(next) => onChange(next)}
       />
     )
@@ -677,7 +675,7 @@ function CatalogParameterField({
         onChange={onChange}
       />
     )
-  const multiline = resolveParameterMultiline(name, definition?.parameter_options)
+  const multiline = resolveParameterMultiline(name, definition?.parameterOptions)
   return (
     <TextField
       label={label}

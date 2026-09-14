@@ -21,10 +21,10 @@ test('generic multiline true resolves to a textarea render decision', () => {
 test('knowledge-sources array picker appends and removes values generically', () => {
   const picker = {
     resource: 'knowledge-sources',
-    value_field: 'id',
-    display_fields: ['label', 'context_label'],
-    value_type: 'array',
-    selection_mode: 'append_one',
+    valueField: 'id',
+    displayFields: ['label', 'contextLabel'],
+    valueType: 'array',
+    selectionMode: 'append_one',
   }
   assert.equal(isPickerAppendOne(picker), true)
 

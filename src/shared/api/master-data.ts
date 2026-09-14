@@ -1,14 +1,14 @@
 import { apiClient } from './client'
 
 export interface MasterEmailAttachment {
-  attachment_id: string
-  doc_content_id: string | null
-  document_id: string | null
-  document_name: string
+  attachmentId: string
+  docContentId: string | null
+  documentId: string | null
+  documentName: string
 }
 
 export interface MasterEmailDetail {
-  email_id: string
+  emailId: string
   attachments: MasterEmailAttachment[]
 }
 
@@ -19,10 +19,10 @@ export const getStudioMasterEmail = (emailId: string) =>
   apiClient<MasterEmailDetail>(`/studio/master-data/emails/${encodeURIComponent(emailId)}`)
 
 export interface MasterActor {
-  actor_id: string
-  actor_name: string
-  actor_email?: string | null
-  actor_position?: string | null
+  actorId: string
+  actorName: string
+  actorEmail?: string | null
+  actorPosition?: string | null
   [key: string]: unknown
 }
 

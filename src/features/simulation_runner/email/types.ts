@@ -4,41 +4,41 @@ export interface EmailMessage {
   from: string
   actor: string
   channel: 'email'
-  email_id: string | null
-  message_id?: string
-  session_id?: string
+  emailId: string | null
+  messageId?: string
+  sessionId?: string
   subject: string
   content: string
   timestamp: string
-  action_type: string
-  simulation_label?: string
-  simulation_id?: string
-  is_unread?: boolean
+  actionType: string
+  simulationLabel?: string
+  simulationId?: string
+  isUnread?: boolean
   attachments: EmailAttachment[]
 }
 
 export interface EmailAttachment {
-  email_attachment_id: string
-  participant_email_id: string
-  participant_doc_id: string | null
-  master_attachment_id: string | null
-  document_id: string | null
-  file_name: string | null
-  is_highlight: boolean
-  owner_name: string | null
-  opened_at: string | null
-  modified_date: string | null
+  emailAttachmentId: string
+  participantEmailId: string
+  participantDocId: string | null
+  masterAttachmentId: string | null
+  documentId: string | null
+  fileName: string | null
+  isHighlight: boolean
+  ownerName: string | null
+  openedAt: string | null
+  modifiedDate: string | null
   contents: EmailAttachmentContent[]
 }
 
 export interface EmailAttachmentContent {
-  participant_attachment_email_id: string
-  email_attachment_id: string
-  participant_doc_content_id: string | null
+  participantAttachmentEmailId: string
+  emailAttachmentId: string
+  participantDocContentId: string | null
   page: number | null
   content: string | null
-  is_highlight: boolean
-  owner_name: string | null
+  isHighlight: boolean
+  ownerName: string | null
 }
 
 export function sortAttachmentPreviewPages<T extends EmailAttachmentContent>(
@@ -49,7 +49,7 @@ export function sortAttachmentPreviewPages<T extends EmailAttachmentContent>(
     const secondPage = second.page ?? Number.MAX_SAFE_INTEGER
     return (
       firstPage - secondPage ||
-      first.participant_attachment_email_id.localeCompare(second.participant_attachment_email_id)
+      first.participantAttachmentEmailId.localeCompare(second.participantAttachmentEmailId)
     )
   })
 }

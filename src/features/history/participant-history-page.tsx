@@ -89,10 +89,10 @@ export function ParticipantHistoryPage() {
     queryFn: async (): Promise<HistoryRow[]> => {
       const executions = await getExecutionHistory()
       return executions.map((execution) => ({
-        id: execution.execution_id,
+        id: execution.executionId,
         execution,
-        simulationName: execution.group_simulation_name ?? 'Simulation unavailable',
-        simulationVersionName: execution.simulation_name,
+        simulationName: execution.groupSimulationName ?? 'Simulation unavailable',
+        simulationVersionName: execution.simulationName,
       }))
     },
   })
@@ -135,12 +135,12 @@ export function ParticipantHistoryPage() {
       cell: (row) => (
         <span
           className="block max-w-[150px] truncate font-mono text-xs text-slate-700"
-          title={row.execution.participant_id}
+          title={row.execution.participantId}
         >
-          {row.execution.participant_id}
+          {row.execution.participantId}
         </span>
       ),
-      filterValue: (row) => row.execution.participant_id,
+      filterValue: (row) => row.execution.participantId,
     },
     {
       id: 'session',
@@ -148,12 +148,12 @@ export function ParticipantHistoryPage() {
       cell: (row) => (
         <span
           className="block max-w-44 truncate font-mono text-xs text-slate-700"
-          title={row.execution.session_id}
+          title={row.execution.sessionId}
         >
-          {row.execution.session_id}
+          {row.execution.sessionId}
         </span>
       ),
-      filterValue: (row) => row.execution.session_id,
+      filterValue: (row) => row.execution.sessionId,
     },
     {
       id: 'simulation',
@@ -184,22 +184,22 @@ export function ParticipantHistoryPage() {
       cell: (row) => (
         <time
           className="text-xs text-slate-700 tabular-nums"
-          dateTime={row.execution.started_at ?? row.execution.created_at}
+          dateTime={row.execution.startedAt ?? row.execution.createdAt}
         >
           {new Date(
-            /(?:[zZ]$|[+-]\d{2}:?\d{2}$)/.test(row.execution.started_at ?? row.execution.created_at)
-              ? (row.execution.started_at ?? row.execution.created_at)
-              : `${row.execution.started_at ?? row.execution.created_at}Z`,
+            /(?:[zZ]$|[+-]\d{2}:?\d{2}$)/.test(row.execution.startedAt ?? row.execution.createdAt)
+              ? (row.execution.startedAt ?? row.execution.createdAt)
+              : `${row.execution.startedAt ?? row.execution.createdAt}Z`,
           ).toLocaleString([], { timeZone: 'Asia/Jakarta' })}
         </time>
       ),
-      sortValue: (row) => row.execution.started_at ?? row.execution.created_at,
+      sortValue: (row) => row.execution.startedAt ?? row.execution.createdAt,
     },
     {
       id: 'completed',
       header: 'Completed at',
       cell: (row) => {
-        const val = row.execution.completed_at
+        const val = row.execution.completedAt
         const parsed = val
           ? new Date(/(?:[zZ]$|[+-]\d{2}:?\d{2}$)/.test(val) ? val : `${val}Z`)
           : null
@@ -209,7 +209,7 @@ export function ParticipantHistoryPage() {
           </time>
         )
       },
-      sortValue: (row) => row.execution.completed_at ?? '',
+      sortValue: (row) => row.execution.completedAt ?? '',
     },
     {
       id: 'actions',
@@ -217,14 +217,14 @@ export function ParticipantHistoryPage() {
       cell: (row) => (
         <div className="flex items-center justify-end gap-1.5">
           <button
-            onClick={() => navigate(`/simulation/${row.execution.participant_id}`)}
+            onClick={() => navigate(`/simulation/${row.execution.participantId}`)}
             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50"
           >
             <ListTree size={12} className="mr-1 inline" />
             Detail
           </button>
           <button
-            onClick={() => navigate(`/history/${row.execution.execution_id}?tab=flow`)}
+            onClick={() => navigate(`/history/${row.execution.executionId}?tab=flow`)}
             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:bg-slate-50"
           >
             <Route size={12} className="mr-1 inline" />
@@ -232,7 +232,7 @@ export function ParticipantHistoryPage() {
           </button>
           <button
             onClick={() => setDeleteTarget(row)}
-            aria-label={`Delete execution ${row.execution.execution_id}`}
+            aria-label={`Delete execution ${row.execution.executionId}`}
             title="Delete execution log"
             className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
           >
@@ -309,7 +309,7 @@ export function ParticipantHistoryPage() {
               variant="destructive"
               disabled={removeExecution.isPending}
               onClick={() =>
-                deleteTarget && removeExecution.mutate(deleteTarget.execution.execution_id)
+                deleteTarget && removeExecution.mutate(deleteTarget.execution.executionId)
               }
               className="border-0 bg-red-600 text-white hover:bg-red-700"
             >

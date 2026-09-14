@@ -16,7 +16,7 @@ export function useParticipantRuns(participantId: string, options?: { enabled?: 
     runs.find((run) => run.status === 'waiting' || run.status === 'running') ?? runs[0] ?? null
   const activeSimulation =
     (client.getQueryData<PublishedSimulation[]>(['published-simulations']) ?? []).find(
-      (item) => item.simulation_id === activeExecution?.simulation_id,
+      (item) => item.simulationId === activeExecution?.simulationId,
     ) ?? null
   return { runs, activeExecution, activeSimulation }
 }

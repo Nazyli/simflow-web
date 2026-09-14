@@ -37,7 +37,7 @@ export function ConversationBody({
       <div className="mx-auto max-w-3xl">
         {messages.map((message, index) => (
           <MessageBubble
-            key={message.message_id || message.email_id || `msg-${index}`}
+            key={message.messageId || message.emailId || `msg-${index}`}
             message={message}
             participantId={participantId}
             openingAttachmentIds={openingAttachmentIds}

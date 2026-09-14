@@ -1,21 +1,21 @@
 import { apiClient } from './client'
 
 export interface ChatActivityItem {
-  actor_id: string
+  actorId: string
   content: string
-  unread_count: number
+  unreadCount: number
 }
 
 export interface EmailActivityItem {
-  actor_id: string
+  actorId: string
   subject: string
   content: string
-  unread_count: number
+  unreadCount: number
 }
 
 export interface NotificationActivity {
-  activity_chat: ChatActivityItem[]
-  activity_email: EmailActivityItem[]
+  activityChat: ChatActivityItem[]
+  activityEmail: EmailActivityItem[]
 }
 
 export const getNotificationActivity = (participantId: string) =>

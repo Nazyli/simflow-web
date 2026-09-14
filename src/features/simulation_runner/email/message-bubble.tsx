@@ -58,9 +58,9 @@ export function MessageBubble({
                   You
                 </span>
               )}
-              {message.simulation_label && (
+              {message.simulationLabel && (
                 <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600">
-                  {message.simulation_label}
+                  {message.simulationLabel}
                 </span>
               )}
               <time className="ml-auto shrink-0 text-xs text-slate-400">
@@ -101,12 +101,12 @@ export function MessageBubble({
           </p>
           <div className="flex flex-wrap gap-2">
             {message.attachments.map((attachment) => {
-              const isOpened = Boolean(attachment.opened_at)
-              const isOpening = openingAttachmentIds.has(attachment.email_attachment_id)
+              const isOpened = Boolean(attachment.openedAt)
+              const isOpening = openingAttachmentIds.has(attachment.emailAttachmentId)
               const pageLabel = formatAttachmentPageLabel(attachment.contents)
               return (
                 <button
-                  key={attachment.email_attachment_id}
+                  key={attachment.emailAttachmentId}
                   type="button"
                   disabled={isOpening}
                   onClick={() => onOpenAttachment(message, attachment)}
@@ -119,7 +119,7 @@ export function MessageBubble({
                   ) : (
                     <FileText className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   )}
-                  <span className="truncate">{attachment.file_name ?? 'Attachment'}</span>
+                  <span className="truncate">{attachment.fileName ?? 'Attachment'}</span>
                   {pageLabel ? <span className="shrink-0 text-slate-400">{pageLabel}</span> : null}
                   {isOpened ? <span className="text-emerald-700">Opened</span> : null}
                 </button>

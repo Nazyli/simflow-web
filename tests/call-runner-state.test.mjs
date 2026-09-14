@@ -93,9 +93,9 @@ test('classifies call statuses and builds the participant end request body', () 
       '2026-08-28T10:00:00.123Z',
     ),
     {
-      participant_id: 'participant-1',
-      event_id: 'participant-end-1',
-      occurred_at: '2026-08-28T10:00:00.123Z',
+      participantId: 'participant-1',
+      eventId: 'participant-end-1',
+      occurredAt: '2026-08-28T10:00:00.123Z',
     },
   )
 })

@@ -14,36 +14,36 @@ import type { ChatActor, ChatMessage, ChatSimulation } from './chat/types'
 import { useSimulationRun } from './simulation-run-context'
 
 export function ChatChannelPage() {
-  const { participantId, runnerParticipantId, isChatPending, sendChat, markChatRead } =
-    useSimulationRun()
+  const { participantId, isChatPending, sendChat, markChatRead } = useSimulationRun()
 
   const toChatMessage = (message: ApiChatMessage): ChatMessage => ({
-    message_id: message.participant_chat_id,
-    from: message.sender_id,
-    to: message.sender_type === 'participant' ? message.chat_partner_id : runnerParticipantId,
-    actor: message.sender_id,
+    messageId: message.participantChatId,
+    from: message.senderId,
+    to: message.senderType === 'participant' ? message.chatPartnerId : participantId,
+    actor: message.senderId,
+    senderType: message.senderType,
     channel: 'chat' as const,
-    chat_id: null,
-    action_type: 'message',
+    chatId: null,
+    actionType: 'message',
     content: message.content,
-    timestamp: message.created_date,
-    session_id: message.session_id,
-    simulation_id: message.simulation_id ?? undefined,
-    is_unread: message.is_read === false,
+    timestamp: message.createdDate,
+    sessionId: message.sessionId,
+    simulationId: message.simulationId ?? undefined,
+    isUnread: message.isRead === false,
   })
 
   const toChatSimulation = (item: ChatSimulationItem): ChatSimulation => ({
-    simulationId: item.simulation_id,
-    groupSimulationName: item.group_simulation_name,
-    simulationName: item.simulation_name,
+    simulationId: item.simulationId,
+    groupSimulationName: item.groupSimulationName,
+    simulationName: item.simulationName,
     status: item.status,
-    unreadCount: item.unread_count,
+    unreadCount: item.unreadCount,
   })
 
   const toChatActor = (item: ChatActorItem): ChatActor => ({
-    actorId: item.actor_id,
-    actorName: item.actor_name,
-    unreadCount: item.unread_count,
+    actorId: item.actorId,
+    actorName: item.actorName,
+    unreadCount: item.unreadCount,
   })
 
   const simulationsQuery = useQuery({
@@ -118,18 +118,18 @@ export function ChatChannelPage() {
         const payload = JSON.parse(event.data) as {
           type?: string
           message?: {
-            sender_type?: string
-            sender_id?: string
-            simulation_id?: string
-            is_read?: boolean
+            senderType?: string
+            senderId?: string
+            simulationId?: string
+            isRead?: boolean
           }
         }
         if (
           payload.type === 'chat_message' &&
-          payload.message?.sender_type === 'actor' &&
-          payload.message.is_read === false &&
-          payload.message.sender_id === selectedActor &&
-          payload.message.simulation_id === effectiveSelected
+          payload.message?.senderType === 'actor' &&
+          payload.message.isRead === false &&
+          payload.message.senderId === selectedActor &&
+          payload.message.simulationId === effectiveSelected
         ) {
           setReadPendingActors((prev) => {
             if (prev.has(selectedActor)) return prev
@@ -190,7 +190,7 @@ export function ChatChannelPage() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
       <ChatWorkspace
-        participantId={runnerParticipantId}
+        participantId={participantId}
         messages={visibleMessages}
         actors={actors}
         simulations={simulations}

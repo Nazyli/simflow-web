@@ -22,37 +22,37 @@ export function EmailChannelPage() {
     useSimulationRun()
 
   const toEmailMessage = (message: ApiEmailMessage): EmailMessage => ({
-    message_id: message.participant_email_id,
-    from: message.sender_id,
+    messageId: message.participantEmailId,
+    from: message.senderId,
     to: message.to,
     cc: message.cc,
-    actor: message.sender_id,
+    actor: message.senderId,
     channel: 'email' as const,
-    email_id: null,
-    action_type: 'message',
+    emailId: null,
+    actionType: 'message',
     subject: message.subject,
     content: message.content,
-    timestamp: message.created_date,
-    session_id: message.session_id,
-    simulation_id: message.simulation_id ?? undefined,
-    is_unread: message.is_read === false,
+    timestamp: message.createdDate,
+    sessionId: message.sessionId,
+    simulationId: message.simulationId ?? undefined,
+    isUnread: message.isRead === false,
     attachments: message.attachments ?? [],
   })
 
   const toEmailThread = (item: EmailInboxThreadItem): EmailInboxThread => ({
-    rootId: item.root_id,
-    latestSenderId: item.latest_sender_id,
-    latestSenderType: item.latest_sender_type,
-    latestSubject: item.latest_subject,
-    latestContent: item.latest_content,
-    latestIsRead: item.latest_is_read,
-    latestCreatedDate: item.latest_created_date,
-    unreadCount: item.unread_count,
-    messageCount: item.message_count,
-    simulationId: item.simulation_id,
+    rootId: item.rootId,
+    latestSenderId: item.latestSenderId,
+    latestSenderType: item.latestSenderType,
+    latestSubject: item.latestSubject,
+    latestContent: item.latestContent,
+    latestIsRead: item.latestIsRead,
+    latestCreatedDate: item.latestCreatedDate,
+    unreadCount: item.unreadCount,
+    messageCount: item.messageCount,
+    simulationId: item.simulationId,
   })
 
-  // Fetch all threads across all simulations (no simulation_id filter).
+  // Fetch all threads across all simulations (no simulationId filter).
   const inboxQuery = useQuery({
     queryKey: ['email-inbox', participantId],
     queryFn: () => getEmailInbox(participantId),
@@ -81,7 +81,7 @@ export function EmailChannelPage() {
 
   const selectedThread = threads.find((t) => t.rootId === selectedRootId) ?? null
 
-  // Fetch messages for the selected thread using its simulation_id.
+  // Fetch messages for the selected thread using its simulationId.
   const threadVersionId = selectedThread?.simulationId ?? null
   const threadMessagesQuery = useQuery({
     queryKey: ['email-thread-messages', participantId, threadVersionId, selectedRootId],
@@ -113,11 +113,11 @@ export function EmailChannelPage() {
         ['email-thread-messages', participantId, threadVersionId, selectedRootId],
         (messages) =>
           messages?.map((message) =>
-            message.participant_email_id === participantEmailId
+            message.participantEmailId === participantEmailId
               ? {
                   ...message,
                   attachments: message.attachments.map((attachment) =>
-                    attachment.email_attachment_id === openedAttachment.email_attachment_id
+                    attachment.emailAttachmentId === openedAttachment.emailAttachmentId
                       ? openedAttachment
                       : attachment,
                   ),
@@ -147,9 +147,9 @@ export function EmailChannelPage() {
     const target = String(data.get('target') ?? '').trim()
     if (!threadVersionId || !target) return
     const attachments: ParticipantEmailAttachmentInput[] = selectedAttachments.map((selection) => ({
-      participant_doc_id: selection.participant_doc_id,
+      participantDocId: selection.participantDocId,
       contents: selection.contents.map((page) => ({
-        participant_doc_content_id: page.participant_doc_content_id,
+        participantDocContentId: page.participantDocContentId,
       })),
     }))
     sendEmail({
@@ -158,7 +158,7 @@ export function EmailChannelPage() {
       subject: String(data.get('subject') ?? ''),
       content: String(data.get('content') ?? ''),
       parentEmailId: selectedRootId ?? undefined,
-      replyToEmailId: visibleMessages.at(-1)?.message_id,
+      replyToEmailId: visibleMessages.at(-1)?.messageId,
       attachments,
     })
     setSelectedAttachments([])
@@ -168,17 +168,17 @@ export function EmailChannelPage() {
   function openAttachment(message: EmailMessage, attachment: EmailAttachment) {
     if (
       !threadVersionId ||
-      !message.message_id ||
-      openingAttachmentIds.has(attachment.email_attachment_id)
+      !message.messageId ||
+      openingAttachmentIds.has(attachment.emailAttachmentId)
     )
       return
-    if (attachment.opened_at) {
+    if (attachment.openedAt) {
       setPreviewAttachment(attachment)
       return
     }
     attachmentOpenMutation.mutate({
-      attachmentId: attachment.email_attachment_id,
-      participantEmailId: message.message_id,
+      attachmentId: attachment.emailAttachmentId,
+      participantEmailId: message.messageId,
     })
   }
 
@@ -196,7 +196,7 @@ export function EmailChannelPage() {
         onOpenAttachmentPicker={handleOpenPicker}
         onRemoveAttachment={(participantDocId) =>
           setSelectedAttachments((current) =>
-            current.filter((selection) => selection.participant_doc_id !== participantDocId),
+            current.filter((selection) => selection.participantDocId !== participantDocId),
           )
         }
         onSubmit={submit}

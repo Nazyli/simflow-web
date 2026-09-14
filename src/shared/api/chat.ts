@@ -1,30 +1,30 @@
 import { apiClient } from './client'
 
 export interface ChatMessage {
-  participant_chat_id: string
-  session_id: string
-  chat_partner_id: string
-  sender_id: string
-  sender_type: 'participant' | 'actor'
+  participantChatId: string
+  sessionId: string
+  chatPartnerId: string
+  senderId: string
+  senderType: 'participant' | 'actor'
   content: string
-  simulation_id: string | null
-  is_read: boolean
-  read_at: string | null
-  created_date: string
+  simulationId: string | null
+  isRead: boolean
+  readAt: string | null
+  createdDate: string
 }
 
 export interface ChatSimulationItem {
-  simulation_id: string
-  group_simulation_name: string
-  simulation_name: string | null
+  simulationId: string
+  groupSimulationName: string
+  simulationName: string | null
   status: string
-  unread_count: number
+  unreadCount: number
 }
 
 export interface ChatActorItem {
-  actor_id: string
-  actor_name: string
-  unread_count: number
+  actorId: string
+  actorName: string
+  unreadCount: number
 }
 
 export interface ChatMarkAsReadResult {

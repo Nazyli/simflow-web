@@ -1,69 +1,69 @@
 import { apiClient } from './client'
 
 interface RuntimeEmailAttachmentContent {
-  participant_attachment_email_id: string
-  email_attachment_id: string
-  participant_doc_content_id: string | null
+  participantAttachmentEmailId: string
+  emailAttachmentId: string
+  participantDocContentId: string | null
   page: number | null
   content: string | null
-  is_highlight: boolean
-  owner_name: string | null
+  isHighlight: boolean
+  ownerName: string | null
 }
 
 export interface RuntimeEmailAttachment {
-  email_attachment_id: string
-  participant_email_id: string
-  participant_doc_id: string | null
-  master_attachment_id: string | null
-  document_id: string | null
-  file_name: string | null
-  is_highlight: boolean
-  owner_name: string | null
-  opened_at: string | null
-  modified_date: string | null
+  emailAttachmentId: string
+  participantEmailId: string
+  participantDocId: string | null
+  masterAttachmentId: string | null
+  documentId: string | null
+  fileName: string | null
+  isHighlight: boolean
+  ownerName: string | null
+  openedAt: string | null
+  modifiedDate: string | null
   contents: RuntimeEmailAttachmentContent[]
 }
 
 export interface EmailMessage {
-  participant_email_id: string
-  session_id: string
-  email_partner_id: string
-  sender_id: string
-  sender_type: 'participant' | 'actor'
+  participantEmailId: string
+  sessionId: string
+  emailPartnerId: string
+  senderId: string
+  senderType: 'participant' | 'actor'
   subject: string
   content: string
   to: string[]
   cc: string[]
-  simulation_id: string | null
-  parent_email_id: string | null
-  reply_to_email_id: string | null
-  master_email_id: string | null
-  is_read: boolean
-  read_at: string | null
-  created_date: string
+  simulationId: string | null
+  parentEmailId: string | null
+  replyToEmailId: string | null
+  masterEmailId: string | null
+  isRead: boolean
+  readAt: string | null
+  createdDate: string
   attachments: RuntimeEmailAttachment[]
 }
 
 interface EmailSimulationItem {
-  simulation_id: string
-  group_simulation_name: string
-  simulation_name: string | null
+  simulationId: string
+  groupSimulationName: string
+  simulationName: string | null
   status: string
-  unread_count: number
+  unreadCount: number
 }
 
 export interface EmailInboxThreadItem {
-  root_id: string
-  latest_message_id: string
-  latest_sender_id: string
-  latest_sender_type: string
-  latest_subject: string
-  latest_content: string
-  latest_is_read: boolean
-  latest_created_date: string
-  unread_count: number
-  message_count: number
-  simulation_id: string | null
+  rootId: string
+  latestMessageId: string
+  latestSenderId: string
+  latestSenderType: string
+  latestSubject: string
+  latestContent: string
+  latestIsRead: boolean
+  latestCreatedDate: string
+  unreadCount: number
+  messageCount: number
+  simulationId: string | null
 }
 
 export interface EmailMarkAsReadResult {
@@ -72,11 +72,11 @@ export interface EmailMarkAsReadResult {
 }
 
 export interface ParticipantEmailAttachmentContentInput {
-  participant_doc_content_id: string
+  participantDocContentId: string
 }
 
 export interface ParticipantEmailAttachmentInput {
-  participant_doc_id: string
+  participantDocId: string
   contents: ParticipantEmailAttachmentContentInput[]
 }
 

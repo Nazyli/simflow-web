@@ -36,7 +36,7 @@ export function DocumentChannelPage() {
         ['documents', variables.participantId],
         (current) =>
           current?.map((record) =>
-            record.participant_doc_id === updated.participant_doc_id ? updated : record,
+            record.participantDocId === updated.participantDocId ? updated : record,
           ),
       )
       setPreviewDoc(mapRuntimeDocument(updated))

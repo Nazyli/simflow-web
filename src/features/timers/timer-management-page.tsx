@@ -122,8 +122,8 @@ function ConfigurationValue({ value }: { value: unknown }) {
   return <span className="text-xs text-slate-700">{formatConfigurationScalar(value)}</span>
 }
 function progress(timer: TransParticipantTimer, now: number) {
-  const start = parseServerTime(timer.created_date).getTime()
-  const due = parseServerTime(timer.due_at).getTime()
+  const start = parseServerTime(timer.createdDate).getTime()
+  const due = parseServerTime(timer.dueAt).getTime()
   return Math.min(100, Math.max(0, ((now - start) / Math.max(1, due - start)) * 100))
 }
 
@@ -151,7 +151,7 @@ function StatusIcon({ status }: { status: string }) {
 }
 
 function CountdownCell({ timer, now }: { timer: TransParticipantTimer; now: number }) {
-  const parts = countdown(timer.due_at, now)
+  const parts = countdown(timer.dueAt, now)
   const tone =
     parts.total <= 60 ? 'text-red-600' : parts.total <= 300 ? 'text-amber-600' : 'text-[#5b46c5]'
   return (
@@ -230,9 +230,9 @@ export function TimerManagementPage() {
   const rows = useMemo(
     () =>
       [...(timers.data ?? [])]
-        .map((timer) => ({ ...timer, id: timer.participant_timer_id }))
+        .map((timer) => ({ ...timer, id: timer.participantTimerId }))
         .sort((a, b) =>
-          String(b.created_date).localeCompare(String(a.created_date), undefined, {
+          String(b.createdDate).localeCompare(String(a.createdDate), undefined, {
             numeric: true,
           }),
         ),
@@ -264,75 +264,75 @@ export function TimerManagementPage() {
         ) : (
           <span className="text-slate-300">—</span>
         ),
-      sortValue: (timer) => timer.due_at,
+      sortValue: (timer) => timer.dueAt,
     },
     {
       id: 'due',
       header: 'Due at',
       cell: (timer) => (
-        <time className="text-xs text-slate-700 tabular-nums" dateTime={timer.due_at}>
-          {formatTime(timer.due_at)}
+        <time className="text-xs text-slate-700 tabular-nums" dateTime={timer.dueAt}>
+          {formatTime(timer.dueAt)}
         </time>
       ),
-      sortValue: (timer) => timer.due_at,
+      sortValue: (timer) => timer.dueAt,
     },
     {
       id: 'created',
       header: 'Created at',
       cell: (timer) => (
-        <time className="text-xs text-slate-700 tabular-nums" dateTime={timer.created_date}>
-          {formatTime(timer.created_date)}
+        <time className="text-xs text-slate-700 tabular-nums" dateTime={timer.createdDate}>
+          {formatTime(timer.createdDate)}
         </time>
       ),
-      sortValue: (timer) => timer.created_date,
+      sortValue: (timer) => timer.createdDate,
     },
     {
       id: 'timeout',
       header: 'Timeout',
       cell: (timer) => (
         <span className="inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">
-          {durationSeconds(timer.created_date, timer.due_at)}s
+          {durationSeconds(timer.createdDate, timer.dueAt)}s
         </span>
       ),
-      sortValue: (timer) => timer.due_at,
+      sortValue: (timer) => timer.dueAt,
     },
     {
       id: 'cancel',
       header: 'Cancel at',
       cell: (timer) =>
-        timer.cancelled_at ? (
+        timer.cancelledAt ? (
           <div className="flex flex-col gap-0.5">
-            <time className="text-xs text-slate-700 tabular-nums" dateTime={timer.cancelled_at}>
-              {formatTime(timer.cancelled_at)}
+            <time className="text-xs text-slate-700 tabular-nums" dateTime={timer.cancelledAt}>
+              {formatTime(timer.cancelledAt)}
             </time>
             <span className="text-[10px] font-semibold text-slate-400">
-              {formatCancelDelta(timer.due_at, timer.cancelled_at)}
+              {formatCancelDelta(timer.dueAt, timer.cancelledAt)}
             </span>
           </div>
         ) : (
           <span className="text-slate-300">—</span>
         ),
-      sortValue: (timer) => timer.cancelled_at ?? '',
+      sortValue: (timer) => timer.cancelledAt ?? '',
     },
     {
       id: 'retries',
       header: 'Retries',
       cell: (timer) => (
         <span className="text-xs text-slate-600 tabular-nums">
-          {timer.attempt_count} / {timer.max_attempts}
+          {timer.attemptCount} / {timer.maxAttempts}
         </span>
       ),
-      sortValue: (timer) => timer.attempt_count,
+      sortValue: (timer) => timer.attemptCount,
     },
     {
       id: 'delay',
       header: 'Retry delay',
       cell: (timer) => (
         <span className="inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600 tabular-nums">
-          {timer.retry_delay_seconds}s
+          {timer.retryDelaySeconds}s
         </span>
       ),
-      sortValue: (timer) => timer.retry_delay_seconds,
+      sortValue: (timer) => timer.retryDelaySeconds,
     },
     {
       id: 'node',
@@ -341,49 +341,49 @@ export function TimerManagementPage() {
         <div className="min-w-[150px]">
           <span
             className="block truncate text-xs font-semibold text-slate-700"
-            title={timer.node_name ?? undefined}
+            title={timer.nodeName ?? undefined}
           >
-            {timer.node_name ?? 'Node unavailable'}
+            {timer.nodeName ?? 'Node unavailable'}
           </span>
           <span
             className="block truncate font-mono text-[10px] text-slate-400"
-            title={timer.node_type ?? undefined}
+            title={timer.nodeType ?? undefined}
           >
-            {timer.node_type ?? 'Unknown type'}
+            {timer.nodeType ?? 'Unknown type'}
           </span>
         </div>
       ),
-      filterValue: (timer) => `${timer.node_name ?? ''} ${timer.node_type ?? ''}`,
+      filterValue: (timer) => `${timer.nodeName ?? ''} ${timer.nodeType ?? ''}`,
     },
     {
       id: 'participant',
       header: 'Participant ID',
       cell: (timer) => (
         <span className="font-mono text-xs text-slate-600">
-          {timer.participant_id ?? 'Unavailable'}
+          {timer.participantId ?? 'Unavailable'}
         </span>
       ),
-      filterValue: (timer) => timer.participant_id ?? '',
+      filterValue: (timer) => timer.participantId ?? '',
     },
     {
       id: 'simulation',
       header: 'Simulation',
       cell: (timer) => (
         <span className="block max-w-[180px] truncate text-xs text-slate-700">
-          {timer.group_simulation_name ?? 'Unavailable'}
+          {timer.groupSimulationName ?? 'Unavailable'}
         </span>
       ),
-      filterValue: (timer) => timer.group_simulation_name ?? '',
+      filterValue: (timer) => timer.groupSimulationName ?? '',
     },
     {
-      id: 'simulation_name',
+      id: 'simulationName',
       header: 'Simulation',
       cell: (timer) => (
         <span className="text-xs text-slate-600">
-          {timer.simulation_name ?? timer.master_simulation ?? 'Unavailable'}
+          {timer.simulationName ?? timer.masterSimulation ?? 'Unavailable'}
         </span>
       ),
-      sortValue: (timer) => timer.simulation_name ?? timer.master_simulation ?? '',
+      sortValue: (timer) => timer.simulationName ?? timer.masterSimulation ?? '',
     },
     {
       id: 'actions',
@@ -479,21 +479,20 @@ export function TimerManagementPage() {
         isSaving={reschedule.isPending}
         onClose={() => setRescheduleTarget(null)}
         onSave={(dueAt) =>
-          rescheduleTarget &&
-          reschedule.mutate({ id: rescheduleTarget.participant_timer_id, dueAt })
+          rescheduleTarget && reschedule.mutate({ id: rescheduleTarget.participantTimerId, dueAt })
         }
       />
       <CancelDialog
         timer={cancelTarget}
         isSaving={cancel.isPending}
         onClose={() => setCancelTarget(null)}
-        onConfirm={() => cancelTarget && cancel.mutate(cancelTarget.participant_timer_id)}
+        onConfirm={() => cancelTarget && cancel.mutate(cancelTarget.participantTimerId)}
       />
       <RunNowDialog
         timer={runNowTarget}
         isSaving={runNow.isPending}
         onClose={() => setRunNowTarget(null)}
-        onConfirm={() => runNowTarget && runNow.mutate(runNowTarget.participant_timer_id)}
+        onConfirm={() => runNowTarget && runNow.mutate(runNowTarget.participantTimerId)}
       />
       <TimerDetail timer={detailTarget} onClose={() => setDetailTarget(null)} />
     </main>
@@ -544,7 +543,7 @@ function RescheduleDialog({
   onSave: (dueAt: string) => void
 }) {
   const [dueAt, setDueAt] = useState('')
-  useEffect(() => setDueAt(timer ? toJakartaInput(timer.due_at) : ''), [timer])
+  useEffect(() => setDueAt(timer ? toJakartaInput(timer.dueAt) : ''), [timer])
   return (
     <Dialog open={Boolean(timer)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="p-6 sm:max-w-[430px]">
@@ -595,7 +594,7 @@ function CancelDialog({
         </DialogTitle>
         <DialogDescription>
           This prevents the simulation action from running at{' '}
-          {timer ? formatTime(timer.due_at) : 'the scheduled time'}.
+          {timer ? formatTime(timer.dueAt) : 'the scheduled time'}.
         </DialogDescription>
         <DialogFooter>
           <DialogButton onClick={onClose}>Keep timer</DialogButton>
@@ -664,8 +663,8 @@ function TimerDetail({
               Retry policy
             </dt>
             <dd className="text-xs font-semibold text-slate-700 tabular-nums">
-              {timer?.attempt_count ?? 0} of {timer?.max_attempts ?? 0} attempts ·{' '}
-              {timer?.retry_delay_seconds ?? 0}s delay
+              {timer?.attemptCount ?? 0} of {timer?.maxAttempts ?? 0} attempts ·{' '}
+              {timer?.retryDelaySeconds ?? 0}s delay
             </dd>
           </div>
           <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-2.5">
@@ -673,7 +672,7 @@ function TimerDetail({
               Last error
             </dt>
             <dd className="max-w-[260px] text-right text-xs text-slate-600">
-              {timer?.last_error ?? 'No error recorded.'}
+              {timer?.lastError ?? 'No error recorded.'}
             </dd>
           </div>
           <div className="grid gap-1">
@@ -681,10 +680,10 @@ function TimerDetail({
               Execution / node
             </dt>
             <dd className="grid gap-1 font-mono text-xs text-slate-600">
-              <span>Execution: {timer?.execution_id ?? 'Unavailable'}</span>
-              <span>Node execution: {timer?.node_execution_id ?? 'Unavailable'}</span>
+              <span>Execution: {timer?.executionId ?? 'Unavailable'}</span>
+              <span>Node execution: {timer?.nodeExecutionId ?? 'Unavailable'}</span>
               <span>
-                Node: {timer?.node_name ?? 'Unavailable'} ({timer?.node_type ?? 'Unknown type'})
+                Node: {timer?.nodeName ?? 'Unavailable'} ({timer?.nodeType ?? 'Unknown type'})
               </span>
             </dd>
           </div>
@@ -693,7 +692,7 @@ function TimerDetail({
               Node configuration
             </dt>
             <dd className="rounded-lg bg-slate-50 p-3">
-              <ConfigurationValue value={timer?.node_configuration} />
+              <ConfigurationValue value={timer?.nodeConfiguration} />
             </dd>
           </div>
         </dl>

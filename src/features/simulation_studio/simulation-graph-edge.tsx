@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 
 type SimulationEdgeData = {
   label: string
-  style: { color: string; line_style: string; animated: boolean }
+  style: { color: string; lineStyle: string; animated: boolean }
   edgeType?: EdgePathType
   onDelete?: (edgeId: string) => void
 }
@@ -26,7 +26,7 @@ export function SimulationGraphEdge({
 }: EdgeProps) {
   const edgeData = data as SimulationEdgeData
   const label = edgeData?.label ?? ''
-  const style = edgeData?.style ?? { color: '#94a3b8', line_style: 'solid', animated: false }
+  const style = edgeData?.style ?? { color: '#94a3b8', lineStyle: 'solid', animated: false }
   const edgeType = edgeData?.edgeType ?? 'default'
   const onDelete = edgeData?.onDelete
   const stroke = selected ? '#5b46c5' : style.color
@@ -48,7 +48,7 @@ export function SimulationGraphEdge({
         stroke,
         strokeWidth: selected ? 2.5 : 1.5,
         strokeDasharray:
-          style.line_style === 'dashed' ? '6 4' : style.line_style === 'dotted' ? '2 3' : undefined,
+          style.lineStyle === 'dashed' ? '6 4' : style.lineStyle === 'dotted' ? '2 3' : undefined,
       }}
     >
       <div

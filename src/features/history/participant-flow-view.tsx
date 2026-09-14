@@ -31,7 +31,7 @@ function dagLayout(
   apiNodes: ApiNode[],
   apiEdges: ApiEdge[],
 ): Map<string, { x: number; y: number }> {
-  const nodeIds = new Set(apiNodes.map((n) => n.node_id))
+  const nodeIds = new Set(apiNodes.map((n) => n.nodeId))
   const graph = new dagre.graphlib.Graph()
   graph.setGraph({
     rankdir: 'LR',
@@ -41,17 +41,17 @@ function dagLayout(
     marginy: 60,
   })
   graph.setDefaultEdgeLabel(() => ({}))
-  apiNodes.forEach((node) => graph.setNode(node.node_id, { width: 200, height: 90 }))
+  apiNodes.forEach((node) => graph.setNode(node.nodeId, { width: 200, height: 90 }))
   apiEdges.forEach((edge) => {
-    if (!nodeIds.has(edge.source_node_id) || !nodeIds.has(edge.target_node_id)) return
-    graph.setEdge(edge.source_node_id, edge.target_node_id)
+    if (!nodeIds.has(edge.sourceNodeId) || !nodeIds.has(edge.targetNodeId)) return
+    graph.setEdge(edge.sourceNodeId, edge.targetNodeId)
   })
   dagre.layout(graph)
   const positions = new Map<string, { x: number; y: number }>()
   apiNodes.forEach((node) => {
-    const meta = graph.node(node.node_id)
+    const meta = graph.node(node.nodeId)
     if (!meta) return
-    positions.set(node.node_id, {
+    positions.set(node.nodeId, {
       x: meta.x - meta.width / 2,
       y: meta.y - meta.height / 2,
     })
@@ -93,15 +93,15 @@ export function ParticipantFlowCanvas({
     const apiEdges: ApiEdge[] = graph.data?.[1] ?? []
     const definitions = new Map(
       (nodeCatalog.data?.nodes ?? []).map((definition: NodeDefinition) => [
-        definition.node_type,
+        definition.nodeType,
         definition,
       ]),
     )
-    const nodeById = new Map(apiNodes.map((node) => [node.node_id, node]))
+    const nodeById = new Map(apiNodes.map((node) => [node.nodeId, node]))
     const layout = dagLayout(apiNodes, apiEdges)
 
     const referencedIds = new Set<string>()
-    for (const item of nodeExecutions.data ?? []) referencedIds.add(item.node_id)
+    for (const item of nodeExecutions.data ?? []) referencedIds.add(item.nodeId)
 
     const visitedNodeIds = new Set<string>()
     const externalNodeIds = new Set<string>()
@@ -112,53 +112,53 @@ export function ParticipantFlowCanvas({
 
     const takenEdgeIds = new Set<string>()
     for (const item of nodeExecutions.data ?? []) {
-      if (item.selected_edge_id) takenEdgeIds.add(item.selected_edge_id)
+      if (item.selectedEdgeId) takenEdgeIds.add(item.selectedEdgeId)
     }
 
     const flowNodes: Node[] = apiNodes.map((node) => {
-      const definition = definitions.get(node.node_type)
-      const visited = visitedNodeIds.has(node.node_id)
+      const definition = definitions.get(node.nodeType)
+      const visited = visitedNodeIds.has(node.nodeId)
       return {
-        id: node.node_id,
+        id: node.nodeId,
         type: 'simulation',
         position:
-          node.position_x !== null && node.position_y !== null
-            ? { x: node.position_x, y: node.position_y }
-            : (layout.get(node.node_id) ?? { x: 80, y: 80 }),
+          node.positionX !== null && node.positionY !== null
+            ? { x: node.positionX, y: node.positionY }
+            : (layout.get(node.nodeId) ?? { x: 80, y: 80 }),
         className: visited
-          ? `history-node-visited${node.node_id === currentState ? ' history-node-current' : ''}`
+          ? `history-node-visited${node.nodeId === currentState ? ' history-node-current' : ''}`
           : 'history-node-unvisited',
         data: {
-          label: node.node_name,
-          nodeType: node.node_type,
+          label: node.nodeName,
+          nodeType: node.nodeType,
           color: definition?.color ?? '#64748b',
-          inputPorts: node.input_ports,
-          outputPorts: node.output_ports,
+          inputPorts: node.inputPorts,
+          outputPorts: node.outputPorts,
           rotation: node.rotation ?? 0,
         },
       }
     })
 
     const flowEdges: Edge[] = apiEdges.map((edge) => {
-      const taken = takenEdgeIds.has(edge.edge_id)
+      const taken = takenEdgeIds.has(edge.edgeId)
       const color = taken ? PATH_COLOR : MASTER_COLOR
       const sourcePort = nodeById
-        .get(edge.source_node_id)
-        ?.output_ports.find((port) => port.id === edge.source_port_id)
+        .get(edge.sourceNodeId)
+        ?.outputPorts.find((port) => port.id === edge.sourcePortId)
       return {
-        id: edge.edge_id,
+        id: edge.edgeId,
         type: 'simulation',
-        source: edge.source_node_id,
-        sourceHandle: edge.source_port_id,
-        target: edge.target_node_id,
-        targetHandle: edge.target_port_id,
+        source: edge.sourceNodeId,
+        sourceHandle: edge.sourcePortId,
+        target: edge.targetNodeId,
+        targetHandle: edge.targetPortId,
         markerEnd: { type: MarkerType.ArrowClosed, color },
         animated: taken,
         data: {
-          label: sourcePort?.label ?? edge.source_port_id,
+          label: sourcePort?.label ?? edge.sourcePortId,
           style: {
             color,
-            line_style: taken ? 'solid' : 'dashed',
+            lineStyle: taken ? 'solid' : 'dashed',
             animated: taken,
           },
           edgeType: edgePathType,

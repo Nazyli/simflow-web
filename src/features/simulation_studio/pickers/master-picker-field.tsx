@@ -28,8 +28,8 @@ export function MasterPickerField({
 }) {
   const [open, setOpen] = useState(false)
   const filter =
-    picker.filter_by && picker.filter_field && filterValue
-      ? { field: picker.filter_field, value: filterValue }
+    picker.filterBy && picker.filterField && filterValue
+      ? { field: picker.filterField, value: filterValue }
       : undefined
   const values = Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')
@@ -39,9 +39,9 @@ export function MasterPickerField({
     onChange(
       isAppendOne
         ? applyPickerSelection(values, record, picker)
-        : record[picker.value_field] === null || record[picker.value_field] === undefined
+        : record[picker.valueField] === null || record[picker.valueField] === undefined
           ? ''
-          : String(record[picker.value_field]),
+          : String(record[picker.valueField]),
     )
   }
   return (
@@ -97,9 +97,9 @@ export function MasterPickerField({
         title={`Pick ${label}`}
         resource={picker.resource}
         endpoint={picker.endpoint}
-        displayFields={picker.display_fields}
+        displayFields={picker.displayFields}
         filter={filter}
-        valueField={picker.value_field}
+        valueField={picker.valueField}
         selected={isAppendOne ? values : String(value ?? '')}
         onSelect={select}
       />

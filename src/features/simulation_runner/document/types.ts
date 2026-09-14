@@ -54,16 +54,16 @@ export function mapRuntimeDocument(record: RuntimeSimulationDocument): Simulatio
   const content = pageTexts.join('\n\n')
   const summarySource = isHtmlContent(content) ? stripHtmlToText(content) : content
   return {
-    id: record.participant_doc_id,
-    title: record.document_name ?? 'Untitled document',
+    id: record.participantDocId,
+    title: record.documentName ?? 'Untitled document',
     type: 'document',
-    status: record.is_read ? 'read' : 'unread',
+    status: record.isRead ? 'read' : 'unread',
     simulationName: null,
     sharedBy: record.owner ?? '',
-    sharedAt: record.created_date,
+    sharedAt: record.createdDate,
     pageCount: record.contents.length,
     openCount: record.counter,
-    openedAt: record.opened_at,
+    openedAt: record.openedAt,
     summary:
       summarySource.length > SUMMARY_MAX_LENGTH
         ? `${summarySource.slice(0, SUMMARY_MAX_LENGTH)}…`
