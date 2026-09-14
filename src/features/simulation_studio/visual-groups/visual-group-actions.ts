@@ -69,6 +69,21 @@ export function detachVisualGroupMember<T extends VisualGroupMembership>(
   return memberNodeIds.length ? { ...group, memberNodeIds } : null
 }
 
+export function attachVisualGroupMember<T extends VisualGroupMembership>(
+  groups: T[],
+  groupId: string,
+  nodeId: string,
+): T[] {
+  if (!groups.some((group) => group.visualGroupId === groupId)) return groups
+  return groups.flatMap((group) => {
+    const memberNodeIds =
+      group.visualGroupId === groupId
+        ? [...new Set([...group.memberNodeIds, nodeId])]
+        : group.memberNodeIds.filter((memberId) => memberId !== nodeId)
+    return memberNodeIds.length ? [{ ...group, memberNodeIds }] : []
+  })
+}
+
 export function ungroupVisualGroup<T extends Pick<VisualGroup, 'visualGroupId'>>(
   groups: T[],
   groupId: string,

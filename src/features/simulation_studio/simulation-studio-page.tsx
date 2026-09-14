@@ -76,7 +76,12 @@ import { SimulationGraphEdge } from './simulation-graph-edge'
 import { SimulationGraphNode } from './simulation-graph-node'
 import { SimulationVisualGroupNode } from './visual-groups/simulation-visual-group-node'
 import { useVisualGroups } from './visual-groups/use-visual-groups'
-import { parentToAbsolutePosition, shouldDetachChild, type Rect } from './visual-groups/visual-group-layout'
+import {
+  absoluteToParentPosition,
+  parentToAbsolutePosition,
+  shouldDetachChild,
+  type Rect,
+} from './visual-groups/visual-group-layout'
 import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
 
 const emptyNodes: ApiNode[] = []
@@ -545,6 +550,7 @@ export function SimulationStudioPage() {
   })
   const groupList = visualGroupEditor.groups
   const createVisualGroupFromNodes = visualGroupEditor.createGroup
+  const attachVisualGroupMember = visualGroupEditor.attachMember
   const detachVisualGroupMember = visualGroupEditor.detachMember
   const updateVisualGroup = visualGroupEditor.updateGroup
   const visualGroupNodes = visualGroupEditor.groupNodes
@@ -588,6 +594,35 @@ export function SimulationStudioPage() {
       }
     },
     [apiNodes, detachVisualGroupMember, enqueueNodeSave, groupList, setNodes],
+  )
+  const addWorkflowNodeToGroup = useCallback(
+    (nodeId: string, groupId: string) => {
+      const flowNode = nodesRef.current.find((node) => node.id === nodeId)
+      const group = groupList.find((item) => item.visualGroupId === groupId)
+      if (!flowNode || !group || flowNode.parentId) return
+      const groupRect: Rect = {
+        x: group.positionX,
+        y: group.positionY,
+        width: group.width,
+        height: group.height,
+      }
+      void attachVisualGroupMember(groupId, nodeId)
+      setNodes((current) =>
+        current.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                parentId: groupId,
+                position: absoluteToParentPosition(node.position, groupRect),
+                hidden: false,
+                zIndex: 1,
+                data: { ...node.data, parentGroupId: groupId },
+              }
+            : node,
+        ),
+      )
+    },
+    [attachVisualGroupMember, groupList, setNodes],
   )
   const definitions = useMemo(
     () =>
@@ -858,6 +893,13 @@ export function SimulationStudioPage() {
       data: {
         ...node.data,
         parentGroupId: node.parentId,
+        availableGroups: groupList
+          .filter((group) => !group.memberNodeIds.includes(node.id))
+          .map((group) => ({
+            visualGroupId: group.visualGroupId,
+            groupName: group.groupName,
+          })),
+        onAddToGroup: addWorkflowNodeToGroup,
       },
     }))
     setNodes([
@@ -886,6 +928,8 @@ export function SimulationStudioPage() {
     deleteEdge,
     rotateNode,
     detachWorkflowNode,
+    addWorkflowNodeToGroup,
+    groupList,
     visualGroupNodes,
     projectVisualNodes,
     edgePathType,

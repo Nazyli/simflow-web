@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
+import { useState } from 'react'
 import { NodeResizer, NodeToolbar, Position, type NodeProps } from '@xyflow/react'
-import { CircleDot, LogOut, RotateCw } from 'lucide-react'
+import { CircleDot, LogIn, LogOut, RotateCw } from 'lucide-react'
 import { BaseHandle } from '@/components/base-handle'
 import { BaseNode, BaseNodeContent, BaseNodeHeader } from '@/components/base-node'
 import type { InputPort, OutputPort } from '../../shared/types/simulation'
@@ -18,6 +19,8 @@ type SimulationNodeData = {
   onRotate?: (nodeId: string) => void
   parentGroupId?: string
   onRemoveFromGroup?: (nodeId: string) => void
+  availableGroups?: Array<{ visualGroupId: string; groupName: string }>
+  onAddToGroup?: (nodeId: string, groupId: string) => void
 }
 
 function inputPosition(rotation: number): Position {
@@ -56,6 +59,7 @@ function handleOffset(position: Position, index: number, count: number): CSSProp
 
 export function SimulationGraphNode({ id, data, selected }: NodeProps) {
   const nodeData = data as SimulationNodeData
+  const [groupPickerOpen, setGroupPickerOpen] = useState(false)
   const rotation = nodeData.rotation ?? 0
   const inputPos = inputPosition(rotation)
   const outputPos = outputPosition(rotation)
@@ -85,6 +89,40 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
             <LogOut className="h-3 w-3" />
           </button>
         )}
+        {nodeData.editable &&
+          !nodeData.parentGroupId &&
+          nodeData.availableGroups?.length &&
+          nodeData.onAddToGroup && (
+            <div className="nodrag relative">
+              <button
+                type="button"
+                className="ml-1 inline-flex items-center rounded bg-white px-1.5 py-0.5 text-[0.6rem] font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-100"
+                onClick={() => setGroupPickerOpen((open) => !open)}
+                title="Add node to visual group"
+                aria-label="Add node to visual group"
+                aria-expanded={groupPickerOpen}
+              >
+                <LogIn className="h-3 w-3" />
+              </button>
+              {groupPickerOpen && (
+                <div className="absolute top-full left-0 z-30 mt-1 min-w-36 rounded-md border border-slate-200 bg-white p-1 text-left shadow-lg">
+                  {nodeData.availableGroups.map((group) => (
+                    <button
+                      key={group.visualGroupId}
+                      type="button"
+                      className="block w-full truncate rounded px-2 py-1 text-left text-[0.65rem] text-slate-700 hover:bg-slate-100"
+                      onClick={() => {
+                        nodeData.onAddToGroup?.(id, group.visualGroupId)
+                        setGroupPickerOpen(false)
+                      }}
+                    >
+                      {group.groupName}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
       </NodeToolbar>
       <BaseNode
         className="w-[220px]"

@@ -1,10 +1,23 @@
 import { NodeResizer, NodeToolbar, Position, type NodeProps } from '@xyflow/react'
 import { ChevronDown, ChevronRight, Layers3, Palette, Pencil, Trash2, Ungroup } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import type { VisualGroupNode } from './visual-group-types'
 
 export function SimulationVisualGroupNode({ id, data, selected }: NodeProps<VisualGroupNode>) {
   const group = data.group
   const borderStyle = group.style.borderStyle
+  const [editingName, setEditingName] = useState(false)
+  const [draftName, setDraftName] = useState(group.groupName)
+
+  useEffect(() => {
+    if (!editingName) setDraftName(group.groupName)
+  }, [editingName, group.groupName])
+
+  const commitName = () => {
+    const nextName = draftName.trim()
+    if (nextName) data.onRename?.(id, nextName)
+    setEditingName(false)
+  }
 
   return (
     <>
@@ -29,10 +42,7 @@ export function SimulationVisualGroupNode({ id, data, selected }: NodeProps<Visu
           <button
             type="button"
             className="rounded p-1 text-slate-600 hover:bg-slate-100"
-            onClick={() => {
-              const nextName = window.prompt('Visual group name', group.groupName)?.trim()
-              if (nextName) data.onRename?.(id, nextName)
-            }}
+            onClick={() => setEditingName(true)}
             title="Rename group"
           >
             <Pencil size={13} />
@@ -72,7 +82,23 @@ export function SimulationVisualGroupNode({ id, data, selected }: NodeProps<Visu
           style={{ backgroundColor: `${group.style.color}18` }}
         >
           <Layers3 size={13} style={{ color: group.style.color }} />
-          <span className="truncate">{group.groupName}</span>
+          {editingName ? (
+            <input
+              autoFocus
+              value={draftName}
+              onChange={(event) => setDraftName(event.target.value)}
+              onBlur={commitName}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') commitName()
+                if (event.key === 'Escape') setEditingName(false)
+              }}
+              onClick={(event) => event.stopPropagation()}
+              className="nodrag nowheel min-w-0 flex-1 rounded border border-slate-300 bg-white/80 px-1.5 py-0.5 text-xs font-medium outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-200"
+              aria-label="Visual group name"
+            />
+          ) : (
+            <span className="truncate">{group.groupName}</span>
+          )}
           <span className="ml-auto text-[10px] font-normal text-slate-400">
             {group.memberNodeIds.length}
           </span>

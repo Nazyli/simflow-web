@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  attachVisualGroupMember,
   cleanupVisualGroups,
   createVisualGroup,
   detachVisualGroupMember,
@@ -41,6 +42,17 @@ test('detaches members and removes a group when it becomes empty', () => {
   const remaining = detachVisualGroupMember(group, 'node-a')
   assert.deepEqual(remaining?.memberNodeIds, ['node-b'])
   assert.equal(detachVisualGroupMember(remaining, 'node-b'), null)
+})
+
+test('attaches a node to an existing group and removes stale membership elsewhere', () => {
+  const groups = [
+    { visualGroupId: 'group-1', memberNodeIds: ['node-a'] },
+    { visualGroupId: 'group-2', memberNodeIds: ['node-b'] },
+  ]
+
+  assert.deepEqual(attachVisualGroupMember(groups, 'group-1', 'node-b'), [
+    { visualGroupId: 'group-1', memberNodeIds: ['node-a', 'node-b'] },
+  ])
 })
 
 test('ungroups without deleting workflow nodes', () => {

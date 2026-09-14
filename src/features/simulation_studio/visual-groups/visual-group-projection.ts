@@ -21,7 +21,7 @@ export function projectWorkflowNodes(workflowNodes: Node[], groups: VisualGroup[
       ...node,
       parentId: group.visualGroupId,
       position: absoluteToParentPosition(node.position, parent),
-      hidden: group.isCollapsed,
+      hidden: false,
       zIndex: 1,
     }
   })

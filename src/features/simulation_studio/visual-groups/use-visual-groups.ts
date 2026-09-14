@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Node } from '@xyflow/react'
 import type { VisualGroup } from '../../../shared/types/simulation'
 import {
+  attachVisualGroupMember,
   cleanupVisualGroups,
   createVisualGroup,
   detachVisualGroupMember,
@@ -60,6 +61,14 @@ export function useVisualGroups({
           ? groups.map((group) => (group.visualGroupId === groupId ? next : group))
           : ungroupVisualGroup(groups, groupId),
       )
+    },
+    [commitGroups, editable, groups],
+  )
+
+  const attachMember = useCallback(
+    async (groupId: string, nodeId: string) => {
+      if (!editable) return
+      await commitGroups(attachVisualGroupMember(groups, groupId, nodeId))
     },
     [commitGroups, editable, groups],
   )
@@ -127,7 +136,7 @@ export function useVisualGroups({
         id: group.visualGroupId,
         type: 'visualGroup',
         position: { x: group.positionX, y: group.positionY },
-        style: { width: group.width, height: group.height },
+        style: { width: group.width, height: group.isCollapsed ? 32 : group.height },
         draggable: editable,
         connectable: false,
         selectable: true,
@@ -153,6 +162,7 @@ export function useVisualGroups({
     groupNodes,
     projectNodes,
     createGroup,
+    attachMember,
     detachMember,
     deleteNodeMembership,
     ungroup,
