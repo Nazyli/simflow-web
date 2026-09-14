@@ -3,6 +3,7 @@ export interface EmailMessage {
   cc: string[]
   from: string
   actor: string
+  senderType: 'participant' | 'actor' | 'system'
   channel: 'email'
   emailId: string | null
   messageId?: string

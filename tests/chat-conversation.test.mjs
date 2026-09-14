@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { buildConversations } from '../src/features/simulation_runner/chat/utils.ts'
+import { buildConversations, isOwnMessage } from '../src/features/simulation_runner/chat/utils.ts'
 
 test('groups both directions into the selected actor conversation', () => {
   const conversations = buildConversations(
@@ -36,6 +36,23 @@ test('groups both directions into the selected actor conversation', () => {
   )
 
   assert.equal(conversations.length, 1)
-  assert.equal(conversations[0].actor, 'alexa-pmwm-ambj-01')
   assert.equal(conversations[0].messages.length, 2)
+})
+
+test('uses sender type to identify participant messages as own messages', () => {
+  const participantMessage = {
+    from: 'participant-001-ambj-01-platform',
+    to: 'alexa-pmwm-ambj-01',
+    actor: 'participant-001-ambj-01-platform',
+    senderType: 'participant',
+  }
+  const actorMessage = {
+    from: 'alexa-pmwm-ambj-01',
+    to: 'participant-001-ambj-01-platform',
+    actor: 'alexa-pmwm-ambj-01',
+    senderType: 'actor',
+  }
+
+  assert.equal(isOwnMessage(participantMessage, '90722'), true)
+  assert.equal(isOwnMessage(actorMessage, '90722'), false)
 })

@@ -9,6 +9,8 @@ export function formatChatTime(timestamp?: string): string {
 }
 
 export function isOwnMessage(message: ChatMessage, participantId: string): boolean {
+  if (message.senderType === 'participant') return true
+  if (message.senderType === 'actor') return false
   return message.from ? message.from === participantId : message.actor === participantId
 }
 

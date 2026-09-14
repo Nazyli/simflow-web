@@ -27,6 +27,7 @@ export function EmailChannelPage() {
     to: message.to,
     cc: message.cc,
     actor: message.senderId,
+    senderType: message.senderType,
     channel: 'email' as const,
     emailId: null,
     actionType: 'message',
