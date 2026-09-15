@@ -38,7 +38,8 @@ export function isCrudEditor(picker: Pick<ParameterPicker, 'editor'> | undefined
   return (
     picker?.editor === 'chat_crud' ||
     picker?.editor === 'call_crud' ||
-    picker?.editor === 'prompt_crud'
+    picker?.editor === 'prompt_crud' ||
+    picker?.editor === 'email_crud'
   )
 }
 

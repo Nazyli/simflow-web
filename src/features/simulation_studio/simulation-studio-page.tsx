@@ -70,7 +70,12 @@ import {
 import { replaceVisualGroups } from '../../shared/api/visual-groups'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
-import type { Execution, NodeDefinition, OutputPort, VisualGroup } from '../../shared/types/simulation'
+import type {
+  Execution,
+  NodeDefinition,
+  OutputPort,
+  VisualGroup,
+} from '../../shared/types/simulation'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { SimulationGraphEdge } from './simulation-graph-edge'
 import { SimulationGraphNode } from './simulation-graph-node'
@@ -657,7 +662,8 @@ export function SimulationStudioPage() {
   const selectedExecution =
     executions.data?.find((execution) => execution.executionId === selectedExecutionId) ?? null
   const selectedWorkflowNodeIds = useMemo(
-    () => nodes.filter((node) => node.type === 'simulation' && node.selected).map((node) => node.id),
+    () =>
+      nodes.filter((node) => node.type === 'simulation' && node.selected).map((node) => node.id),
     [nodes],
   )
 
@@ -670,9 +676,7 @@ export function SimulationStudioPage() {
       toast.error('Select at least two workflow nodes to create a visual group.')
       return
     }
-    const groupById = new Map(
-      groupList.map((group) => [group.visualGroupId, group]),
-    )
+    const groupById = new Map(groupList.map((group) => [group.visualGroupId, group]))
     const selectedNodes = nodes
       .filter((node) => selectedWorkflowNodeIds.includes(node.id))
       .map((node) => {
@@ -894,11 +898,11 @@ export function SimulationStudioPage() {
       return {
         ...nodeToFlow(
           { ...node, rotation },
-            definitions.get(node.nodeType),
-            !isLocked,
-            rotateNode,
-            detachWorkflowNode,
-          ),
+          definitions.get(node.nodeType),
+          !isLocked,
+          rotateNode,
+          detachWorkflowNode,
+        ),
         position: cached ?? { x: node.positionX ?? 100, y: node.positionY ?? 100 },
       }
     })
@@ -916,23 +920,14 @@ export function SimulationStudioPage() {
         onAddToGroup: addWorkflowNodeToGroup,
       },
     }))
-    const visualGroupById = new Map(
-      groupList.map((group) => [group.visualGroupId, group]),
-    )
+    const visualGroupById = new Map(groupList.map((group) => [group.visualGroupId, group]))
     const projectedWorkflowEdges = projectWorkflowEdges(apiEdges, groupList)
-    setNodes([
-      ...visualGroupNodes,
-      ...projectedWorkflowNodes,
-    ])
+    setNodes([...visualGroupNodes, ...projectedWorkflowNodes])
     setEdges(
       projectedWorkflowEdges.map((edge) => {
         const sourceNode = apiNodes.find((node) => node.nodeId === edge.sourceNodeId)
-        const sourceGroup = edge.sourceGroupId
-          ? visualGroupById.get(edge.sourceGroupId)
-          : undefined
-        const targetGroup = edge.targetGroupId
-          ? visualGroupById.get(edge.targetGroupId)
-          : undefined
+        const sourceGroup = edge.sourceGroupId ? visualGroupById.get(edge.sourceGroupId) : undefined
+        const targetGroup = edge.targetGroupId ? visualGroupById.get(edge.targetGroupId) : undefined
         return edgeToFlow(
           edge,
           sourceNode?.outputPorts.find((port) => port.id === edge.sourcePortId),
@@ -1837,9 +1832,7 @@ export function SimulationStudioPage() {
                 }
 
                 if (node.type === 'visualGroup') {
-                  const group = groupList.find(
-                    (item) => item.visualGroupId === node.id,
-                  )
+                  const group = groupList.find((item) => item.visualGroupId === node.id)
                   if (!group) return
                   const nextGroupRect: Rect = {
                     x: Math.round(node.position.x),
@@ -1875,9 +1868,7 @@ export function SimulationStudioPage() {
                 }
 
                 const parentGroup = node.parentId
-                  ? groupList.find(
-                      (group) => group.visualGroupId === node.parentId,
-                    )
+                  ? groupList.find((group) => group.visualGroupId === node.parentId)
                   : undefined
                 const absolutePosition = parentGroup
                   ? parentToAbsolutePosition(node.position, {
@@ -2010,6 +2001,7 @@ export function SimulationStudioPage() {
                     node={{ ...selectedNode, configuration: selectedNode.parameters }}
                     definition={definitions.get(selectedNode.nodeType)}
                     graphNodes={apiNodes}
+                    simulationId={simulationId}
                     onSave={saveStructuredNode}
                     onDuplicate={() => handleDuplicateNode(selectedNode)}
                     onDelete={() => handleDeleteNode(selectedNode.nodeId)}

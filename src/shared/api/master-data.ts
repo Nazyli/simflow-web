@@ -7,9 +7,26 @@ export interface MasterEmailAttachment {
   documentName: string
 }
 
-export interface MasterEmailDetail {
+export interface MasterEmail {
   emailId: string
+  emailName: string | null
+  nodeId: string | null
+  actorFrom: string | null
+  actorTo: string | null
+  actorCc: string | null
+  emailType: string | null
+  parentMasterEmailId: string | null
+  subject: string | null
+  content: string | null
   attachments: MasterEmailAttachment[]
+}
+
+export interface MasterDocumentContent {
+  docContentId: string
+  documentId: string
+  documentName: string
+  page: number | null
+  content: string | null
 }
 
 export const getStudioMasterData = (endpoint: string) =>
@@ -92,7 +109,43 @@ export const deleteMasterPrompt = (promptId: string) =>
   })
 
 export const getStudioMasterEmail = (emailId: string) =>
-  apiClient<MasterEmailDetail>(`/admin/master-data/emails/${encodeURIComponent(emailId)}`)
+  apiClient<MasterEmail>(`/admin/master-data/emails/${encodeURIComponent(emailId)}`)
+
+export const getMasterEmails = () => apiClient<MasterEmail[]>('/admin/master-data/emails')
+
+export const getMasterEmailOriginals = (simulationId: string) =>
+  apiClient<MasterEmail[]>(
+    `/admin/master-data/emails/originals?simulationId=${encodeURIComponent(simulationId)}`,
+  )
+
+export const getMasterDocumentContents = () =>
+  apiClient<MasterDocumentContent[]>('/admin/master-data/emails/document-contents')
+
+export interface MasterEmailFormPayload {
+  actorFrom: string
+  actorTo: string
+  actorCc: string | null
+  emailType: 'original' | 'reply'
+  parentMasterEmailId: string | null
+  subject: string
+  content: string
+  docContentIds: string[]
+}
+
+export const createMasterEmail = (nodeId: string, values: MasterEmailFormPayload) =>
+  apiClient<MasterEmail>('/admin/master-data/emails', {
+    method: 'POST',
+    body: JSON.stringify({ nodeId, ...values }),
+  })
+
+export const updateMasterEmail = (emailId: string, values: MasterEmailFormPayload) =>
+  apiClient<MasterEmail>(`/admin/master-data/emails/${encodeURIComponent(emailId)}`, {
+    method: 'PUT',
+    body: JSON.stringify(values),
+  })
+
+export const deleteMasterEmail = (emailId: string) =>
+  apiClient<null>(`/admin/master-data/emails/${encodeURIComponent(emailId)}`, { method: 'DELETE' })
 
 export interface MasterActor {
   actorId: string

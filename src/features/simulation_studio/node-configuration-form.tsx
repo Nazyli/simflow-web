@@ -47,6 +47,7 @@ export function NodeConfigurationForm({
   onDelete,
   graphNodes = [],
   readonly = false,
+  simulationId,
 }: {
   node: {
     nodeId?: string
@@ -61,6 +62,7 @@ export function NodeConfigurationForm({
   onDelete: () => void
   graphNodes?: GraphNode[]
   readonly?: boolean
+  simulationId?: string | null
 }) {
   const [name, setName] = useState(node.nodeName)
   const [configuration, setConfiguration] = useState<Configuration>({
@@ -78,6 +80,7 @@ export function NodeConfigurationForm({
     nodeType: node.nodeType,
     definition,
     graphNodes,
+    simulationId,
   })
   latestRef.current = {
     name,
@@ -86,6 +89,7 @@ export function NodeConfigurationForm({
     nodeType: node.nodeType,
     definition,
     graphNodes,
+    simulationId,
   }
   const savedSnapshot = useRef<{ name: string; configuration: string } | null>(null)
   if (savedSnapshot.current === null) {
@@ -234,6 +238,7 @@ export function NodeConfigurationForm({
               value={configuration[key]}
               defaultValue={defaultValue}
               nodeId={node.nodeId}
+              simulationId={simulationId}
               required={isRequired(
                 definition.validationRules[key] as Record<string, unknown>,
                 configuration,
@@ -555,6 +560,7 @@ function CatalogParameterField({
   value,
   defaultValue,
   nodeId,
+  simulationId,
   validationRule,
   required,
   definition,
@@ -565,6 +571,7 @@ function CatalogParameterField({
   value: unknown
   defaultValue: unknown
   nodeId?: string
+  simulationId?: string | null
   validationRule?: Record<string, unknown>
   required: boolean
   definition?: NodeDefinition
@@ -650,6 +657,7 @@ function CatalogParameterField({
         multiline={resolveParameterMultiline(name, definition?.parameterOptions)}
         picker={picker}
         nodeId={nodeId}
+        simulationId={simulationId}
         filterValue={picker.filterBy ? String(configuration[picker.filterBy] ?? '') : undefined}
         onChange={(next) => onChange(next)}
       />

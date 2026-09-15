@@ -16,6 +16,13 @@ import {
   updateMasterCall,
   updateMasterPrompt,
 } from '../src/shared/api/master-data.ts'
+import {
+  createMasterEmail,
+  deleteMasterEmail,
+  getMasterDocumentContents,
+  getMasterEmailOriginals,
+  updateMasterEmail,
+} from '../src/shared/api/master-data.ts'
 
 function stubSuccess(data) {
   globalThis.fetch = async (path, init) => {
@@ -116,5 +123,39 @@ test('loads and saves master prompts for the prompt CRUD editor', async () => {
 
   await deleteMasterPrompt('prompt/1')
   assert.equal(globalThis.lastRequest.path, '/admin/master-data/prompts/prompt%2F1')
+  assert.equal(globalThis.lastRequest.init.method, 'DELETE')
+})
+
+test('loads and saves node-owned master emails with parent and attachments', async () => {
+  stubSuccess([{ emailId: 'email-1' }])
+
+  await getMasterEmailOriginals('simulation/1')
+  assert.equal(
+    globalThis.lastRequest.path,
+    '/admin/master-data/emails/originals?simulationId=simulation%2F1',
+  )
+
+  await getMasterDocumentContents()
+  assert.equal(globalThis.lastRequest.path, '/admin/master-data/emails/document-contents')
+
+  const values = {
+    actorFrom: 'actor-1',
+    actorTo: 'actor-2',
+    actorCc: null,
+    emailType: 'reply',
+    parentMasterEmailId: 'parent-1',
+    subject: 'Reply',
+    content: 'Body',
+    docContentIds: ['content-1', 'content-2'],
+  }
+  await createMasterEmail('node-1', values)
+  assert.equal(globalThis.lastRequest.path, '/admin/master-data/emails')
+  assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), { nodeId: 'node-1', ...values })
+
+  await updateMasterEmail('email/1', values)
+  assert.equal(globalThis.lastRequest.path, '/admin/master-data/emails/email%2F1')
+  assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), values)
+
+  await deleteMasterEmail('email/1')
   assert.equal(globalThis.lastRequest.init.method, 'DELETE')
 })

@@ -15,6 +15,7 @@ import { MasterPickerDialog } from './master-picker-dialog'
 import { ChatCrudDialog } from '../master-data/chat-crud-dialog'
 import { CallCrudDialog } from '../master-data/call-crud-dialog'
 import { PromptCrudDialog } from '../master-data/prompt-crud-dialog'
+import { EmailCrudDialog } from '../master-data/email-crud-dialog'
 
 export function MasterPickerField({
   label,
@@ -23,6 +24,7 @@ export function MasterPickerField({
   multiline = false,
   picker,
   nodeId,
+  simulationId,
   filterValue,
   onChange,
 }: {
@@ -32,6 +34,7 @@ export function MasterPickerField({
   multiline?: boolean
   picker: ParameterPicker
   nodeId?: string
+  simulationId?: string | null
   filterValue?: string
   onChange: (value: string | string[]) => void
 }) {
@@ -133,6 +136,18 @@ export function MasterPickerField({
           selectedPromptId={String(value ?? '')}
           onSelect={(promptId) => {
             onChange(promptId)
+            setCrudOpen(false)
+          }}
+        />
+      ) : useCrud && picker.editor === 'email_crud' ? (
+        <EmailCrudDialog
+          open={crudOpen}
+          onOpenChange={setCrudOpen}
+          nodeId={nodeId!}
+          simulationId={simulationId}
+          selectedEmailId={String(value ?? '')}
+          onSelect={(emailId) => {
+            onChange(emailId)
             setCrudOpen(false)
           }}
         />

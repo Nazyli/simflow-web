@@ -17,6 +17,7 @@ test('routes call and prompt pickers to explicit CRUD editors', () => {
   assert.equal(isCrudEditor({ editor: 'chat_crud' }), true)
   assert.equal(isCrudEditor({ editor: 'call_crud' }), true)
   assert.equal(isCrudEditor({ editor: 'prompt_crud' }), true)
+  assert.equal(isCrudEditor({ editor: 'email_crud' }), true)
   assert.equal(isCrudEditor({ editor: 'table' }), false)
 })
 
