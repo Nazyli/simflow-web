@@ -441,6 +441,7 @@ export function SimulationStudioPage() {
         nodeName: `${node.nodeName} copy`,
         nodeType: node.nodeType,
         parameters: { ...node.parameters },
+        duplicateFromNodeId: node.nodeId,
         rotation: node.rotation ?? 0,
         positionX: (node.positionX ?? 80) + 60,
         positionY: (node.positionY ?? 80) + 60,

@@ -91,7 +91,9 @@ export interface SimulationGraph {
   edges: ApiEdge[]
   visualGroups: VisualGroup[]
 }
-export type ApiNodePayload = Omit<ApiNode, 'nodeId' | 'category' | 'inputPorts' | 'outputPorts'>
+export type ApiNodePayload = Omit<ApiNode, 'nodeId' | 'category' | 'inputPorts' | 'outputPorts'> & {
+  duplicateFromNodeId?: string
+}
 export type ApiEdgePayload = Omit<ApiEdge, 'edgeId' | 'isValid'>
 export const getGraph = (simulationId: string) =>
   apiClient<SimulationGraph>(`/admin/studio/simulations/${encodeURIComponent(simulationId)}/graph`)
