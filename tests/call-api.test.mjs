@@ -35,7 +35,7 @@ test('requests the active call connection for a participant', async () => {
 
   const details = await getCallConnection('participant-1')
 
-  assert.equal(requests[0].path, '/agent-call/connection?participantId=participant-1')
+  assert.equal(requests[0].path, '/web/agent-call/connection?participantId=participant-1')
   assert.equal(details.callSessionId, 'call-session-1')
   assert.equal(details.roomName, 'simflow_call-session-1')
 })
@@ -54,7 +54,7 @@ test('loads call history by session and participant', async () => {
 
   assert.equal(
     requests[0].path,
-    '/agent-call/participant-call-sessions/call-session-1/history?participantId=participant-1',
+    '/web/agent-call/participant-call-sessions/call-session-1/history?participantId=participant-1',
   )
 })
 
@@ -91,7 +91,7 @@ test('posts a stable participant end request', async () => {
 
   assert.equal(
     requests[0].path,
-    '/agent-call/participant-call-sessions/call-session-1/participant-end',
+    '/web/agent-call/participant-call-sessions/call-session-1/participant-end',
   )
   assert.equal(requests[0].method, 'POST')
   assert.deepEqual(requests[0].body, {
@@ -121,6 +121,6 @@ test('resolves the room connection for the agent-ready flow', async () => {
 
   const result = await getCallRoomConnection('simflow_call-session-1')
 
-  assert.equal(requests[0].path, '/agent-call/room-connection?roomName=simflow_call-session-1')
+  assert.equal(requests[0].path, '/web/agent-call/room-connection?roomName=simflow_call-session-1')
   assert.equal(result.status, 'active')
 })

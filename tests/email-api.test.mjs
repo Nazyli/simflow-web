@@ -28,7 +28,7 @@ test('serializes the selected root and direct reply email IDs for a participant 
     'direct-reply-email-2',
   )
 
-  assert.equal(request.path, '/runner/email?participantId=participant%201')
+  assert.equal(request.path, '/web/email?participantId=participant%201')
   assert.deepEqual(JSON.parse(request.init.body), {
     partnerId: 'actor-1',
     subject: 'Re: Contract',
@@ -60,7 +60,7 @@ test('records a runtime attachment open against its participant email scope', as
 
   assert.equal(
     request.path,
-    '/runner/email/attachments/runtime%20attachment%2F1/opened?participantId=participant+1&simulationId=simulation+1&participantEmailId=participant+email%2F1',
+    '/web/email/attachments/runtime%20attachment%2F1/opened?participantId=participant+1&simulationId=simulation+1&participantEmailId=participant+email%2F1',
   )
   assert.equal(request.init.method, 'POST')
 })
@@ -133,6 +133,6 @@ test('loads the selected source email detail for an attachment picker', async ()
 
   await getStudioMasterEmail('WELCOME EMAIL/1')
 
-  assert.equal(request.path, '/studio/master-data/emails/WELCOME%20EMAIL%2F1')
+  assert.equal(request.path, '/admin/master-data/emails/WELCOME%20EMAIL%2F1')
   assert.deepEqual(request.init, { headers: { 'Content-Type': 'application/json' } })
 })

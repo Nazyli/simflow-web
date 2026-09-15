@@ -3,7 +3,7 @@ import { isHtmlContent, stripHtmlToText } from '../../../shared/html'
 
 /**
  * Document channel local model.
- * Mirrors the runtime payload from `/runner/documents`; the mapper below
+ * Mirrors the runtime payload from `/web/documents`; the mapper below
  * converts the API record into this view model 1:1.
  */
 
@@ -46,7 +46,7 @@ export const DOCUMENT_STATUS_META: Record<
 
 const SUMMARY_MAX_LENGTH = 160
 
-/** Convert a runtime document record from `/runner/documents` into the view model. */
+/** Convert a runtime document record from `/web/documents` into the view model. */
 export function mapRuntimeDocument(record: RuntimeSimulationDocument): SimulationDocument {
   const pageTexts = record.contents
     .map((page) => page.content ?? '')

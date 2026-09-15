@@ -23,13 +23,13 @@ export type TransParticipantTimer = {
   createdDate: string
 }
 
-export const getTimers = () => apiClient<TransParticipantTimer[]>('/timers')
+export const getTimers = () => apiClient<TransParticipantTimer[]>('/admin/timers')
 export const cancelTimer = (participantTimerId: string) =>
-  apiClient<TransParticipantTimer>(`/timers/${participantTimerId}/cancel`, { method: 'POST' })
+  apiClient<TransParticipantTimer>(`/admin/timers/${participantTimerId}/cancel`, { method: 'POST' })
 export const rescheduleTimer = (participantTimerId: string, dueAt: string) =>
-  apiClient<TransParticipantTimer>(`/timers/${participantTimerId}/reschedule`, {
+  apiClient<TransParticipantTimer>(`/admin/timers/${participantTimerId}/reschedule`, {
     method: 'POST',
     body: JSON.stringify({ dueAt: dueAt }),
   })
 export const runTimerNow = (participantTimerId: string) =>
-  apiClient<TransParticipantTimer>(`/timers/${participantTimerId}/run-now`, { method: 'POST' })
+  apiClient<TransParticipantTimer>(`/admin/timers/${participantTimerId}/run-now`, { method: 'POST' })

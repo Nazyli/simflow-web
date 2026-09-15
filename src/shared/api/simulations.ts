@@ -8,13 +8,13 @@ import type {
   VisualGroup,
 } from '../types/simulation'
 
-export const getGroupSimulations = () => apiClient<GroupSimulation[]>('/studio/group-simulations')
+export const getGroupSimulations = () => apiClient<GroupSimulation[]>('/admin/studio/group-simulations')
 export const getSimulationDetail = (simulationId: string) =>
-  apiClient<SimulationDetail>(`/studio/simulations/${encodeURIComponent(simulationId)}`)
+  apiClient<SimulationDetail>(`/admin/studio/simulations/${encodeURIComponent(simulationId)}`)
 export const createGroupSimulation = (
   payload: Pick<GroupSimulation, 'groupSimulationName' | 'groupSimulationDesc'>,
 ) =>
-  apiClient<GroupSimulation>('/studio/group-simulations', {
+  apiClient<GroupSimulation>('/admin/studio/group-simulations', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
@@ -22,12 +22,12 @@ export const updateGroupSimulation = (
   groupSimulationId: string,
   payload: Pick<GroupSimulation, 'groupSimulationName' | 'groupSimulationDesc'>,
 ) =>
-  apiClient<GroupSimulation>(`/studio/group-simulations/${encodeURIComponent(groupSimulationId)}`, {
+  apiClient<GroupSimulation>(`/admin/studio/group-simulations/${encodeURIComponent(groupSimulationId)}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
   })
 export const deleteGroupSimulation = (groupSimulationId: string) =>
-  apiClient<void>(`/studio/group-simulations/${encodeURIComponent(groupSimulationId)}`, {
+  apiClient<void>(`/admin/studio/group-simulations/${encodeURIComponent(groupSimulationId)}`, {
     method: 'DELETE',
   })
 export const createSimulation = (
@@ -35,7 +35,7 @@ export const createSimulation = (
   payload: Pick<Simulation, 'simulationName' | 'simulationDesc' | 'channelName' | 'duration'>,
 ) =>
   apiClient<Simulation>(
-    `/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`,
+    `/admin/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`,
     {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -45,25 +45,25 @@ export const duplicateSimulation = (
   simulationId: string,
   payload?: Pick<Simulation, 'simulationName' | 'simulationDesc'>,
 ) =>
-  apiClient<Simulation>(`/studio/simulations/${encodeURIComponent(simulationId)}/duplicate`, {
+  apiClient<Simulation>(`/admin/studio/simulations/${encodeURIComponent(simulationId)}/duplicate`, {
     method: 'POST',
     body: JSON.stringify(payload ?? {}),
   })
 
 export const getSimulations = (groupSimulationId: string) =>
   apiClient<Simulation[]>(
-    `/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`,
+    `/admin/studio/group-simulations/${encodeURIComponent(groupSimulationId)}/simulations`,
   )
 export interface PublishedSimulation extends Simulation {
   groupSimulationName: string
 }
 export const getPublishedSimulations = () =>
-  apiClient<PublishedSimulation[]>('/studio/simulations/published')
+  apiClient<PublishedSimulation[]>('/admin/studio/simulations/published')
 export const deleteSimulation = (simulationId: string) =>
-  apiClient<void>(`/studio/simulations/${encodeURIComponent(simulationId)}`, { method: 'DELETE' })
+  apiClient<void>(`/admin/studio/simulations/${encodeURIComponent(simulationId)}`, { method: 'DELETE' })
 export const validateSimulation = (simulationId: string) =>
   apiClient<{ valid: boolean; errors: string[] }>(
-    `/studio/simulations/${encodeURIComponent(simulationId)}/validate`,
+    `/admin/studio/simulations/${encodeURIComponent(simulationId)}/validate`,
   )
 
 export interface ApiNode {
@@ -94,28 +94,28 @@ export interface SimulationGraph {
 export type ApiNodePayload = Omit<ApiNode, 'nodeId' | 'category' | 'inputPorts' | 'outputPorts'>
 export type ApiEdgePayload = Omit<ApiEdge, 'edgeId' | 'isValid'>
 export const getGraph = (simulationId: string) =>
-  apiClient<SimulationGraph>(`/studio/simulations/${encodeURIComponent(simulationId)}/graph`)
+  apiClient<SimulationGraph>(`/admin/studio/simulations/${encodeURIComponent(simulationId)}/graph`)
 export const addNode = (simulationId: string, payload: ApiNodePayload) =>
-  apiClient<ApiNode>(`/studio/simulations/${encodeURIComponent(simulationId)}/nodes`, {
+  apiClient<ApiNode>(`/admin/studio/simulations/${encodeURIComponent(simulationId)}/nodes`, {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 export const updateNode = (nodeId: string, payload: ApiNodePayload) =>
-  apiClient<ApiNode>(`/studio/simulations/nodes/${encodeURIComponent(nodeId)}`, {
+  apiClient<ApiNode>(`/admin/studio/simulations/nodes/${encodeURIComponent(nodeId)}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
   })
 export const deleteNode = (nodeId: string) =>
-  apiClient<void>(`/studio/simulations/nodes/${encodeURIComponent(nodeId)}`, { method: 'DELETE' })
+  apiClient<void>(`/admin/studio/simulations/nodes/${encodeURIComponent(nodeId)}`, { method: 'DELETE' })
 export const addSimulationEdge = (simulationId: string, payload: ApiEdgePayload) =>
-  apiClient<ApiEdge>(`/studio/simulations/${encodeURIComponent(simulationId)}/edges`, {
+  apiClient<ApiEdge>(`/admin/studio/simulations/${encodeURIComponent(simulationId)}/edges`, {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 export const updateSimulationEdge = (edgeId: string, payload: ApiEdgePayload) =>
-  apiClient<ApiEdge>(`/studio/simulations/edges/${encodeURIComponent(edgeId)}`, {
+  apiClient<ApiEdge>(`/admin/studio/simulations/edges/${encodeURIComponent(edgeId)}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
   })
 export const deleteSimulationEdge = (edgeId: string) =>
-  apiClient<void>(`/studio/simulations/edges/${encodeURIComponent(edgeId)}`, { method: 'DELETE' })
+  apiClient<void>(`/admin/studio/simulations/edges/${encodeURIComponent(edgeId)}`, { method: 'DELETE' })

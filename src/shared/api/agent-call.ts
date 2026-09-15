@@ -37,19 +37,19 @@ export interface CallParticipantEndResult {
 
 export function getCallConnection(participantId: string) {
   return apiClient<CallConnection>(
-    `/agent-call/connection?participantId=${encodeURIComponent(participantId)}`,
+    `/web/agent-call/connection?participantId=${encodeURIComponent(participantId)}`,
   )
 }
 
 export function getCallRoomConnection(roomName: string) {
   return apiClient<CallConnection>(
-    `/agent-call/room-connection?roomName=${encodeURIComponent(roomName)}`,
+    `/web/agent-call/room-connection?roomName=${encodeURIComponent(roomName)}`,
   )
 }
 
 export function getCallHistory(participantCallSessionId: string, participantId: string) {
   return apiClient<CallMessage[]>(
-    `/agent-call/participant-call-sessions/${encodeURIComponent(participantCallSessionId)}/history?participantId=${encodeURIComponent(participantId)}`,
+    `/web/agent-call/participant-call-sessions/${encodeURIComponent(participantCallSessionId)}/history?participantId=${encodeURIComponent(participantId)}`,
   )
 }
 
@@ -60,7 +60,7 @@ export function requestParticipantEnd(
   occurredAt: string,
 ) {
   return apiClient<CallParticipantEndResult>(
-    `/agent-call/participant-call-sessions/${encodeURIComponent(participantCallSessionId)}/participant-end`,
+    `/web/agent-call/participant-call-sessions/${encodeURIComponent(participantCallSessionId)}/participant-end`,
     {
       method: 'POST',
       body: JSON.stringify({

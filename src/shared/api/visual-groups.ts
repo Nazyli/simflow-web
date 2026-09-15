@@ -7,7 +7,7 @@ export type VisualGroupPayload = Omit<VisualGroup, 'simulationId' | 'visualGroup
 
 export const replaceVisualGroups = (simulationId: string, visualGroups: VisualGroupPayload[]) =>
   apiClient<VisualGroup[]>(
-    `/studio/simulations/${encodeURIComponent(simulationId)}/visual-groups`,
+    `/admin/studio/simulations/${encodeURIComponent(simulationId)}/visual-groups`,
     {
       method: 'PUT',
       body: JSON.stringify({ visualGroups }),

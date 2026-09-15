@@ -18,10 +18,10 @@ export interface ExecutionTrace {
   createdAt: string
 }
 export const getExecutions = (simulationId: string) =>
-  apiClient<Execution[]>(`/runner/executions?simulationId=${encodeURIComponent(simulationId)}`)
+  apiClient<Execution[]>(`/web/executions?simulationId=${encodeURIComponent(simulationId)}`)
 export const getParticipantExecutions = (participantId: string) =>
   apiClient<Execution[]>(
-    `/runner/sessions/executions?participantId=${encodeURIComponent(participantId)}`,
+    `/web/sessions/executions?participantId=${encodeURIComponent(participantId)}`,
   )
 export interface BatchExecutionRun extends Execution {
   outcome: 'created' | 'resumed' | 'archived'
@@ -35,14 +35,14 @@ export const startExecutionBatch = (payload: {
   simulationIds: string[]
   context?: Record<string, unknown>
 }) =>
-  apiClient<BatchExecutionResponse>('/runner/executions/batch', {
+  apiClient<BatchExecutionResponse>('/web/executions/batch', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 export const deleteExecution = (executionId: string) =>
-  apiClient<void>(`/runner/executions/${executionId}`, { method: 'DELETE' })
+  apiClient<void>(`/web/executions/${executionId}`, { method: 'DELETE' })
 export const getNodeExecutions = (executionId: string) =>
-  apiClient<NodeExecution[]>(`/runner/executions/${executionId}/node-executions`)
+  apiClient<NodeExecution[]>(`/web/executions/${executionId}/node-executions`)
 export const getExecutionTrace = async (executionId: string): Promise<ExecutionTrace[]> =>
   (await getNodeExecutions(executionId)).map((item) => ({
     eventId: item.nodeExecutionId,

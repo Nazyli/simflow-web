@@ -16,4 +16,4 @@ export interface ExecutionHistoryItem {
   lastActivityAt: string
 }
 
-export const getExecutionHistory = () => apiClient<ExecutionHistoryItem[]>('/history/executions')
+export const getExecutionHistory = () => apiClient<ExecutionHistoryItem[]>('/admin/history/executions')

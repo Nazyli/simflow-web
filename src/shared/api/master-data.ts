@@ -16,7 +16,7 @@ export const getStudioMasterData = (endpoint: string) =>
   apiClient<Record<string, unknown>[]>(endpoint)
 
 export const getStudioMasterEmail = (emailId: string) =>
-  apiClient<MasterEmailDetail>(`/studio/master-data/emails/${encodeURIComponent(emailId)}`)
+  apiClient<MasterEmailDetail>(`/admin/master-data/emails/${encodeURIComponent(emailId)}`)
 
 export interface MasterActor {
   actorId: string
@@ -26,4 +26,4 @@ export interface MasterActor {
   [key: string]: unknown
 }
 
-export const getMasterActors = () => apiClient<MasterActor[]>('/studio/master-data/actors')
+export const getMasterActors = () => apiClient<MasterActor[]>('/admin/master-data/actors')

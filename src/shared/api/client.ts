@@ -38,5 +38,5 @@ export async function apiClient<T>(path: string, init: RequestInit = {}): Promis
 }
 
 export function eventsUrl(participantId: string): string {
-  return `${apiBaseUrl}/runner/events?participant_id=${encodeURIComponent(participantId)}`
+  return `${apiBaseUrl}/web/events?participant_id=${encodeURIComponent(participantId)}`
 }
