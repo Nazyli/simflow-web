@@ -25,7 +25,6 @@ import {
 import { MasterPickerDialog } from '../pickers/master-picker-dialog'
 import {
   chatDialogInitialForm,
-  chatNamePreview,
   emptyChatForm,
   validateChatForm,
   type ChatFormValues,
@@ -160,9 +159,6 @@ export function ChatCrudDialog({
                 setForm((current) => ({ ...current, content: event.target.value }))
               }
             />
-            <p className="text-muted-foreground text-xs">
-              Chat name preview: {chatNamePreview(form.content)}
-            </p>
           </div>
           {formError && <p className="text-destructive text-xs">{formError}</p>}
           {chatsQuery.isError && (
