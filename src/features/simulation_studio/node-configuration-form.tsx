@@ -233,6 +233,7 @@ export function NodeConfigurationForm({
               name={key}
               value={configuration[key]}
               defaultValue={defaultValue}
+              nodeId={node.nodeId}
               required={isRequired(
                 definition.validationRules[key] as Record<string, unknown>,
                 configuration,
@@ -553,6 +554,7 @@ function CatalogParameterField({
   name,
   value,
   defaultValue,
+  nodeId,
   validationRule,
   required,
   definition,
@@ -562,6 +564,7 @@ function CatalogParameterField({
   name: string
   value: unknown
   defaultValue: unknown
+  nodeId?: string
   validationRule?: Record<string, unknown>
   required: boolean
   definition?: NodeDefinition
@@ -646,6 +649,7 @@ function CatalogParameterField({
         required={required}
         multiline={resolveParameterMultiline(name, definition?.parameterOptions)}
         picker={picker}
+        nodeId={nodeId}
         filterValue={picker.filterBy ? String(configuration[picker.filterBy] ?? '') : undefined}
         onChange={(next) => onChange(next)}
       />

@@ -83,9 +83,10 @@ export interface OutputPort {
   edgeStyle: EdgeStyle
 }
 export interface ParameterPicker {
+  editor?: string
   resource: string
   valueField: string
-  displayFields: string[]
+  displayFields?: string[]
   filterField?: string
   filterBy?: string
   endpoint?: string

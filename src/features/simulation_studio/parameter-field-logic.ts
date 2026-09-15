@@ -1,4 +1,4 @@
-import type { ParameterOption } from '../../shared/types/simulation'
+import type { ParameterOption, ParameterPicker } from '../../shared/types/simulation'
 
 type ValidationRule = Record<string, unknown>
 
@@ -13,9 +13,7 @@ export function isNumericParameter(
   if (type === 'number' || type === 'integer') return true
   if (Array.isArray(type) && type.some((item) => item === 'number' || item === 'integer'))
     return true
-  return (
-    typeof validationRule.minimum === 'number' || typeof validationRule.maximum === 'number'
-  )
+  return typeof validationRule.minimum === 'number' || typeof validationRule.maximum === 'number'
 }
 
 export function parseNumericParameter(value: string): number | null {
@@ -30,6 +28,18 @@ export function resolveParameterMultiline(
   parameterOptions?: Record<string, ParameterOption>,
 ): boolean {
   return Boolean(parameterOptions?.[name]?.multiline)
+}
+
+export function isChatCrudEditor(picker: Pick<ParameterPicker, 'editor'> | undefined): boolean {
+  return picker?.editor === 'chat_crud'
+}
+
+export function isCrudEditor(picker: Pick<ParameterPicker, 'editor'> | undefined): boolean {
+  return (
+    picker?.editor === 'chat_crud' ||
+    picker?.editor === 'call_crud' ||
+    picker?.editor === 'prompt_crud'
+  )
 }
 
 export function pickerAddButtonLabel(label: string): string {

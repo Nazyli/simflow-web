@@ -6,8 +6,15 @@ import { Label } from '../../../components/ui/label'
 import { Textarea } from '../../../components/ui/textarea'
 import type { ParameterPicker } from '../../../shared/types/simulation'
 import { applyPickerSelection, isPickerAppendOne, removePickerValue } from './picker-logic'
-import { pickerAddButtonLabel, pickerSelectButtonLabel } from '../parameter-field-logic'
+import {
+  isCrudEditor,
+  pickerAddButtonLabel,
+  pickerSelectButtonLabel,
+} from '../parameter-field-logic'
 import { MasterPickerDialog } from './master-picker-dialog'
+import { ChatCrudDialog } from '../master-data/chat-crud-dialog'
+import { CallCrudDialog } from '../master-data/call-crud-dialog'
+import { PromptCrudDialog } from '../master-data/prompt-crud-dialog'
 
 export function MasterPickerField({
   label,
@@ -15,6 +22,7 @@ export function MasterPickerField({
   required = false,
   multiline = false,
   picker,
+  nodeId,
   filterValue,
   onChange,
 }: {
@@ -23,10 +31,12 @@ export function MasterPickerField({
   required?: boolean
   multiline?: boolean
   picker: ParameterPicker
+  nodeId?: string
   filterValue?: string
   onChange: (value: string | string[]) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [crudOpen, setCrudOpen] = useState(false)
   const filter =
     picker.filterBy && picker.filterField && filterValue
       ? { field: picker.filterField, value: filterValue }
@@ -35,6 +45,8 @@ export function MasterPickerField({
     ? value.filter((item): item is string => typeof item === 'string')
     : []
   const isAppendOne = isPickerAppendOne(picker)
+  const useCrud = isCrudEditor(picker) && Boolean(nodeId)
+  const openPicker = () => (useCrud ? setCrudOpen(true) : setOpen(true))
   const select = (record: Record<string, unknown>) => {
     onChange(
       isAppendOne
@@ -65,7 +77,7 @@ export function MasterPickerField({
               </div>
             ))}
           </div>
-          <Button type="button" variant="outline" onClick={() => setOpen(true)}>
+          <Button type="button" variant="outline" onClick={openPicker}>
             <PackageSearch /> {pickerAddButtonLabel(label)}
           </Button>
         </div>
@@ -86,23 +98,58 @@ export function MasterPickerField({
               onChange={(event) => onChange(event.target.value)}
             />
           )}
-          <Button type="button" variant="outline" onClick={() => setOpen(true)}>
+          <Button type="button" variant="outline" onClick={openPicker}>
             <PackageSearch /> {pickerSelectButtonLabel(label)}
           </Button>
         </div>
       )}
-      <MasterPickerDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={`Pick ${label}`}
-        resource={picker.resource}
-        endpoint={picker.endpoint}
-        displayFields={picker.displayFields}
-        filter={filter}
-        valueField={picker.valueField}
-        selected={isAppendOne ? values : String(value ?? '')}
-        onSelect={select}
-      />
+      {useCrud && picker.editor === 'chat_crud' ? (
+        <ChatCrudDialog
+          open={crudOpen}
+          onOpenChange={setCrudOpen}
+          nodeId={nodeId!}
+          selectedChatId={String(value ?? '')}
+          onSelect={(chatId) => {
+            onChange(chatId)
+            setCrudOpen(false)
+          }}
+        />
+      ) : useCrud && picker.editor === 'call_crud' ? (
+        <CallCrudDialog
+          open={crudOpen}
+          onOpenChange={setCrudOpen}
+          nodeId={nodeId!}
+          selectedCallId={String(value ?? '')}
+          onSelect={(callId) => {
+            onChange(callId)
+            setCrudOpen(false)
+          }}
+        />
+      ) : useCrud && picker.editor === 'prompt_crud' ? (
+        <PromptCrudDialog
+          open={crudOpen}
+          onOpenChange={setCrudOpen}
+          nodeId={nodeId!}
+          selectedPromptId={String(value ?? '')}
+          onSelect={(promptId) => {
+            onChange(promptId)
+            setCrudOpen(false)
+          }}
+        />
+      ) : (
+        <MasterPickerDialog
+          open={open}
+          onOpenChange={setOpen}
+          title={`Pick ${label}`}
+          resource={picker.resource}
+          endpoint={picker.endpoint}
+          displayFields={picker.displayFields ?? [picker.valueField]}
+          filter={filter}
+          valueField={picker.valueField}
+          selected={isAppendOne ? values : String(value ?? '')}
+          onSelect={select}
+        />
+      )}
     </div>
   )
 }
