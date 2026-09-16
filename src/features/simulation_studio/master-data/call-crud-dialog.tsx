@@ -65,6 +65,8 @@ export function CallCrudDialog({
     queryKey: CALL_QUERY_KEY,
     queryFn: getMasterCalls,
     enabled: open && Boolean(selectedCallId),
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
   const saveMutation = useMutation({
     mutationFn: (values: CallFormValues) =>

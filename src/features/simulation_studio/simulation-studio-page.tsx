@@ -470,6 +470,11 @@ export function SimulationStudioPage() {
       queryClient.invalidateQueries({
         queryKey: ['simulation-versions', selectedGroupSimulation?.groupSimulationId],
       })
+      queryClient.invalidateQueries({ queryKey: ['master', 'chats'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'calls'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'prompts'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'emails'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'email'] })
       navigate(`/studio/${version.simulationId}`)
       setDuplicateOpen(false)
       toast.success(`Duplicated to "${version.simulationName}".`)
@@ -517,6 +522,11 @@ export function SimulationStudioPage() {
       setActiveRightTab('inspector')
       setRightSidebarOpen(true)
       queryClient.invalidateQueries({ queryKey: ['graph', simulationId] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'chats'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'calls'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'prompts'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'emails'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'email'] })
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })

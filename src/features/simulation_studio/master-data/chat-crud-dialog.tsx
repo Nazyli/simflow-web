@@ -65,6 +65,8 @@ export function ChatCrudDialog({
     queryKey: CHAT_QUERY_KEY,
     queryFn: getMasterChats,
     enabled: open && Boolean(selectedChatId),
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
   const saveMutation = useMutation({
     mutationFn: (values: ChatFormValues) =>

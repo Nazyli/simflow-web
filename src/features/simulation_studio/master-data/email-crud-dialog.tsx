@@ -71,6 +71,8 @@ export function EmailCrudDialog({
     queryKey: ['master', 'email', selectedEmailId ?? 'new'],
     queryFn: () => getStudioMasterEmail(selectedEmailId!),
     enabled: open && Boolean(selectedEmailId),
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
   const documentsQuery = useQuery({
     queryKey: ['master', 'email-document-contents'],

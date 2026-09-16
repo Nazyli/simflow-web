@@ -62,6 +62,8 @@ export function PromptCrudDialog({
     queryKey: PROMPT_QUERY_KEY,
     queryFn: getMasterPrompts,
     enabled: open && Boolean(selectedPromptId),
+    staleTime: 0,
+    refetchOnMount: 'always',
   })
   const saveMutation = useMutation({
     mutationFn: (values: PromptFormValues) =>
