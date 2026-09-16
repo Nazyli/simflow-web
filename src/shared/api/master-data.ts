@@ -1,5 +1,12 @@
 import { apiClient } from './client'
 
+export interface AuditFields {
+  createdBy: string | null
+  createdDate: string | null
+  modifiedBy: string | null
+  modifiedDate: string | null
+}
+
 export interface MasterEmailAttachment {
   attachmentId: string
   docContentId: string | null
@@ -7,7 +14,7 @@ export interface MasterEmailAttachment {
   documentName: string
 }
 
-export interface MasterEmail {
+export interface MasterEmail extends AuditFields {
   emailId: string
   emailName: string | null
   nodeId: string | null
@@ -32,7 +39,7 @@ export interface MasterDocumentContent {
 export const getStudioMasterData = (endpoint: string) =>
   apiClient<Record<string, unknown>[]>(endpoint)
 
-export interface MasterChat {
+export interface MasterChat extends AuditFields {
   chatId: string
   nodeId: string | null
   chatName: string
@@ -57,7 +64,7 @@ export const updateMasterChat = (chatId: string, actorId: string, content: strin
 export const deleteMasterChat = (chatId: string) =>
   apiClient<null>(`/admin/master-data/chats/${encodeURIComponent(chatId)}`, { method: 'DELETE' })
 
-export interface MasterCall {
+export interface MasterCall extends AuditFields {
   callId: string
   callName: string | null
   nodeId: string | null
@@ -82,7 +89,7 @@ export const updateMasterCall = (callId: string, actorId: string, content: strin
 export const deleteMasterCall = (callId: string) =>
   apiClient<null>(`/admin/master-data/calls/${encodeURIComponent(callId)}`, { method: 'DELETE' })
 
-export interface MasterPrompt {
+export interface MasterPrompt extends AuditFields {
   promptId: string
   nodeId: string | null
   content: string | null
