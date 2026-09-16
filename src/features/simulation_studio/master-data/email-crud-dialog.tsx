@@ -354,10 +354,14 @@ export function EmailCrudDialog({
         resource="email-originals"
         endpoint={
           simulationId
-            ? `/admin/master-data/emails/originals?simulationId=${encodeURIComponent(simulationId)}`
+            ? (() => {
+                const params = new URLSearchParams({ simulationId })
+                if (editing?.emailId) params.set('excludeEmailId', editing.emailId)
+                return `/admin/master-data/emails/originals?${params.toString()}`
+              })()
             : undefined
         }
-        displayFields={['emailId', 'subject', 'emailName']}
+        displayFields={['emailId', 'subject']}
         valueField="emailId"
         selected={form.parentMasterEmailId}
         onSelect={(record) => setField('parentMasterEmailId', String(record.emailId ?? ''))}

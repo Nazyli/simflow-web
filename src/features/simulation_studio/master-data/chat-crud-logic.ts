@@ -27,8 +27,3 @@ export function validateChatForm(values: ChatFormValues): string | null {
   if (!values.content.trim()) return 'Enter chat content.'
   return null
 }
-
-export function chatNamePreview(content: string): string {
-  const name = content.trim().slice(0, 255)
-  return name || 'Untitled chat'
-}

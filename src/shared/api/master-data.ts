@@ -16,7 +16,6 @@ export interface MasterEmailAttachment {
 
 export interface MasterEmail extends AuditFields {
   emailId: string
-  emailName: string | null
   nodeId: string | null
   actorFrom: string | null
   actorTo: string | null
@@ -42,7 +41,6 @@ export const getStudioMasterData = (endpoint: string) =>
 export interface MasterChat extends AuditFields {
   chatId: string
   nodeId: string | null
-  chatName: string
   actorId: string | null
   content: string | null
 }
@@ -66,7 +64,6 @@ export const deleteMasterChat = (chatId: string) =>
 
 export interface MasterCall extends AuditFields {
   callId: string
-  callName: string | null
   nodeId: string | null
   actorId: string | null
   content: string | null
@@ -120,10 +117,11 @@ export const getStudioMasterEmail = (emailId: string) =>
 
 export const getMasterEmails = () => apiClient<MasterEmail[]>('/admin/master-data/emails')
 
-export const getMasterEmailOriginals = (simulationId: string) =>
-  apiClient<MasterEmail[]>(
-    `/admin/master-data/emails/originals?simulationId=${encodeURIComponent(simulationId)}`,
-  )
+export const getMasterEmailOriginals = (simulationId: string, excludeEmailId?: string) => {
+  const params = new URLSearchParams({ simulationId })
+  if (excludeEmailId) params.set('excludeEmailId', excludeEmailId)
+  return apiClient<MasterEmail[]>(`/admin/master-data/emails/originals?${params.toString()}`)
+}
 
 export const getMasterDocumentContents = () =>
   apiClient<MasterDocumentContent[]>('/admin/master-data/emails/document-contents')
