@@ -13,7 +13,6 @@ import {
 } from '../../../components/ui/dialog'
 import { Input } from '../../../components/ui/input'
 import { Label } from '../../../components/ui/label'
-import { Textarea } from '../../../components/ui/textarea'
 import { ApiError } from '../../../shared/api/client'
 import {
   createMasterCall,
@@ -29,6 +28,8 @@ import {
   validateCallForm,
   type CallFormValues,
 } from './call-crud-logic'
+import { useTemplateContract } from './template-contract-logic'
+import { TemplateTextarea } from './template-placeholder-picker'
 
 const CALL_QUERY_KEY = ['master', 'calls']
 
@@ -48,12 +49,14 @@ export function CallCrudDialog({
   open,
   onOpenChange,
   nodeId,
+  nodeType = 'send_call_speech',
   selectedCallId,
   onSelect,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   nodeId: string
+  nodeType?: string
   selectedCallId?: string
   onSelect: (callId: string) => void
 }) {
@@ -61,6 +64,8 @@ export function CallCrudDialog({
   const [editing, setEditing] = useState<MasterCall | null>(null)
   const [form, setForm] = useState<CallFormValues>(emptyCallForm)
   const [actorPickerOpen, setActorPickerOpen] = useState(false)
+  const contentContract = useTemplateContract(nodeType, 'content')
+  const promptContract = useTemplateContract(nodeType, 'prompt')
   const callsQuery = useQuery({
     queryKey: CALL_QUERY_KEY,
     queryFn: getMasterCalls,
@@ -160,28 +165,26 @@ export function CallCrudDialog({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="master-call-content">Content</Label>
-            <Textarea
+            <TemplateTextarea
               id="master-call-content"
               rows={7}
               disabled={isLoadingExisting || saveMutation.isPending}
               value={form.content}
+              placeholders={contentContract.contract?.allowedPlaceholders}
               placeholder="Write the speech sent by this actor..."
-              onChange={(event) =>
-                setForm((current) => ({ ...current, content: event.target.value }))
-              }
+              onValueChange={(value) => setForm((current) => ({ ...current, content: value }))}
             />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="master-call-prompt">Prompt (optional)</Label>
-            <Textarea
+            <TemplateTextarea
               id="master-call-prompt"
               rows={4}
               disabled={isLoadingExisting || saveMutation.isPending}
               value={form.prompt}
+              placeholders={promptContract.contract?.allowedPlaceholders}
               placeholder="Optional prompt for AI generation..."
-              onChange={(event) =>
-                setForm((current) => ({ ...current, prompt: event.target.value }))
-              }
+              onValueChange={(value) => setForm((current) => ({ ...current, prompt: value }))}
             />
           </div>
           {formError && <p className="text-destructive text-xs">{formError}</p>}

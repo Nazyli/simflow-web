@@ -235,6 +235,7 @@ export function NodeConfigurationForm({
             <CatalogParameterField
               key={key}
               name={key}
+              nodeType={node.nodeType}
               value={configuration[key]}
               defaultValue={defaultValue}
               nodeId={node.nodeId}
@@ -557,6 +558,7 @@ function isRequired(
 
 function CatalogParameterField({
   name,
+  nodeType,
   value,
   defaultValue,
   nodeId,
@@ -568,6 +570,7 @@ function CatalogParameterField({
   onChange,
 }: {
   name: string
+  nodeType: string
   value: unknown
   defaultValue: unknown
   nodeId?: string
@@ -657,6 +660,7 @@ function CatalogParameterField({
         multiline={resolveParameterMultiline(name, definition?.parameterOptions)}
         picker={picker}
         nodeId={nodeId}
+        nodeType={nodeType}
         simulationId={simulationId}
         filterValue={picker.filterBy ? String(configuration[picker.filterBy] ?? '') : undefined}
         onChange={(next) => onChange(next)}

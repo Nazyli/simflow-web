@@ -24,6 +24,7 @@ export function MasterPickerField({
   multiline = false,
   picker,
   nodeId,
+  nodeType,
   simulationId,
   filterValue,
   onChange,
@@ -34,6 +35,7 @@ export function MasterPickerField({
   multiline?: boolean
   picker: ParameterPicker
   nodeId?: string
+  nodeType?: string
   simulationId?: string | null
   filterValue?: string
   onChange: (value: string | string[]) => void
@@ -111,6 +113,7 @@ export function MasterPickerField({
           open={crudOpen}
           onOpenChange={setCrudOpen}
           nodeId={nodeId!}
+          nodeType={nodeType}
           selectedChatId={String(value ?? '')}
           onSelect={(chatId) => {
             onChange(chatId)
@@ -122,6 +125,7 @@ export function MasterPickerField({
           open={crudOpen}
           onOpenChange={setCrudOpen}
           nodeId={nodeId!}
+          nodeType={nodeType}
           selectedCallId={String(value ?? '')}
           onSelect={(callId) => {
             onChange(callId)
@@ -133,6 +137,7 @@ export function MasterPickerField({
           open={crudOpen}
           onOpenChange={setCrudOpen}
           nodeId={nodeId!}
+          nodeType={nodeType}
           selectedPromptId={String(value ?? '')}
           onSelect={(promptId) => {
             onChange(promptId)
@@ -144,6 +149,7 @@ export function MasterPickerField({
           open={crudOpen}
           onOpenChange={setCrudOpen}
           nodeId={nodeId!}
+          nodeType={nodeType}
           simulationId={simulationId}
           selectedEmailId={String(value ?? '')}
           onSelect={(emailId) => {

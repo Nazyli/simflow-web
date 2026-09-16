@@ -13,7 +13,6 @@ import {
 } from '../../../components/ui/dialog'
 import { Input } from '../../../components/ui/input'
 import { Label } from '../../../components/ui/label'
-import { Textarea } from '../../../components/ui/textarea'
 import { ApiError } from '../../../shared/api/client'
 import {
   createMasterEmail,
@@ -31,6 +30,8 @@ import {
   validateEmailForm,
   type EmailFormValues,
 } from './email-crud-logic'
+import { useTemplateContract } from './template-contract-logic'
+import { TemplateTextarea } from './template-placeholder-picker'
 
 const EMAIL_QUERY_KEY = ['master', 'emails']
 
@@ -50,6 +51,7 @@ export function EmailCrudDialog({
   open,
   onOpenChange,
   nodeId,
+  nodeType = 'send_email',
   simulationId,
   selectedEmailId,
   onSelect,
@@ -57,6 +59,7 @@ export function EmailCrudDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
   nodeId: string
+  nodeType?: string
   simulationId?: string | null
   selectedEmailId?: string
   onSelect: (emailId: string) => void
@@ -67,6 +70,8 @@ export function EmailCrudDialog({
   const [actorPicker, setActorPicker] = useState<'from' | 'to' | 'cc' | null>(null)
   const [parentPickerOpen, setParentPickerOpen] = useState(false)
   const [documentPickerOpen, setDocumentPickerOpen] = useState(false)
+  const contentContract = useTemplateContract(nodeType, 'content')
+  const promptContract = useTemplateContract(nodeType, 'prompt')
   const emailsQuery = useQuery({
     queryKey: ['master', 'email', selectedEmailId ?? 'new'],
     queryFn: () => getStudioMasterEmail(selectedEmailId!),
@@ -237,23 +242,25 @@ export function EmailCrudDialog({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="master-email-content">Content</Label>
-            <Textarea
+            <TemplateTextarea
               id="master-email-content"
               rows={8}
               disabled={disabled}
               value={form.content}
-              onChange={(event) => setField('content', event.target.value)}
+              placeholders={contentContract.contract?.allowedPlaceholders}
+              onValueChange={(value) => setField('content', value)}
             />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="master-email-prompt">Prompt (optional)</Label>
-            <Textarea
+            <TemplateTextarea
               id="master-email-prompt"
               rows={4}
               disabled={disabled}
               value={form.prompt}
+              placeholders={promptContract.contract?.allowedPlaceholders}
               placeholder="Optional prompt for AI generation..."
-              onChange={(event) => setField('prompt', event.target.value)}
+              onValueChange={(value) => setField('prompt', value)}
             />
           </div>
           <div className="grid gap-2">

@@ -13,7 +13,6 @@ import {
 } from '../../../components/ui/dialog'
 import { Input } from '../../../components/ui/input'
 import { Label } from '../../../components/ui/label'
-import { Textarea } from '../../../components/ui/textarea'
 import { ApiError } from '../../../shared/api/client'
 import {
   createMasterChat,
@@ -29,6 +28,8 @@ import {
   validateChatForm,
   type ChatFormValues,
 } from './chat-crud-logic'
+import { useTemplateContract } from './template-contract-logic'
+import { TemplateTextarea } from './template-placeholder-picker'
 
 const CHAT_QUERY_KEY = ['master', 'chats']
 
@@ -48,12 +49,14 @@ export function ChatCrudDialog({
   open,
   onOpenChange,
   nodeId,
+  nodeType = 'send_chat',
   selectedChatId,
   onSelect,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   nodeId: string
+  nodeType?: string
   selectedChatId?: string
   onSelect: (chatId: string) => void
 }) {
@@ -61,6 +64,8 @@ export function ChatCrudDialog({
   const [editing, setEditing] = useState<MasterChat | null>(null)
   const [form, setForm] = useState<ChatFormValues>(emptyChatForm)
   const [actorPickerOpen, setActorPickerOpen] = useState(false)
+  const contentContract = useTemplateContract(nodeType, 'content')
+  const promptContract = useTemplateContract(nodeType, 'prompt')
   const chatsQuery = useQuery({
     queryKey: CHAT_QUERY_KEY,
     queryFn: getMasterChats,
@@ -161,28 +166,26 @@ export function ChatCrudDialog({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="master-chat-content">Content</Label>
-            <Textarea
+            <TemplateTextarea
               id="master-chat-content"
               rows={7}
               disabled={isLoadingExisting || saveMutation.isPending}
               value={form.content}
+              placeholders={contentContract.contract?.allowedPlaceholders}
               placeholder="Write the message sent by this actor..."
-              onChange={(event) =>
-                setForm((current) => ({ ...current, content: event.target.value }))
-              }
+              onValueChange={(value) => setForm((current) => ({ ...current, content: value }))}
             />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="master-chat-prompt">Prompt (optional)</Label>
-            <Textarea
+            <TemplateTextarea
               id="master-chat-prompt"
               rows={4}
               disabled={isLoadingExisting || saveMutation.isPending}
               value={form.prompt}
+              placeholders={promptContract.contract?.allowedPlaceholders}
               placeholder="Optional prompt for AI generation..."
-              onChange={(event) =>
-                setForm((current) => ({ ...current, prompt: event.target.value }))
-              }
+              onValueChange={(value) => setForm((current) => ({ ...current, prompt: value }))}
             />
           </div>
           {formError && <p className="text-destructive text-xs">{formError}</p>}

@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from '../../../components/ui/dialog'
 import { Label } from '../../../components/ui/label'
-import { Textarea } from '../../../components/ui/textarea'
 import { ApiError } from '../../../shared/api/client'
 import {
   createMasterPrompt,
@@ -27,6 +26,8 @@ import {
   validatePromptForm,
   type PromptFormValues,
 } from './prompt-crud-logic'
+import { useTemplateContract } from './template-contract-logic'
+import { TemplateTextarea } from './template-placeholder-picker'
 
 const PROMPT_QUERY_KEY = ['master', 'prompts']
 
@@ -46,18 +47,21 @@ export function PromptCrudDialog({
   open,
   onOpenChange,
   nodeId,
+  nodeType = 'ai_classification',
   selectedPromptId,
   onSelect,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   nodeId: string
+  nodeType?: string
   selectedPromptId?: string
   onSelect: (promptId: string) => void
 }) {
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState<MasterPrompt | null>(null)
   const [form, setForm] = useState<PromptFormValues>(emptyPromptForm)
+  const contentContract = useTemplateContract(nodeType, 'prompt')
   const promptsQuery = useQuery({
     queryKey: PROMPT_QUERY_KEY,
     queryFn: getMasterPrompts,
@@ -124,15 +128,14 @@ export function PromptCrudDialog({
           )}
           <div className="grid gap-1.5">
             <Label htmlFor="master-prompt-content">Content</Label>
-            <Textarea
+            <TemplateTextarea
               id="master-prompt-content"
               rows={9}
               disabled={isLoadingExisting || saveMutation.isPending}
               value={form.content}
+              placeholders={contentContract.contract?.allowedPlaceholders}
               placeholder="Write the classification prompt..."
-              onChange={(event) =>
-                setForm((current) => ({ ...current, content: event.target.value }))
-              }
+              onValueChange={(value) => setForm((current) => ({ ...current, content: value }))}
             />
           </div>
           {formError && <p className="text-destructive text-xs">{formError}</p>}

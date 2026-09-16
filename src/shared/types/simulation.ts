@@ -98,6 +98,16 @@ export interface ParameterOption {
   select?: { id: string; label: string }[]
   multiline?: boolean
 }
+export interface TemplatePlaceholder {
+  name: string
+  label: string
+  description?: string
+}
+export interface TemplateContract {
+  field: string
+  target: string
+  allowedPlaceholders: TemplatePlaceholder[]
+}
 export interface NodeDefinition {
   nodeType: string
   category: string
@@ -110,6 +120,7 @@ export interface NodeDefinition {
   parameters: Record<string, unknown>
   validationRules: Record<string, unknown>
   parameterOptions?: Record<string, ParameterOption>
+  templateContracts?: TemplateContract[]
 }
 export interface NodeCatalog {
   categories: { id: string; label: string }[]
