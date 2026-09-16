@@ -11,6 +11,7 @@ type NodeAutosaveQueueOptions<Payload> = {
   delayMs: number
   save: (nodeId: string, payload: Payload) => Promise<unknown>
   onStatusChange?: (nodeId: string, status: NodeAutosaveStatus) => void
+  onSuccess?: (nodeId: string, result: unknown) => void
 }
 
 export class NodeAutosaveQueue<Payload> {
@@ -66,7 +67,8 @@ export class NodeAutosaveQueue<Payload> {
     this.options.onStatusChange?.(nodeId, 'saving')
 
     try {
-      await this.options.save(nodeId, entry.payload)
+      const result = await this.options.save(nodeId, entry.payload)
+      this.options.onSuccess?.(nodeId, result)
       this.options.onStatusChange?.(nodeId, entry.queued ? 'pending' : 'saved')
     } catch {
       if (!entry.queued) this.options.onStatusChange?.(nodeId, 'error')

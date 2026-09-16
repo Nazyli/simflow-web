@@ -305,6 +305,7 @@ export function SimulationStudioPage() {
   const localRotations = useRef<Map<string, number>>(new Map())
   const nodeAutosaveStatuses = useRef<Map<string, NodeAutosaveStatus>>(new Map())
   const nodeAutosaveQueue = useRef<NodeAutosaveQueue<ApiNodePayload> | null>(null)
+  const simulationIdRef = useRef<string | null>(null)
   const nodesRef = useRef<Node[]>([])
   const pendingEdgeKeys = useRef<Set<string>>(new Set())
   const fittedSimulationId = useRef<string | null>(null)
@@ -323,22 +324,82 @@ export function SimulationStudioPage() {
     setNodeAutosaveStatus(combinedAutosaveStatus(nodeAutosaveStatuses.current.values()))
   }, [])
 
+  simulationIdRef.current = simulationId
+
   if (!nodeAutosaveQueue.current) {
     nodeAutosaveQueue.current = new NodeAutosaveQueue({
       delayMs: 400,
       save: updateNode,
       onStatusChange: updateNodeAutosaveStatus,
+      onSuccess: (nodeId, result) => {
+        const updated = result as ApiNode
+        if (!updated) return
+        // Prefer current simulationId, fallback to any cached graph containing the node
+        // to handle race where simulationId changed between enqueue and success.
+        const targetId = simulationIdRef.current
+        let applied = false
+        if (targetId) {
+          queryClient.setQueryData<SimulationGraph>(['graph', targetId], (current) => {
+            if (!current || !current.nodes.some((node) => node.nodeId === nodeId)) return current
+            applied = true
+            return {
+              ...current,
+              nodes: current.nodes.map((node) =>
+                node.nodeId === nodeId
+                  ? {
+                      ...node,
+                      ...updated,
+                      inputPorts: updated.inputPorts,
+                      outputPorts: updated.outputPorts,
+                      category: updated.category,
+                    }
+                  : node,
+              ),
+            }
+          })
+          if (applied) return
+        }
+        queryClient.setQueriesData<SimulationGraph>({ queryKey: ['graph'] }, (current) => {
+          if (!current || !current.nodes.some((node) => node.nodeId === nodeId)) return current
+          return {
+            ...current,
+            nodes: current.nodes.map((node) =>
+              node.nodeId === nodeId
+                ? {
+                    ...node,
+                    ...updated,
+                    inputPorts: updated.inputPorts,
+                    outputPorts: updated.outputPorts,
+                    category: updated.category,
+                  }
+                : node,
+            ),
+          }
+        })
+      },
     })
   }
 
   const enqueueNodeSave = useCallback(
     ({ id, payload }: { id: string; payload: ApiNodePayload }) => {
       if (!simulationId) return
+      // Optimistic update: merge payload but preserve existing ports/category
+      // so handles stay visible until server returns resolved ports.
       queryClient.setQueryData<SimulationGraph>(['graph', simulationId], (current) => {
         if (!current) return current
         return {
           ...current,
-          nodes: current.nodes.map((node) => (node.nodeId === id ? { ...node, ...payload } : node)),
+          nodes: current.nodes.map((node) =>
+            node.nodeId === id
+              ? {
+                  ...node,
+                  ...payload,
+                  inputPorts: node.inputPorts,
+                  outputPorts: node.outputPorts,
+                  category: node.category,
+                }
+              : node,
+          ),
         }
       })
       nodeAutosaveQueue.current?.enqueue(id, payload)
