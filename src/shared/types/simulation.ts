@@ -29,6 +29,7 @@ export interface Execution {
 export interface Simulation {
   simulationId: string
   groupSimulationId: string
+  versionName: number
   simulationName: string
   simulationDesc: string | null
   channelName: string

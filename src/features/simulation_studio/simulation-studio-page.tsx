@@ -3,6 +3,7 @@ import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover'
 import { type EdgePathType } from '../../components/button-edge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import {
@@ -26,6 +27,9 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Copy,
+  Download,
+  Upload,
+  ChevronDown,
   Lock,
   Maximize,
   Minus,
@@ -42,7 +46,16 @@ import {
   Trash2,
   MapPin,
 } from 'lucide-react'
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+} from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import dagre from 'dagre'
@@ -53,6 +66,8 @@ import {
   addNode,
   addSimulationEdge,
   duplicateSimulation,
+  exportSimulation,
+  importSimulation,
   deleteNode,
   deleteSimulationEdge,
   deleteSimulation,
@@ -66,6 +81,7 @@ import {
   type ApiNode,
   type ApiNodePayload,
   type SimulationGraph,
+  type WorkflowPackage,
 } from '../../shared/api/simulations'
 import { replaceVisualGroups } from '../../shared/api/visual-groups'
 import { LoadingState } from '../../shared/components/async-state'
@@ -89,6 +105,7 @@ import {
 } from './visual-groups/visual-group-layout'
 import { projectWorkflowEdges } from './visual-groups/visual-group-projection'
 import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
+import { WorkflowPackageDialog } from './workflow-package-dialog'
 
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
@@ -282,6 +299,11 @@ export function SimulationStudioPage() {
   const [duplicateSourceId, setDuplicateSourceId] = useState<string | null>(null)
   const [duplicateName, setDuplicateName] = useState('')
   const [duplicateDesc, setDuplicateDesc] = useState('')
+  const [workflowActionsOpen, setWorkflowActionsOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [workflowPackage, setWorkflowPackage] = useState<WorkflowPackage | null>(null)
+  const [workflowPackageFileName, setWorkflowPackageFileName] = useState<string | null>(null)
+  const importFileInputRef = useRef<HTMLInputElement | null>(null)
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
@@ -478,6 +500,48 @@ export function SimulationStudioPage() {
       navigate(`/studio/${version.simulationId}`)
       setDuplicateOpen(false)
       toast.success(`Duplicated to "${version.simulationName}".`)
+    },
+    onError: (error) => toast.error(apiErrorMessage(error)),
+  })
+
+  const exportWorkflow = useMutation({
+    mutationFn: () => exportSimulation(simulationId!),
+    onSuccess: (workflowPackage) => {
+      const blob = new Blob([JSON.stringify(workflowPackage, null, 2)], {
+        type: 'application/json',
+      })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      const safeName = workflowPackage.simulation.name
+        .replace(/[^a-z0-9-_]+/gi, '-')
+        .replace(/^-|-$/g, '')
+      link.href = url
+      link.download = `${safeName || 'simflow-workflow'}.json`
+      link.click()
+      URL.revokeObjectURL(url)
+      toast.success('Workflow exported as JSON.')
+    },
+    onError: (error) => toast.error(apiErrorMessage(error)),
+  })
+
+  const importWorkflow = useMutation({
+    mutationFn: (packageToImport: WorkflowPackage) =>
+      importSimulation(simulationId!, packageToImport),
+    onSuccess: (version) => {
+      queryClient.invalidateQueries({
+        queryKey: ['simulation-versions', selectedGroupSimulation?.groupSimulationId],
+      })
+      queryClient.invalidateQueries({ queryKey: ['simulations'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'chats'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'calls'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'prompts'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'emails'] })
+      queryClient.invalidateQueries({ queryKey: ['master', 'email'] })
+      setImportDialogOpen(false)
+      setWorkflowPackage(null)
+      setWorkflowPackageFileName(null)
+      navigate(`/studio/${version.simulationId}`)
+      toast.success(`Imported as "${version.simulationName}".`)
     },
     onError: (error) => toast.error(apiErrorMessage(error)),
   })
@@ -793,6 +857,38 @@ export function SimulationStudioPage() {
     },
     [selectedSimulation, versions.data],
   )
+
+  const openImportPicker = useCallback(() => {
+    setWorkflowActionsOpen(false)
+    importFileInputRef.current?.click()
+  }, [])
+
+  const handleImportFile = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    try {
+      const parsed = JSON.parse(await file.text()) as WorkflowPackage
+      if (parsed.format !== 'simflow.workflow' || parsed.format_version !== 1) {
+        throw new Error('Unsupported workflow package format or version.')
+      }
+      if (
+        !parsed.simulation ||
+        !Array.isArray(parsed.nodes) ||
+        !Array.isArray(parsed.edges) ||
+        !Array.isArray(parsed.visual_groups) ||
+        typeof parsed.master_data !== 'object' ||
+        parsed.master_data === null
+      ) {
+        throw new Error('Workflow package is incomplete.')
+      }
+      setWorkflowPackage(parsed)
+      setWorkflowPackageFileName(file.name)
+      setImportDialogOpen(true)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to read workflow JSON.')
+    }
+  }, [])
 
   const invalidNodeIds = useMemo(() => new Set<string>(), [])
   const invalidEdgeIds = useMemo(() => new Set<string>(), [])
@@ -1570,13 +1666,55 @@ export function SimulationStudioPage() {
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                className="flex items-center gap-1 rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
-                onClick={() => openDuplicateDialog()}
-              >
-                <Plus className="h-3 w-3" /> Duplicate
-              </button>
+              <Popover open={workflowActionsOpen} onOpenChange={setWorkflowActionsOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
+                  >
+                    <Copy className="h-3 w-3" /> Workflow actions{' '}
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-48 p-1">
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-purple-50 hover:text-purple-700"
+                    onClick={() => {
+                      setWorkflowActionsOpen(false)
+                      openDuplicateDialog()
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5" /> Duplicate
+                  </button>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-purple-50 hover:text-purple-700 disabled:opacity-50"
+                    disabled={exportWorkflow.isPending || !selectedSimulation}
+                    onClick={() => {
+                      setWorkflowActionsOpen(false)
+                      exportWorkflow.mutate()
+                    }}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Export JSON
+                  </button>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-purple-50 hover:text-purple-700 disabled:opacity-50"
+                    disabled={!selectedSimulation || importWorkflow.isPending}
+                    onClick={openImportPicker}
+                  >
+                    <Upload className="h-3.5 w-3.5" /> Import JSON
+                  </button>
+                </PopoverContent>
+              </Popover>
+              <input
+                ref={importFileInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={handleImportFile}
+              />
             </div>
           )}
 
@@ -2274,6 +2412,23 @@ export function SimulationStudioPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <WorkflowPackageDialog
+        open={importDialogOpen}
+        onOpenChange={(open) => {
+          setImportDialogOpen(open)
+          if (!open) {
+            setWorkflowPackage(null)
+            setWorkflowPackageFileName(null)
+          }
+        }}
+        packageFileName={workflowPackageFileName}
+        workflowPackage={workflowPackage}
+        importing={importWorkflow.isPending}
+        onImport={() => {
+          if (workflowPackage) importWorkflow.mutate(workflowPackage)
+        }}
+      />
 
       {/* Duplicate Simulation Dialog */}
       <Dialog
