@@ -111,7 +111,7 @@ export function PromptCrudDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[min(720px,calc(100vh-32px))] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+      <DialogContent className="flex max-h-[min(720px,calc(100vh-32px))] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="border-b px-6 pt-6 pb-4">
           <DialogTitle>{editing ? 'Edit prompt' : 'New prompt'}</DialogTitle>
           <DialogDescription>
