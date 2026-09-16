@@ -18,6 +18,7 @@ test('starts a new original email form without parent or attachments', () => {
     subject: '',
     content: '',
     docContentIds: [],
+    prompt: '',
   })
 })
 
@@ -48,6 +49,7 @@ test('maps an existing reply email and its document contents', () => {
     subject: 'Reply',
     content: 'Body',
     docContentIds: ['content-1'],
+    prompt: '',
   })
 })
 

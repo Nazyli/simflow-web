@@ -53,6 +53,7 @@ test('creates a master chat with the owning node and actor', async () => {
     nodeId: 'node-1',
     actorId: 'actor-1',
     content: 'Hello',
+    prompt: null,
   })
 })
 
@@ -66,6 +67,7 @@ test('updates a master chat without changing its chat or node identity', async (
   assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), {
     actorId: 'actor-2',
     content: 'Updated',
+    prompt: null,
   })
 })
 
@@ -87,6 +89,7 @@ test('creates, updates, and deletes a node-owned master call', async () => {
     nodeId: 'node-1',
     actorId: 'actor-1',
     content: 'Start call',
+    prompt: null,
   })
 
   await updateMasterCall('call/1', 'actor-2', 'Updated call')
@@ -94,6 +97,7 @@ test('creates, updates, and deletes a node-owned master call', async () => {
   assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), {
     actorId: 'actor-2',
     content: 'Updated call',
+    prompt: null,
   })
 
   await deleteMasterCall('call/1')
@@ -107,18 +111,16 @@ test('loads and saves master prompts for the prompt CRUD editor', async () => {
   await getMasterPrompts()
   assert.equal(globalThis.lastRequest.path, '/admin/master-data/prompts')
 
-  await createMasterPrompt('node-1', 'Classify this', 'Intent classifier')
+  await createMasterPrompt('node-1', 'Classify this')
   assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), {
     nodeId: 'node-1',
     content: 'Classify this',
-    desc: 'Intent classifier',
   })
 
-  await updateMasterPrompt('prompt/1', 'Updated', null)
+  await updateMasterPrompt('prompt/1', 'Updated')
   assert.equal(globalThis.lastRequest.path, '/admin/master-data/prompts/prompt%2F1')
   assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), {
     content: 'Updated',
-    desc: null,
   })
 
   await deleteMasterPrompt('prompt/1')
@@ -150,11 +152,11 @@ test('loads and saves node-owned master emails with parent and attachments', asy
   }
   await createMasterEmail('node-1', values)
   assert.equal(globalThis.lastRequest.path, '/admin/master-data/emails')
-  assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), { nodeId: 'node-1', ...values })
+  assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), { nodeId: 'node-1', ...values, prompt: null })
 
   await updateMasterEmail('email/1', values)
   assert.equal(globalThis.lastRequest.path, '/admin/master-data/emails/email%2F1')
-  assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), values)
+  assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), { ...values, prompt: null })
 
   await deleteMasterEmail('email/1')
   assert.equal(globalThis.lastRequest.init.method, 'DELETE')

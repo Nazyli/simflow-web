@@ -71,8 +71,18 @@ export function CallCrudDialog({
   const saveMutation = useMutation({
     mutationFn: (values: CallFormValues) =>
       editing
-        ? updateMasterCall(editing.callId, values.actorId.trim(), values.content.trim())
-        : createMasterCall(nodeId, values.actorId.trim(), values.content.trim()),
+        ? updateMasterCall(
+            editing.callId,
+            values.actorId.trim(),
+            values.content.trim(),
+            values.prompt?.trim() ? values.prompt.trim() : null,
+          )
+        : createMasterCall(
+            nodeId,
+            values.actorId.trim(),
+            values.content.trim(),
+            values.prompt?.trim() ? values.prompt.trim() : null,
+          ),
     onSuccess: (call) => {
       void queryClient.invalidateQueries({ queryKey: CALL_QUERY_KEY })
       onSelect(call.callId)
@@ -158,6 +168,19 @@ export function CallCrudDialog({
               placeholder="Write the speech sent by this actor..."
               onChange={(event) =>
                 setForm((current) => ({ ...current, content: event.target.value }))
+              }
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="master-call-prompt">Prompt (optional)</Label>
+            <Textarea
+              id="master-call-prompt"
+              rows={4}
+              disabled={isLoadingExisting || saveMutation.isPending}
+              value={form.prompt}
+              placeholder="Optional prompt for AI generation..."
+              onChange={(event) =>
+                setForm((current) => ({ ...current, prompt: event.target.value }))
               }
             />
           </div>

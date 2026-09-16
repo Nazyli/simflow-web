@@ -11,6 +11,7 @@ export interface EmailFormValues {
   subject: string
   content: string
   docContentIds: string[]
+  prompt: string
 }
 
 export function emptyEmailForm(): EmailFormValues {
@@ -23,6 +24,7 @@ export function emptyEmailForm(): EmailFormValues {
     subject: '',
     content: '',
     docContentIds: [],
+    prompt: '',
   }
 }
 
@@ -44,6 +46,7 @@ export function emailDialogInitialForm(
     docContentIds: email.attachments
       .map((attachment) => attachment.docContentId)
       .filter((id): id is string => Boolean(id)),
+    prompt: (email as MasterEmail & { prompt?: string | null }).prompt ?? '',
   }
 }
 

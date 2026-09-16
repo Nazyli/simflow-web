@@ -22,7 +22,7 @@ test('routes call and prompt pickers to explicit CRUD editors', () => {
 })
 
 test('starts a new call form and validates actor plus content', () => {
-  assert.deepEqual(emptyCallForm(), { actorId: '', content: '' })
+  assert.deepEqual(emptyCallForm(), { actorId: '', content: '', prompt: '' })
   assert.equal(validateCallForm({ actorId: '', content: 'Hello' }), 'Select an actor.')
   assert.equal(validateCallForm({ actorId: 'actor-1', content: '  ' }), 'Enter call content.')
   assert.equal(validateCallForm({ actorId: 'actor-1', content: 'Hello' }), null)
@@ -35,6 +35,7 @@ test('maps an existing call into its edit form', () => {
   assert.deepEqual(callDialogInitialForm('call-1', records), {
     actorId: 'actor-1',
     content: 'Speak',
+    prompt: '',
   })
 })
 

@@ -71,8 +71,18 @@ export function ChatCrudDialog({
   const saveMutation = useMutation({
     mutationFn: (values: ChatFormValues) =>
       editing
-        ? updateMasterChat(editing.chatId, values.actorId.trim(), values.content.trim())
-        : createMasterChat(nodeId, values.actorId.trim(), values.content.trim()),
+        ? updateMasterChat(
+            editing.chatId,
+            values.actorId.trim(),
+            values.content.trim(),
+            values.prompt?.trim() ? values.prompt.trim() : null,
+          )
+        : createMasterChat(
+            nodeId,
+            values.actorId.trim(),
+            values.content.trim(),
+            values.prompt?.trim() ? values.prompt.trim() : null,
+          ),
     onSuccess: (chat) => {
       void queryClient.invalidateQueries({ queryKey: CHAT_QUERY_KEY })
       onSelect(chat.chatId)
@@ -159,6 +169,19 @@ export function ChatCrudDialog({
               placeholder="Write the message sent by this actor..."
               onChange={(event) =>
                 setForm((current) => ({ ...current, content: event.target.value }))
+              }
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="master-chat-prompt">Prompt (optional)</Label>
+            <Textarea
+              id="master-chat-prompt"
+              rows={4}
+              disabled={isLoadingExisting || saveMutation.isPending}
+              value={form.prompt}
+              placeholder="Optional prompt for AI generation..."
+              onChange={(event) =>
+                setForm((current) => ({ ...current, prompt: event.target.value }))
               }
             />
           </div>

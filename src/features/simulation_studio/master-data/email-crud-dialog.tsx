@@ -90,6 +90,7 @@ export function EmailCrudDialog({
         subject: values.subject.trim(),
         content: values.content.trim(),
         docContentIds: values.docContentIds,
+        prompt: values.prompt?.trim() ? values.prompt.trim() : null,
       }
       return editing
         ? updateMasterEmail(editing.emailId, payload)
@@ -242,6 +243,17 @@ export function EmailCrudDialog({
               disabled={disabled}
               value={form.content}
               onChange={(event) => setField('content', event.target.value)}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="master-email-prompt">Prompt (optional)</Label>
+            <Textarea
+              id="master-email-prompt"
+              rows={4}
+              disabled={disabled}
+              value={form.prompt}
+              placeholder="Optional prompt for AI generation..."
+              onChange={(event) => setField('prompt', event.target.value)}
             />
           </div>
           <div className="grid gap-2">

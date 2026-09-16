@@ -3,14 +3,19 @@ import type { MasterChat } from '../../../shared/api/master-data'
 export interface ChatFormValues {
   actorId: string
   content: string
+  prompt: string
 }
 
 export function emptyChatForm(): ChatFormValues {
-  return { actorId: '', content: '' }
+  return { actorId: '', content: '', prompt: '' }
 }
 
 export function chatFormFromRecord(record: MasterChat): ChatFormValues {
-  return { actorId: record.actorId ?? '', content: record.content ?? '' }
+  return {
+    actorId: record.actorId ?? '',
+    content: record.content ?? '',
+    prompt: (record as MasterChat & { prompt?: string | null }).prompt ?? '',
+  }
 }
 
 export function chatDialogInitialForm(

@@ -47,16 +47,26 @@ export interface MasterChat extends AuditFields {
 
 export const getMasterChats = () => apiClient<MasterChat[]>('/admin/master-data/chats')
 
-export const createMasterChat = (nodeId: string, actorId: string, content: string) =>
+export const createMasterChat = (
+  nodeId: string,
+  actorId: string,
+  content: string,
+  prompt?: string | null,
+) =>
   apiClient<MasterChat>('/admin/master-data/chats', {
     method: 'POST',
-    body: JSON.stringify({ nodeId, actorId, content }),
+    body: JSON.stringify({ nodeId, actorId, content, prompt: prompt ?? null }),
   })
 
-export const updateMasterChat = (chatId: string, actorId: string, content: string) =>
+export const updateMasterChat = (
+  chatId: string,
+  actorId: string,
+  content: string,
+  prompt?: string | null,
+) =>
   apiClient<MasterChat>(`/admin/master-data/chats/${encodeURIComponent(chatId)}`, {
     method: 'PUT',
-    body: JSON.stringify({ actorId, content }),
+    body: JSON.stringify({ actorId, content, prompt: prompt ?? null }),
   })
 
 export const deleteMasterChat = (chatId: string) =>
@@ -71,16 +81,26 @@ export interface MasterCall extends AuditFields {
 
 export const getMasterCalls = () => apiClient<MasterCall[]>('/admin/master-data/calls')
 
-export const createMasterCall = (nodeId: string, actorId: string, content: string) =>
+export const createMasterCall = (
+  nodeId: string,
+  actorId: string,
+  content: string,
+  prompt?: string | null,
+) =>
   apiClient<MasterCall>('/admin/master-data/calls', {
     method: 'POST',
-    body: JSON.stringify({ nodeId, actorId, content }),
+    body: JSON.stringify({ nodeId, actorId, content, prompt: prompt ?? null }),
   })
 
-export const updateMasterCall = (callId: string, actorId: string, content: string) =>
+export const updateMasterCall = (
+  callId: string,
+  actorId: string,
+  content: string,
+  prompt?: string | null,
+) =>
   apiClient<MasterCall>(`/admin/master-data/calls/${encodeURIComponent(callId)}`, {
     method: 'PUT',
-    body: JSON.stringify({ actorId, content }),
+    body: JSON.stringify({ actorId, content, prompt: prompt ?? null }),
   })
 
 export const deleteMasterCall = (callId: string) =>
@@ -135,18 +155,19 @@ export interface MasterEmailFormPayload {
   subject: string
   content: string
   docContentIds: string[]
+  prompt?: string | null
 }
 
 export const createMasterEmail = (nodeId: string, values: MasterEmailFormPayload) =>
   apiClient<MasterEmail>('/admin/master-data/emails', {
     method: 'POST',
-    body: JSON.stringify({ nodeId, ...values }),
+    body: JSON.stringify({ nodeId, ...values, prompt: values.prompt ?? null }),
   })
 
 export const updateMasterEmail = (emailId: string, values: MasterEmailFormPayload) =>
   apiClient<MasterEmail>(`/admin/master-data/emails/${encodeURIComponent(emailId)}`, {
     method: 'PUT',
-    body: JSON.stringify(values),
+    body: JSON.stringify({ ...values, prompt: values.prompt ?? null }),
   })
 
 export const deleteMasterEmail = (emailId: string) =>
