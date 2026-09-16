@@ -39,15 +39,14 @@ test('maps an existing call into its edit form', () => {
 })
 
 test('starts a new prompt form and requires content', () => {
-  assert.deepEqual(emptyPromptForm(), { content: '', desc: '' })
-  assert.equal(validatePromptForm({ content: '  ', desc: '' }), 'Enter prompt content.')
-  assert.equal(validatePromptForm({ content: 'Classify', desc: '' }), null)
+  assert.deepEqual(emptyPromptForm(), { content: '' })
+  assert.equal(validatePromptForm({ content: '  ' }), 'Enter prompt content.')
+  assert.equal(validatePromptForm({ content: 'Classify' }), null)
 })
 
 test('maps an existing prompt into its edit form', () => {
   const records = [{ promptId: 'prompt-1', nodeId: 'node-1', content: 'Classify', desc: 'Intent' }]
   assert.deepEqual(promptDialogInitialForm('prompt-1', records), {
     content: 'Classify',
-    desc: 'Intent',
   })
 })

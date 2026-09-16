@@ -68,8 +68,8 @@ export function PromptCrudDialog({
   const saveMutation = useMutation({
     mutationFn: (values: PromptFormValues) =>
       editing
-        ? updateMasterPrompt(editing.promptId, values.content.trim(), values.desc.trim() || null)
-        : createMasterPrompt(nodeId, values.content.trim(), values.desc.trim() || null),
+        ? updateMasterPrompt(editing.promptId, values.content.trim())
+        : createMasterPrompt(nodeId, values.content.trim()),
     onSuccess: (prompt) => {
       void queryClient.invalidateQueries({ queryKey: PROMPT_QUERY_KEY })
       onSelect(prompt.promptId)
@@ -116,9 +116,7 @@ export function PromptCrudDialog({
       <DialogContent className="flex max-h-[min(720px,calc(100vh-32px))] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="border-b px-6 pt-6 pb-4">
           <DialogTitle>{editing ? 'Edit prompt' : 'New prompt'}</DialogTitle>
-          <DialogDescription>
-            Update the prompt content and description for this node.
-          </DialogDescription>
+          <DialogDescription>Update the prompt content for this node.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 overflow-auto px-6 py-5">
           {isLoadingExisting && (
@@ -135,17 +133,6 @@ export function PromptCrudDialog({
               onChange={(event) =>
                 setForm((current) => ({ ...current, content: event.target.value }))
               }
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="master-prompt-desc">Description</Label>
-            <Textarea
-              id="master-prompt-desc"
-              rows={3}
-              disabled={isLoadingExisting || saveMutation.isPending}
-              value={form.desc}
-              placeholder="Describe what this prompt classifies..."
-              onChange={(event) => setForm((current) => ({ ...current, desc: event.target.value }))}
             />
           </div>
           {formError && <p className="text-destructive text-xs">{formError}</p>}

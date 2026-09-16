@@ -95,16 +95,16 @@ export interface MasterPrompt extends AuditFields {
 
 export const getMasterPrompts = () => apiClient<MasterPrompt[]>('/admin/master-data/prompts')
 
-export const createMasterPrompt = (nodeId: string, content: string, desc: string | null) =>
+export const createMasterPrompt = (nodeId: string, content: string) =>
   apiClient<MasterPrompt>('/admin/master-data/prompts', {
     method: 'POST',
-    body: JSON.stringify({ nodeId, content, desc }),
+    body: JSON.stringify({ nodeId, content }),
   })
 
-export const updateMasterPrompt = (promptId: string, content: string, desc: string | null) =>
+export const updateMasterPrompt = (promptId: string, content: string) =>
   apiClient<MasterPrompt>(`/admin/master-data/prompts/${encodeURIComponent(promptId)}`, {
     method: 'PUT',
-    body: JSON.stringify({ content, desc }),
+    body: JSON.stringify({ content }),
   })
 
 export const deleteMasterPrompt = (promptId: string) =>
