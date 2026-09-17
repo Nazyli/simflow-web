@@ -1,0 +1,26 @@
+---
+deployment:
+  tasks:
+    - echo "=== NODE 26 ==="
+    - /home/nazylico/.local/share/mise/installs/node/26.8.2/bin/node -v
+
+    - echo "=== NPM 26 ==="
+    - /home/nazylico/.local/share/mise/installs/node/26.8.2/bin/npm -v
+
+    - echo "=== INSTALL ==="
+    - /home/nazylico/.local/share/mise/installs/node/26.8.2/bin/npm ci
+
+    - echo "=== ENV ==="
+    - echo 'VITE_API_BASE_URL=https://simulation-builder-api.nazyli.com/api/v1' > .env
+
+    - echo "=== TSC ==="
+    - /home/nazylico/.local/share/mise/installs/node/26.8.2/bin/node ./node_modules/typescript/bin/tsc -b
+
+    - echo "=== VITE VERSION ==="
+    - /home/nazylico/.local/share/mise/installs/node/26.8.2/bin/node ./node_modules/vite/bin/vite.js --version
+
+    - echo "=== VITE BUILD ==="
+    - /home/nazylico/.local/share/mise/installs/node/26.8.2/bin/node ./node_modules/vite/bin/vite.js build
+
+    - echo "=== COPY ==="
+    - /bin/cp -a dist/. /home/nazylico/simulation-builder.nazyli.com/
