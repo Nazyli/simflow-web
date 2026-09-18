@@ -28,6 +28,7 @@ import { SimulationGraphNode } from '../simulation_studio/simulation-graph-node'
 import { SimulationGraphEdge } from '../simulation_studio/simulation-graph-edge'
 import { SimulationVisualGroupNode } from '../simulation_studio/visual-groups/simulation-visual-group-node'
 import { projectWorkflowEdges, projectWorkflowNodes } from '../simulation_studio/visual-groups/visual-group-projection'
+import { deriveNodeSummary } from '../../shared/utils/node-summary'
 
 const nodeRenderers = {
   simulation: SimulationGraphNode,
@@ -283,6 +284,8 @@ export function ParticipantFlowCanvas({
           inputPorts: node.inputPorts,
           outputPorts: node.outputPorts,
           rotation: node.rotation ?? 0,
+          summary: deriveNodeSummary(node.parameters as Record<string, unknown>),
+          category: node.category ?? definition?.category ?? null,
           editable: false,
           status: isActiveCurrent ? 'active' : null,
         },

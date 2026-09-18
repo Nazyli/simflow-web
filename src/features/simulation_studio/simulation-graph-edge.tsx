@@ -120,7 +120,7 @@ export function SimulationGraphEdge({
       />
       <EdgeLabelRenderer>
         <div
-          className="nodrag nopan pointer-events-auto absolute flex items-center gap-1 rounded-full bg-background p-1 shadow-sm ring-1 ring-border"
+          className="nodrag nopan pointer-events-auto absolute z-10 flex items-center gap-1 rounded-full bg-background p-1 shadow-md ring-2 ring-border"
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px) translateY(${labelOffset}px)`,
           }}

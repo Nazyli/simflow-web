@@ -598,3 +598,12 @@ button:disabled {
     animation: none;
   }
 }
+
+/* Edge labels must paint above visual-group backgrounds (bg-white/60) which
+   otherwise wash them out. The renderer sits before the nodes layer in DOM,
+   so without a z-index the group node (z-index 0) covers labels inside it.
+   Selected groups/nodes are elevated to z-index 1000 by React Flow
+   (elevateOnSelect), so the label layer must be above that. */
+.react-flow__edgelabel-renderer {
+  z-index: 9999 !important;
+}
