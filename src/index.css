@@ -287,6 +287,35 @@ button {
 .react-flow__node.history-node-current {
   filter: drop-shadow(0 0 10px rgba(91, 70, 197, 0.65));
 }
+
+/* NodeStatusIndicator — border variant (orbiting conic-gradient) */
+@keyframes node-status-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+.node-status-indicator__spinner {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 90deg,
+    #6366f1 150deg,
+    #8b5cf6 210deg,
+    #06b6d4 260deg,
+    transparent 320deg,
+    transparent 360deg
+  );
+  animation: node-status-spin 2s linear infinite;
+  will-change: transform;
+}
+.node-status-indicator {
+  /* keep violet glow consistent — React Flow outer filter already handles it,
+     but ensure inner clipping respects BaseNode radius */
+  border-radius: calc(var(--radius) + 1px);
+}
 .history-legend-line {
   display: inline-block;
   width: 24px;
@@ -541,4 +570,31 @@ button:disabled {
 
 .lk-audio-bar.lk-highlighted {
   background-color: #d1d5db;
+}
+
+/* History flow — orbiting loading border for current node (NodeStatusIndicator border variant) */
+@keyframes node-status-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.node-status-indicator__spinner {
+  background: conic-gradient(from 0deg at 50% 50%, #4f46e5 0deg, rgba(99, 102, 241, 0) 360deg);
+  border-radius: 9999px;
+  animation: node-status-spin 2s linear infinite;
+  transform-origin: center;
+}
+
+.react-flow__node.history-node-current--active {
+  filter: drop-shadow(0 0 10px rgba(79, 70, 229, 0.55));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node-status-indicator__spinner {
+    animation: none;
+  }
 }

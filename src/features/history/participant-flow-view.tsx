@@ -109,10 +109,12 @@ export function ParticipantFlowCanvas({
   simulationId,
   executionId,
   currentState,
+  executionStatus,
 }: {
   simulationId: string
   executionId: string
   currentState: string | null
+  executionStatus?: string | null
 }) {
   const graph = useQuery({
     queryKey: ['graph', simulationId],
@@ -155,6 +157,9 @@ export function ParticipantFlowCanvas({
     })
   }
 
+  const isExecutionActive =
+    !executionStatus || !['completed', 'failed', 'cancelled'].includes(executionStatus ?? '')
+
   const view = useMemo(() => {
     const apiNodes: ApiNode[] = graph.data?.nodes ?? []
     const apiEdges: ApiEdge[] = graph.data?.edges ?? []
@@ -182,9 +187,23 @@ export function ParticipantFlowCanvas({
       if (item.selectedEdgeId) takenEdgeIds.add(item.selectedEdgeId)
     }
 
+    // Fallback for completed executions where currentState is null: highlight last visited node
+    let fallbackCurrentId: string | null = null
+    if (!currentState && nodeExecutions.data?.length) {
+      const sorted = [...nodeExecutions.data].sort(
+        (a, b) => (a.sequenceNumber ?? 0) - (b.sequenceNumber ?? 0),
+      )
+      const last = sorted[sorted.length - 1]?.nodeId ?? null
+      if (last && nodeById.has(last)) fallbackCurrentId = last
+    }
+    const effectiveCurrentId = currentState ?? fallbackCurrentId
+
     const baseWorkflowNodes: Node[] = apiNodes.map((node) => {
       const definition = definitions.get(node.nodeType)
       const visited = visitedNodeIds.has(node.nodeId)
+      const isCurrent = node.nodeId === effectiveCurrentId
+      // Always show orbiting border on participant's last node (currentState if present, else last visited)
+      const isActiveCurrent = Boolean(isCurrent)
       return {
         id: node.nodeId,
         type: 'simulation',
@@ -193,7 +212,7 @@ export function ParticipantFlowCanvas({
             ? { x: node.positionX, y: node.positionY }
             : (layout.get(node.nodeId) ?? { x: 80, y: 80 }),
         className: visited
-          ? `history-node-visited${node.nodeId === currentState ? ' history-node-current' : ''}`
+          ? `history-node-visited${isCurrent ? ' history-node-current' : ''}${isActiveCurrent ? ' history-node-current--active' : ''}`
           : 'history-node-unvisited',
         data: {
           label: node.nodeName,
@@ -203,6 +222,7 @@ export function ParticipantFlowCanvas({
           outputPorts: node.outputPorts,
           rotation: node.rotation ?? 0,
           editable: false,
+          status: isActiveCurrent ? 'active' : null,
         },
       }
     })
@@ -285,8 +305,7 @@ export function ParticipantFlowCanvas({
       takenCount: takenEdgeIds.size,
       externalStates: { nodeIds: [...externalNodeIds] },
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentState, edgePathType, graph.data, nodeCatalog.data, nodeExecutions.data, groupsForRender])
+  }, [currentState, edgePathType, graph.data, nodeCatalog.data, nodeExecutions.data, groupsForRender, isExecutionActive])
 
   useEffect(() => {
     if (graph.isPending || nodeExecutions.isPending) return

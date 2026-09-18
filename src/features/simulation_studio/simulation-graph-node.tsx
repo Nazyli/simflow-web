@@ -4,6 +4,7 @@ import { NodeResizer, NodeToolbar, Position, type NodeProps } from '@xyflow/reac
 import { CircleDot, LogIn, LogOut, RotateCw } from 'lucide-react'
 import { BaseHandle } from '@/components/base-handle'
 import { BaseNode, BaseNodeContent, BaseNodeHeader } from '@/components/base-node'
+import { NodeStatusIndicator } from '@/components/node-status-indicator'
 import type { InputPort, OutputPort } from '../../shared/types/simulation'
 
 type SimulationNodeData = {
@@ -21,6 +22,8 @@ type SimulationNodeData = {
   onRemoveFromGroup?: (nodeId: string) => void
   availableGroups?: Array<{ visualGroupId: string; groupName: string }>
   onAddToGroup?: (nodeId: string, groupId: string) => void
+  /** When 'active', wrap node with orbiting border (history flow current node). Opt-in only. */
+  status?: 'active' | 'idle' | null
 }
 
 function inputPosition(rotation: number): Position {
@@ -63,6 +66,64 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
   const rotation = nodeData.rotation ?? 0
   const inputPos = inputPosition(rotation)
   const outputPos = outputPosition(rotation)
+
+  const baseNodeEl = (
+    <BaseNode
+      className="w-[220px]"
+      style={{ borderColor: nodeData.color, boxShadow: `0 0 0 1px ${nodeData.color}22` }}
+    >
+      {nodeData.inputPorts.map((port, index) => (
+        <BaseHandle
+          key={port.id}
+          id={port.id}
+          type="target"
+          position={inputPos}
+          title={port.description}
+          style={handleOffset(inputPos, index, nodeData.inputPorts.length)}
+        />
+      ))}
+      <BaseNodeHeader className="mb-0 flex-col items-start justify-start gap-0 py-1">
+        <span className="flex w-full flex-row items-center justify-end gap-1 leading-none">
+          <CircleDot
+            size={11}
+            aria-hidden="true"
+            className="shrink-0"
+            style={{ color: nodeData.color }}
+          />
+          <span
+            className="text-right font-mono text-[10px] leading-none font-medium tracking-wide uppercase"
+            style={{ color: nodeData.color }}
+          >
+            {nodeData.nodeType}
+          </span>
+        </span>
+        <span className="-mt-px w-full text-left text-[13px] leading-tight font-semibold break-words whitespace-normal text-slate-800">
+          {nodeData.label}
+        </span>
+      </BaseNodeHeader>
+      {nodeData.summary && (
+        <BaseNodeContent className="border-t border-slate-100 pt-1 text-left">
+          <p className="text-muted-foreground line-clamp-2 text-xs leading-normal break-words">
+            {nodeData.summary}
+          </p>
+        </BaseNodeContent>
+      )}
+      {nodeData.outputPorts.map((port, index) => (
+        <BaseHandle
+          key={port.id}
+          id={port.id}
+          type="source"
+          position={outputPos}
+          title={port.label}
+          style={{
+            ...handleOffset(outputPos, index, nodeData.outputPorts.length),
+            background: port.edgeStyle.color,
+          }}
+        />
+      ))}
+    </BaseNode>
+  )
+
   return (
     <>
       <NodeResizer isVisible={selected} minWidth={150} minHeight={72} />
@@ -124,60 +185,7 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
             </div>
           )}
       </NodeToolbar>
-      <BaseNode
-        className="w-[220px]"
-        style={{ borderColor: nodeData.color, boxShadow: `0 0 0 1px ${nodeData.color}22` }}
-      >
-        {nodeData.inputPorts.map((port, index) => (
-          <BaseHandle
-            key={port.id}
-            id={port.id}
-            type="target"
-            position={inputPos}
-            title={port.description}
-            style={handleOffset(inputPos, index, nodeData.inputPorts.length)}
-          />
-        ))}
-        <BaseNodeHeader className="mb-0 flex-col items-start justify-start gap-0 py-1">
-          <span className="flex w-full flex-row items-center justify-end gap-1 leading-none">
-            <CircleDot
-              size={11}
-              aria-hidden="true"
-              className="shrink-0"
-              style={{ color: nodeData.color }}
-            />
-            <span
-              className="text-right font-mono text-[10px] leading-none font-medium tracking-wide uppercase"
-              style={{ color: nodeData.color }}
-            >
-              {nodeData.nodeType}
-            </span>
-          </span>
-          <span className="-mt-px w-full text-left text-[13px] leading-tight font-semibold break-words whitespace-normal text-slate-800">
-            {nodeData.label}
-          </span>
-        </BaseNodeHeader>
-        {nodeData.summary && (
-          <BaseNodeContent className="border-t border-slate-100 pt-1 text-left">
-            <p className="text-muted-foreground line-clamp-2 text-xs leading-normal break-words">
-              {nodeData.summary}
-            </p>
-          </BaseNodeContent>
-        )}
-        {nodeData.outputPorts.map((port, index) => (
-          <BaseHandle
-            key={port.id}
-            id={port.id}
-            type="source"
-            position={outputPos}
-            title={port.label}
-            style={{
-              ...handleOffset(outputPos, index, nodeData.outputPorts.length),
-              background: port.edgeStyle.color,
-            }}
-          />
-        ))}
-      </BaseNode>
+      <NodeStatusIndicator status={nodeData.status ?? null}>{baseNodeEl}</NodeStatusIndicator>
     </>
   )
 }

@@ -197,6 +197,7 @@ export function ExecutionDetailPage() {
             simulationId={data.simulationId}
             executionId={data.executionId}
             currentState={data.currentNodeId}
+            executionStatus={data.status}
           />
         </TabsContent>
 
