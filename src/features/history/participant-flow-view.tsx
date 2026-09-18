@@ -529,7 +529,7 @@ export function ParticipantFlowCanvas({
                 {showMiniMap && (
                   <MiniMap className="border-slate-200 bg-white shadow-md" />
                 )}
-                <NodeSearch position="top-center" placeholder="Search nodes... ⌘K" className="w-[320px] shadow-lg md:min-w-[320px]" />
+                <NodeSearch position="top-left" placeholder="Search nodes... ⌘K" className="w-[320px] shadow-lg md:min-w-[320px] ml-2" />
                 <PathTravelingDot path={combinedPath} color={PATH_COLOR} />
               </ReactFlow>
             </div>

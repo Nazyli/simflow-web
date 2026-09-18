@@ -2121,9 +2121,10 @@ export function SimulationStudioPage() {
                 maskColor="rgba(241, 245, 249, 0.7)"
               />
               <NodeSearch
-                position="top-center"
+                position="top-left"
                 placeholder="Search nodes... ⌘K"
-                className="w-[320px] shadow-lg md:min-w-[320px]"
+                className="w-[320px] shadow-lg md:min-w-[320px] !m-0"
+                style={{ top: '56px', left: '16px', margin: 0 } as React.CSSProperties}
               />
             </ReactFlow>
           </div>

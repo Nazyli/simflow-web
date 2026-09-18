@@ -51,16 +51,28 @@ export function NodeSearchInternal({
     (q: string) => {
       const nodes = getNodes()
       const lower = q.toLowerCase()
+      if (!lower) return nodes
       return nodes.filter((node) => {
-        const label = String((node.data as Record<string, unknown>)?.label ?? '').toLowerCase()
-        // support both data.nodeType and node.type
-        const nodeType = String(
-          (node.data as Record<string, unknown>)?.nodeType ??
-            (node as unknown as Record<string, unknown>)?.type ??
+        const data = node.data as Record<string, unknown>
+        const groupName = String(
+          (data?.group as Record<string, unknown> | undefined)?.groupName ?? '',
+        ).toLowerCase()
+        const label = String(
+          (data?.group as Record<string, unknown> | undefined)?.groupName ??
+            data?.label ??
             '',
         ).toLowerCase()
+        // support both data.nodeType and node.type
+        const nodeType = String(
+          (data?.nodeType ?? (node as unknown as Record<string, unknown>)?.type ?? ''),
+        ).toLowerCase()
         const id = String(node.id).toLowerCase()
-        return label.includes(lower) || nodeType.includes(lower) || id.includes(lower)
+        return (
+          label.includes(lower) ||
+          groupName.includes(lower) ||
+          nodeType.includes(lower) ||
+          id.includes(lower)
+        )
       })
     },
     [getNodes],
@@ -74,12 +86,25 @@ export function NodeSearchInternal({
         const results = (onSearch ?? defaultOnSearch)(value)
         setSearchResults(results)
       } else {
-        setSearchResults([])
-        onOpenChange?.(false)
+        // empty query → show full list instead of clearing
+        const all = getNodes()
+        const results = onSearch ? onSearch(value) : all
+        // if custom onSearch returns empty for "", fallback to all nodes
+        setSearchResults(results.length > 0 || value !== '' ? results : all)
+        onOpenChange?.(true)
       }
     },
-    [defaultOnSearch, onOpenChange, onSearch],
+    [defaultOnSearch, getNodes, onOpenChange, onSearch],
   )
+
+  const onFocus = useCallback(() => {
+    onOpenChange?.(true)
+    if (searchString.length === 0) {
+      const all = getNodes()
+      const results = onSearch ? onSearch('') : all
+      setSearchResults(results.length > 0 ? results : all)
+    }
+  }, [getNodes, onOpenChange, onSearch, searchString])
 
   const defaultOnSelectNode = useCallback(
     (node: Node) => {
@@ -102,25 +127,38 @@ export function NodeSearchInternal({
 
   return (
     <>
-      <CommandInput placeholder={placeholder} onValueChange={onChange} value={searchString} onFocus={() => onOpenChange?.(true)} />
+      <CommandInput placeholder={placeholder} onValueChange={onChange} value={searchString} onFocus={onFocus} />
       {open ? (
         <CommandList>
           {searchResults.length === 0 ? (
-            <CommandEmpty>
-              {emptyText} {searchString ? `"${searchString}"` : ''}
-            </CommandEmpty>
+            searchString.length > 0 ? (
+              <CommandEmpty>
+                {emptyText} {`"${searchString}"`}
+              </CommandEmpty>
+            ) : (
+              <CommandEmpty>{emptyText}</CommandEmpty>
+            )
           ) : (
             <CommandGroup heading="Nodes">
               {searchResults.map((node) => {
-                const label = String((node.data as Record<string, unknown>)?.label ?? node.id)
-                const nodeType = String((node.data as Record<string, unknown>)?.nodeType ?? '')
+                const data = node.data as Record<string, unknown>
+                const groupName = (data?.group as Record<string, unknown> | undefined)?.groupName as
+                  | string
+                  | undefined
+                const label = String(groupName ?? data?.label ?? node.id)
+                const nodeType = String(
+                  (data?.nodeType as string | undefined) ??
+                    ((node as unknown as Record<string, unknown>)?.type as string | undefined) ??
+                    '',
+                )
+                // For visualGroup, show type as secondary hint; otherwise nodeType
+                const secondary = groupName ? nodeType || 'visualGroup' : nodeType
                 return (
                   <CommandItem key={node.id} value={node.id} onSelect={() => onSelect(node)}>
                     <span className="flex flex-col">
                       <span>{label}</span>
-                      {nodeType ? <span className="text-muted-foreground text-xs">{nodeType}</span> : null}
+                      {secondary ? <span className="text-muted-foreground text-xs">{secondary}</span> : null}
                     </span>
-                    <span className="text-muted-foreground ml-auto text-xs">{node.id}</span>
                   </CommandItem>
                 )
               })}
