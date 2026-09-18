@@ -48,8 +48,17 @@ export function ButtonEdge({
   markerEnd,
   children,
   data,
-}: EdgeProps & { children: ReactNode }) {
+  animated,
+}: EdgeProps & { children: ReactNode; animated?: boolean }) {
   const edgeType = (data as { edgeType?: EdgePathType } | undefined)?.edgeType ?? 'default'
+  const edgeData = data as { style?: { color?: string; animated?: boolean } } | undefined
+  const isAnimated = Boolean(animated) || Boolean(edgeData?.style?.animated)
+  const dotColor =
+    (typeof style === 'object' && style !== null && 'stroke' in style
+      ? (style as { stroke?: string }).stroke
+      : undefined) ??
+    edgeData?.style?.color ??
+    '#dc2626'
   const [edgePath, labelX, labelY] = getPath(edgeType, {
     sourceX,
     sourceY,
@@ -62,6 +71,11 @@ export function ButtonEdge({
   return (
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      {isAnimated && (
+        <circle r="5" fill={dotColor} stroke="#fff" strokeWidth={1} style={{ pointerEvents: 'none' }}>
+          <animateMotion dur="2s" repeatCount="indefinite" path={edgePath} />
+        </circle>
+      )}
       <EdgeLabelRenderer>
         <div
           className="nodrag nopan pointer-events-auto absolute"

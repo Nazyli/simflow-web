@@ -15,7 +15,7 @@ import {
 } from '@xyflow/react'
 import { CircleAlert, MapPin, Maximize } from 'lucide-react'
 import dagre from 'dagre'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { type EdgePathType } from '../../components/button-edge'
 import { Slider } from '../../components/ui/slider'
 import { NodeSearch } from '../../components/ui/node-search'
@@ -37,10 +37,54 @@ const edgeRenderers = { simulation: SimulationGraphEdge }
 const MASTER_COLOR = '#94a3b8'
 const PATH_COLOR = '#dc2626'
 
+type EdgePathReport = { path: string; sx: number; sy: number; tx: number; ty: number }
+
 const STUDIO_MIN_ZOOM = 0.1
 const STUDIO_MAX_ZOOM = 4
 const STUDIO_ZOOM_SLIDER_MIN = 10
 const STUDIO_ZOOM_SLIDER_MAX = 400
+
+/** Measures a path in pane coordinates; returns its length in px. */
+function measurePathLength(d: string): number {
+  try {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    el.setAttribute('d', d)
+    return el.getTotalLength() || 0
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * Single traveling dot rendered as a stable overlay SVG that is synced to the
+ * React Flow viewport. Unlike rendering inside an edge, this element is never
+ * remounted by edge reconciliation, so the SMIL animation runs continuously.
+ */
+function PathTravelingDot({
+  path,
+  color,
+}: {
+  path: string | null
+  color: string
+}) {
+  const { x, y, zoom } = useViewport()
+  const duration = useMemo(() => {
+    if (!path) return 4
+    return Math.max(1.2, Math.round((measurePathLength(path) / 120) * 10) / 10)
+  }, [path])
+  if (!path) return null
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 h-full w-full overflow-visible z-10"
+      style={{ transform: `translate(${x}px, ${y}px) scale(${zoom})`, transformOrigin: '0 0' }}
+      aria-hidden
+    >
+      <circle r="7" fill={color} fillOpacity={1} stroke="#fff" strokeWidth={1.5} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}>
+        <animateMotion dur={`${duration}s`} repeatCount="indefinite" path={path} />
+      </circle>
+    </svg>
+  )
+}
 
 function ZoomSliderPanel() {
   const { zoom } = useViewport()
@@ -137,6 +181,24 @@ export function ParticipantFlowCanvas({
   const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
   const [showMiniMap, setShowMiniMap] = useState(true)
   const [localGroups, setLocalGroups] = useState<VisualGroup[]>([])
+  const [pathReports, setPathReports] = useState<Record<string, EdgePathReport>>({})
+
+  const handleEdgePathReady = useCallback((edgeId: string, report: EdgePathReport) => {
+    setPathReports((prev) => {
+      const existing = prev[edgeId]
+      if (
+        existing &&
+        existing.path === report.path &&
+        existing.sx === report.sx &&
+        existing.sy === report.sy &&
+        existing.tx === report.tx &&
+        existing.ty === report.ty
+      ) {
+        return prev
+      }
+      return { ...prev, [edgeId]: report }
+    })
+  }, [])
 
   const apiVisualGroups = graph.data?.visualGroups ?? []
 
@@ -278,6 +340,7 @@ export function ParticipantFlowCanvas({
             animated: taken,
           },
           edgeType: edgePathType,
+          onPathReady: handleEdgePathReady,
           collapsedSourceRect: sourceGroup
             ? {
                 x: sourceGroup.positionX,
@@ -306,6 +369,42 @@ export function ParticipantFlowCanvas({
       externalStates: { nodeIds: [...externalNodeIds] },
     }
   }, [currentState, edgePathType, graph.data, nodeCatalog.data, nodeExecutions.data, groupsForRender, isExecutionActive])
+
+  // Participant path order: node executions sorted by sequence number → the
+  // selected edges they traversed, deduped and restricted to edges that are
+  // actually part of the current graph (only those can report a path).
+  const orderedTakenEdgeIds = useMemo(() => {
+    const edgeIdsInGraph = new Set((graph.data?.edges ?? []).map((edge) => edge.edgeId))
+    const ordered: string[] = []
+    const seen = new Set<string>()
+    const sorted = [...(nodeExecutions.data ?? [])].sort(
+      (a, b) => (a.sequenceNumber ?? 0) - (b.sequenceNumber ?? 0),
+    )
+    for (const item of sorted) {
+      const edgeId = item.selectedEdgeId
+      if (edgeId && edgeIdsInGraph.has(edgeId) && !seen.has(edgeId)) {
+        seen.add(edgeId)
+        ordered.push(edgeId)
+      }
+    }
+    return ordered
+  }, [graph.data?.edges, nodeExecutions.data])
+
+  const hiddenEdgeIds = useMemo(
+    () => new Set(view.flowEdges.filter((edge) => edge.hidden).map((edge) => edge.id)),
+    [view.flowEdges],
+  )
+
+  const combinedPath = useMemo(() => {
+    let path = ''
+    for (const edgeId of orderedTakenEdgeIds) {
+      if (hiddenEdgeIds.has(edgeId)) continue
+      const report = pathReports[edgeId]
+      if (!report) return null
+      path += (path ? ' ' : '') + report.path
+    }
+    return path || null
+  }, [orderedTakenEdgeIds, pathReports, hiddenEdgeIds])
 
   useEffect(() => {
     if (graph.isPending || nodeExecutions.isPending) return
@@ -428,6 +527,7 @@ export function ParticipantFlowCanvas({
                   <MiniMap className="border-slate-200 bg-white shadow-md" />
                 )}
                 <NodeSearch position="top-center" placeholder="Search nodes... ⌘K" className="w-[320px] shadow-lg md:min-w-[320px]" />
+                <PathTravelingDot path={combinedPath} color={PATH_COLOR} />
               </ReactFlow>
             </div>
           )}
