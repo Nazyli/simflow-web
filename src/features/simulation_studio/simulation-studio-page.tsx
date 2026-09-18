@@ -6,6 +6,7 @@ import { Textarea } from '../../components/ui/textarea'
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover'
 import { type EdgePathType } from '../../components/button-edge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
+import { NodeSearch } from '@/components/ui/node-search'
 import {
   Background,
   Controls,
@@ -2151,6 +2152,11 @@ export function SimulationStudioPage() {
               <MiniMap
                 className="border-slate-200 bg-white shadow-md"
                 maskColor="rgba(241, 245, 249, 0.7)"
+              />
+              <NodeSearch
+                position="top-center"
+                placeholder="Search nodes... ⌘K"
+                className="w-[320px] shadow-lg md:min-w-[320px]"
               />
             </ReactFlow>
           </div>

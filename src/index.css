@@ -274,6 +274,10 @@ button {
   height: 55vh;
   min-height: 320px;
 }
+.history-flow-canvas.graph {
+  height: 55vh;
+  min-height: 320px;
+}
 .history-flow-canvas .react-flow__node {
   cursor: grab;
 }

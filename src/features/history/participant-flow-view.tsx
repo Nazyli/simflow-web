@@ -3,29 +3,75 @@ import {
   Background,
   Controls,
   MarkerType,
+  MiniMap,
   ReactFlow,
   useEdgesState,
   useNodesState,
+  useReactFlow,
+  useViewport,
   type Edge,
   type Node,
   type ReactFlowInstance,
 } from '@xyflow/react'
-import { CircleAlert } from 'lucide-react'
+import { CircleAlert, MapPin, Maximize } from 'lucide-react'
 import dagre from 'dagre'
 import { useEffect, useMemo, useState } from 'react'
 import { type EdgePathType } from '../../components/button-edge'
+import { Slider } from '../../components/ui/slider'
+import { NodeSearch } from '../../components/ui/node-search'
 import { getNodeExecutions } from '../../shared/api/executions'
 import { getNodeCatalog } from '../../shared/api/node-catalog'
 import { getGraph, type ApiEdge, type ApiNode } from '../../shared/api/simulations'
 import { EmptyState, LoadingState } from '../../shared/components/async-state'
-import type { NodeDefinition } from '../../shared/types/simulation'
+import type { NodeDefinition, VisualGroup } from '../../shared/types/simulation'
 import { SimulationGraphNode } from '../simulation_studio/simulation-graph-node'
 import { SimulationGraphEdge } from '../simulation_studio/simulation-graph-edge'
+import { SimulationVisualGroupNode } from '../simulation_studio/visual-groups/simulation-visual-group-node'
+import { projectWorkflowEdges, projectWorkflowNodes } from '../simulation_studio/visual-groups/visual-group-projection'
 
-const nodeRenderers = { simulation: SimulationGraphNode }
+const nodeRenderers = {
+  simulation: SimulationGraphNode,
+  visualGroup: SimulationVisualGroupNode,
+}
 const edgeRenderers = { simulation: SimulationGraphEdge }
 const MASTER_COLOR = '#94a3b8'
 const PATH_COLOR = '#dc2626'
+
+const STUDIO_MIN_ZOOM = 0.1
+const STUDIO_MAX_ZOOM = 4
+const STUDIO_ZOOM_SLIDER_MIN = 10
+const STUDIO_ZOOM_SLIDER_MAX = 400
+
+function ZoomSliderPanel() {
+  const { zoom } = useViewport()
+  const { zoomTo } = useReactFlow()
+  const percent = Math.round(zoom * 100)
+  const clamped = Math.min(STUDIO_ZOOM_SLIDER_MAX, Math.max(STUDIO_ZOOM_SLIDER_MIN, percent))
+  return (
+    <div
+      className="absolute bottom-[12px] left-[72px] z-10 flex h-9 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-slate-700 shadow-md sm:px-3"
+      aria-label="Zoom slider"
+    >
+      <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">ZOOM</span>
+      <Slider
+        value={[clamped]}
+        min={STUDIO_ZOOM_SLIDER_MIN}
+        max={STUDIO_ZOOM_SLIDER_MAX}
+        step={1}
+        onValueChange={(vals) => {
+          const next = (vals[0] ?? 100) / 100
+          const clampedNext = Math.min(STUDIO_MAX_ZOOM, Math.max(STUDIO_MIN_ZOOM, next))
+          zoomTo(clampedNext)
+        }}
+        className="w-20 sm:w-28 lg:w-36"
+        aria-label="Zoom level"
+      />
+      <span className="w-9 shrink-0 text-right text-xs font-medium text-slate-700 tabular-nums sm:w-10">
+        {clamped}%
+      </span>
+    </div>
+  )
+}
 
 function dagLayout(
   apiNodes: ApiNode[],
@@ -87,6 +133,27 @@ export function ParticipantFlowCanvas({
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null)
   const [edgePathType, setEdgePathType] = useState<EdgePathType>('smoothstep')
+  const [showMiniMap, setShowMiniMap] = useState(true)
+  const [localGroups, setLocalGroups] = useState<VisualGroup[]>([])
+
+  const apiVisualGroups = graph.data?.visualGroups ?? []
+
+  useEffect(() => {
+    setLocalGroups(apiVisualGroups)
+  }, [apiVisualGroups])
+
+  const effectiveGroups = localGroups.length > 0 || apiVisualGroups.length === 0 ? localGroups : apiVisualGroups
+  const groupsForRender = useMemo(() => {
+    if (localGroups.length === 0 && apiVisualGroups.length > 0) return apiVisualGroups
+    return effectiveGroups
+  }, [localGroups, apiVisualGroups, effectiveGroups])
+
+  const handleToggleGroup = (groupId: string) => {
+    setLocalGroups((prev) => {
+      const base = prev.length > 0 ? prev : apiVisualGroups
+      return base.map((g) => (g.visualGroupId === groupId ? { ...g, isCollapsed: !g.isCollapsed } : g))
+    })
+  }
 
   const view = useMemo(() => {
     const apiNodes: ApiNode[] = graph.data?.nodes ?? []
@@ -115,7 +182,7 @@ export function ParticipantFlowCanvas({
       if (item.selectedEdgeId) takenEdgeIds.add(item.selectedEdgeId)
     }
 
-    const flowNodes: Node[] = apiNodes.map((node) => {
+    const baseWorkflowNodes: Node[] = apiNodes.map((node) => {
       const definition = definitions.get(node.nodeType)
       const visited = visitedNodeIds.has(node.nodeId)
       return {
@@ -135,33 +202,78 @@ export function ParticipantFlowCanvas({
           inputPorts: node.inputPorts,
           outputPorts: node.outputPorts,
           rotation: node.rotation ?? 0,
+          editable: false,
         },
       }
     })
 
-    const flowEdges: Edge[] = apiEdges.map((edge) => {
+    const groupNodes: Node[] = groupsForRender.map((group) => ({
+      id: group.visualGroupId,
+      type: 'visualGroup',
+      position: { x: group.positionX, y: group.positionY },
+      style: { width: group.width, height: group.isCollapsed ? 32 : group.height },
+      draggable: true,
+      selectable: true,
+      zIndex: 0,
+      dragHandle: '.visual-group-header',
+      data: {
+        group,
+        editable: false,
+        onToggleCollapsed: handleToggleGroup,
+      },
+    }))
+
+    const projectedWorkflowNodes: Node[] =
+      groupsForRender.length > 0 ? projectWorkflowNodes(baseWorkflowNodes, groupsForRender) : baseWorkflowNodes
+
+    const flowNodes: Node[] = [...groupNodes, ...projectedWorkflowNodes]
+
+    const groupById = new Map(groupsForRender.map((g) => [g.visualGroupId, g]))
+    const projectedEdges = projectWorkflowEdges(apiEdges, groupsForRender)
+
+    const flowEdges: Edge[] = projectedEdges.map((edge) => {
       const taken = takenEdgeIds.has(edge.edgeId)
-      const color = taken ? PATH_COLOR : MASTER_COLOR
       const sourcePort = nodeById
         .get(edge.sourceNodeId)
         ?.outputPorts.find((port) => port.id === edge.sourcePortId)
+      const sourceGroup = edge.sourceGroupId ? groupById.get(edge.sourceGroupId) : undefined
+      const targetGroup = edge.targetGroupId ? groupById.get(edge.targetGroupId) : undefined
+      const styleColor = taken ? PATH_COLOR : (sourcePort?.edgeStyle.color ?? MASTER_COLOR)
+      const lineStyle = taken ? 'solid' : (sourcePort?.edgeStyle.lineStyle ?? 'dashed')
       return {
         id: edge.edgeId,
         type: 'simulation',
-        source: edge.sourceNodeId,
-        sourceHandle: edge.sourcePortId,
-        target: edge.targetNodeId,
-        targetHandle: edge.targetPortId,
-        markerEnd: { type: MarkerType.ArrowClosed, color },
+        hidden: edge.hidden,
+        source: edge.visualSourceNodeId ?? edge.sourceNodeId,
+        sourceHandle: edge.visualSourceHandleId ?? edge.sourcePortId,
+        target: edge.visualTargetNodeId ?? edge.targetNodeId,
+        targetHandle: edge.visualTargetHandleId ?? edge.targetPortId,
+        markerEnd: { type: MarkerType.ArrowClosed, color: taken ? PATH_COLOR : styleColor },
         animated: taken,
         data: {
           label: sourcePort?.label ?? edge.sourcePortId,
           style: {
-            color,
-            lineStyle: taken ? 'solid' : 'dashed',
+            color: taken ? PATH_COLOR : styleColor,
+            lineStyle,
             animated: taken,
           },
           edgeType: edgePathType,
+          collapsedSourceRect: sourceGroup
+            ? {
+                x: sourceGroup.positionX,
+                y: sourceGroup.positionY,
+                width: sourceGroup.width,
+                height: sourceGroup.isCollapsed ? 32 : sourceGroup.height,
+              }
+            : undefined,
+          collapsedTargetRect: targetGroup
+            ? {
+                x: targetGroup.positionX,
+                y: targetGroup.positionY,
+                width: targetGroup.width,
+                height: targetGroup.isCollapsed ? 32 : targetGroup.height,
+              }
+            : undefined,
         },
       }
     })
@@ -173,20 +285,14 @@ export function ParticipantFlowCanvas({
       takenCount: takenEdgeIds.size,
       externalStates: { nodeIds: [...externalNodeIds] },
     }
-  }, [currentState, edgePathType, graph.data, nodeCatalog.data, nodeExecutions.data])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentState, edgePathType, graph.data, nodeCatalog.data, nodeExecutions.data, groupsForRender])
 
   useEffect(() => {
     if (graph.isPending || nodeExecutions.isPending) return
     setNodes(view.flowNodes)
     setEdges(view.flowEdges)
-  }, [
-    graph.isPending,
-    nodeExecutions.isPending,
-    setEdges,
-    setNodes,
-    view.flowEdges,
-    view.flowNodes,
-  ])
+  }, [graph.isPending, nodeExecutions.isPending, setEdges, setNodes, view.flowEdges, view.flowNodes])
 
   useEffect(() => {
     if (!flowInstance || nodes.length === 0) return
@@ -217,16 +323,37 @@ export function ParticipantFlowCanvas({
             ● Current state: {currentState}
           </span>
         )}
-        <select
-          value={edgePathType}
-          onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
-          className="ml-auto h-7 cursor-pointer rounded-lg border border-slate-200 bg-white px-1.5 text-[11px] font-semibold text-slate-600 transition-colors outline-none hover:bg-slate-50"
-        >
-          <option value="default">Bezier</option>
-          <option value="smoothstep">Smooth</option>
-          <option value="step">Step</option>
-          <option value="straight">Straight</option>
-        </select>
+        <div className="ml-auto flex items-center gap-1.5">
+          <select
+            value={edgePathType}
+            onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
+            className="ml-auto h-7 cursor-pointer rounded-lg border border-slate-200 bg-white px-1.5 text-[11px] font-semibold text-slate-600 transition-colors outline-none hover:bg-slate-50"
+            title="Edge path style"
+          >
+            <option value="default">Bezier</option>
+            <option value="smoothstep">Smooth</option>
+            <option value="step">Step</option>
+            <option value="straight">Straight</option>
+          </select>
+          <button
+            type="button"
+            className="inline-flex h-7 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-slate-600 transition-colors hover:bg-slate-50"
+            onClick={() => flowInstance?.fitView({ padding: 0.2, duration: 240 })}
+            title="Fit view"
+            aria-label="Fit view"
+          >
+            <Maximize size={13} />
+          </button>
+          <button
+            type="button"
+            className={`inline-flex h-7 items-center justify-center rounded-lg border px-2 transition-colors ${showMiniMap ? 'border-purple-200 bg-purple-50 text-purple-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+            onClick={() => setShowMiniMap((v) => !v)}
+            title="Toggle minimap"
+            aria-label="Toggle minimap"
+          >
+            <MapPin size={13} />
+          </button>
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -256,7 +383,7 @@ export function ParticipantFlowCanvas({
               description="No nodes were recorded for this simulation version."
             />
           ) : (
-            <div className="history-flow-canvas">
+            <div className="graph history-flow-canvas">
               <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -266,6 +393,8 @@ export function ParticipantFlowCanvas({
                 onEdgesChange={onEdgesChange}
                 onInit={setFlowInstance}
                 fitView
+                minZoom={STUDIO_MIN_ZOOM}
+                maxZoom={STUDIO_MAX_ZOOM}
                 nodesDraggable
                 nodesConnectable={false}
                 elementsSelectable={false}
@@ -275,6 +404,11 @@ export function ParticipantFlowCanvas({
                   showInteractive={false}
                   className="border-slate-200 bg-white fill-current text-slate-700 shadow-md"
                 />
+                <ZoomSliderPanel />
+                {showMiniMap && (
+                  <MiniMap className="border-slate-200 bg-white shadow-md" />
+                )}
+                <NodeSearch position="top-center" placeholder="Search nodes... ⌘K" className="w-[320px] shadow-lg md:min-w-[320px]" />
               </ReactFlow>
             </div>
           )}
