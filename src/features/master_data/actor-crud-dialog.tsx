@@ -13,7 +13,6 @@ import {
 } from '../../components/ui/dialog'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
-import { Textarea } from '../../components/ui/textarea'
 import { Checkbox } from '../../components/ui/checkbox'
 import { ApiError } from '../../shared/api/client'
 import {
@@ -28,6 +27,7 @@ import {
   validateActorForm,
   type ActorFormValues,
 } from './actor-crud-logic'
+import { PromptContentEditor } from '../simulation_studio/master-data/prompt-content-editor'
 
 const ACTOR_QUERY_KEY = ['master', 'actors']
 
@@ -174,13 +174,11 @@ export function ActorCrudDialog({
 
           <div className="grid gap-1.5">
             <Label htmlFor="master-actor-personality">Personality Markdown</Label>
-            <Textarea
+            <PromptContentEditor
               id="master-actor-personality"
-              rows={8}
               value={form.personaDesc}
               disabled={busy}
-              placeholder="# Communication style\n- Warm\n- Clear"
-              onChange={(event) => updateField('personaDesc', event.target.value)}
+              onValueChange={(value) => updateField('personaDesc', value)}
             />
             <p className="text-muted-foreground text-xs">
               Markdown is rendered in the actor table and used as the actor personality.

@@ -4,6 +4,13 @@ import { useState } from 'react'
 
 import { Button } from '../../components/ui/button'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog'
+import {
   Table,
   TableBody,
   TableCell,
@@ -14,7 +21,7 @@ import {
 import { ApiError } from '../../shared/api/client'
 import { getMasterActors, type MasterActor } from '../../shared/api/master-data'
 import { RICH_TEXT_CLASS, SafeHtml } from '../../shared/safe-html'
-import { renderActorPersonality } from './actor-crud-logic'
+import { hasActorPersonality, renderActorPersonality } from './actor-crud-logic'
 import { ActorCrudDialog } from './actor-crud-dialog'
 
 const ACTOR_QUERY_KEY = ['master', 'actors']
@@ -38,6 +45,7 @@ function scalar(value: string | null | undefined): string {
 export function MasterActorsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedActor, setSelectedActor] = useState<MasterActor | null>(null)
+  const [personalityActor, setPersonalityActor] = useState<MasterActor | null>(null)
   const actorsQuery = useQuery({
     queryKey: ACTOR_QUERY_KEY,
     queryFn: getMasterActors,
@@ -129,11 +137,17 @@ export function MasterActorsPage() {
                     </span>
                   </TableCell>
                   <TableCell className="whitespace-normal">
-                    {actor.personaDesc?.trim() ? (
-                      <SafeHtml
-                        html={renderActorPersonality(actor.personaDesc)}
-                        className={`${RICH_TEXT_CLASS} max-h-28 max-w-md overflow-auto rounded-lg bg-slate-50 px-3 py-2 text-xs`}
-                      />
+                    {hasActorPersonality(actor.personaDesc) ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setPersonalityActor(actor)}
+                        aria-label={`View personality for ${actor.actorName}`}
+                      >
+                        View personality
+                      </Button>
                     ) : (
                       <span className="text-slate-400">—</span>
                     )}
@@ -157,6 +171,28 @@ export function MasterActorsPage() {
       </section>
 
       <ActorCrudDialog open={dialogOpen} onOpenChange={setDialogOpen} actor={selectedActor} />
+
+      <Dialog
+        open={personalityActor !== null}
+        onOpenChange={(open) => {
+          if (!open) setPersonalityActor(null)
+        }}
+      >
+        <DialogContent className="flex max-h-[min(680px,calc(100vh-32px))] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="border-b px-6 pt-6 pb-4">
+            <DialogTitle>{personalityActor?.actorName} · Personality</DialogTitle>
+            <DialogDescription>Markdown personality for this actor.</DialogDescription>
+          </DialogHeader>
+          <div className="overflow-auto px-6 py-5">
+            {personalityActor && (
+              <SafeHtml
+                html={renderActorPersonality(personalityActor.personaDesc)}
+                className={`${RICH_TEXT_CLASS} rounded-lg bg-slate-50 px-4 py-4`}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

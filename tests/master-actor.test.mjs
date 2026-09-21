@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 import {
   actorFormFromRecord,
   emptyActorForm,
+  hasActorPersonality,
   renderActorPersonality,
   validateActorForm,
 } from '../src/features/master_data/actor-crud-logic.ts'
@@ -13,6 +15,11 @@ import {
   updateMasterActor,
 } from '../src/shared/api/master-data.ts'
 import { masterDataNavigation } from '../src/app/layouts/navigation.ts'
+
+const actorDialogSource = readFileSync(
+  new URL('../src/features/master_data/actor-crud-dialog.tsx', import.meta.url),
+  'utf8',
+)
 
 function stubSuccess(data) {
   globalThis.fetch = async (path, init) => {
@@ -127,6 +134,19 @@ test('escapes unsafe actor personality HTML', () => {
   const html = renderActorPersonality('<script>alert(1)</script>')
 
   assert.doesNotMatch(html, /<script>/)
+})
+
+test('only offers the personality preview for non-empty personality content', () => {
+  assert.equal(hasActorPersonality('# Warm'), true)
+  assert.equal(hasActorPersonality('  '), false)
+  assert.equal(hasActorPersonality(null), false)
+})
+
+test('uses the shared Markdown editor for actor personality', () => {
+  assert.match(actorDialogSource, /PromptContentEditor/)
+  assert.match(actorDialogSource, /id="master-actor-personality"/)
+  assert.match(actorDialogSource, /value=\{form\.personaDesc\}/)
+  assert.doesNotMatch(actorDialogSource, /<Textarea/)
 })
 
 test('exposes Actors under the Master Data navigation group', () => {

@@ -41,6 +41,10 @@ export function validateActorForm(values: ActorFormValues, editing: boolean): st
   return null
 }
 
+export function hasActorPersonality(value: string | null | undefined): boolean {
+  return Boolean(value?.trim())
+}
+
 export function renderActorPersonality(value: string | null | undefined): string {
   return renderMarkdown(value ?? '')
 }
