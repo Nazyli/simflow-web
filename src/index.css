@@ -263,7 +263,6 @@ button {
 
 .graph {
   height: 680px;
-  margin-top: 1rem;
   border: 1px solid #374151;
 }
 .react-flow__edge.invalid-edge .react-flow__edge-path {
