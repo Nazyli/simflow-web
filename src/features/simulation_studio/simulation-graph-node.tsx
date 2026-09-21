@@ -143,27 +143,27 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
         {nodeData.editable && nodeData.parentGroupId && nodeData.onRemoveFromGroup && (
           <button
             type="button"
-            className="nodrag ml-1 inline-flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[0.6rem] font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-100"
+            className="nodrag ml-1 inline-flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[0.6rem] font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-amber-50"
             onClick={() => nodeData.onRemoveFromGroup?.(id)}
             title="Remove node from visual group"
           >
-            <LogOut className="h-3 w-3" />
+            <LogOut className="h-3 w-3 -scale-x-100 text-amber-600" />
           </button>
         )}
         {nodeData.editable &&
           !nodeData.parentGroupId &&
           nodeData.availableGroups?.length &&
           nodeData.onAddToGroup && (
-            <div className="nodrag relative">
+            <div className="nodrag relative inline-flex">
               <button
                 type="button"
-                className="ml-1 inline-flex items-center rounded bg-white px-1.5 py-0.5 text-[0.6rem] font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-100"
+                className="ml-1 inline-flex items-center rounded bg-white px-1.5 py-0.5 text-[0.6rem] font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-emerald-50"
                 onClick={() => setGroupPickerOpen((open) => !open)}
                 title="Add node to visual group"
                 aria-label="Add node to visual group"
                 aria-expanded={groupPickerOpen}
               >
-                <LogIn className="h-3 w-3" />
+                <LogIn className="h-3 w-3 text-emerald-600" />
               </button>
               {groupPickerOpen && (
                 <div className="absolute top-full left-0 z-30 mt-1 min-w-36 rounded-md border border-slate-200 bg-white p-1 text-left shadow-lg">
