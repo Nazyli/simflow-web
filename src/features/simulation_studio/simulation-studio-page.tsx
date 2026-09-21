@@ -87,6 +87,7 @@ import {
 import { replaceVisualGroups } from '../../shared/api/visual-groups'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
+import { buildWorkflowExportFileName } from './workflow-package-logic'
 import type {
   Execution,
   NodeDefinition,
@@ -533,11 +534,8 @@ export function SimulationStudioPage() {
       })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      const safeName = workflowPackage.simulation.name
-        .replace(/[^a-z0-9-_]+/gi, '-')
-        .replace(/^-|-$/g, '')
       link.href = url
-      link.download = `${safeName || 'simflow-workflow'}.json`
+      link.download = buildWorkflowExportFileName(workflowPackage.simulation.name)
       link.click()
       URL.revokeObjectURL(url)
       toast.success('Workflow exported as JSON.')
