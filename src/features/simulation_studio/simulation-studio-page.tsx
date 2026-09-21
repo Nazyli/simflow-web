@@ -101,6 +101,7 @@ import { SimulationVisualGroupNode } from './visual-groups/simulation-visual-gro
 import { useVisualGroups } from './visual-groups/use-visual-groups'
 import {
   absoluteToParentPosition,
+  computeVisualGroupLayouts,
   parentToAbsolutePosition,
   shouldDetachChild,
   type Rect,
@@ -724,6 +725,7 @@ export function SimulationStudioPage() {
     save: saveVisualGroups,
   })
   const groupList = visualGroupEditor.groups
+  const commitVisualGroups = visualGroupEditor.commitGroups
   const createVisualGroupFromNodes = visualGroupEditor.createGroup
   const attachVisualGroupMember = visualGroupEditor.attachMember
   const detachVisualGroupMember = visualGroupEditor.detachMember
@@ -1428,10 +1430,66 @@ export function SimulationStudioPage() {
       if (meta)
         positions.set(node.nodeId, { x: meta.x - meta.width / 2, y: meta.y - meta.height / 2 })
     })
+
+    const groupLayouts = computeVisualGroupLayouts(
+      groupList,
+      apiNodes.map((node) => ({
+        id: node.nodeId,
+        position: positions.get(node.nodeId) ?? {
+          x: node.positionX ?? 100,
+          y: node.positionY ?? 100,
+        },
+        width: 200,
+        height: 90,
+      })),
+    )
+    const nextGroups = groupList.map((group) => {
+      const rect = groupLayouts.get(group.visualGroupId)
+      if (!rect) return group
+      return {
+        ...group,
+        positionX: Math.round(rect.x),
+        positionY: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      }
+    })
+    const nextGroupById = new Map(nextGroups.map((group) => [group.visualGroupId, group]))
+
     positions.forEach((position, nodeId) => localPositions.current.set(nodeId, position))
     setNodes((current) =>
-      current.map((node) => ({ ...node, position: positions.get(node.id) ?? node.position })),
+      current.map((node) => {
+        const visualGroup = nextGroupById.get(node.id)
+        if (visualGroup) {
+          return {
+            ...node,
+            position: { x: visualGroup.positionX, y: visualGroup.positionY },
+            style: { ...node.style, width: visualGroup.width, height: visualGroup.height },
+          }
+        }
+
+        const absolutePosition = positions.get(node.id)
+        if (!absolutePosition) return node
+        if (!node.parentId) return { ...node, position: absolutePosition }
+
+        const group = nextGroupById.get(node.parentId)
+        if (!group) return { ...node, position: absolutePosition }
+        return {
+          ...node,
+          position: absoluteToParentPosition(absolutePosition, {
+            x: group.positionX,
+            y: group.positionY,
+            width: group.width,
+            height: group.height,
+          }),
+        }
+      }),
     )
+    if (nextGroups.some((group, index) => group !== groupList[index])) {
+      void commitVisualGroups(nextGroups).catch((error: unknown) => {
+        toast.error(apiErrorMessage(error))
+      })
+    }
     apiNodes.forEach((node) => {
       const position = positions.get(node.nodeId)
       if (position)

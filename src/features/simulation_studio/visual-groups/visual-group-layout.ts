@@ -17,6 +17,66 @@ export interface PositionedNode {
   parentId?: string
 }
 
+interface VisualGroupLayoutGroup {
+  visualGroupId: string
+  memberNodeIds: string[]
+}
+
+interface VisualGroupLayoutNode {
+  id: string
+  position: XYPosition
+  width?: number
+  height?: number
+}
+
+export function computeVisualGroupLayouts(
+  groups: VisualGroupLayoutGroup[],
+  nodes: VisualGroupLayoutNode[],
+  options: { padding?: number; headerHeight?: number } = {},
+): Map<string, Rect> {
+  const padding = options.padding ?? 32
+  const headerHeight = options.headerHeight ?? 32
+  const minimumWidth = 180
+  const minimumHeight = 100
+  const nodesById = new Map(nodes.map((node) => [node.id, node]))
+  const layouts = new Map<string, Rect>()
+
+  groups.forEach((group) => {
+    const members = group.memberNodeIds
+      .map((nodeId) => nodesById.get(nodeId))
+      .filter((node): node is VisualGroupLayoutNode => Boolean(node))
+    if (members.length === 0) return
+
+    const bounds = members.reduce(
+      (result, node) => {
+        const width = node.width ?? 200
+        const height = node.height ?? 90
+        return {
+          minX: Math.min(result.minX, node.position.x),
+          minY: Math.min(result.minY, node.position.y),
+          maxX: Math.max(result.maxX, node.position.x + width),
+          maxY: Math.max(result.maxY, node.position.y + height),
+        }
+      },
+      {
+        minX: Number.POSITIVE_INFINITY,
+        minY: Number.POSITIVE_INFINITY,
+        maxX: Number.NEGATIVE_INFINITY,
+        maxY: Number.NEGATIVE_INFINITY,
+      },
+    )
+
+    layouts.set(group.visualGroupId, {
+      x: bounds.minX - padding,
+      y: bounds.minY - padding,
+      width: Math.max(minimumWidth, bounds.maxX - bounds.minX + padding * 2),
+      height: Math.max(minimumHeight, bounds.maxY - bounds.minY + padding * 2 + headerHeight),
+    })
+  })
+
+  return layouts
+}
+
 export function absoluteToParentPosition(position: XYPosition, parent: Rect): XYPosition {
   return { x: position.x - parent.x, y: position.y - parent.y }
 }

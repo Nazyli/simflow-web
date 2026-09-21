@@ -3,11 +3,34 @@ import test from 'node:test'
 
 import {
   absoluteToParentPosition,
+  computeVisualGroupLayouts,
   parentToAbsolutePosition,
   pointOnRectBoundary,
   shouldDetachChild,
   translateGroupMembers,
 } from '../src/features/simulation_studio/visual-groups/visual-group-layout.ts'
+
+test('computes visual group bounds from the laid out member nodes', () => {
+  const layouts = computeVisualGroupLayouts(
+    [
+      {
+        visualGroupId: 'group-1',
+        memberNodeIds: ['node-a', 'node-b'],
+      },
+    ],
+    [
+      { id: 'node-a', position: { x: 300, y: 120 }, width: 200, height: 90 },
+      { id: 'node-b', position: { x: 550, y: 300 }, width: 200, height: 90 },
+    ],
+  )
+
+  assert.deepEqual(layouts.get('group-1'), {
+    x: 268,
+    y: 88,
+    width: 514,
+    height: 366,
+  })
+})
 
 test('converts absolute node position to parent-relative and back', () => {
   const parent = { x: 100, y: 200, width: 400, height: 240 }
