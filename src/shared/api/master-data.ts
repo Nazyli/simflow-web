@@ -202,9 +202,62 @@ export const deleteMasterEmail = (emailId: string) =>
 export interface MasterActor {
   actorId: string
   actorName: string
-  actorEmail?: string | null
-  actorPosition?: string | null
+  actorEmail: string | null
+  actorPosition: string | null
+  actorGroupPosition: string | null
+  personaDesc: string | null
+  isParticipant: boolean
+  createdBy?: string | null
+  createdDate?: string | null
+  modifiedBy?: string | null
+  modifiedDate?: string | null
   [key: string]: unknown
 }
 
 export const getMasterActors = () => apiClient<MasterActor[]>('/admin/master-data/actors')
+
+export interface MasterActorFormPayload {
+  actorId: string
+  actorName: string
+  actorEmail: string
+  actorPosition: string
+  actorGroupPosition: string
+  personaDesc: string
+  isParticipant: boolean
+}
+
+function optionalActorField(value: string): string | null {
+  return value.trim() || null
+}
+
+function actorCreatePayload(values: MasterActorFormPayload) {
+  return {
+    actorId: values.actorId.trim(),
+    actorName: values.actorName.trim(),
+    actorEmail: optionalActorField(values.actorEmail),
+    actorPosition: optionalActorField(values.actorPosition),
+    actorGroupPosition: optionalActorField(values.actorGroupPosition),
+    personaDesc: optionalActorField(values.personaDesc),
+    isParticipant: values.isParticipant,
+  }
+}
+
+export const createMasterActor = (values: MasterActorFormPayload) =>
+  apiClient<MasterActor>('/admin/master-data/actors', {
+    method: 'POST',
+    body: JSON.stringify(actorCreatePayload(values)),
+  })
+
+export const updateMasterActor = (actorId: string, values: MasterActorFormPayload) => {
+  const payload = actorCreatePayload(values)
+  const { actorId: _actorId, ...updatePayload } = payload
+  return apiClient<MasterActor>(`/admin/master-data/actors/${encodeURIComponent(actorId)}`, {
+    method: 'PUT',
+    body: JSON.stringify(updatePayload),
+  })
+}
+
+export const deleteMasterActor = (actorId: string) =>
+  apiClient<null>(`/admin/master-data/actors/${encodeURIComponent(actorId)}`, {
+    method: 'DELETE',
+  })

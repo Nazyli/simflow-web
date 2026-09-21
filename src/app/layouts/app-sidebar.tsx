@@ -1,6 +1,7 @@
-import { Bot } from 'lucide-react'
+import { Bot, ChevronDown } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import {
   Sidebar,
   SidebarContent,
@@ -9,13 +10,23 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
+
+export interface SidebarNavChild {
+  label: string
+  path: string
+  icon?: LucideIcon
+}
 
 export interface SidebarNavItem {
   label: string
   path: string
   icon: LucideIcon
+  children?: SidebarNavChild[]
 }
 
 interface AppSidebarProps {
@@ -24,6 +35,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ items }: AppSidebarProps) {
   const location = useLocation()
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
 
   return (
     <Sidebar collapsible="icon">
@@ -46,9 +58,54 @@ export function AppSidebar({ items }: AppSidebarProps) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {items.map(({ label, path, icon: Icon }) => {
+            {items.map(({ label, path, icon: Icon, children }) => {
               const isActive =
                 location.pathname === path || location.pathname.startsWith(`${path}/`)
+              const hasChildren = Boolean(children?.length)
+              const expanded = expandedGroups[path] ?? isActive
+
+              if (hasChildren) {
+                return (
+                  <SidebarMenuItem key={path}>
+                    <SidebarMenuButton
+                      type="button"
+                      isActive={isActive}
+                      tooltip={label}
+                      onClick={() =>
+                        setExpandedGroups((current) => ({ ...current, [path]: !expanded }))
+                      }
+                    >
+                      <Icon />
+                      <span>{label}</span>
+                      <ChevronDown
+                        className={`ml-auto transition-transform ${expanded ? 'rotate-180' : ''}`}
+                      />
+                    </SidebarMenuButton>
+                    {expanded && (
+                      <SidebarMenuSub>
+                        {children?.map(
+                          ({ label: childLabel, path: childPath, icon: ChildIcon }) => {
+                            const childActive =
+                              location.pathname === childPath ||
+                              location.pathname.startsWith(`${childPath}/`)
+                            return (
+                              <SidebarMenuSubItem key={childPath}>
+                                <SidebarMenuSubButton asChild isActive={childActive}>
+                                  <NavLink to={childPath}>
+                                    {ChildIcon && <ChildIcon />}
+                                    <span>{childLabel}</span>
+                                  </NavLink>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            )
+                          },
+                        )}
+                      </SidebarMenuSub>
+                    )}
+                  </SidebarMenuItem>
+                )
+              }
+
               return (
                 <SidebarMenuItem key={path}>
                   <SidebarMenuButton asChild isActive={isActive} tooltip={label}>

@@ -1,21 +1,8 @@
-import { BookOpen, Clock3, Layers, Play, Settings, Users } from 'lucide-react'
 import { type PropsWithChildren } from 'react'
 import { useLocation } from 'react-router-dom'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { AppSidebar } from './app-sidebar'
-
-const navigation = [
-  { label: 'Studio', path: '/studio', icon: Layers },
-  { label: 'Runner', path: '/simulation', icon: Play },
-  { label: 'Participant History', path: '/history', icon: Users },
-  { label: 'Timers', path: '/timers', icon: Clock3 },
-  { label: 'Documentation', path: '/documentation', icon: BookOpen },
-  { label: 'Settings', path: '/settings', icon: Settings },
-]
-
-const pageNames: Record<string, string> = Object.fromEntries(
-  navigation.map(({ path, label }) => [path, label]),
-)
+import { navigation, pageNames } from './navigation'
 
 function Breadcrumb() {
   const location = useLocation()
@@ -33,7 +20,9 @@ function Breadcrumb() {
       {segments.length > 1 && (
         <>
           <span>/</span>
-          <strong className="font-semibold text-slate-600">{segments.at(-1)}</strong>
+          <strong className="font-semibold text-slate-600">
+            {pageNames[location.pathname] ?? segments.at(-1)}
+          </strong>
         </>
       )}
     </nav>
