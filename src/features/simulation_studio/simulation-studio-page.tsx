@@ -15,6 +15,7 @@ import {
   ReactFlow,
   useEdgesState,
   useNodesState,
+  useNodesInitialized,
   useReactFlow,
   useViewport,
   type Connection,
@@ -150,6 +151,54 @@ function ZoomSliderPanel() {
       </span>
     </div>
   )
+}
+
+function StartNodeViewport({
+  simulationId,
+  apiNodes,
+  flowNodes,
+}: {
+  simulationId: string | null
+  apiNodes: ApiNode[]
+  flowNodes: Node[]
+}) {
+  const { getInternalNode, setCenter } = useReactFlow()
+  const nodesInitialized = useNodesInitialized({ includeHiddenNodes: true })
+  const centeredSimulationId = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (
+      !simulationId ||
+      apiNodes.length === 0 ||
+      flowNodes.length === 0 ||
+      !nodesInitialized ||
+      centeredSimulationId.current === simulationId
+    ) {
+      return
+    }
+
+    const startNode =
+      apiNodes.find((node) => node.nodeType === 'start') ??
+      apiNodes.find((node) => node.category === 'trigger') ??
+      apiNodes[0]
+    const flowNode = startNode ? getInternalNode(startNode.nodeId) : undefined
+    if (!startNode || !flowNode) return
+
+    const position = flowNode.internals.positionAbsolute ?? flowNode.position
+    const width = flowNode.measured?.width ?? 200
+    const height = flowNode.measured?.height ?? 90
+    centeredSimulationId.current = simulationId
+
+    const frame = requestAnimationFrame(() =>
+      setCenter(position.x + width / 2, position.y + height / 2, {
+        zoom: 1,
+        duration: 240,
+      }),
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [apiNodes, flowNodes, getInternalNode, nodesInitialized, setCenter, simulationId])
+
+  return null
 }
 
 const simulationNodeRenderers = {
@@ -298,7 +347,6 @@ export function SimulationStudioPage() {
   const simulationIdRef = useRef<string | null>(null)
   const nodesRef = useRef<Node[]>([])
   const pendingEdgeKeys = useRef<Set<string>>(new Set())
-  const fittedSimulationId = useRef<string | null>(null)
 
   // Stable ref for autosave — kept in sync after mutations are declared below.
   // Using ref avoids adding it as useEffect dependency (which would cause infinite loops).
@@ -1122,37 +1170,7 @@ export function SimulationStudioPage() {
     setSelectedExecutionId(null)
     localPositions.current.clear()
     localRotations.current.clear()
-    fittedSimulationId.current = null
   }, [simulationId])
-
-  // Center on Start node once per simulationId at zoom 1, after final dagre/localPositions resolve.
-  // Uses setCenter with zoom 1 so slider stays 100%; waits for nodes+flowInstance ready; fallback first node.
-  // Keeps defaultViewport zoom 1 and auto-fitView disabled; manual Fit View via toolbar/Controls tetap tersedia.
-  useEffect(() => {
-    if (!flowInstance || !simulationId || apiNodes.length === 0 || nodes.length === 0) return
-    if (fittedSimulationId.current === simulationId) return
-    const startNode =
-      apiNodes.find((n) => n.nodeType === 'start') ??
-      apiNodes.find((n) => (n.category as string) === 'trigger') ??
-      apiNodes[0]
-    if (!startNode) return
-    const flowNode = nodes.find((n) => n.id === startNode.nodeId) as
-      (Node & { measured?: { width?: number; height?: number } }) | undefined
-    const cached = localPositions.current.get(startNode.nodeId)
-    const pos = flowNode?.position ??
-      cached ?? { x: startNode.positionX ?? 0, y: startNode.positionY ?? 0 }
-    const measuredW = flowNode?.measured?.width ?? 200
-    const measuredH = flowNode?.measured?.height ?? 90
-    const halfW = measuredW > 0 ? measuredW / 2 : 75
-    const halfH = measuredH > 0 ? measuredH / 2 : 40
-    const cx = pos.x + halfW
-    const cy = pos.y + halfH
-    fittedSimulationId.current = simulationId
-    const frame = requestAnimationFrame(() =>
-      flowInstance.setCenter(cx, cy, { zoom: 1, duration: 240 }),
-    )
-    return () => cancelAnimationFrame(frame)
-  }, [apiNodes, nodes, flowInstance, simulationId])
 
   // Apply edgePathType to all edges when dropdown changes
   useEffect(() => {
@@ -1784,7 +1802,7 @@ export function SimulationStudioPage() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-1.5">
+                  <div className="flex flex-wrap items-start gap-1.5">
                     {group.entries.map(({ definition, parameters }) => {
                       const isEditable = Boolean(simulationId) && !isLocked
 
@@ -1807,7 +1825,7 @@ export function SimulationStudioPage() {
                                 borderColor: `${definition.color}55`,
                                 backgroundColor: `${definition.color}0d`,
                               }}
-                              className={`palette-card-item cursor-grab rounded-lg border px-2 py-1.5 text-center transition-all active:cursor-grabbing ${
+                              className={`palette-card-item w-fit max-w-full cursor-grab rounded-lg border px-2 py-1.5 text-center transition-all active:cursor-grabbing ${
                                 isEditable
                                   ? 'border-slate-200 opacity-100 hover:scale-[1.02] hover:shadow-md'
                                   : 'cursor-not-allowed opacity-50'
@@ -2159,6 +2177,11 @@ export function SimulationStudioPage() {
                 placeholder="Search nodes... ⌘K"
                 className="w-[320px] shadow-lg md:min-w-[320px] !m-0"
                 style={{ top: '56px', left: '16px', margin: 0 } as React.CSSProperties}
+              />
+              <StartNodeViewport
+                simulationId={simulationId}
+                apiNodes={apiNodes}
+                flowNodes={nodes}
               />
             </ReactFlow>
           </div>
