@@ -26,8 +26,8 @@ import {
   validatePromptForm,
   type PromptFormValues,
 } from './prompt-crud-logic'
+import { PromptContentEditor } from './prompt-content-editor'
 import { useTemplateContract } from './template-contract-logic'
-import { TemplateTextarea } from './template-placeholder-picker'
 
 const PROMPT_QUERY_KEY = ['master', 'prompts']
 
@@ -128,13 +128,11 @@ export function PromptCrudDialog({
           )}
           <div className="grid gap-1.5">
             <Label htmlFor="master-prompt-content">Content</Label>
-            <TemplateTextarea
+            <PromptContentEditor
               id="master-prompt-content"
-              rows={9}
               disabled={isLoadingExisting || saveMutation.isPending}
               value={form.content}
               placeholders={contentContract.contract?.allowedPlaceholders}
-              placeholder="Write the classification prompt..."
               onValueChange={(value) => setForm((current) => ({ ...current, content: value }))}
             />
           </div>

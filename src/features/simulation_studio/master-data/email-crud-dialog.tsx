@@ -30,8 +30,9 @@ import {
   validateEmailForm,
   type EmailFormValues,
 } from './email-crud-logic'
+import { EmailContentEditor } from './email-content-editor'
+import { PromptContentEditor } from './prompt-content-editor'
 import { useTemplateContract } from './template-contract-logic'
-import { TemplateTextarea } from './template-placeholder-picker'
 
 const EMAIL_QUERY_KEY = ['master', 'emails']
 
@@ -242,9 +243,8 @@ export function EmailCrudDialog({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="master-email-content">Content</Label>
-            <TemplateTextarea
+            <EmailContentEditor
               id="master-email-content"
-              rows={8}
               disabled={disabled}
               value={form.content}
               placeholders={contentContract.contract?.allowedPlaceholders}
@@ -253,13 +253,11 @@ export function EmailCrudDialog({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="master-email-prompt">Prompt (optional)</Label>
-            <TemplateTextarea
+            <PromptContentEditor
               id="master-email-prompt"
-              rows={4}
               disabled={disabled}
               value={form.prompt}
               placeholders={promptContract.contract?.allowedPlaceholders}
-              placeholder="Optional prompt for AI generation..."
               onValueChange={(value) => setField('prompt', value)}
             />
           </div>

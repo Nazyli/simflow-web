@@ -28,6 +28,7 @@ import {
   validateChatForm,
   type ChatFormValues,
 } from './chat-crud-logic'
+import { PromptContentEditor } from './prompt-content-editor'
 import { useTemplateContract } from './template-contract-logic'
 import { TemplateTextarea } from './template-placeholder-picker'
 
@@ -178,13 +179,11 @@ export function ChatCrudDialog({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="master-chat-prompt">Prompt (optional)</Label>
-            <TemplateTextarea
+            <PromptContentEditor
               id="master-chat-prompt"
-              rows={4}
               disabled={isLoadingExisting || saveMutation.isPending}
               value={form.prompt}
               placeholders={promptContract.contract?.allowedPlaceholders}
-              placeholder="Optional prompt for AI generation..."
               onValueChange={(value) => setForm((current) => ({ ...current, prompt: value }))}
             />
           </div>

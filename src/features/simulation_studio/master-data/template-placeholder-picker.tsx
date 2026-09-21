@@ -51,12 +51,14 @@ export function TemplatePlaceholderPicker({
 type TemplateTextareaProps = Omit<ComponentProps<typeof Textarea>, 'onChange' | 'value'> & {
   value: string
   placeholders?: TemplatePlaceholder[]
+  textareaRef?: RefObject<HTMLTextAreaElement | null>
   onValueChange: (value: string) => void
 }
 
 export function TemplateTextarea({
   value,
   placeholders,
+  textareaRef: externalTextareaRef,
   onValueChange,
   disabled,
   className,
@@ -65,7 +67,8 @@ export function TemplateTextarea({
   style,
   ...props
 }: TemplateTextareaProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const internalTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const textareaRef = externalTextareaRef ?? internalTextareaRef
   const highlightRef = useRef<HTMLDivElement>(null)
   const hasContract = placeholders !== undefined
   const allowedNames = placeholders?.map((placeholder) => placeholder.name) ?? []
