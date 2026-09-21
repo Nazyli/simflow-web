@@ -14,7 +14,7 @@ import {
 import { ApiError } from '../../../shared/api/client'
 import { RICH_TEXT_CLASS, SafeHtml } from '../../../shared/safe-html'
 import { previewPrompt } from '../../../shared/api/master-data'
-import { renderPromptPreview } from './prompt-preview-logic'
+import { renderMarkdown } from '../../documentation/markdown'
 
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -98,7 +98,7 @@ export function PromptPreviewControl({
               <>
                 <div className="max-h-[min(480px,55vh)] overflow-auto rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm selection:bg-indigo-100 [&_code]:rounded [&_code]:bg-slate-200/70 [&_code]:px-1 [&_code]:py-0.5 [&_h1]:mb-3 [&_h2]:mb-2 [&_h3]:mb-2 [&_hr]:my-4 [&_li]:my-1 [&_p]:mb-3 [&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:border [&_pre]:border-slate-200 [&_pre]:bg-white [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0">
                   <SafeHtml
-                    html={renderPromptPreview(previewMutation.data.renderedPrompt)}
+                    html={renderMarkdown(previewMutation.data.renderedPrompt)}
                     className={RICH_TEXT_CLASS}
                   />
                 </div>

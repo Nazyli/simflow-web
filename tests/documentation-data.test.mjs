@@ -83,6 +83,13 @@ test('renders the Markdown structures used by the documentation files', () => {
   assert.match(html, /<div class="mermaid-diagram" data-mermaid>flowchart LR\nA --&gt; B<\/div>/)
 })
 
+test('keeps underscores inside prompt placeholders when rendering Markdown', () => {
+  const html = renderMarkdown('Selamat siang {user_titles} {user_name}')
+
+  assert.match(html, /\{user_titles\} \{user_name\}/)
+  assert.doesNotMatch(html, /<em>/)
+})
+
 test('recognizes a flowchart even when the code fence has the wrong language', () => {
   const html = renderMarkdown('```less\nflowchart LR\nA --> B\n```')
 

@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { buildNodePaletteGroups } from '../src/features/simulation_studio/node-palette.ts'
+import {
+  buildNodePaletteGroups,
+  readPaletteDragParameters,
+} from '../src/features/simulation_studio/node-palette.ts'
 
 const definition = (nodeType, label, paletteGroups, parameters = {}, paletteParameters = {}) => ({
   nodeType,
@@ -50,4 +53,15 @@ test('builds visible palette groups from backend metadata and omits empty groups
     ['send_chat', 'wait_for_reply'],
   )
   assert.deepEqual(groups[1].entries[0].parameters, { channel: 'email' })
+})
+
+test('reads channel-specific parameters from a palette drag payload', () => {
+  const dataTransfer = {
+    getData: (format) =>
+      format === 'application/simulation-builder-node-parameters'
+        ? JSON.stringify({ channel: 'email' })
+        : '',
+  }
+
+  assert.deepEqual(readPaletteDragParameters(dataTransfer), { channel: 'email' })
 })

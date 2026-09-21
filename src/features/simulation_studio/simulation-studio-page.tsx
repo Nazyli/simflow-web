@@ -108,7 +108,12 @@ import { projectWorkflowEdges } from './visual-groups/visual-group-projection'
 import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
 import { WorkflowPackageDialog } from './workflow-package-dialog'
 import { deriveNodeSummary } from '../../shared/utils/node-summary'
-import { buildNodePaletteGroups } from './node-palette'
+import {
+  buildNodePaletteGroups,
+  PALETTE_NODE_PARAMETERS_DATA,
+  PALETTE_NODE_TYPE_DATA,
+  readPaletteDragParameters,
+} from './node-palette'
 
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
@@ -1234,13 +1239,16 @@ export function SimulationStudioPage() {
         toast.error(lockedMessage)
         return
       }
-      const nodeType = event.dataTransfer?.getData('application/simulation-builder-node-type')
+      const nodeType = event.dataTransfer?.getData(PALETTE_NODE_TYPE_DATA)
       const definition = definitions.get(nodeType ?? '')
       if (!definition) return
       event.preventDefault()
       event.stopPropagation()
       addGraphNode.mutate({
         definition,
+        parameters: event.dataTransfer
+          ? readPaletteDragParameters(event.dataTransfer)
+          : undefined,
         position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }),
       })
     }
@@ -1249,7 +1257,7 @@ export function SimulationStudioPage() {
       if (
         event.target instanceof Element &&
         event.target.closest('.graph') &&
-        event.dataTransfer?.types.includes('application/simulation-builder-node-type')
+        event.dataTransfer?.types.includes(PALETTE_NODE_TYPE_DATA)
       )
         event.preventDefault()
     }
@@ -1454,11 +1462,8 @@ export function SimulationStudioPage() {
       toast.error(lockedMessage)
       return
     }
-    event.dataTransfer.setData('application/simulation-builder-node-type', nodeType)
-    event.dataTransfer.setData(
-      'application/simulation-builder-node-parameters',
-      JSON.stringify(parameters ?? {}),
-    )
+    event.dataTransfer.setData(PALETTE_NODE_TYPE_DATA, nodeType)
+    event.dataTransfer.setData(PALETTE_NODE_PARAMETERS_DATA, JSON.stringify(parameters ?? {}))
     event.dataTransfer.setData('text/plain', nodeType)
     event.dataTransfer.effectAllowed = 'move'
   }
@@ -1476,20 +1481,12 @@ export function SimulationStudioPage() {
       return
     }
     const definition = definitions.get(
-      event.dataTransfer.getData('application/simulation-builder-node-type'),
+      event.dataTransfer.getData(PALETTE_NODE_TYPE_DATA),
     )
     if (!definition || !flowInstance || !simulationId) return
-    let parameters: Record<string, unknown> | undefined
-    try {
-      parameters = JSON.parse(
-        event.dataTransfer.getData('application/simulation-builder-node-parameters') || '{}',
-      ) as Record<string, unknown>
-    } catch {
-      parameters = undefined
-    }
     addGraphNode.mutate({
       definition,
-      parameters,
+      parameters: readPaletteDragParameters(event.dataTransfer),
       position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }),
     })
   }

@@ -18,6 +18,12 @@ function documentationHref(href: string): string {
 
 function renderInline(value: string): string {
   let html = escapeHtml(value)
+  const placeholders: string[] = []
+  html = html.replace(/\{\w+\}/g, (placeholder) => {
+    const marker = `\uE000${placeholders.length}\uE001`
+    placeholders.push(placeholder)
+    return marker
+  })
 
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, alt: string) => escapeHtml(alt))
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, href: string) => {
@@ -31,7 +37,10 @@ function renderInline(value: string): string {
   html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>')
   html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>')
   html = html.replace(/_([^_]+)_/g, '<em>$1</em>')
-  return html
+  return html.replace(
+    /\uE000(\d+)\uE001/g,
+    (_match, index: string) => placeholders[Number(index)] ?? '',
+  )
 }
 
 function isFenceStart(line: string): RegExpMatchArray | null {
