@@ -18,7 +18,7 @@ import {
   createMasterEmail,
   deleteMasterEmail,
   getMasterDocumentContents,
-  getStudioMasterEmail,
+  getMasterEmailByNode,
   type MasterEmail,
   updateMasterEmail,
 } from '../../../shared/api/master-data'
@@ -32,6 +32,7 @@ import {
 } from './email-crud-logic'
 import { EmailContentEditor } from './email-content-editor'
 import { PromptContentEditor } from './prompt-content-editor'
+import { PromptPreviewControl } from './prompt-preview-control'
 import { useTemplateContract } from './template-contract-logic'
 
 const EMAIL_QUERY_KEY = ['master', 'emails']
@@ -54,7 +55,6 @@ export function EmailCrudDialog({
   nodeId,
   nodeType = 'send_email',
   simulationId,
-  selectedEmailId,
   onSelect,
 }: {
   open: boolean
@@ -62,7 +62,6 @@ export function EmailCrudDialog({
   nodeId: string
   nodeType?: string
   simulationId?: string | null
-  selectedEmailId?: string
   onSelect: (emailId: string) => void
 }) {
   const queryClient = useQueryClient()
@@ -74,9 +73,9 @@ export function EmailCrudDialog({
   const contentContract = useTemplateContract(nodeType, 'content')
   const promptContract = useTemplateContract(nodeType, 'prompt')
   const emailsQuery = useQuery({
-    queryKey: ['master', 'email', selectedEmailId ?? 'new'],
-    queryFn: () => getStudioMasterEmail(selectedEmailId!),
-    enabled: open && Boolean(selectedEmailId),
+    queryKey: ['master', 'email-by-node', nodeId],
+    queryFn: () => getMasterEmailByNode(nodeId),
+    enabled: open,
     staleTime: 0,
     refetchOnMount: 'always',
   })
@@ -119,22 +118,19 @@ export function EmailCrudDialog({
     },
   })
   const formError = validateEmailForm(form)
-  const isLoadingExisting = Boolean(selectedEmailId) && emailsQuery.isPending
+  const isLoadingExisting = open && emailsQuery.isPending
   const disabled = isLoadingExisting || saveMutation.isPending || deleteMutation.isPending
   const resetSaveMutation = saveMutation.reset
   const resetDeleteMutation = deleteMutation.reset
 
   useEffect(() => {
     if (!open) return
-    const records = emailsQuery.data ? [emailsQuery.data] : []
-    const selected = selectedEmailId
-      ? (records.find((email) => email.emailId === selectedEmailId) ?? null)
-      : null
+    const selected = emailsQuery.data ?? null
     setEditing(selected)
-    setForm(emailDialogInitialForm(selectedEmailId, records))
+    setForm(selected ? emailDialogInitialForm(selected.emailId, [selected]) : emptyEmailForm())
     resetSaveMutation()
     resetDeleteMutation()
-  }, [emailsQuery.data, open, resetDeleteMutation, resetSaveMutation, selectedEmailId])
+  }, [emailsQuery.data, open, resetDeleteMutation, resetSaveMutation])
 
   function setField<K extends keyof EmailFormValues>(field: K, value: EmailFormValues[K]) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -325,6 +321,13 @@ export function EmailCrudDialog({
                 <Trash2 /> Delete email
               </Button>
             )}
+            <PromptPreviewControl
+              nodeType={nodeType}
+              prompt={form.prompt}
+              actorId={form.actorFrom}
+              variables={{ message_template: form.content }}
+              disabled={disabled}
+            />
             <Button
               type="button"
               variant="outline"

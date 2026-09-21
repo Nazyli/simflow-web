@@ -24,6 +24,7 @@ export interface MasterEmail extends AuditFields {
   parentMasterEmailId: string | null
   subject: string | null
   content: string | null
+  prompt?: string | null
   attachments: MasterEmailAttachment[]
 }
 
@@ -43,9 +44,11 @@ export interface MasterChat extends AuditFields {
   nodeId: string | null
   actorId: string | null
   content: string | null
+  prompt?: string | null
 }
 
-export const getMasterChats = () => apiClient<MasterChat[]>('/admin/master-data/chats')
+export const getMasterChatByNode = (nodeId: string) =>
+  apiClient<MasterChat | null>(`/admin/master-data/chats/by-node/${encodeURIComponent(nodeId)}`)
 
 export const createMasterChat = (
   nodeId: string,
@@ -77,9 +80,11 @@ export interface MasterCall extends AuditFields {
   nodeId: string | null
   actorId: string | null
   content: string | null
+  prompt?: string | null
 }
 
-export const getMasterCalls = () => apiClient<MasterCall[]>('/admin/master-data/calls')
+export const getMasterCallByNode = (nodeId: string) =>
+  apiClient<MasterCall | null>(`/admin/master-data/calls/by-node/${encodeURIComponent(nodeId)}`)
 
 export const createMasterCall = (
   nodeId: string,
@@ -113,7 +118,8 @@ export interface MasterPrompt extends AuditFields {
   desc: string | null
 }
 
-export const getMasterPrompts = () => apiClient<MasterPrompt[]>('/admin/master-data/prompts')
+export const getMasterPromptByNode = (nodeId: string) =>
+  apiClient<MasterPrompt | null>(`/admin/master-data/prompts/by-node/${encodeURIComponent(nodeId)}`)
 
 export const createMasterPrompt = (nodeId: string, content: string) =>
   apiClient<MasterPrompt>('/admin/master-data/prompts', {
@@ -132,10 +138,30 @@ export const deleteMasterPrompt = (promptId: string) =>
     method: 'DELETE',
   })
 
-export const getStudioMasterEmail = (emailId: string) =>
-  apiClient<MasterEmail>(`/admin/master-data/emails/${encodeURIComponent(emailId)}`)
+export interface PromptPreviewResponse {
+  renderedPrompt: string
+  variables: Record<string, unknown>
+  unresolvedPlaceholders: string[]
+}
 
-export const getMasterEmails = () => apiClient<MasterEmail[]>('/admin/master-data/emails')
+export const previewPrompt = (
+  nodeType: string,
+  prompt: string,
+  actorId?: string | null,
+  variables?: Record<string, unknown>,
+) =>
+  apiClient<PromptPreviewResponse>('/admin/master-data/prompts/preview', {
+    method: 'POST',
+    body: JSON.stringify({
+      nodeType,
+      prompt,
+      ...(actorId?.trim() ? { actorId: actorId.trim() } : {}),
+      ...(variables && Object.keys(variables).length > 0 ? { variables } : {}),
+    }),
+  })
+
+export const getMasterEmailByNode = (nodeId: string) =>
+  apiClient<MasterEmail | null>(`/admin/master-data/emails/by-node/${encodeURIComponent(nodeId)}`)
 
 export const getMasterEmailOriginals = (simulationId: string, excludeEmailId?: string) => {
   const params = new URLSearchParams({ simulationId })

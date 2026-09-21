@@ -17,7 +17,7 @@ import { ApiError } from '../../../shared/api/client'
 import {
   createMasterCall,
   deleteMasterCall,
-  getMasterCalls,
+  getMasterCallByNode,
   type MasterCall,
   updateMasterCall,
 } from '../../../shared/api/master-data'
@@ -29,6 +29,7 @@ import {
   type CallFormValues,
 } from './call-crud-logic'
 import { PromptContentEditor } from './prompt-content-editor'
+import { PromptPreviewControl } from './prompt-preview-control'
 import { useTemplateContract } from './template-contract-logic'
 import { TemplateTextarea } from './template-placeholder-picker'
 
@@ -51,14 +52,12 @@ export function CallCrudDialog({
   onOpenChange,
   nodeId,
   nodeType = 'send_call_speech',
-  selectedCallId,
   onSelect,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   nodeId: string
   nodeType?: string
-  selectedCallId?: string
   onSelect: (callId: string) => void
 }) {
   const queryClient = useQueryClient()
@@ -68,9 +67,9 @@ export function CallCrudDialog({
   const contentContract = useTemplateContract(nodeType, 'content')
   const promptContract = useTemplateContract(nodeType, 'prompt')
   const callsQuery = useQuery({
-    queryKey: CALL_QUERY_KEY,
-    queryFn: getMasterCalls,
-    enabled: open && Boolean(selectedCallId),
+    queryKey: ['master', 'call-by-node', nodeId],
+    queryFn: () => getMasterCallByNode(nodeId),
+    enabled: open,
     staleTime: 0,
     refetchOnMount: 'always',
   })
@@ -104,21 +103,20 @@ export function CallCrudDialog({
     },
   })
   const formError = validateCallForm(form)
-  const isLoadingExisting = Boolean(selectedCallId) && callsQuery.isPending
+  const isLoadingExisting = open && callsQuery.isPending
   const resetSaveMutation = saveMutation.reset
   const resetDeleteMutation = deleteMutation.reset
 
   useEffect(() => {
     if (!open) return
-    const records = callsQuery.data ?? []
-    const selectedCall = selectedCallId
-      ? (records.find((call) => call.callId === selectedCallId) ?? null)
-      : null
+    const selectedCall = callsQuery.data ?? null
     setEditing(selectedCall)
-    setForm(callDialogInitialForm(selectedCallId, records))
+    setForm(
+      selectedCall ? callDialogInitialForm(selectedCall.callId, [selectedCall]) : emptyCallForm(),
+    )
     resetSaveMutation()
     resetDeleteMutation()
-  }, [callsQuery.data, open, resetDeleteMutation, resetSaveMutation, selectedCallId])
+  }, [callsQuery.data, open, resetDeleteMutation, resetSaveMutation])
 
   function submit() {
     if (formError || isLoadingExisting) return
@@ -208,6 +206,13 @@ export function CallCrudDialog({
                 <Trash2 /> Delete call
               </Button>
             )}
+            <PromptPreviewControl
+              nodeType={nodeType}
+              prompt={form.prompt}
+              actorId={form.actorId}
+              variables={{ message_template: form.content }}
+              disabled={isLoadingExisting || saveMutation.isPending}
+            />
             <Button
               type="button"
               variant="outline"

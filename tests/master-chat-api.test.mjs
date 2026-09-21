@@ -4,7 +4,7 @@ import test from 'node:test'
 import {
   createMasterChat,
   deleteMasterChat,
-  getMasterChats,
+  getMasterChatByNode,
   updateMasterChat,
 } from '../src/shared/api/master-data.ts'
 import {
@@ -12,7 +12,8 @@ import {
   createMasterPrompt,
   deleteMasterCall,
   deleteMasterPrompt,
-  getMasterPrompts,
+  getMasterCallByNode,
+  getMasterPromptByNode,
   updateMasterCall,
   updateMasterPrompt,
 } from '../src/shared/api/master-data.ts'
@@ -20,6 +21,7 @@ import {
   createMasterEmail,
   deleteMasterEmail,
   getMasterDocumentContents,
+  getMasterEmailByNode,
   getMasterEmailOriginals,
   updateMasterEmail,
 } from '../src/shared/api/master-data.ts'
@@ -34,12 +36,20 @@ function stubSuccess(data) {
   }
 }
 
-test('loads master chats through the Studio resource endpoint', async () => {
-  stubSuccess([])
+test('loads node-owned chat, call, email, and prompt details without list endpoints', async () => {
+  stubSuccess(null)
 
-  await getMasterChats()
+  await getMasterChatByNode('node/chat-1')
+  assert.equal(globalThis.lastRequest.path, '/admin/master-data/chats/by-node/node%2Fchat-1')
 
-  assert.equal(globalThis.lastRequest.path, '/admin/master-data/chats')
+  await getMasterCallByNode('node/call-1')
+  assert.equal(globalThis.lastRequest.path, '/admin/master-data/calls/by-node/node%2Fcall-1')
+
+  await getMasterEmailByNode('node/email-1')
+  assert.equal(globalThis.lastRequest.path, '/admin/master-data/emails/by-node/node%2Femail-1')
+
+  await getMasterPromptByNode('node/prompt-1')
+  assert.equal(globalThis.lastRequest.path, '/admin/master-data/prompts/by-node/node%2Fprompt-1')
 })
 
 test('creates a master chat with the owning node and actor', async () => {
@@ -105,11 +115,8 @@ test('creates, updates, and deletes a node-owned master call', async () => {
   assert.equal(globalThis.lastRequest.init.method, 'DELETE')
 })
 
-test('loads and saves master prompts for the prompt CRUD editor', async () => {
-  stubSuccess([{ promptId: 'prompt-1', content: 'Classify', desc: 'Intent' }])
-
-  await getMasterPrompts()
-  assert.equal(globalThis.lastRequest.path, '/admin/master-data/prompts')
+test('saves master prompts for the prompt CRUD editor', async () => {
+  stubSuccess({ promptId: 'prompt-1', content: 'Classify', desc: 'Intent' })
 
   await createMasterPrompt('node-1', 'Classify this')
   assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), {
@@ -152,7 +159,11 @@ test('loads and saves node-owned master emails with parent and attachments', asy
   }
   await createMasterEmail('node-1', values)
   assert.equal(globalThis.lastRequest.path, '/admin/master-data/emails')
-  assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), { nodeId: 'node-1', ...values, prompt: null })
+  assert.deepEqual(JSON.parse(globalThis.lastRequest.init.body), {
+    nodeId: 'node-1',
+    ...values,
+    prompt: null,
+  })
 
   await updateMasterEmail('email/1', values)
   assert.equal(globalThis.lastRequest.path, '/admin/master-data/emails/email%2F1')

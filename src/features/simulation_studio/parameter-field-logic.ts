@@ -30,6 +30,28 @@ export function resolveParameterMultiline(
   return Boolean(parameterOptions?.[name]?.multiline)
 }
 
+export function buildClassificationPreviewVariables(
+  nodeType: string,
+  parameterName: string,
+  configuration: Record<string, unknown>,
+): Record<string, string> | undefined {
+  if (nodeType !== 'ai_classification' || !['promptId', 'prompt_id'].includes(parameterName)) {
+    return undefined
+  }
+  if (!Array.isArray(configuration.labels)) return undefined
+
+  const labels = configuration.labels
+    .map((item) => {
+      if (!item || typeof item !== 'object') return ''
+      const candidate = item as { id?: unknown; label?: unknown }
+      const label = typeof candidate.label === 'string' ? candidate.label.trim() : ''
+      if (label) return label
+      return typeof candidate.id === 'string' ? candidate.id.trim() : ''
+    })
+    .filter(Boolean)
+  return labels.length ? { labels: labels.map((label) => `- ${label}`).join('\n') } : undefined
+}
+
 export function isChatCrudEditor(picker: Pick<ParameterPicker, 'editor'> | undefined): boolean {
   return picker?.editor === 'chat_crud'
 }

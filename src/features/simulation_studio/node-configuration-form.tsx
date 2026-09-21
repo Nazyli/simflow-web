@@ -13,9 +13,10 @@ import {
   SelectValue,
 } from '../../components/ui/select'
 import { Textarea } from '../../components/ui/textarea'
-import { getStudioMasterEmail, type MasterEmailAttachment } from '../../shared/api/master-data'
+import { getMasterEmailByNode, type MasterEmailAttachment } from '../../shared/api/master-data'
 import type { NodeDefinition } from '../../shared/types/simulation'
 import {
+  buildClassificationPreviewVariables,
   isNumericParameter,
   parseNumericParameter,
   resolveParameterMultiline,
@@ -388,9 +389,9 @@ function AttachmentOpenConfigurationFields({
   const emailId =
     typeof sourceNode?.parameters.emailId === 'string' ? sourceNode.parameters.emailId : ''
   const emailDetail = useQuery({
-    queryKey: ['studio-master-email', emailId],
-    queryFn: () => getStudioMasterEmail(emailId),
-    enabled: Boolean(emailId),
+    queryKey: ['studio-master-email-by-node', sourceNodeId],
+    queryFn: () => getMasterEmailByNode(sourceNodeId),
+    enabled: Boolean(sourceNodeId),
   })
   const attachments = emailDetail.data?.attachments ?? []
   const attachmentSelection = configuration.attachmentSelection === 'all' ? 'all' : 'selected'
@@ -663,6 +664,7 @@ function CatalogParameterField({
         nodeType={nodeType}
         simulationId={simulationId}
         filterValue={picker.filterBy ? String(configuration[picker.filterBy] ?? '') : undefined}
+        previewVariables={buildClassificationPreviewVariables(nodeType, name, configuration)}
         onChange={(next) => onChange(next)}
       />
     )

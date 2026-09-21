@@ -17,7 +17,7 @@ import { ApiError } from '../../../shared/api/client'
 import {
   createMasterChat,
   deleteMasterChat,
-  getMasterChats,
+  getMasterChatByNode,
   type MasterChat,
   updateMasterChat,
 } from '../../../shared/api/master-data'
@@ -29,6 +29,7 @@ import {
   type ChatFormValues,
 } from './chat-crud-logic'
 import { PromptContentEditor } from './prompt-content-editor'
+import { PromptPreviewControl } from './prompt-preview-control'
 import { useTemplateContract } from './template-contract-logic'
 import { TemplateTextarea } from './template-placeholder-picker'
 
@@ -51,14 +52,12 @@ export function ChatCrudDialog({
   onOpenChange,
   nodeId,
   nodeType = 'send_chat',
-  selectedChatId,
   onSelect,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   nodeId: string
   nodeType?: string
-  selectedChatId?: string
   onSelect: (chatId: string) => void
 }) {
   const queryClient = useQueryClient()
@@ -68,9 +67,9 @@ export function ChatCrudDialog({
   const contentContract = useTemplateContract(nodeType, 'content')
   const promptContract = useTemplateContract(nodeType, 'prompt')
   const chatsQuery = useQuery({
-    queryKey: CHAT_QUERY_KEY,
-    queryFn: getMasterChats,
-    enabled: open && Boolean(selectedChatId),
+    queryKey: ['master', 'chat-by-node', nodeId],
+    queryFn: () => getMasterChatByNode(nodeId),
+    enabled: open,
     staleTime: 0,
     refetchOnMount: 'always',
   })
@@ -106,19 +105,18 @@ export function ChatCrudDialog({
   const resetSaveMutation = saveMutation.reset
   const resetDeleteMutation = deleteMutation.reset
   const formError = validateChatForm(form)
-  const isLoadingExisting = Boolean(selectedChatId) && chatsQuery.isPending
+  const isLoadingExisting = open && chatsQuery.isPending
 
   useEffect(() => {
     if (!open) return
-    const records = chatsQuery.data ?? []
-    const selectedChat = selectedChatId
-      ? (records.find((chat) => chat.chatId === selectedChatId) ?? null)
-      : null
+    const selectedChat = chatsQuery.data ?? null
     setEditing(selectedChat)
-    setForm(chatDialogInitialForm(selectedChatId, records))
+    setForm(
+      selectedChat ? chatDialogInitialForm(selectedChat.chatId, [selectedChat]) : emptyChatForm(),
+    )
     resetSaveMutation()
     resetDeleteMutation()
-  }, [chatsQuery.data, open, resetDeleteMutation, resetSaveMutation, selectedChatId])
+  }, [chatsQuery.data, open, resetDeleteMutation, resetSaveMutation])
 
   function submit() {
     if (formError || isLoadingExisting) return
@@ -209,6 +207,13 @@ export function ChatCrudDialog({
                 <Trash2 /> Delete chat
               </Button>
             )}
+            <PromptPreviewControl
+              nodeType={nodeType}
+              prompt={form.prompt}
+              actorId={form.actorId}
+              variables={{ message_template: form.content }}
+              disabled={isLoadingExisting || saveMutation.isPending}
+            />
             <Button
               type="button"
               variant="outline"

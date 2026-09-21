@@ -16,7 +16,7 @@ import { ApiError } from '../../../shared/api/client'
 import {
   createMasterPrompt,
   deleteMasterPrompt,
-  getMasterPrompts,
+  getMasterPromptByNode,
   type MasterPrompt,
   updateMasterPrompt,
 } from '../../../shared/api/master-data'
@@ -27,6 +27,7 @@ import {
   type PromptFormValues,
 } from './prompt-crud-logic'
 import { PromptContentEditor } from './prompt-content-editor'
+import { PromptPreviewControl } from './prompt-preview-control'
 import { useTemplateContract } from './template-contract-logic'
 
 const PROMPT_QUERY_KEY = ['master', 'prompts']
@@ -48,14 +49,14 @@ export function PromptCrudDialog({
   onOpenChange,
   nodeId,
   nodeType = 'ai_classification',
-  selectedPromptId,
+  previewVariables,
   onSelect,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   nodeId: string
   nodeType?: string
-  selectedPromptId?: string
+  previewVariables?: Record<string, unknown>
   onSelect: (promptId: string) => void
 }) {
   const queryClient = useQueryClient()
@@ -63,9 +64,9 @@ export function PromptCrudDialog({
   const [form, setForm] = useState<PromptFormValues>(emptyPromptForm)
   const contentContract = useTemplateContract(nodeType, 'prompt')
   const promptsQuery = useQuery({
-    queryKey: PROMPT_QUERY_KEY,
-    queryFn: getMasterPrompts,
-    enabled: open && Boolean(selectedPromptId),
+    queryKey: ['master', 'prompt-by-node', nodeId],
+    queryFn: () => getMasterPromptByNode(nodeId),
+    enabled: open,
     staleTime: 0,
     refetchOnMount: 'always',
   })
@@ -89,21 +90,22 @@ export function PromptCrudDialog({
     },
   })
   const formError = validatePromptForm(form)
-  const isLoadingExisting = Boolean(selectedPromptId) && promptsQuery.isPending
+  const isLoadingExisting = open && promptsQuery.isPending
   const resetSaveMutation = saveMutation.reset
   const resetDeleteMutation = deleteMutation.reset
 
   useEffect(() => {
     if (!open) return
-    const records = promptsQuery.data ?? []
-    const selectedPrompt = selectedPromptId
-      ? (records.find((prompt) => prompt.promptId === selectedPromptId) ?? null)
-      : null
+    const selectedPrompt = promptsQuery.data ?? null
     setEditing(selectedPrompt)
-    setForm(promptDialogInitialForm(selectedPromptId, records))
+    setForm(
+      selectedPrompt
+        ? promptDialogInitialForm(selectedPrompt.promptId, [selectedPrompt])
+        : emptyPromptForm(),
+    )
     resetSaveMutation()
     resetDeleteMutation()
-  }, [open, promptsQuery.data, resetDeleteMutation, resetSaveMutation, selectedPromptId])
+  }, [open, promptsQuery.data, resetDeleteMutation, resetSaveMutation])
 
   function submit() {
     if (formError || isLoadingExisting) return
@@ -158,6 +160,12 @@ export function PromptCrudDialog({
                 <Trash2 /> Delete prompt
               </Button>
             )}
+            <PromptPreviewControl
+              nodeType={nodeType}
+              prompt={form.content}
+              variables={previewVariables}
+              disabled={isLoadingExisting || saveMutation.isPending}
+            />
             <Button
               type="button"
               variant="outline"

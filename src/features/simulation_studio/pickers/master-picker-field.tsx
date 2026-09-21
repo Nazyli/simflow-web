@@ -27,6 +27,7 @@ export function MasterPickerField({
   nodeType,
   simulationId,
   filterValue,
+  previewVariables,
   onChange,
 }: {
   label: string
@@ -38,6 +39,7 @@ export function MasterPickerField({
   nodeType?: string
   simulationId?: string | null
   filterValue?: string
+  previewVariables?: Record<string, unknown>
   onChange: (value: string | string[]) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -114,7 +116,6 @@ export function MasterPickerField({
           onOpenChange={setCrudOpen}
           nodeId={nodeId!}
           nodeType={nodeType}
-          selectedChatId={String(value ?? '')}
           onSelect={(chatId) => {
             onChange(chatId)
             setCrudOpen(false)
@@ -126,7 +127,6 @@ export function MasterPickerField({
           onOpenChange={setCrudOpen}
           nodeId={nodeId!}
           nodeType={nodeType}
-          selectedCallId={String(value ?? '')}
           onSelect={(callId) => {
             onChange(callId)
             setCrudOpen(false)
@@ -138,7 +138,7 @@ export function MasterPickerField({
           onOpenChange={setCrudOpen}
           nodeId={nodeId!}
           nodeType={nodeType}
-          selectedPromptId={String(value ?? '')}
+          previewVariables={previewVariables}
           onSelect={(promptId) => {
             onChange(promptId)
             setCrudOpen(false)
@@ -151,7 +151,6 @@ export function MasterPickerField({
           nodeId={nodeId!}
           nodeType={nodeType}
           simulationId={simulationId}
-          selectedEmailId={String(value ?? '')}
           onSelect={(emailId) => {
             onChange(emailId)
             setCrudOpen(false)

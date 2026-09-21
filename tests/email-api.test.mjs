@@ -4,7 +4,6 @@ import test from 'node:test'
 
 import { markEmailAttachmentOpened, sendParticipantEmail } from '../src/shared/api/email.ts'
 import { sortAttachmentPreviewPages } from '../src/features/simulation_runner/email/types.ts'
-import { getStudioMasterEmail } from '../src/shared/api/master-data.ts'
 
 test('serializes the selected root and direct reply email IDs for a participant email', async () => {
   let request
@@ -121,18 +120,3 @@ test('sorts attachment preview pages in ascending page order', () => {
   )
 })
 
-test('loads the selected source email detail for an attachment picker', async () => {
-  let request
-  globalThis.fetch = async (path, init) => {
-    request = { path, init }
-    return {
-      ok: true,
-      json: async () => ({ status: 'success', info: { code: 200, message: 'ok' }, data: {} }),
-    }
-  }
-
-  await getStudioMasterEmail('WELCOME EMAIL/1')
-
-  assert.equal(request.path, '/admin/master-data/emails/WELCOME%20EMAIL%2F1')
-  assert.deepEqual(request.init, { headers: { 'Content-Type': 'application/json' } })
-})
