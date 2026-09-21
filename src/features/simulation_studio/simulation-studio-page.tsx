@@ -48,7 +48,6 @@ import {
   MapPin,
 } from 'lucide-react'
 import {
-  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -108,6 +107,7 @@ import { projectWorkflowEdges } from './visual-groups/visual-group-projection'
 import { NodeAutosaveQueue, type NodeAutosaveStatus } from './node-autosave'
 import { WorkflowPackageDialog } from './workflow-package-dialog'
 import { deriveNodeSummary } from '../../shared/utils/node-summary'
+import { buildNodePaletteGroups } from './node-palette'
 
 const emptyNodes: ApiNode[] = []
 const emptyEdges: ApiEdge[] = []
@@ -518,14 +518,16 @@ export function SimulationStudioPage() {
     mutationFn: ({
       definition,
       position,
+      parameters,
     }: {
       definition: NodeDefinition
       position?: { x: number; y: number }
+      parameters?: Record<string, unknown>
     }) =>
       addNode(simulationId!, {
         nodeName: `${definition.label} node`,
         nodeType: definition.nodeType,
-        parameters: { ...definition.parameters },
+        parameters: { ...definition.parameters, ...parameters },
         rotation: 0,
         positionX: Math.round(position?.x ?? 180),
         positionY: Math.round(position?.y ?? 180),
@@ -751,6 +753,10 @@ export function SimulationStudioPage() {
       new Map(
         (nodeCatalog.data?.nodes ?? []).map((definition) => [definition.nodeType, definition]),
       ),
+    [nodeCatalog.data],
+  )
+  const paletteGroups = useMemo(
+    () => buildNodePaletteGroups(nodeCatalog.data),
     [nodeCatalog.data],
   )
   const selectedNode = useMemo(
@@ -1420,13 +1426,21 @@ export function SimulationStudioPage() {
     requestAnimationFrame(() => flowInstance?.fitView({ padding: 0.2, duration: 240 }))
   }
 
-  function startPaletteDrag(event: DragEvent<HTMLDivElement>, nodeType: string) {
+  function startPaletteDrag(
+    event: DragEvent<HTMLDivElement>,
+    nodeType: string,
+    parameters?: Record<string, unknown>,
+  ) {
     if (isLocked) {
       event.preventDefault()
       toast.error(lockedMessage)
       return
     }
     event.dataTransfer.setData('application/simulation-builder-node-type', nodeType)
+    event.dataTransfer.setData(
+      'application/simulation-builder-node-parameters',
+      JSON.stringify(parameters ?? {}),
+    )
     event.dataTransfer.setData('text/plain', nodeType)
     event.dataTransfer.effectAllowed = 'move'
   }
@@ -1447,8 +1461,17 @@ export function SimulationStudioPage() {
       event.dataTransfer.getData('application/simulation-builder-node-type'),
     )
     if (!definition || !flowInstance || !simulationId) return
+    let parameters: Record<string, unknown> | undefined
+    try {
+      parameters = JSON.parse(
+        event.dataTransfer.getData('application/simulation-builder-node-parameters') || '{}',
+      ) as Record<string, unknown>
+    } catch {
+      parameters = undefined
+    }
     addGraphNode.mutate({
       definition,
+      parameters,
       position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }),
     })
   }
@@ -1741,33 +1764,44 @@ export function SimulationStudioPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-3">
-            <div className="grid grid-cols-2 content-start gap-1.5">
-              <p className="col-span-2 mb-1 text-xs text-slate-500">
-                Drag a component card onto the canvas or click to append.
-              </p>
+            <p className="mb-3 text-xs text-slate-500">
+              Drag a node onto the canvas or click to append it.
+            </p>
 
-              {(nodeCatalog.data?.categories ?? []).map((cat) => {
-                const catNodes = (nodeCatalog.data?.nodes ?? []).filter(
-                  (n) => n.category === cat.id,
-                )
-                if (catNodes.length === 0) return null
-                return (
-                  <Fragment key={cat.id}>
-                    {catNodes.map((definition) => {
+            <div className="space-y-4">
+              {paletteGroups.map((group) => (
+                <section key={group.id} aria-labelledby={`palette-group-${group.id}`}>
+                  <div className="mb-1.5 flex items-center justify-between border-b border-slate-100 pb-1">
+                    <h3
+                      id={`palette-group-${group.id}`}
+                      className="flex items-center gap-1 text-[11px] font-bold tracking-wide text-slate-500 uppercase"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5 text-purple-500" />
+                      {group.label}
+                    </h3>
+                    <span className="text-[10px] font-medium text-slate-400">
+                      {group.entries.length}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {group.entries.map(({ definition, parameters }) => {
                       const isEditable = Boolean(simulationId) && !isLocked
 
                       return (
-                        <Tooltip key={definition.nodeType}>
+                        <Tooltip key={`${group.id}-${definition.nodeType}`}>
                           <TooltipTrigger asChild>
                             <div
                               draggable={isEditable}
-                              onDragStart={(event) => startPaletteDrag(event, definition.nodeType)}
+                              onDragStart={(event) =>
+                                startPaletteDrag(event, definition.nodeType, parameters)
+                              }
                               onClick={() => {
                                 if (isLocked) {
                                   toast.error(lockedMessage)
                                   return
                                 }
-                                if (isEditable) addGraphNode.mutate({ definition })
+                                if (isEditable) addGraphNode.mutate({ definition, parameters })
                               }}
                               style={{
                                 borderColor: `${definition.color}55`,
@@ -1792,9 +1826,9 @@ export function SimulationStudioPage() {
                         </Tooltip>
                       )
                     })}
-                  </Fragment>
-                )
-              })}
+                  </div>
+                </section>
+              ))}
 
               {isLocked && (
                 <div className="col-span-2 mt-3 flex flex-col gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">

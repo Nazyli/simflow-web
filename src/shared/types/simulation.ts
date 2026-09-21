@@ -116,6 +116,8 @@ export interface NodeDefinition {
   icon: string
   color: string
   description: string
+  paletteGroups: string[]
+  paletteParameters: Record<string, Record<string, unknown>>
   inputPorts: InputPort[]
   outputPorts: OutputPort[]
   parameters: Record<string, unknown>
@@ -125,5 +127,6 @@ export interface NodeDefinition {
 }
 export interface NodeCatalog {
   categories: { id: string; label: string }[]
+  paletteGroups: { id: string; label: string }[]
   nodes: NodeDefinition[]
 }

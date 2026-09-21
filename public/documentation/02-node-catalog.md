@@ -25,5 +25,3 @@ Node Catalog berisi Node yang dapat digunakan untuk menyusun Simulation. Pengelo
 | Flow Control | Loop | Mengulangi sub-graph dengan batas iterasi. | Flow | `loop`, `failed` |
 
 Untuk detail setting, buka halaman Node dari [index](00-index.md). Untuk aturan port umum, lihat [Port Reference](30-port-reference.md).
-
-> `Set Variable` tidak ditampilkan karena dikecualikan dari dokumentasi sesuai keputusan produk.

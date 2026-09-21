@@ -35,7 +35,3 @@
 - **Informasi belum dapat dipastikan:** Beberapa field runtime pada `End Call` belum konsisten sebagai setting katalog Studio; hal ini ditandai di halaman Node dan Configuration Reference.
 
 `*` `End Call` didokumentasikan, tetapi sebagian detail setting runtime diberi tanda belum dapat dipastikan karena definisi katalog dan implementasinya tidak konsisten.
-
-## Pengecualian
-
-`Set Variable` ditemukan di source code, tetapi tidak dihitung karena secara eksplisit dikecualikan dan direncanakan untuk dihapus.
