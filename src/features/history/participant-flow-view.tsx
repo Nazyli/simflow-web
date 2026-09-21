@@ -7,6 +7,7 @@ import {
   ReactFlow,
   useEdgesState,
   useNodesState,
+  useNodesInitialized,
   useReactFlow,
   useViewport,
   type Edge,
@@ -15,7 +16,7 @@ import {
 } from '@xyflow/react'
 import { CircleAlert, MapPin, Maximize } from 'lucide-react'
 import dagre from 'dagre'
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type EdgePathType } from '../../components/button-edge'
 import { Slider } from '../../components/ui/slider'
 import { NodeSearch } from '../../components/ui/node-search'
@@ -29,6 +30,7 @@ import { SimulationGraphEdge } from '../simulation_studio/simulation-graph-edge'
 import { SimulationVisualGroupNode } from '../simulation_studio/visual-groups/simulation-visual-group-node'
 import { projectWorkflowEdges, projectWorkflowNodes } from '../simulation_studio/visual-groups/visual-group-projection'
 import { deriveNodeSummary } from '../../shared/utils/node-summary'
+import { selectParticipantFocusNodeId } from './participant-flow-focus'
 
 const nodeRenderers = {
   simulation: SimulationGraphNode,
@@ -116,6 +118,45 @@ function ZoomSliderPanel() {
       </span>
     </div>
   )
+}
+
+function ParticipantFocusViewport({
+  focusNodeId,
+  nodeCount,
+}: {
+  focusNodeId: string | null
+  nodeCount: number
+}) {
+  const { fitView, getInternalNode, setCenter } = useReactFlow()
+  const nodesInitialized = useNodesInitialized({ includeHiddenNodes: true })
+  const focusedNodeId = useRef<string | null | undefined>(undefined)
+
+  useEffect(() => {
+    if (!nodesInitialized || nodeCount === 0 || focusedNodeId.current === focusNodeId) return
+
+    if (!focusNodeId) {
+      focusedNodeId.current = focusNodeId
+      const frame = requestAnimationFrame(() => fitView({ padding: 0.2, duration: 240 }))
+      return () => cancelAnimationFrame(frame)
+    }
+
+    const flowNode = getInternalNode(focusNodeId)
+    if (!flowNode) return
+
+    const position = flowNode.internals.positionAbsolute ?? flowNode.position
+    const width = flowNode.measured?.width ?? 200
+    const height = flowNode.measured?.height ?? 90
+    focusedNodeId.current = focusNodeId
+    const frame = requestAnimationFrame(() =>
+      setCenter(position.x + width / 2, position.y + height / 2, {
+        zoom: 1,
+        duration: 240,
+      }),
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [fitView, focusNodeId, getInternalNode, nodeCount, nodesInitialized, setCenter])
+
+  return null
 }
 
 function dagLayout(
@@ -250,16 +291,12 @@ export function ParticipantFlowCanvas({
       if (item.selectedEdgeId) takenEdgeIds.add(item.selectedEdgeId)
     }
 
-    // Fallback for completed executions where currentState is null: highlight last visited node
-    let fallbackCurrentId: string | null = null
-    if (!currentState && nodeExecutions.data?.length) {
-      const sorted = [...nodeExecutions.data].sort(
-        (a, b) => (a.sequenceNumber ?? 0) - (b.sequenceNumber ?? 0),
-      )
-      const last = sorted[sorted.length - 1]?.nodeId ?? null
-      if (last && nodeById.has(last)) fallbackCurrentId = last
-    }
-    const effectiveCurrentId = currentState ?? fallbackCurrentId
+    const focusNodeId = selectParticipantFocusNodeId(
+      currentState,
+      nodeExecutions.data ?? [],
+      new Set(nodeById.keys()),
+    )
+    const effectiveCurrentId = focusNodeId
 
     const baseWorkflowNodes: Node[] = apiNodes.map((node) => {
       const definition = definitions.get(node.nodeType)
@@ -369,6 +406,7 @@ export function ParticipantFlowCanvas({
       flowEdges,
       visitedCount: visitedNodeIds.size,
       takenCount: takenEdgeIds.size,
+      focusNodeId,
       externalStates: { nodeIds: [...externalNodeIds] },
     }
   }, [currentState, edgePathType, graph.data, nodeCatalog.data, nodeExecutions.data, groupsForRender, isExecutionActive])
@@ -414,12 +452,6 @@ export function ParticipantFlowCanvas({
     setNodes(view.flowNodes)
     setEdges(view.flowEdges)
   }, [graph.isPending, nodeExecutions.isPending, setEdges, setNodes, view.flowEdges, view.flowNodes])
-
-  useEffect(() => {
-    if (!flowInstance || nodes.length === 0) return
-    const frame = requestAnimationFrame(() => flowInstance.fitView({ padding: 0.2, duration: 240 }))
-    return () => cancelAnimationFrame(frame)
-  }, [flowInstance, nodes.length])
 
   const pending = graph.isPending || nodeCatalog.isPending || nodeExecutions.isPending
   const hasWarnings = view.externalStates.nodeIds.length > 0
@@ -513,7 +545,7 @@ export function ParticipantFlowCanvas({
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onInit={setFlowInstance}
-                fitView
+                fitView={false}
                 minZoom={STUDIO_MIN_ZOOM}
                 maxZoom={STUDIO_MAX_ZOOM}
                 nodesDraggable
@@ -530,6 +562,10 @@ export function ParticipantFlowCanvas({
                   <MiniMap className="border-slate-200 bg-white shadow-md" />
                 )}
                 <NodeSearch position="top-left" placeholder="Search nodes... ⌘K" className="w-[320px] shadow-lg md:min-w-[320px] ml-2" />
+                <ParticipantFocusViewport
+                  focusNodeId={view.focusNodeId}
+                  nodeCount={nodes.length}
+                />
                 <PathTravelingDot path={combinedPath} color={PATH_COLOR} />
               </ReactFlow>
             </div>
