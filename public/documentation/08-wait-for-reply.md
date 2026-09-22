@@ -13,18 +13,19 @@ Gunakan setelah `Send Chat` atau `Send Email` ketika langkah berikutnya bergantu
 ~~~mermaid
 flowchart LR
     A[Send Chat] --> B{Wait for Reply}
-    B -->|reply| C[Process Reply]
-    B -->|timeout| D[Send Reminder]
-    B -->|failed| E([End])
+    B -->|actor-a| C[Process Reply A]
+    B -->|actor-b| D[Process Reply B]
+    B -->|timeout| E[Send Reminder]
+    B -->|failed| F([End])
     classDef action fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
     classDef wait fill:#f3e8ff,stroke:#9333ea,color:#581c87
     classDef terminal fill:#dcfce7,stroke:#16a34a,color:#14532d
-    class A,C,D action
+    class A,C,D,E action
     class B wait
-    class E terminal
+    class F terminal
 ~~~
 
-Workflow melanjutkan ke `Process Reply` jika balasan datang. Jika tidak, cabang `timeout` dapat mengirim reminder.
+Setiap Actor yang dikonfigurasi mendapat port sendiri. Balasan ke `actor-a` memilih port `actor-a`; balasan ke `actor-b` memilih port `actor-b`. Jika tidak ada balasan, cabang `timeout` dapat mengirim reminder.
 
 ## Input
 
@@ -36,13 +37,13 @@ Workflow melanjutkan ke `Process Reply` jika balasan datang. Jika tidak, cabang 
 
 | Output Port | Arti | Kapan digunakan? |
 |---|---|---|
-| `reply` | Balasan diterima. | Untuk memproses jawaban participant. |
+| `<actor_id>` | Participant membalas ke Actor dengan ID yang sama. | Untuk memproses jawaban dari Actor tersebut. |
 | `timeout` | Tidak ada balasan sampai deadline. | Untuk follow-up atau jalur alternatif. |
 | `failed` | Penantian gagal didaftarkan/diproses. | Untuk error handling. |
 
 ## Output yang dihasilkan
 
-- `reply`: `execution_id`, `node_execution_id`, `message_id`, `content`, `replied_at`.
+- `<actor_id>`: `execution_id`, `node_execution_id`, `actor_id`, `message_id`, `content`, `replied_at`.
 - `timeout`: `execution_id`, `node_execution_id`, `timeout_seconds`, `timed_out_at`.
 - `failed`: `error_code` dan `error_message`.
 
@@ -58,15 +59,15 @@ Workflow melanjutkan ke `Process Reply` jika balasan datang. Jika tidak, cabang 
 
 **Contoh:** Pilih `email` bila pesan sebelumnya dikirim sebagai email.
 
-### To (`to`)
+### Reply Targets (`reply_targets`)
 
-**Apa fungsinya?** Menentukan Actor yang wajib menerima balasan.
+**Apa fungsinya?** Menentukan satu atau lebih Actor yang balasannya dapat menyelesaikan wait. Setiap ID Actor menjadi output port tersendiri dengan ID dan label yang sama.
 
-**Apa yang harus diisi?** Pilih Actor dari picker.
+**Apa yang harus diisi?** Tambahkan Actor satu per satu dari picker; nilai disimpan sebagai array ID Actor unik.
 
 **Wajib diisi?** Ya.
 
-**Contoh:** Pilih Actor yang mengirim instruksi kepada participant.
+**Contoh:** `"reply_targets": ["actor-a", "actor-b"]`. Balasan ke salah satunya memilih cabang port Actor yang bersangkutan.
 
 ### Enable Timeout (`enable_timeout`)
 
@@ -104,11 +105,11 @@ Status wajib atau opsional setiap setting dijelaskan pada bagian Konfigurasi di 
 
 ## Connection
 
-`reply` dapat menuju proses balasan. `timeout` dapat menuju reminder atau jalur alternatif. `failed` menuju error handling. Untuk `Check Reply Attachment`, input harus langsung berasal dari `reply` pada channel `email`.
+Hubungkan setiap port Actor ke jalur pemrosesan yang sesuai. `timeout` dapat menuju reminder atau jalur alternatif; `failed` menuju error handling. Untuk `Check Reply Attachment`, edge harus berasal langsung dari salah satu port Actor yang dikonfigurasi pada wait ber-channel `email`.
 
 ## Kesalahan Umum
 
-- `to` belum dipilih.
+- `reply_targets` kosong, memiliki ID duplikat, atau memakai ID port cadangan `timeout`/`failed`.
 - `timeout_seconds` kosong, nol, atau negatif saat timeout aktif.
 - Menganggap `timeout` adalah error teknis.
 - Menghubungkan `Check Reply Attachment` dari channel chat.

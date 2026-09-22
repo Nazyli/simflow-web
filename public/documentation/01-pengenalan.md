@@ -24,7 +24,7 @@
 flowchart LR
     A([Start]) -->|started| B[Send Chat]
     B -->|success| C[Wait for Reply]
-    C -->|reply| D[AI Classification]
+    C -->|actor-a| D[AI Classification]
     C -->|timeout| E[Send Email]
     D -->|label| F([End])
     E --> F

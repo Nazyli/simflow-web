@@ -23,7 +23,7 @@ Workflow dimulai dari `Start`, mengirim chat, lalu selesai pada hasil `success` 
 flowchart LR
     A([Start]) --> B[Send Chat]
     B -->|success| C[Wait for Reply]
-    C -->|reply| D[Process Reply]
+    C -->|actor-a| D[Process Reply]
     C -->|timeout| E[Send Reminder]
     C -->|failed| F([End])
     D --> G([End])
@@ -42,7 +42,7 @@ Setelah chat terkirim, workflow menunggu balasan. Balasan diproses, sedangkan ti
 
 ```mermaid
 flowchart LR
-    A[Wait for Reply] -->|reply| B{AI Classification}
+    A[Wait for Reply] -->|actor-a| B{AI Classification}
     B -->|complaint| C[Handle Complaint]
     B -->|question| D[Answer Question]
     B -->|failed| E([End])
@@ -66,7 +66,7 @@ flowchart LR
 flowchart LR
     A([Start]) --> B[Send Email]
     B -->|success| C[Wait for Reply]
-    C -->|reply| D[Check Reply Attachment]
+    C -->|actor-email| D[Check Reply Attachment]
     C -->|timeout| E[Send Email Reminder]
     D -->|has_attachment| F[Process Attachment]
     D -->|no_attachment| G[Request Attachment]

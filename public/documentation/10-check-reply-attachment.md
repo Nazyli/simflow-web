@@ -6,13 +6,13 @@
 
 ## Kapan digunakan?
 
-Gunakan hanya setelah output `reply` dari `Wait for Reply` dengan channel `email`.
+Gunakan hanya setelah salah satu output port Actor yang dikonfigurasi pada `Wait for Reply` dengan channel `email`.
 
 ## Contoh
 
 ~~~mermaid
 flowchart LR
-    A[Wait for Reply] -->|reply| B{Check Reply Attachment}
+    A[Wait for Reply] -->|actor-a| B{Check Reply Attachment}
     B -->|has_attachment| C[Process Attachment]
     B -->|no_attachment| D[Request Attachment]
     B -->|failed| E([End])
@@ -32,7 +32,7 @@ Balasan dengan attachment dan balasan tanpa attachment dapat ditangani melalui j
 
 | Input | Tipe | Wajib | Keterangan |
 |---|---|:---:|---|
-| Input | Flow dari `reply` | Ya | Harus berasal langsung dari `Wait for Reply` email. |
+| Input | Flow dari port Actor | Ya | Harus berasal langsung dari port Actor pada `Wait for Reply` email. |
 
 ## Output Port
 
@@ -56,12 +56,12 @@ Status wajib atau opsional setiap setting dijelaskan pada bagian Konfigurasi di 
 
 ## Connection
 
-Input wajib langsung dari port `reply` `Wait for Reply` dengan channel `email`. `has_attachment`, `no_attachment`, dan `failed` harus menjadi cabang terpisah.
+Input wajib langsung dari port Actor yang dikonfigurasi pada `Wait for Reply` dengan channel `email`. `has_attachment`, `no_attachment`, dan `failed` harus menjadi cabang terpisah.
 
 ## Kesalahan Umum
 
 - Menghubungkan dari `Wait for Reply` channel `chat`.
-- Menghubungkan dari port selain `reply`.
+- Menghubungkan dari port `timeout` atau `failed`.
 - Menganggap `no_attachment` sebagai error.
 
 ## Tips

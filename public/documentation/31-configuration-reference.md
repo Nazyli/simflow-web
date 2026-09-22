@@ -12,7 +12,7 @@ Gunakan halaman ini untuk mencari setting tanpa membaca seluruh halaman Node. La
 | Open Document | `document_id` | Ya | Dokumen yang diperiksa. |
 | Open Document | `required_open_count` | Ya | Jumlah minimal pembukaan; default `1`, minimal `1`. |
 | Wait for Reply | `channel` | Tidak | `chat` atau `email`; default `chat`. |
-| Wait for Reply | `to` | Ya | Actor yang harus menerima balasan. |
+| Wait for Reply | `reply_targets` | Ya | Array ID Actor unik; tiap Actor menjadi output port tersendiri. |
 | Wait for Reply | `enable_timeout` | Ya | Menentukan apakah batas waktu aktif. |
 | Wait for Reply | `timeout_seconds` | Kondisional | Wajib positif jika timeout aktif; default `600`. |
 | Wait for Reply | `is_read` | Kondisional | Menentukan perilaku timer setelah pesan dibaca; default `false`. |
@@ -31,7 +31,6 @@ Gunakan halaman ini untuk mencari setting tanpa membaca seluruh halaman Node. La
 | Conversation Group | `timeout_seconds` | Kondisional | Wajib positif jika timeout aktif. |
 | Conversation Group | `default_group_id` | Kondisional | Group default saat timeout aktif. |
 | Loop | `max_iterations` | Tidak | Batas iterasi 1–50 jika diisi. |
-| Loop | `counter_variable` | Tidak | Nama counter bila digunakan. |
 | Invite to Call | `chat_id` | Ya | Chat yang dipakai untuk mengirim undangan. |
 | Invite to Call | `enable_timeout` | Ya | Mengaktifkan timeout; default `true`. |
 | Invite to Call | `timeout_seconds` | Kondisional | Wajib positif jika aktif; default `300`. |

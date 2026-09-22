@@ -13,7 +13,7 @@ Output Port menentukan hasil dan jalur yang dipilih setelah Node selesai.
 | Jenis hasil | Contoh port | Arti |
 |---|---|---|
 | Berhasil | `success`, `started`, `joined`, `read` | Langkah selesai atau event yang ditunggu terjadi. |
-| Respons | `reply`, `has_attachment`, `no_attachment` | Participant menghasilkan respons atau kondisi bisnis tertentu. |
+| Respons | Port Actor, `has_attachment`, `no_attachment` | Participant membalas ke Actor terpilih atau memenuhi kondisi bisnis tertentu. |
 | Tidak terpenuhi | `not_opened` | Kondisi belum memenuhi target, tetapi bukan error teknis. |
 | Waktu habis | `timeout` | Event yang ditunggu belum terjadi sampai batas waktu. |
 | Gagal | `failed` | Node tidak dapat menyelesaikan prosesnya. |
@@ -25,7 +25,7 @@ Output Port menentukan hasil dan jalur yang dipilih setelah Node selesai.
 - Tarik connection dari Output Port sumber ke Input Port tujuan.
 - Gunakan nama port yang benar-benar tersedia pada Node.
 - Hubungkan setiap hasil yang perlu ditangani; khususnya `failed` dan `timeout`.
-- `Check Reply Attachment` hanya menerima input langsung dari `reply` milik `Wait for Reply` dengan channel `email`.
+- `Check Reply Attachment` hanya menerima input langsung dari port Actor milik `Wait for Reply` dengan channel `email`.
 - `Wait for Attachment Open` harus merujuk ke Node `Send Email` sebagai sumber email.
 - `End` tidak memiliki Output Port dan tidak boleh menjadi sumber connection.
 - Hindari cycle biasa. Pengulangan harus menggunakan pola `Loop` yang memiliki batas iterasi.
@@ -34,4 +34,4 @@ Output Port menentukan hasil dan jalur yang dipilih setelah Node selesai.
 
 Output Port membawa dua hal: nama port yang dipilih dan data hasilnya. Contohnya, `Send Chat` memilih `success` dan menghasilkan `message_id` serta `sent_at`. Data tersebut adalah hasil runtime; pengguna tidak perlu membuat Output Port baru untuk menampungnya.
 
-Jika suatu Node memiliki output dinamis, seperti `AI Classification`, port dibuat dari label yang dikonfigurasi ditambah `failed`.
+Jika suatu Node memiliki output dinamis, seperti `AI Classification` atau `Wait for Reply`, backend membentuk port dari label atau ID Actor yang dikonfigurasi, lalu menambahkan port status seperti `timeout` dan `failed` sesuai kontrak Node.

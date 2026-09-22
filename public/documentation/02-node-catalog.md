@@ -11,7 +11,7 @@ Node Catalog berisi Node yang dapat digunakan untuk menyusun Simulation. Pengelo
 | Documents | Add Document | Menambahkan dokumen ke Simulation participant. | Flow | `success`, `failed` |
 | Documents | Open Document | Memeriksa jumlah pembukaan dokumen. | Flow | `success`, `not_opened`, `failed` |
 | Documents | Check Reply Attachment | Memeriksa attachment email balasan. | Flow | `has_attachment`, `no_attachment`, `failed` |
-| Waiting & Response | Wait for Reply | Menunggu balasan participant. | Flow | `reply`, `timeout`, `failed` |
+| Waiting & Response | Wait for Reply | Menunggu balasan participant ke Actor yang dikonfigurasi. | Flow | Port per Actor, `timeout`, `failed` |
 | Waiting & Response | Wait for Read | Menunggu pesan dibaca. | Flow | `read`, `timeout`, `failed` |
 | Waiting & Response | Wait for Attachment Open | Menunggu attachment dibuka. | Flow | `opened`, `timeout`, `failed` |
 | Waiting & Response | Conversation Group | Menunggu subgroup percakapan selesai. | Flow | `success`, `failed` |
@@ -22,6 +22,6 @@ Node Catalog berisi Node yang dapat digunakan untuk menyusun Simulation. Pengelo
 | Call | Wait for Call Utterance | Menunggu ucapan participant. | Flow | `success`, `failed` |
 | Call | Wait for Call End | Menunggu call berakhir. | Flow | `success`, `disconnected`, `failed` |
 | Call | End Call | Meminta call berakhir. | Flow | `success`, `failed` |
-| Flow Control | Loop | Mengulangi sub-graph dengan batas iterasi. | Flow | `loop`, `failed` |
+| Flow Control | Loop | Mengulangi sub-graph; perilakunya hanya dikonfigurasi melalui `max_iterations`. | Flow | `loop`, `failed` |
 
 Untuk detail setting, buka halaman Node dari [index](00-index.md). Untuk aturan port umum, lihat [Port Reference](30-port-reference.md).
