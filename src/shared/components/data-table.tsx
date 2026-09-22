@@ -25,12 +25,16 @@ export function DataTable<T extends { id: string }>({
   pageSize = 10,
   onSelectionChange,
   selectable = true,
+  toolbarActions,
+  showColumnToggle = true,
 }: {
   rows: T[]
   columns: DataTableColumn<T>[]
   pageSize?: number
   onSelectionChange?: (rows: T[]) => void
   selectable?: boolean
+  toolbarActions?: ReactNode
+  showColumnToggle?: boolean
 }) {
   const [filter, setFilter] = useState('')
   const [sort, setSort] = useState<{ id: string; desc: boolean } | null>(null)
@@ -84,31 +88,34 @@ export function DataTable<T extends { id: string }>({
           }}
           className="w-[180px]"
         />
-        <details className="group relative ml-auto">
-          <summary className="cursor-pointer text-[0.72rem] font-semibold text-slate-500 group-open:text-violet-600">
-            Columns
-          </summary>
-          <div className="absolute top-full right-0 z-20 mt-1.5 grid min-w-[150px] gap-0.5 rounded-lg border border-slate-200 bg-white p-1.5 shadow-lg">
-            {columns.map((column) => (
-              <label
-                key={column.id}
-                className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-[0.72rem] text-slate-600 hover:bg-slate-50"
-              >
-                <Checkbox
-                  checked={visible.has(column.id)}
-                  onCheckedChange={() =>
-                    setVisible((current) => {
-                      const next = new Set(current)
-                      next.has(column.id) ? next.delete(column.id) : next.add(column.id)
-                      return next
-                    })
-                  }
-                />{' '}
-                {column.header}
-              </label>
-            ))}
-          </div>
-        </details>
+        {toolbarActions}
+        {showColumnToggle && (
+          <details className="group relative ml-auto">
+            <summary className="cursor-pointer text-[0.72rem] font-semibold text-slate-500 group-open:text-violet-600">
+              Columns
+            </summary>
+            <div className="absolute top-full right-0 z-20 mt-1.5 grid min-w-[150px] gap-0.5 rounded-lg border border-slate-200 bg-white p-1.5 shadow-lg">
+              {columns.map((column) => (
+                <label
+                  key={column.id}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-[0.72rem] text-slate-600 hover:bg-slate-50"
+                >
+                  <Checkbox
+                    checked={visible.has(column.id)}
+                    onCheckedChange={() =>
+                      setVisible((current) => {
+                        const next = new Set(current)
+                        next.has(column.id) ? next.delete(column.id) : next.add(column.id)
+                        return next
+                      })
+                    }
+                  />{' '}
+                  {column.header}
+                </label>
+              ))}
+            </div>
+          </details>
+        )}
       </div>
       <Table>
         <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:bg-slate-50 [&_th]:text-[0.66rem] [&_th]:font-bold [&_th]:tracking-[0.06em] [&_th]:uppercase">

@@ -470,7 +470,23 @@ export function TimerManagementPage() {
         ) : timers.isError ? (
           <ErrorState message="Unable to load timers." />
         ) : (
-          <DataTable rows={rows} columns={columns} selectable={false} />
+          <DataTable
+            rows={rows}
+            columns={columns}
+            selectable={false}
+            showColumnToggle={false}
+            toolbarActions={
+              <button
+                type="button"
+                onClick={() => void timers.refetch()}
+                disabled={timers.isFetching}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 transition hover:border-violet-200 hover:bg-slate-50 hover:text-violet-700 focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCw size={13} className={timers.isFetching ? 'animate-spin' : undefined} />
+                {timers.isFetching ? 'Refreshing…' : 'Refresh'}
+              </button>
+            }
+          />
         )}
       </section>
 
