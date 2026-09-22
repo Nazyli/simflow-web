@@ -19,7 +19,7 @@ Selamat datang di panduan penggunaan **Simulation Builder**. Gunakan panduan ini
 | 2 | Send Chat | [04-send-chat.md](04-send-chat.md) |
 | 3 | Send Email | [05-send-email.md](05-send-email.md) |
 | 4 | Add Document | [06-add-document.md](06-add-document.md) |
-| 5 | Open Document | [07-open-document.md](07-open-document.md) |
+| 5 | Wait for Document Open | [07-wait-for-document-open.md](07-wait-for-document-open.md) |
 | 6 | Wait for Reply | [08-wait-for-reply.md](08-wait-for-reply.md) |
 | 7 | Wait for Read | [09-wait-for-read.md](09-wait-for-read.md) |
 | 8 | Check Reply Attachment | [10-check-reply-attachment.md](10-check-reply-attachment.md) |

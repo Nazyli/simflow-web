@@ -40,9 +40,9 @@ export const DOCUMENTATION_ENTRIES: DocumentationEntry[] = [
   { slug: '05-send-email', file: '05-send-email.md', title: 'Send Email', section: 'nodes' },
   { slug: '06-add-document', file: '06-add-document.md', title: 'Add Document', section: 'nodes' },
   {
-    slug: '07-open-document',
-    file: '07-open-document.md',
-    title: 'Open Document',
+    slug: '07-wait-for-document-open',
+    file: '07-wait-for-document-open.md',
+    title: 'Wait for Document Open',
     section: 'nodes',
   },
   {

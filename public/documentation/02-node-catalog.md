@@ -9,7 +9,7 @@ Node Catalog berisi Node yang dapat digunakan untuk menyusun Simulation. Pengelo
 | Communication | Send Chat | Mengirim pesan chat. | Flow | `success`, `failed` |
 | Communication | Send Email | Mengirim email. | Flow | `success`, `failed` |
 | Documents | Add Document | Menambahkan dokumen ke Simulation participant. | Flow | `success`, `failed` |
-| Documents | Open Document | Memeriksa jumlah pembukaan dokumen. | Flow | `success`, `not_opened`, `failed` |
+| Documents | Wait for Document Open | Menunggu participant membuka dokumen sampai target atau timeout. | Flow | `opened`, `timeout`, `failed` |
 | Documents | Check Reply Attachment | Memeriksa attachment email balasan. | Flow | `has_attachment`, `no_attachment`, `failed` |
 | Waiting & Response | Wait for Reply | Menunggu balasan participant ke Actor yang dikonfigurasi. | Flow | Port per Actor, `timeout`, `failed` |
 | Waiting & Response | Wait for Read | Menunggu pesan dibaca. | Flow | `read`, `timeout`, `failed` |

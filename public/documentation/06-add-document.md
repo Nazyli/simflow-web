@@ -6,13 +6,13 @@
 
 ## Kapan digunakan?
 
-Gunakan sebelum participant diminta membaca dokumen atau sebelum memakai `Open Document`.
+Gunakan sebelum participant diminta membaca dokumen atau sebelum memakai `Wait for Document Open`.
 
 ## Contoh
 
 ~~~mermaid
 flowchart LR
-    A[Add Document] -->|success| B[Open Document]
+    A[Add Document] -->|success| B[Wait for Document Open]
     A -->|failed| C([End])
     classDef action fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
     classDef logic fill:#fef3c7,stroke:#d97706,color:#78350f
@@ -22,7 +22,7 @@ flowchart LR
     class C terminal
 ~~~
 
-Dokumen ditambahkan terlebih dahulu, kemudian status pembukaannya dapat diperiksa.
+Dokumen ditambahkan terlebih dahulu, kemudian workflow dapat menunggu hingga participant membukanya.
 
 ## Input
 
@@ -60,7 +60,7 @@ Status wajib atau opsional setiap setting dijelaskan pada bagian Konfigurasi di 
 
 ## Connection
 
-`success` dapat menuju `Open Document` atau Node berikutnya. `failed` menuju error handling atau `End`.
+`success` dapat menuju `Wait for Document Open` atau Node berikutnya. `failed` menuju error handling atau `End`.
 
 ## Kesalahan Umum
 
@@ -70,4 +70,4 @@ Status wajib atau opsional setiap setting dijelaskan pada bagian Konfigurasi di 
 
 ## Tips
 
-Gunakan `Open Document` terpisah untuk memeriksa apakah participant benar-benar membuka dokumen.
+Gunakan `Wait for Document Open` untuk menunggu event pembukaan dokumen dan mengatur jalur timeout.

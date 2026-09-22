@@ -8,7 +8,7 @@
 | Workflow gagal divalidasi karena jalur belum selesai | Ada jalur yang tidak mencapai `End` atau Node terminal. | Telusuri setiap Output Port dan tambahkan tujuan akhir. |
 | `timeout_seconds` ditolak | Timeout aktif tetapi durasi kosong, nol, atau negatif. | Isi durasi positif atau matikan `enable_timeout`. |
 | `AI Classification` tidak menemukan port yang diharapkan | Label belum dikonfigurasi atau ID label berubah. | Periksa daftar `labels` dan gunakan port yang dibuat dari label tersebut. |
-| `Open Document` menghasilkan `not_opened` | Participant belum membuka dokumen sesuai target. | Gunakan cabang `not_opened` untuk reminder atau langkah lanjutan. |
+| `Wait for Document Open` memilih `timeout` | Participant belum mencapai jumlah pembukaan yang diminta sebelum deadline. | Tangani port `timeout`, atau matikan timeout jika workflow harus menunggu tanpa batas. |
 | `Check Reply Attachment` tidak dapat dihubungkan | Input bukan port Actor dari `Wait for Reply` email atau berasal dari port status. | Hubungkan langsung dari salah satu port Actor yang dikonfigurasi dengan channel `email`. |
 | `Wait for Attachment Open` gagal dikonfigurasi | Source bukan `Send Email` atau attachment belum dipilih. | Pilih Node `Send Email` yang memiliki email dan pilih attachment yang sesuai. |
 | Call tidak berjalan | Tidak ada sesi call aktif atau setting mode belum lengkap. | Pastikan `Start Call` berhasil; pada `Agent Driven`, isi `prompt_id` dan `model_id`. |

@@ -9,8 +9,10 @@ Gunakan halaman ini untuk mencari setting tanpa membaca seluruh halaman Node. La
 | Send Chat | `chat_id` | Ya | Chat master yang dikirim. |
 | Send Email | `email_id` | Ya | Email master yang dikirim. |
 | Add Document | `document_ids` | Ya | Daftar dokumen yang ditambahkan. |
-| Open Document | `document_id` | Ya | Dokumen yang diperiksa. |
-| Open Document | `required_open_count` | Ya | Jumlah minimal pembukaan; default `1`, minimal `1`. |
+| Wait for Document Open | `document_id` | Ya | Dokumen yang ditunggu. |
+| Wait for Document Open | `required_open_count` | Ya | Jumlah minimal pembukaan; default `1`, minimal `1`. |
+| Wait for Document Open | `enable_timeout` | Ya | Mengaktifkan timeout; default `true`. |
+| Wait for Document Open | `timeout_seconds` | Kondisional | Wajib positif jika timeout aktif; default `600`. |
 | Wait for Reply | `channel` | Tidak | `chat` atau `email`; default `chat`. |
 | Wait for Reply | `reply_targets` | Ya | Array ID Actor unik; tiap Actor menjadi output port tersendiri. |
 | Wait for Reply | `enable_timeout` | Ya | Menentukan apakah batas waktu aktif. |

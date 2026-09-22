@@ -8,7 +8,7 @@
 | 2 | Send Chat | ✅ |
 | 3 | Send Email | ✅ |
 | 4 | Add Document | ✅ |
-| 5 | Open Document | ✅ |
+| 5 | Wait for Document Open | ✅ |
 | 6 | Wait for Reply | ✅ |
 | 7 | Wait for Read | ✅ |
 | 8 | Check Reply Attachment | ✅ |
