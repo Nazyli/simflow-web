@@ -28,7 +28,10 @@ import type { NodeDefinition, VisualGroup } from '../../shared/types/simulation'
 import { SimulationGraphNode } from '../simulation_studio/simulation-graph-node'
 import { SimulationGraphEdge } from '../simulation_studio/simulation-graph-edge'
 import { SimulationVisualGroupNode } from '../simulation_studio/visual-groups/simulation-visual-group-node'
-import { projectWorkflowEdges, projectWorkflowNodes } from '../simulation_studio/visual-groups/visual-group-projection'
+import {
+  projectWorkflowEdges,
+  projectWorkflowNodes,
+} from '../simulation_studio/visual-groups/visual-group-projection'
 import { deriveNodeSummary } from '../../shared/utils/node-summary'
 import { selectParticipantFocusNodeId } from './participant-flow-focus'
 
@@ -63,13 +66,7 @@ function measurePathLength(d: string): number {
  * React Flow viewport. Unlike rendering inside an edge, this element is never
  * remounted by edge reconciliation, so the SMIL animation runs continuously.
  */
-function PathTravelingDot({
-  path,
-  color,
-}: {
-  path: string | null
-  color: string
-}) {
+function PathTravelingDot({ path, color }: { path: string | null; color: string }) {
   const { x, y, zoom } = useViewport()
   const duration = useMemo(() => {
     if (!path) return 4
@@ -78,11 +75,18 @@ function PathTravelingDot({
   if (!path) return null
   return (
     <svg
-      className="pointer-events-none absolute inset-0 h-full w-full overflow-visible z-10"
+      className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible"
       style={{ transform: `translate(${x}px, ${y}px) scale(${zoom})`, transformOrigin: '0 0' }}
       aria-hidden
     >
-      <circle r="7" fill={color} fillOpacity={1} stroke="#fff" strokeWidth={1.5} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}>
+      <circle
+        r="7"
+        fill={color}
+        fillOpacity={1}
+        stroke="#fff"
+        strokeWidth={1.5}
+        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
+      >
         <animateMotion dur={`${duration}s`} repeatCount="indefinite" path={path} />
       </circle>
     </svg>
@@ -99,7 +103,9 @@ function ZoomSliderPanel() {
       className="absolute bottom-[12px] left-[72px] z-10 flex h-9 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-slate-700 shadow-md sm:px-3"
       aria-label="Zoom slider"
     >
-      <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">ZOOM</span>
+      <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">
+        ZOOM
+      </span>
       <Slider
         value={[clamped]}
         min={STUDIO_ZOOM_SLIDER_MIN}
@@ -248,7 +254,8 @@ export function ParticipantFlowCanvas({
     setLocalGroups(apiVisualGroups)
   }, [apiVisualGroups])
 
-  const effectiveGroups = localGroups.length > 0 || apiVisualGroups.length === 0 ? localGroups : apiVisualGroups
+  const effectiveGroups =
+    localGroups.length > 0 || apiVisualGroups.length === 0 ? localGroups : apiVisualGroups
   const groupsForRender = useMemo(() => {
     if (localGroups.length === 0 && apiVisualGroups.length > 0) return apiVisualGroups
     return effectiveGroups
@@ -257,7 +264,9 @@ export function ParticipantFlowCanvas({
   const handleToggleGroup = (groupId: string) => {
     setLocalGroups((prev) => {
       const base = prev.length > 0 ? prev : apiVisualGroups
-      return base.map((g) => (g.visualGroupId === groupId ? { ...g, isCollapsed: !g.isCollapsed } : g))
+      return base.map((g) =>
+        g.visualGroupId === groupId ? { ...g, isCollapsed: !g.isCollapsed } : g,
+      )
     })
   }
 
@@ -346,7 +355,9 @@ export function ParticipantFlowCanvas({
     }))
 
     const projectedWorkflowNodes: Node[] =
-      groupsForRender.length > 0 ? projectWorkflowNodes(baseWorkflowNodes, groupsForRender) : baseWorkflowNodes
+      groupsForRender.length > 0
+        ? projectWorkflowNodes(baseWorkflowNodes, groupsForRender)
+        : baseWorkflowNodes
 
     const flowNodes: Node[] = [...groupNodes, ...projectedWorkflowNodes]
 
@@ -409,7 +420,15 @@ export function ParticipantFlowCanvas({
       focusNodeId,
       externalStates: { nodeIds: [...externalNodeIds] },
     }
-  }, [currentState, edgePathType, graph.data, nodeCatalog.data, nodeExecutions.data, groupsForRender, isExecutionActive])
+  }, [
+    currentState,
+    edgePathType,
+    graph.data,
+    nodeCatalog.data,
+    nodeExecutions.data,
+    groupsForRender,
+    isExecutionActive,
+  ])
 
   // Participant path order: node executions sorted by sequence number → the
   // selected edges they traversed, deduped and restricted to edges that are
@@ -451,7 +470,14 @@ export function ParticipantFlowCanvas({
     if (graph.isPending || nodeExecutions.isPending) return
     setNodes(view.flowNodes)
     setEdges(view.flowEdges)
-  }, [graph.isPending, nodeExecutions.isPending, setEdges, setNodes, view.flowEdges, view.flowNodes])
+  }, [
+    graph.isPending,
+    nodeExecutions.isPending,
+    setEdges,
+    setNodes,
+    view.flowEdges,
+    view.flowNodes,
+  ])
 
   const pending = graph.isPending || nodeCatalog.isPending || nodeExecutions.isPending
   const hasWarnings = view.externalStates.nodeIds.length > 0
@@ -509,7 +535,7 @@ export function ParticipantFlowCanvas({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {hasWarnings && (
           <div className="mx-4 mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
             <CircleAlert size={14} className="mt-0.5 shrink-0" />
@@ -527,7 +553,7 @@ export function ParticipantFlowCanvas({
             </div>
           </div>
         )}
-        <div className="p-4">
+        <div className="min-h-0 flex-1">
           {pending ? (
             <LoadingState />
           ) : view.flowNodes.length === 0 ? (
@@ -558,14 +584,13 @@ export function ParticipantFlowCanvas({
                   className="border-slate-200 bg-white fill-current text-slate-700 shadow-md"
                 />
                 <ZoomSliderPanel />
-                {showMiniMap && (
-                  <MiniMap className="border-slate-200 bg-white shadow-md" />
-                )}
-                <NodeSearch position="top-left" placeholder="Search nodes... ⌘K" className="w-[320px] shadow-lg md:min-w-[320px] ml-2" />
-                <ParticipantFocusViewport
-                  focusNodeId={view.focusNodeId}
-                  nodeCount={nodes.length}
+                {showMiniMap && <MiniMap className="border-slate-200 bg-white shadow-md" />}
+                <NodeSearch
+                  position="top-left"
+                  placeholder="Search nodes... ⌘K"
+                  className="ml-2 w-[320px] shadow-lg md:min-w-[320px]"
                 />
+                <ParticipantFocusViewport focusNodeId={view.focusNodeId} nodeCount={nodes.length} />
                 <PathTravelingDot path={combinedPath} color={PATH_COLOR} />
               </ReactFlow>
             </div>
