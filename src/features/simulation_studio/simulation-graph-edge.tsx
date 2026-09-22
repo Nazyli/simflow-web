@@ -120,18 +120,18 @@ export function SimulationGraphEdge({
       />
       <EdgeLabelRenderer>
         <div
-          className="nodrag nopan pointer-events-auto absolute z-10 flex items-center gap-1 rounded-full bg-background p-1 shadow-md ring-2 ring-border"
+          className="nodrag nopan pointer-events-auto absolute z-10 flex items-center gap-0.5 rounded-full border border-border/50 bg-background/35 p-0.5 shadow-sm backdrop-blur-sm"
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px) translateY(${labelOffset}px)`,
           }}
         >
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="xs"
-            className="h-auto gap-1 rounded-full px-2 py-0.5 text-[0.65rem] text-muted-foreground"
+            className="h-auto gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-medium text-foreground/80 hover:bg-background/50 hover:text-foreground"
           >
-            <span className="max-w-[180px] truncate text-muted-foreground">{label}</span>
+            <span className="max-w-[180px] truncate">{label}</span>
           </Button>
           {onDelete && (
             <Button

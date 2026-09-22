@@ -61,6 +61,7 @@ export function MasterPickerDialog({
   const records = useQuery({
     queryKey: ['master', resource, endpoint ?? ''],
     queryFn: () => getStudioMasterData(endpoint ?? `/admin/master-data/${resource}`),
+    enabled: open,
   })
   const selectedSet = useMemo(() => {
     if (selected === undefined) return null

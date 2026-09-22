@@ -80,7 +80,7 @@ export function EmailCrudDialog({
     refetchOnMount: 'always',
   })
   const documentsQuery = useQuery({
-    queryKey: ['master', 'email-document-contents'],
+    queryKey: ['master', 'email-document-contents', '/admin/master-data/emails/document-contents'],
     queryFn: getMasterDocumentContents,
     enabled: documentPickerOpen,
   })
