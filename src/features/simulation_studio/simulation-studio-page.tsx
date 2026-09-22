@@ -1593,6 +1593,7 @@ export function SimulationStudioPage() {
       const res = await validateSimulation(simulationId)
       setValidationErrors(res.errors)
       setValidationRequested(true)
+      await graph.refetch()
       if (res.valid) toast.success('Graph is valid')
     } catch (e) {
       toast.error(apiErrorMessage(e))
