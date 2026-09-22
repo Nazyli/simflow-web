@@ -62,7 +62,9 @@ export function EmailWorkspace({
                 onOpenAttachment={onOpenAttachment}
               />
               <MessageComposer
+                key={selectedThread.rootId}
                 target={selectedThread.latestSenderId}
+                subject={selectedThread.latestSubject}
                 disabled={disabled}
                 attachments={attachments}
                 onOpenAttachmentPicker={onOpenAttachmentPicker}

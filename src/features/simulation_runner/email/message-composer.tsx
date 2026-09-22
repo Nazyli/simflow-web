@@ -1,10 +1,13 @@
-import { type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { FileText, Paperclip, Send, X } from 'lucide-react'
 
 import type { AttachmentSelection } from './attachment-picker-dialog'
+import { MasterPickerDialog } from '../../simulation_studio/pickers/master-picker-dialog'
+import { formatReplySubject } from './utils'
 
 interface MessageComposerProps {
   target: string
+  subject: string
   disabled: boolean
   attachments: AttachmentSelection[]
   onOpenAttachmentPicker: () => void
@@ -18,37 +21,54 @@ function formatPages(pages: { page: number | null }[]): string {
 
 export function MessageComposer({
   target,
+  subject: latestSubject,
   disabled,
   attachments,
   onOpenAttachmentPicker,
   onRemoveAttachment,
   onSubmit,
 }: MessageComposerProps) {
-  const hasTarget = Boolean(target)
+  const [recipient, setRecipient] = useState(target)
+  const [subject, setSubject] = useState(formatReplySubject(latestSubject))
+  const [actorPickerOpen, setActorPickerOpen] = useState(false)
+  const hasTarget = Boolean(recipient.trim())
 
   return (
     <form className="border-t border-[#e8eaed] bg-white" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2 p-4">
         <div className="flex items-center gap-2 pb-1">
           <span className="text-xs font-medium text-[#5f6368]">Reply to</span>
-          <span className="text-xs font-semibold text-[#5b46c5]">{target}</span>
+          <span className="text-xs font-semibold text-[#5b46c5]">{recipient}</span>
         </div>
 
-        <input
-          type="text"
-          name="target"
-          required
-          disabled={!hasTarget || disabled}
-          defaultValue={target}
-          placeholder={hasTarget ? undefined : 'Select a conversation to reply'}
-          className="min-h-[36px] w-full rounded-lg border border-[#e8eaed] bg-[#f6f8fb] px-3 py-2 text-sm text-[#1a1a2e] transition-colors outline-none focus:border-[#5b46c5] focus:ring-2 focus:ring-violet-100 disabled:bg-[#f1f3f4] disabled:text-[#9aa0a6]"
-        />
+        <div className="flex gap-2">
+          <input
+            type="text"
+            name="target"
+            required
+            disabled={disabled}
+            value={recipient}
+            onChange={(event) => setRecipient(event.target.value)}
+            placeholder={hasTarget ? undefined : 'Select a conversation to reply'}
+            className="min-h-[36px] min-w-0 flex-1 rounded-lg border border-[#e8eaed] bg-[#f6f8fb] px-3 py-2 text-sm text-[#1a1a2e] transition-colors outline-none focus:border-[#5b46c5] focus:ring-2 focus:ring-violet-100 disabled:bg-[#f1f3f4] disabled:text-[#9aa0a6]"
+          />
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setActorPickerOpen(true)}
+            className="min-h-[36px] shrink-0 rounded-lg border border-[#e8eaed] px-3 py-2 text-sm font-medium text-[#5f6368] transition-colors hover:border-[#5b46c5] hover:text-[#5b46c5] disabled:opacity-50"
+          >
+            Pick actor
+          </button>
+        </div>
 
         <input
           type="text"
           name="subject"
           required
           disabled={disabled}
+          value={subject}
+          onChange={(event) => setSubject(event.target.value)}
           placeholder={hasTarget ? 'Subject' : undefined}
           className="min-h-[36px] w-full rounded-lg border border-[#e8eaed] bg-[#f6f8fb] px-3 py-2 text-sm text-[#1a1a2e] transition-colors outline-none focus:border-[#5b46c5] focus:ring-2 focus:ring-violet-100 disabled:bg-[#f1f3f4] disabled:text-[#9aa0a6]"
         />
@@ -107,6 +127,17 @@ export function MessageComposer({
           </button>
         </div>
       </div>
+      <MasterPickerDialog
+        open={actorPickerOpen}
+        onOpenChange={setActorPickerOpen}
+        title="Pick actor"
+        resource="actors"
+        endpoint="/admin/master-data/actors"
+        displayFields={['actorId', 'actorName', 'actorEmail']}
+        valueField="actorId"
+        selected={recipient}
+        onSelect={(record) => setRecipient(String(record.actorId ?? ''))}
+      />
     </form>
   )
 }

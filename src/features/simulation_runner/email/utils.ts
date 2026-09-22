@@ -28,3 +28,9 @@ export function isOwnEmail(message: EmailMessage, participantId: string): boolea
   if (message.senderType === 'actor') return false
   return message.from ? message.from === participantId : message.actor === participantId
 }
+
+export function formatReplySubject(subject: string): string {
+  const trimmed = subject.trim()
+  if (!trimmed) return ''
+  return /^re\s*:/i.test(trimmed) ? trimmed : `RE : ${trimmed}`
+}
