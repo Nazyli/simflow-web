@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, Copy, Layers, ListTree, Route } from 'lucide-react'
+import { ArrowLeft, Check, Copy, Layers, ListTree, RefreshCw, Route } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
@@ -85,6 +85,10 @@ export function ExecutionDetailPage() {
 
   const title = `${data.groupSimulationName ?? 'Simulation unavailable'} · ${data.simulationName ?? '—'}`
   const isFinalStatus = ['completed', 'failed', 'cancelled'].includes(data.status)
+  const isFlowRefreshing = history.isFetching || nodeExecutions.isFetching
+  const refreshFlow = () => {
+    void Promise.all([history.refetch(), nodeExecutions.refetch()])
+  }
 
   return (
     <main className="min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
@@ -168,6 +172,16 @@ export function ExecutionDetailPage() {
                   <span className="text-slate-500">detik</span>
                 </>
               )}
+              <button
+                type="button"
+                onClick={refreshFlow}
+                disabled={isFlowRefreshing}
+                aria-label="Refresh flow"
+                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-600 transition hover:border-violet-200 hover:bg-slate-50 hover:text-violet-700 focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCw size={12} className={isFlowRefreshing ? 'animate-spin' : undefined} />
+                {isFlowRefreshing ? 'Refreshing…' : 'Refresh'}
+              </button>
             </div>
           )}
         </div>
