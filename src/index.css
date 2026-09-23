@@ -326,15 +326,29 @@ button {
   border-top: 2.5px dashed #94a3b8;
 }
 .history-legend-line--path {
-  border-top: 2.5px solid #dc2626;
+  border-top: 2.5px solid #7c3aed;
+  box-shadow: 0 0 6px rgba(124, 58, 237, 0.72);
 }
 .history-legend-node {
   display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: rgba(220, 38, 38, 0.22);
-  box-shadow: 0 0 0 2px #dc2626;
+  background: rgba(124, 58, 237, 0.22);
+  box-shadow: 0 0 0 2px #7c3aed;
+}
+
+.history-flow-canvas .history-edge-background {
+  opacity: 0.56;
+}
+.history-edge-label--participant {
+  border-color: rgba(196, 181, 253, 0.9);
+  background: rgba(255, 255, 255, 0.94);
+  color: #5b21b6;
+  box-shadow: 0 3px 12px rgba(124, 58, 237, 0.18);
+}
+.history-edge-label--background {
+  opacity: 0.52;
 }
 
 /* Light default theme. */
@@ -599,6 +613,9 @@ button:disabled {
 @media (prefers-reduced-motion: reduce) {
   .node-status-indicator__spinner {
     animation: none;
+  }
+  .history-flow-canvas .history-path-traveling-dot {
+    display: none;
   }
 }
 

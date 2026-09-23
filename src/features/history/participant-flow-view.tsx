@@ -41,7 +41,7 @@ const nodeRenderers = {
 }
 const edgeRenderers = { simulation: SimulationGraphEdge }
 const MASTER_COLOR = '#94a3b8'
-const PATH_COLOR = '#dc2626'
+const PATH_COLOR = '#7c3aed'
 
 type EdgePathReport = { path: string; sx: number; sy: number; tx: number; ty: number }
 
@@ -75,7 +75,7 @@ function PathTravelingDot({ path, color }: { path: string | null; color: string 
   if (!path) return null
   return (
     <svg
-      className="pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible"
+      className="history-path-traveling-dot pointer-events-none absolute inset-0 z-10 h-full w-full overflow-visible"
       style={{ transform: `translate(${x}px, ${y}px) scale(${zoom})`, transformOrigin: '0 0' }}
       aria-hidden
     >
@@ -85,7 +85,7 @@ function PathTravelingDot({ path, color }: { path: string | null; color: string 
         fillOpacity={1}
         stroke="#fff"
         strokeWidth={1.5}
-        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
+        style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.8))' }}
       >
         <animateMotion dur={`${duration}s`} repeatCount="indefinite" path={path} />
       </circle>
@@ -373,6 +373,7 @@ export function ParticipantFlowCanvas({
       const targetGroup = edge.targetGroupId ? groupById.get(edge.targetGroupId) : undefined
       const styleColor = taken ? PATH_COLOR : (sourcePort?.edgeStyle.color ?? MASTER_COLOR)
       const lineStyle = taken ? 'solid' : (sourcePort?.edgeStyle.lineStyle ?? 'dashed')
+      const emphasis = taken ? 'participant' : 'background'
       return {
         id: edge.edgeId,
         type: 'simulation',
@@ -381,7 +382,10 @@ export function ParticipantFlowCanvas({
         sourceHandle: edge.visualSourceHandleId ?? edge.sourcePortId,
         target: edge.visualTargetNodeId ?? edge.targetNodeId,
         targetHandle: edge.visualTargetHandleId ?? edge.targetPortId,
-        markerEnd: { type: MarkerType.ArrowClosed, color: taken ? PATH_COLOR : styleColor },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: taken ? PATH_COLOR : '#cbd5e1',
+        },
         animated: taken,
         data: {
           label: sourcePort?.label ?? edge.sourcePortId,
@@ -390,6 +394,7 @@ export function ParticipantFlowCanvas({
             lineStyle,
             animated: taken,
           },
+          emphasis,
           edgeType: edgePathType,
           onPathReady: handleEdgePathReady,
           collapsedSourceRect: sourceGroup
@@ -491,7 +496,7 @@ export function ParticipantFlowCanvas({
         </span>
         <span className="flex items-center gap-1.5">
           <i className="history-legend-line" />
-          Simulation definition
+          Other routes
         </span>
         <span className="flex items-center gap-1.5">
           <i className="history-legend-node" />

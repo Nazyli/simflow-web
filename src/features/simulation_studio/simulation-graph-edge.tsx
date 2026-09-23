@@ -16,12 +16,16 @@ import { pointOnRectBoundary, type Rect } from './visual-groups/visual-group-lay
 type SimulationEdgeData = {
   label: string
   style: { color: string; lineStyle: string; animated: boolean }
+  emphasis?: 'participant' | 'background'
   edgeType?: EdgePathType
   onDelete?: (edgeId: string) => void
   collapsedSourceRect?: Rect
   collapsedTargetRect?: Rect
   /** Reports the rendered path + endpoints back to the parent so the flow can draw one combined traveling dot. */
-  onPathReady?: (edgeId: string, report: { path: string; sx: number; sy: number; tx: number; ty: number }) => void
+  onPathReady?: (
+    edgeId: string,
+    report: { path: string; sx: number; sy: number; tx: number; ty: number },
+  ) => void
 }
 
 type PathProps = Pick<
@@ -67,6 +71,8 @@ export function SimulationGraphEdge({
   const edgeData = data as SimulationEdgeData
   const label = edgeData?.label ?? ''
   const style = edgeData?.style ?? { color: '#94a3b8', lineStyle: 'solid', animated: false }
+  const isParticipantPath = edgeData?.emphasis === 'participant'
+  const isBackgroundEdge = edgeData?.emphasis === 'background'
   const edgeType = edgeData?.edgeType ?? 'default'
   const onDelete = edgeData?.onDelete
   const sourceBoundary = edgeData?.collapsedSourceRect
@@ -104,23 +110,53 @@ export function SimulationGraphEdge({
       tx: effectiveTargetX,
       ty: effectiveTargetY,
     })
-  }, [_id, edgePath, effectiveSourceX, effectiveSourceY, effectiveTargetX, effectiveTargetY, edgeData?.onPathReady])
+  }, [
+    _id,
+    edgePath,
+    effectiveSourceX,
+    effectiveSourceY,
+    effectiveTargetX,
+    effectiveTargetY,
+    edgeData?.onPathReady,
+  ])
 
   return (
     <>
+      {isParticipantPath && (
+        <BaseEdge
+          path={edgePath}
+          className="history-edge-participant-halo"
+          style={{
+            stroke: stroke,
+            strokeWidth: 7,
+            opacity: 0.14,
+            filter: 'blur(3px)',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
       <BaseEdge
         path={edgePath}
+        className={
+          isParticipantPath
+            ? 'history-edge-participant'
+            : isBackgroundEdge
+              ? 'history-edge-background'
+              : undefined
+        }
         markerEnd={markerEnd}
         style={{
           stroke,
-          strokeWidth: selected ? 2.5 : 1.5,
+          strokeWidth: isParticipantPath ? 2.25 : selected ? 2.5 : 1.5,
+          opacity: isBackgroundEdge ? 0.56 : 1,
+          filter: isParticipantPath ? 'drop-shadow(0 0 3px rgba(124,58,237,0.5))' : undefined,
           strokeDasharray:
             style.lineStyle === 'dashed' ? '6 4' : style.lineStyle === 'dotted' ? '2 3' : undefined,
         }}
       />
       <EdgeLabelRenderer>
         <div
-          className="nodrag nopan pointer-events-auto absolute z-10 flex items-center gap-0.5 rounded-full border border-border/50 bg-background/35 p-0.5 shadow-sm backdrop-blur-sm"
+          className={`nodrag nopan pointer-events-auto absolute z-10 flex items-center gap-0.5 rounded-full border p-0.5 shadow-sm backdrop-blur-sm ${isParticipantPath ? 'history-edge-label--participant' : ''} ${isBackgroundEdge ? 'history-edge-label--background' : ''}`}
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px) translateY(${labelOffset}px)`,
           }}
@@ -129,7 +165,7 @@ export function SimulationGraphEdge({
             type="button"
             variant="ghost"
             size="xs"
-            className="h-auto gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-medium text-foreground/80 hover:bg-background/50 hover:text-foreground"
+            className="text-foreground/80 hover:bg-background/50 hover:text-foreground h-auto gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-medium"
           >
             <span className="max-w-[180px] truncate">{label}</span>
           </Button>
@@ -138,7 +174,7 @@ export function SimulationGraphEdge({
               type="button"
               variant="ghost"
               size="icon-xs"
-              className="nodrag size-5 rounded-full text-muted-foreground"
+              className="nodrag text-muted-foreground size-5 rounded-full"
               onClick={() => onDelete(_id)}
               aria-label={`Delete edge ${label}`}
             >
