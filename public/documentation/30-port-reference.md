@@ -16,6 +16,7 @@ Output Port menentukan hasil dan jalur yang dipilih setelah Node selesai.
 | Respons | Port Actor, `has_attachment`, `no_attachment` | Participant membalas ke Actor terpilih atau memenuhi kondisi bisnis tertentu. |
 | Dokumen dibuka | `opened` | Jumlah pembukaan dokumen mencapai target. |
 | Waktu habis | `timeout` | Event yang ditunggu belum terjadi sampai batas waktu. |
+| Batas iterasi | `limit_reached` | Batas Loop yang dikonfigurasi tercapai; ini bukan error teknis. |
 | Gagal | `failed` | Node tidak dapat menyelesaikan prosesnya. |
 | Call berakhir tidak normal | `disconnected` | Sesi call terputus. |
 | Hasil AI | Port sesuai label | Classification memilih salah satu label yang dikonfigurasi. |

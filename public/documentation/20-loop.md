@@ -12,16 +12,17 @@ Gunakan saat suatu rangkaian langkah perlu diulang dalam jumlah terbatas.
 
 ~~~mermaid
 flowchart LR
-    A[Loop] -->|loop| B[Loop Body]
+    A[Loop] -->|repeat| B[Loop Body]
     B --> A
-    A -->|failed| C([End])
+    A -->|limit_reached| C([Fallback])
+    A -->|failed| D([Error])
     classDef flow fill:#fef3c7,stroke:#d97706,color:#78350f
     classDef terminal fill:#dcfce7,stroke:#16a34a,color:#14532d
     class A flow
     class C terminal
 ~~~
 
-Port `loop` menjalankan body pengulangan. Jalur `failed` dipakai jika batas atau hard limit terlampaui.
+Port `repeat` menjalankan body pengulangan. Jalur `limit_reached` dipakai saat batas iterasi terkonfigurasi tercapai. Jalur `failed` hanya untuk hard limit atau error teknis.
 
 ## Input
 
@@ -33,12 +34,14 @@ Port `loop` menjalankan body pengulangan. Jalur `failed` dipakai jika batas atau
 
 | Output Port | Arti | Kapan digunakan? |
 |---|---|---|
-| `loop` | Masih boleh mengulang. | Menuju body pengulangan. |
-| `failed` | Batas iterasi/hard limit terlampaui. | Untuk error handling atau `End`. |
+| `repeat` | Masih boleh mengulang. | Menuju body pengulangan. |
+| `limit_reached` | Batas iterasi terkonfigurasi tercapai. | Menuju fallback bisnis. |
+| `failed` | Hard limit atau error teknis. | Menuju error handling atau `End`. |
 
 ## Output yang dihasilkan
 
-- `loop`: `iteration`, `max_iterations`, dan `remaining`.
+- `repeat`: `iteration`, `max_iterations`, dan `remaining`.
+- `limit_reached`: `iteration` dan `max_iterations`.
 - `failed`: `iteration`, `max_iterations` bila ada, `error_code`, dan `error_message`.
 
 ## Konfigurasi
@@ -69,7 +72,7 @@ Status wajib atau opsional setiap setting dijelaskan pada bagian Konfigurasi di 
 
 ## Connection
 
-Hubungkan `loop` ke body pengulangan dan gunakan pola kembali ke `Loop` sesuai graph. `failed` menuju error handling atau `End`. Jangan membuat cycle bebas di luar mekanisme `Loop`.
+Hubungkan `repeat` ke body pengulangan dan gunakan pola kembali ke `Loop` sesuai graph. `limit_reached` menuju fallback bisnis, sedangkan `failed` menuju error handling atau `End`. Jangan membuat cycle bebas di luar mekanisme `Loop`.
 
 ## Kesalahan Umum
 
