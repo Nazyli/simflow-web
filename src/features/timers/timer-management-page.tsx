@@ -1,8 +1,13 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarClock, CheckCircle2, Clock, Play, RefreshCw, Timer, XCircle } from 'lucide-react'
+import { Clock, Play, RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
+import { PageFrame } from '../../components/layout/page-frame'
+import { PageHeader } from '../../components/layout/page-header'
+import { PageToolbar } from '../../components/layout/page-toolbar'
+import { SummaryStrip } from '../../components/layout/summary-strip'
+import { SurfaceSection } from '../../components/layout/surface-section'
 import {
   cancelTimer,
   getTimers,
@@ -127,29 +132,6 @@ function progress(timer: TransParticipantTimer, now: number) {
   return Math.min(100, Math.max(0, ((now - start) / Math.max(1, due - start)) * 100))
 }
 
-const STATUS_TONES: Record<string, string> = {
-  scheduled: 'bg-blue-50 text-blue-600',
-  running: 'bg-indigo-50 text-indigo-600',
-  retry: 'bg-amber-50 text-amber-600',
-  completed: 'bg-emerald-50 text-emerald-600',
-  failed: 'bg-red-50 text-red-600',
-  total: 'bg-purple-50 text-[#9929EA]',
-}
-
-function StatusIcon({ status }: { status: string }) {
-  return status === 'failed' ? (
-    <XCircle size={18} />
-  ) : status === 'completed' ? (
-    <CheckCircle2 size={18} />
-  ) : status === 'retry' ? (
-    <RefreshCw size={18} />
-  ) : status === 'total' ? (
-    <Timer size={18} />
-  ) : (
-    <CalendarClock size={18} />
-  )
-}
-
 function CountdownCell({ timer, now }: { timer: TransParticipantTimer; now: number }) {
   const parts = countdown(timer.dueAt, now)
   const tone =
@@ -164,26 +146,6 @@ function CountdownCell({ timer, now }: { timer: TransParticipantTimer; now: numb
         />
       </div>
     </div>
-  )
-}
-
-function StatCard({ status, count }: { status: string; count: number }) {
-  return (
-    <article className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-      <span
-        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${STATUS_TONES[status] ?? STATUS_TONES.total}`}
-      >
-        <StatusIcon status={status} />
-      </span>
-      <div className="min-w-0">
-        <small className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-          {status === 'total' ? 'All timers' : status}
-        </small>
-        <strong className="block text-xl leading-tight font-bold text-slate-900 tabular-nums">
-          {count}
-        </strong>
-      </div>
-    </article>
   )
 }
 
@@ -248,6 +210,20 @@ export function TimerManagementPage() {
     ],
     [rows],
   )
+  const summaryItems = counts.map(({ status, count }) => ({
+    label: status === 'total' ? 'All timers' : status,
+    value: count,
+    tone:
+      status === 'completed'
+        ? ('success' as const)
+        : status === 'failed'
+          ? ('danger' as const)
+          : status === 'retry'
+            ? ('warning' as const)
+            : status === 'scheduled' || status === 'running'
+              ? ('accent' as const)
+              : ('neutral' as const),
+  }))
   const columns: DataTableColumn<(typeof rows)[number]>[] = [
     {
       id: 'status',
@@ -427,44 +403,40 @@ export function TimerManagementPage() {
     },
   ]
   return (
-    <main className="timer-management-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
-            <Clock size={18} />
+    <PageFrame mode="operations" className="timer-management-page">
+      <PageHeader
+        eyebrow="Scheduler observability"
+        title={
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-100 text-violet-700">
+              <Clock size={16} />
+            </span>
+            <span>Timer management</span>
           </span>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold tracking-wider text-purple-700 uppercase">
-              Scheduler observability
-            </p>
-            <h1 className="truncate text-lg font-bold text-slate-900">Timer management</h1>
-            <p className="truncate text-xs text-slate-500">
-              Timers refresh automatically while countdowns update in real time.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-white text-[#9929EA] shadow-sm">
-            <Clock size={15} />
-          </span>
-          <div>
-            <small className="block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
-              Current time (WIB)
-            </small>
-            <strong className="block text-sm text-slate-800 tabular-nums">
-              {formatClock(now)}
-            </strong>
-          </div>
-        </div>
-      </header>
+        }
+        description="Timers refresh automatically while countdowns update in real time."
+        actions={
+          <PageToolbar className="sm:justify-end">
+            <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2">
+              <span className="grid size-7 place-items-center rounded-md bg-violet-50 text-[#9929EA]">
+                <Clock size={14} />
+              </span>
+              <div>
+                <small className="block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+                  Current time (WIB)
+                </small>
+                <strong className="block text-sm text-slate-800 tabular-nums">
+                  {formatClock(now)}
+                </strong>
+              </div>
+            </div>
+          </PageToolbar>
+        }
+      />
 
-      <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-        {counts.map(({ status, count }) => (
-          <StatCard key={status} status={status} count={count} />
-        ))}
-      </section>
+      <SummaryStrip items={summaryItems} />
 
-      <section className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <SurfaceSection className="border-b-0 pb-0">
         {timers.isPending ? (
           <LoadingState />
         ) : timers.isError ? (
@@ -488,7 +460,7 @@ export function TimerManagementPage() {
             }
           />
         )}
-      </section>
+      </SurfaceSection>
 
       <RescheduleDialog
         timer={rescheduleTarget}
@@ -511,7 +483,7 @@ export function TimerManagementPage() {
         onConfirm={() => runNowTarget && runNow.mutate(runNowTarget.participantTimerId)}
       />
       <TimerDetail timer={detailTarget} onClose={() => setDetailTarget(null)} />
-    </main>
+    </PageFrame>
   )
 }
 

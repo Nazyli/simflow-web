@@ -3,6 +3,9 @@ import { Pencil, Plus, Users } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '../../components/ui/button'
+import { PageFrame } from '../../components/layout/page-frame'
+import { PageHeader } from '../../components/layout/page-header'
+import { SurfaceSection } from '../../components/layout/surface-section'
 import {
   Dialog,
   DialogContent,
@@ -64,23 +67,26 @@ export function MasterActorsPage() {
   const actors = actorsQuery.data ?? []
 
   return (
-    <div className="master-actors-page mx-auto max-w-[1500px] space-y-6 p-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="mb-1 text-xs font-semibold tracking-[0.18em] text-violet-600 uppercase">
-            Master Data
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Actors</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Manage the people and personalities available to your simulations.
-          </p>
-        </div>
-        <Button type="button" onClick={openCreate}>
-          <Plus /> Add actor
-        </Button>
-      </div>
+    <PageFrame mode="operations" className="master-actors-page mx-auto max-w-[1500px]">
+      <PageHeader
+        eyebrow="Master Data"
+        title={
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-100 text-violet-700">
+              <Users size={16} />
+            </span>
+            <span>Actors</span>
+          </span>
+        }
+        description="Manage the people and personalities available to your simulations."
+        actions={
+          <Button type="button" onClick={openCreate}>
+            <Plus /> Add actor
+          </Button>
+        }
+      />
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <SurfaceSection className="border-b-0 pb-0">
         {actorsQuery.isPending && (
           <div className="px-6 py-12 text-center text-sm text-slate-500">Loading actors...</div>
         )}
@@ -90,85 +96,86 @@ export function MasterActorsPage() {
           </div>
         )}
         {!actorsQuery.isPending && !actorsQuery.isError && actors.length === 0 && (
-          <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-            <span className="mb-4 grid size-12 place-items-center rounded-2xl bg-violet-50 text-violet-600">
-              <Users size={22} />
-            </span>
+          <div className="px-5 py-10 text-left">
             <h2 className="text-base font-semibold text-slate-800">No actors yet</h2>
             <p className="mt-1 max-w-sm text-sm text-slate-500">
               Add the first actor profile to use in chat, email, call, or AI workflows.
             </p>
-            <Button type="button" className="mt-5" onClick={openCreate}>
+            <Button type="button" className="mt-4" onClick={openCreate}>
               <Plus /> Add actor
             </Button>
           </div>
         )}
         {!actorsQuery.isPending && !actorsQuery.isError && actors.length > 0 && (
-          <Table>
-            <TableHeader className="bg-slate-50/80">
-              <TableRow>
-                <TableHead>Actor ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Participant</TableHead>
-                <TableHead className="min-w-[280px]">Personality</TableHead>
-                <TableHead className="w-24 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {actors.map((actor) => (
-                <TableRow key={actor.actorId}>
-                  <TableCell className="font-mono text-xs text-slate-500">
-                    {actor.actorId}
-                  </TableCell>
-                  <TableCell className="font-semibold text-slate-800">{actor.actorName}</TableCell>
-                  <TableCell>{scalar(actor.actorEmail)}</TableCell>
-                  <TableCell>{scalar(actor.actorPosition)}</TableCell>
-                  <TableCell>
-                    <span
-                      className={
-                        actor.isParticipant
-                          ? 'rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700'
-                          : 'rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500'
-                      }
-                    >
-                      {actor.isParticipant ? 'Yes' : 'No'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="whitespace-normal">
-                    {hasActorPersonality(actor.personaDesc) ? (
+          <div className="min-w-0 overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50/80">
+                <TableRow>
+                  <TableHead>Actor ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Position</TableHead>
+                  <TableHead>Participant</TableHead>
+                  <TableHead className="min-w-[280px]">Personality</TableHead>
+                  <TableHead className="w-24 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {actors.map((actor) => (
+                  <TableRow key={actor.actorId}>
+                    <TableCell className="font-mono text-xs text-slate-500">
+                      {actor.actorId}
+                    </TableCell>
+                    <TableCell className="font-semibold text-slate-800">
+                      {actor.actorName}
+                    </TableCell>
+                    <TableCell>{scalar(actor.actorEmail)}</TableCell>
+                    <TableCell>{scalar(actor.actorPosition)}</TableCell>
+                    <TableCell>
+                      <span
+                        className={
+                          actor.isParticipant
+                            ? 'rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700'
+                            : 'rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500'
+                        }
+                      >
+                        {actor.isParticipant ? 'Yes' : 'No'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="whitespace-normal">
+                      {hasActorPersonality(actor.personaDesc) ? (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => setPersonalityActor(actor)}
+                          aria-label={`View personality for ${actor.actorName}`}
+                        >
+                          View personality
+                        </Button>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
                       <Button
                         type="button"
-                        variant="secondary"
+                        variant="ghost"
                         size="sm"
-                        className="text-xs"
-                        onClick={() => setPersonalityActor(actor)}
-                        aria-label={`View personality for ${actor.actorName}`}
+                        aria-label={`Edit ${actor.actorName}`}
+                        onClick={() => openEdit(actor)}
                       >
-                        View personality
+                        <Pencil /> Edit
                       </Button>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      aria-label={`Edit ${actor.actorName}`}
-                      onClick={() => openEdit(actor)}
-                    >
-                      <Pencil /> Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
-      </section>
+      </SurfaceSection>
 
       <ActorCrudDialog open={dialogOpen} onOpenChange={setDialogOpen} actor={selectedActor} />
 
@@ -193,6 +200,6 @@ export function MasterActorsPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageFrame>
   )
 }

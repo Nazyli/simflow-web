@@ -76,8 +76,8 @@ export function DataTable<T extends { id: string }>({
     onSelectionChange?.(rows.filter((row) => next.has(row.id)))
   }
   return (
-    <section className="overflow-x-auto">
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-white px-3.5 py-3">
+    <section className="min-w-0">
+      <div className="flex min-w-0 flex-wrap items-center gap-2 border-b border-slate-100 bg-white px-3.5 py-3">
         <Input
           aria-label="Filter rows"
           placeholder="Filter"
@@ -86,7 +86,7 @@ export function DataTable<T extends { id: string }>({
             setFilter(event.target.value)
             setPage(0)
           }}
-          className="w-[180px]"
+          className="w-[180px] max-w-full"
         />
         {toolbarActions}
         {showColumnToggle && (
@@ -117,76 +117,78 @@ export function DataTable<T extends { id: string }>({
           </details>
         )}
       </div>
-      <Table>
-        <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:bg-slate-50 [&_th]:text-[0.66rem] [&_th]:font-bold [&_th]:tracking-[0.06em] [&_th]:uppercase">
-          <TableRow>
-            {selectable && (
-              <TableHead className="w-9">
-                <Checkbox
-                  aria-label="Select page"
-                  checked={slice.length > 0 && slice.every((row) => selected.has(row.id))}
-                  onCheckedChange={() => {
-                    const next = new Set(selected)
-                    const selectPage = !slice.every((row) => next.has(row.id))
-                    slice.forEach((row) => (selectPage ? next.add(row.id) : next.delete(row.id)))
-                    setSelected(next)
-                    onSelectionChange?.(rows.filter((row) => next.has(row.id)))
-                  }}
-                />
-              </TableHead>
-            )}
-            {shownColumns.map((column) => (
-              <TableHead key={column.id}>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSort((current) =>
-                      current?.id === column.id
-                        ? { id: column.id, desc: !current.desc }
-                        : { id: column.id, desc: false },
-                    )
-                  }
-                  className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[0.66rem] font-bold tracking-[0.06em] text-slate-500 uppercase transition hover:text-violet-600"
-                >
-                  {column.header}
-                  {sort?.id === column.id ? (sort.desc ? ' ↓' : ' ↑') : ''}
-                </button>
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {slice.map((row) => (
-            <TableRow key={row.id}>
+      <div className="min-w-0">
+        <Table className="min-w-max">
+          <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:bg-slate-50 [&_th]:text-[0.66rem] [&_th]:font-bold [&_th]:tracking-[0.06em] [&_th]:uppercase">
+            <TableRow>
               {selectable && (
-                <TableCell>
+                <TableHead className="w-9">
                   <Checkbox
-                    aria-label={`Select ${row.id}`}
-                    checked={selected.has(row.id)}
-                    onCheckedChange={() => select(row.id)}
+                    aria-label="Select page"
+                    checked={slice.length > 0 && slice.every((row) => selected.has(row.id))}
+                    onCheckedChange={() => {
+                      const next = new Set(selected)
+                      const selectPage = !slice.every((row) => next.has(row.id))
+                      slice.forEach((row) => (selectPage ? next.add(row.id) : next.delete(row.id)))
+                      setSelected(next)
+                      onSelectionChange?.(rows.filter((row) => next.has(row.id)))
+                    }}
                   />
-                </TableCell>
+                </TableHead>
               )}
               {shownColumns.map((column) => (
-                <TableCell key={column.id} className="text-[0.78rem] text-slate-700">
-                  {column.cell(row)}
-                </TableCell>
+                <TableHead key={column.id}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSort((current) =>
+                        current?.id === column.id
+                          ? { id: column.id, desc: !current.desc }
+                          : { id: column.id, desc: false },
+                      )
+                    }
+                    className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[0.66rem] font-bold tracking-[0.06em] text-slate-500 uppercase transition hover:text-violet-600"
+                  >
+                    {column.header}
+                    {sort?.id === column.id ? (sort.desc ? ' ↓' : ' ↑') : ''}
+                  </button>
+                </TableHead>
               ))}
             </TableRow>
-          ))}
-          {slice.length === 0 && (
-            <TableRow>
-              <TableCell
-                colSpan={shownColumns.length + (selectable ? 1 : 0)}
-                className="py-6 text-center text-[0.78rem] text-slate-400"
-              >
-                No matching records.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-white px-3.5 py-2.5 text-[0.72rem] text-slate-500">
+          </TableHeader>
+          <TableBody>
+            {slice.map((row) => (
+              <TableRow key={row.id}>
+                {selectable && (
+                  <TableCell>
+                    <Checkbox
+                      aria-label={`Select ${row.id}`}
+                      checked={selected.has(row.id)}
+                      onCheckedChange={() => select(row.id)}
+                    />
+                  </TableCell>
+                )}
+                {shownColumns.map((column) => (
+                  <TableCell key={column.id} className="text-[0.78rem] text-slate-700">
+                    {column.cell(row)}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+            {slice.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={shownColumns.length + (selectable ? 1 : 0)}
+                  className="py-6 text-center text-[0.78rem] text-slate-400"
+                >
+                  No matching records.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <footer className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-white px-3.5 py-2.5 text-[0.72rem] text-slate-500">
         <span>
           {filtered.length} records{selectable ? ` · ${selected.size} selected` : ''}
         </span>

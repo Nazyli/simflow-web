@@ -2,6 +2,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Check, Copy, Layers, ListTree, RefreshCw, Route } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { PageFrame } from '../../components/layout/page-frame'
+import { PageHeader } from '../../components/layout/page-header'
+import { PageToolbar } from '../../components/layout/page-toolbar'
 import { Button } from '../../components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { Input } from '../../components/ui/input'
@@ -91,15 +94,30 @@ export function ExecutionDetailPage() {
   }
 
   return (
-    <main className="history-detail-page flex h-[calc(100dvh-58px)] min-h-0 w-full flex-col overflow-hidden bg-slate-50">
+    <PageFrame
+      mode="operations"
+      edgeToEdge
+      className="history-detail-page flex h-[calc(100dvh-58px)] min-h-0 w-full flex-col overflow-hidden"
+    >
       <Tabs
         defaultValue={defaultTab}
         onValueChange={(value) => setActiveTab(value)}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <header className="shrink-0 border-b border-slate-200 bg-white px-6 py-4 max-[900px]:px-[18px] max-[620px]:px-3 max-[620px]:py-3">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-3">
+        <PageHeader
+          className="shrink-0 border-b border-slate-200 bg-white px-6 py-4 max-[900px]:px-[18px] max-[620px]:px-3 max-[620px]:py-3"
+          eyebrow="Participant flow"
+          title={
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="brand-gradient grid size-8 shrink-0 place-items-center rounded-lg text-white">
+                <Layers size={16} />
+              </span>
+              <span className="min-w-0 break-words">{title}</span>
+            </span>
+          }
+          description={`Participant ${data.participantId} · Session ${data.sessionId}`}
+          actions={
+            <PageToolbar className="sm:justify-end">
               <Button
                 variant="outline"
                 size="sm"
@@ -109,20 +127,6 @@ export function ExecutionDetailPage() {
                 <ArrowLeft size={14} />
                 Back
               </Button>
-              <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
-                <Layers size={18} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold tracking-[0.12em] text-violet-700 uppercase">
-                  Participant flow
-                </p>
-                <h1 className="truncate text-lg font-bold text-slate-900">{title}</h1>
-                <p className="truncate text-xs text-slate-500">
-                  Participant {data.participantId} · Session {data.sessionId}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 max-[620px]:w-full max-[620px]:justify-between">
               <StatusBadge status={data.status} />
               {activeTab === 'flow' && (
                 <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs">
@@ -205,24 +209,24 @@ export function ExecutionDetailPage() {
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-          <div className="mt-4 flex items-center justify-between gap-3 max-[620px]:mt-3">
-            <TabsList className="h-9 bg-slate-100 p-1">
-              <TabsTrigger value="flow" className="px-3 text-xs font-semibold">
-                <Route size={14} />
-                Flow
-              </TabsTrigger>
-              <TabsTrigger value="detail" className="px-3 text-xs font-semibold">
-                <ListTree size={14} />
-                Detail
-              </TabsTrigger>
-            </TabsList>
-            <span className="text-[11px] font-medium text-slate-400 max-[620px]:hidden">
-              {activeTab === 'flow' ? 'Live execution path' : 'Node execution log'}
-            </span>
-          </div>
-        </header>
+            </PageToolbar>
+          }
+        />
+        <PageToolbar className="shrink-0 justify-between border-b border-slate-200 bg-white px-6 pb-4 max-[900px]:px-[18px] max-[620px]:px-3 max-[620px]:pb-3">
+          <TabsList className="h-9 bg-slate-100 p-1">
+            <TabsTrigger value="flow" className="px-3 text-xs font-semibold">
+              <Route size={14} />
+              Flow
+            </TabsTrigger>
+            <TabsTrigger value="detail" className="px-3 text-xs font-semibold">
+              <ListTree size={14} />
+              Detail
+            </TabsTrigger>
+          </TabsList>
+          <span className="text-[11px] font-medium text-slate-400 max-[620px]:hidden">
+            {activeTab === 'flow' ? 'Live execution path' : 'Node execution log'}
+          </span>
+        </PageToolbar>
 
         <TabsContent value="flow" className="min-h-0 flex-1 overflow-hidden bg-white">
           <ParticipantFlowCanvas
@@ -240,7 +244,7 @@ export function ExecutionDetailPage() {
           />
         </TabsContent>
       </Tabs>
-    </main>
+    </PageFrame>
   )
 }
 

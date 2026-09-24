@@ -1,19 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Ban,
-  CheckCircle2,
-  Hourglass,
-  ListTree,
-  PlayCircle,
-  Route,
-  Trash2,
-  Layers,
-  XCircle,
-} from 'lucide-react'
+import { ListTree, Route, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Button } from '../../components/ui/button'
+import { PageFrame } from '../../components/layout/page-frame'
+import { PageHeader } from '../../components/layout/page-header'
+import { SummaryStrip } from '../../components/layout/summary-strip'
+import { SurfaceSection } from '../../components/layout/surface-section'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { deleteExecution } from '../../shared/api/executions'
 import { getExecutionHistory, type ExecutionHistoryItem } from '../../shared/api/sessions'
@@ -32,52 +26,6 @@ const HISTORY_STATUSES = ['pending', 'running', 'waiting', 'completed', 'failed'
 
 function effectiveStatus(row: HistoryRow) {
   return row.execution?.status ?? 'pending'
-}
-
-const STATUS_TONES: Record<string, string> = {
-  pending: 'bg-slate-100 text-slate-500',
-  running: 'bg-indigo-50 text-indigo-600',
-  waiting: 'bg-amber-50 text-amber-600',
-  completed: 'bg-emerald-50 text-emerald-600',
-  failed: 'bg-red-50 text-red-600',
-  cancelled: 'bg-slate-100 text-slate-500',
-  total: 'bg-purple-50 text-[#9929EA]',
-}
-
-function StatusIcon({ status }: { status: string }) {
-  return status === 'failed' ? (
-    <XCircle size={18} />
-  ) : status === 'completed' ? (
-    <CheckCircle2 size={18} />
-  ) : status === 'cancelled' ? (
-    <Ban size={18} />
-  ) : status === 'waiting' ? (
-    <Hourglass size={18} />
-  ) : status === 'active' || status === 'running' ? (
-    <PlayCircle size={18} />
-  ) : (
-    <Layers size={18} />
-  )
-}
-
-function StatCard({ status, count }: { status: string; count: number }) {
-  return (
-    <article className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-      <span
-        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${STATUS_TONES[status] ?? STATUS_TONES.total}`}
-      >
-        <StatusIcon status={status} />
-      </span>
-      <div className="min-w-0">
-        <small className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-          {status === 'total' ? 'All executions' : status}
-        </small>
-        <strong className="block text-xl leading-tight font-bold text-slate-900 tabular-nums">
-          {count}
-        </strong>
-      </div>
-    </article>
-  )
 }
 
 export function ParticipantHistoryPage() {
@@ -122,6 +70,20 @@ export function ParticipantHistoryPage() {
     ],
     [rows],
   )
+  const summaryItems = counts.map(({ status, count }) => ({
+    label: status === 'total' ? 'All executions' : status,
+    value: count,
+    tone:
+      status === 'completed'
+        ? ('success' as const)
+        : status === 'failed'
+          ? ('danger' as const)
+          : status === 'waiting'
+            ? ('warning' as const)
+            : status === 'running'
+              ? ('accent' as const)
+              : ('neutral' as const),
+  }))
   const columns: DataTableColumn<HistoryRow>[] = [
     {
       id: 'status',
@@ -234,7 +196,7 @@ export function ParticipantHistoryPage() {
             onClick={() => setDeleteTarget(row)}
             aria-label={`Delete execution ${row.execution.executionId}`}
             title="Delete execution log"
-            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-none transition hover:border-red-200 hover:text-red-600"
           >
             <Trash2 size={12} />
           </button>
@@ -244,33 +206,16 @@ export function ParticipantHistoryPage() {
   ]
 
   return (
-    <main className="history-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
-            <Layers size={18} />
-          </span>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold tracking-wider text-purple-700 uppercase">
-              Observability
-            </p>
-            <h1 className="truncate text-lg font-bold text-slate-900">
-              Simulation execution history
-            </h1>
-            <p className="truncate text-xs text-slate-500">
-              Every simulation execution across simulation sessions.
-            </p>
-          </div>
-        </div>
-      </header>
+    <PageFrame mode="operations" className="history-page">
+      <PageHeader
+        eyebrow="Observability"
+        title="Simulation execution history"
+        description="Every simulation execution across simulation sessions."
+      />
 
-      <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-7">
-        {counts.map(({ status, count }) => (
-          <StatCard key={status} status={status} count={count} />
-        ))}
-      </section>
+      <SummaryStrip items={summaryItems} />
 
-      <section className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <SurfaceSection className="border-b-0 pb-0">
         {history.isPending ? (
           <LoadingState />
         ) : history.isError ? (
@@ -282,7 +227,7 @@ export function ParticipantHistoryPage() {
             No simulation executions yet.
           </div>
         )}
-      </section>
+      </SurfaceSection>
 
       <Dialog
         open={Boolean(deleteTarget)}
@@ -319,6 +264,6 @@ export function ParticipantHistoryPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </main>
+    </PageFrame>
   )
 }
