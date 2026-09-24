@@ -52,6 +52,19 @@ test('Studio sidebars become overlays below the workbench breakpoint', () => {
   assert.match(page, /studio-right-sidebar[^\n]*max-\[1100px\]:min-w-0/)
 })
 
+test('Studio prevents two narrow sidebar overlays from being open together', () => {
+  const page = source('features/simulation_studio/simulation-studio-page.tsx')
+
+  assert.match(page, /const STUDIO_NARROW_VIEWPORT_QUERY = ['"]\(max-width: 1100px\)['"]/)
+  assert.match(page, /matchMedia\(STUDIO_NARROW_VIEWPORT_QUERY\)/)
+  assert.match(page, /setLeftSidebarOpen\(false\)/)
+  assert.match(page, /setRightSidebarOpen\(false\)/)
+  assert.match(page, /toggleLeftSidebar/)
+  assert.match(page, /toggleRightSidebar/)
+  assert.match(page, /if \(narrowViewport && !leftSidebarOpen\) setRightSidebarOpen\(false\)/)
+  assert.match(page, /if \(narrowViewport && !rightSidebarOpen\) setLeftSidebarOpen\(false\)/)
+})
+
 test('palette groups expose presentation density without changing drag metadata', () => {
   const palette = source('features/simulation_studio/node-palette.ts')
   const page = source('features/simulation_studio/simulation-studio-page.tsx')

@@ -126,6 +126,15 @@ const STUDIO_MIN_ZOOM = 0.1
 const STUDIO_MAX_ZOOM = 4
 const STUDIO_ZOOM_SLIDER_MIN = 10 // 0.1 * 100
 const STUDIO_ZOOM_SLIDER_MAX = 400 // 4 * 100
+const STUDIO_NARROW_VIEWPORT_QUERY = '(max-width: 1100px)'
+
+function isNarrowStudioViewport(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia(STUDIO_NARROW_VIEWPORT_QUERY).matches
+  )
+}
 
 function ZoomSliderPanel() {
   const { zoom } = useViewport()
@@ -339,6 +348,33 @@ export function SimulationStudioPage() {
   // UI Sidebars & Tabs
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true)
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+
+    const mediaQuery = window.matchMedia(STUDIO_NARROW_VIEWPORT_QUERY)
+    const syncSidebarVisibility = () => {
+      if (!mediaQuery.matches) return
+      setLeftSidebarOpen(false)
+      setRightSidebarOpen(false)
+    }
+
+    syncSidebarVisibility()
+    mediaQuery.addEventListener('change', syncSidebarVisibility)
+    return () => mediaQuery.removeEventListener('change', syncSidebarVisibility)
+  }, [])
+
+  const toggleLeftSidebar = useCallback(() => {
+    const narrowViewport = isNarrowStudioViewport()
+    if (narrowViewport && !leftSidebarOpen) setRightSidebarOpen(false)
+    setLeftSidebarOpen((open) => !open)
+  }, [leftSidebarOpen])
+
+  const toggleRightSidebar = useCallback(() => {
+    const narrowViewport = isNarrowStudioViewport()
+    if (narrowViewport && !rightSidebarOpen) setLeftSidebarOpen(false)
+    setRightSidebarOpen((open) => !open)
+  }, [rightSidebarOpen])
   const [activeRightTab, setActiveRightTab] = useState<'inspector' | 'versions' | 'executions'>(
     'inspector',
   )
@@ -1642,7 +1678,7 @@ export function SimulationStudioPage() {
           <button
             type="button"
             className="shrink-0 rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-            onClick={() => setLeftSidebarOpen((prev) => !prev)}
+            onClick={toggleLeftSidebar}
             title={leftSidebarOpen ? 'Collapse left sidebar' : 'Expand left sidebar'}
           >
             <PanelLeftClose size={16} />
@@ -1818,7 +1854,7 @@ export function SimulationStudioPage() {
           <button
             type="button"
             className="ml-1 shrink-0 rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-            onClick={() => setRightSidebarOpen((prev) => !prev)}
+            onClick={toggleRightSidebar}
             title={rightSidebarOpen ? 'Collapse inspector sidebar' : 'Expand inspector sidebar'}
           >
             <PanelLeftClose size={16} />
