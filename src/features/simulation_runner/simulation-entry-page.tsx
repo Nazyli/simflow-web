@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Play } from 'lucide-react'
+import { Play, UserRound } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -9,6 +9,8 @@ import { ErrorState } from '../../shared/components/async-state'
 import { formGroupClass, formLabelClass, inputClass } from '../../shared/form-classes'
 import { readActorId, writeActorId } from './simulation-run-context'
 import { SimulationSelectionPanel } from './simulation-selection-panel'
+import { PageFrame } from '../../components/layout/page-frame'
+import { PageHeader } from '../../components/layout/page-header'
 
 const randomParticipantId = () => String(Math.floor(10000 + Math.random() * 90000))
 
@@ -45,30 +47,30 @@ export function SimulationEntryPage() {
   }
 
   return (
-    <main className="simulation-runner-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
-      <header className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
-            <Play size={15} />
-          </span>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold tracking-wider text-purple-700 uppercase">
-              Simulation cockpit
-            </p>
-            <h1 className="truncate text-lg font-bold text-slate-900">Run a simulation</h1>
-            <p className="truncate text-xs text-slate-500">
-              Enter the participant persona, select a simulation, then start to open the participant
-              workspace.
-            </p>
-          </div>
-        </div>
-      </header>
-      <form
-        className="grid gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
-        onSubmit={begin}
-      >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className={formGroupClass}>
+    <PageFrame
+      mode="workbench"
+      className="simulation-runner-page min-h-[calc(100vh-64px)] w-full"
+    >
+      <div className="mx-auto flex w-full max-w-[1480px] min-w-0 flex-col gap-4">
+        <PageHeader
+          title="Run a simulation"
+          description="Set the participant context, choose one or more published simulations, and open the runner workspace."
+          metadata={
+            <span className="inline-flex items-center gap-1.5">
+              <Play className="size-3.5 text-violet-700" />
+              Participant launch surface
+            </span>
+          }
+          actions={
+            <span className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600">
+              <UserRound className="size-3.5 text-violet-700" />
+              Session setup
+            </span>
+          }
+        />
+        <form className="grid min-w-0 gap-4 rounded-lg border border-slate-200 bg-white p-4" onSubmit={begin}>
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+            <div className={`${formGroupClass} min-w-0`}>
             <label className={formLabelClass} htmlFor="runner-actor">
               Participant actor
             </label>
@@ -80,7 +82,7 @@ export function SimulationEntryPage() {
               onChange={(event) => setActorId(event.target.value)}
             />
           </div>
-          <div className={formGroupClass}>
+            <div className={`${formGroupClass} min-w-0`}>
             <label className={formLabelClass} htmlFor="runner-participant">
               Participant ID
             </label>
@@ -101,7 +103,7 @@ export function SimulationEntryPage() {
           isLoading={simulations.isPending}
           hasError={simulations.isError}
         />
-        <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-col-reverse gap-3 border-t border-slate-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-slate-500">
             {simulationIds.length
               ? `${simulationIds.length} simulation${simulationIds.length === 1 ? '' : 's'} ready to run.`
@@ -110,18 +112,19 @@ export function SimulationEntryPage() {
           <button
             type="submit"
             disabled={!actorId || !participantId.trim() || !simulationIds.length || start.isPending}
-            className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#9929EA] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#7d1fc2] focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50 sm:w-auto"
+            className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-md !border-0 !bg-[#9929EA] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#7d1fc2] focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50 sm:w-auto"
           >
             <Play size={15} />{' '}
             {start.isPending ? 'Starting simulations…' : 'Start selected simulations'}
           </button>
         </div>
         {start.isError && (
-          <div className="sm:col-span-2 lg:col-span-4">
+          <div className="min-w-0">
             <ErrorState message="Unable to start or resume the simulation." />
           </div>
         )}
-      </form>
-    </main>
+        </form>
+      </div>
+    </PageFrame>
   )
 }

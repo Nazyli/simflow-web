@@ -141,7 +141,7 @@ export function ChatSidebar({
       <div ref={listRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 text-sm">
         {messages.length ? (
           messages.map((message) => (
-            <div key={message.id} className="rounded-lg bg-slate-100 px-3 py-2">
+          <div key={message.id} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
               <span className="text-xs font-medium text-indigo-600">{message.sender}</span>
               <p className="mt-0.5 text-slate-700">{message.text}</p>
             </div>
@@ -163,7 +163,7 @@ export function ChatSidebar({
           aria-label="Send message"
           size="icon"
           type="submit"
-          className="shrink-0 rounded-lg bg-indigo-600 hover:bg-indigo-500"
+          className="shrink-0 rounded-md bg-indigo-600 hover:bg-indigo-500"
         >
           <Send className="size-4" />
         </Button>

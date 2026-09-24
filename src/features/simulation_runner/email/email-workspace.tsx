@@ -41,7 +41,7 @@ export function EmailWorkspace({
   onOpenAttachment,
 }: EmailWorkspaceProps) {
   return (
-    <section className="col-span-full flex min-h-0 min-h-[540px] flex-1 flex-col overflow-hidden rounded-xl border border-[#e8eaed] bg-white shadow-sm">
+    <section className="col-span-full flex min-h-0 min-h-[480px] min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
         <ConversationSidebar
           threads={threads}
@@ -51,7 +51,7 @@ export function EmailWorkspace({
             onConversationOpen?.(rootId)
           }}
         />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#f6f8fb]">
           {selectedThread ? (
             <>
               <ConversationHeader thread={selectedThread} messages={messages} />

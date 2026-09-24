@@ -17,10 +17,10 @@ export function NetworkStatus() {
 
   return (
     <span
-      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium backdrop-blur-sm ${
+      className={`flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${
         isOnline
-          ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30'
-          : 'bg-red-500/20 text-red-300 ring-1 ring-red-500/30'
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+          : 'border-red-200 bg-red-50 text-red-700'
       }`}
     >
       {isOnline ? <Wifi className="size-3" /> : <WifiOff className="size-3" />}

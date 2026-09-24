@@ -110,7 +110,7 @@ export function MessageBubble({
                   type="button"
                   disabled={isOpening}
                   onClick={() => onOpenAttachment(message, attachment)}
-                  className="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium text-slate-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-default disabled:opacity-70"
+                  className="inline-flex max-w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium text-indigo-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 disabled:cursor-default disabled:opacity-70"
                 >
                   {isOpening ? (
                     <LoaderCircle className="size-4 shrink-0 animate-spin" aria-hidden="true" />

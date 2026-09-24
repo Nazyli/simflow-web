@@ -24,7 +24,7 @@ export function ConversationBody({
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 overflow-y-auto bg-[#f6f8fb]">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-[#f6f8fb]">
         <div className="mx-auto flex max-w-3xl items-center justify-center px-4 py-10">
           <span className="text-xs text-[#5f6368]">No emails in this conversation yet.</span>
         </div>
@@ -33,7 +33,7 @@ export function ConversationBody({
   }
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto bg-[#f6f8fb]">
+    <div ref={containerRef} className="min-h-0 flex-1 overflow-y-auto bg-[#f6f8fb]">
       <div className="mx-auto max-w-3xl">
         {messages.map((message, index) => (
           <MessageBubble

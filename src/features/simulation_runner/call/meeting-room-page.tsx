@@ -188,7 +188,7 @@ export function CallMeetingRoomPage() {
   }
 
   return (
-    <div className="bg-background relative flex h-full min-h-[420px] flex-col overflow-hidden">
+    <div className="bg-background relative flex h-full min-h-[420px] min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200">
       <AiAgentHeader
         agentTier={activeConnection.actorLevel}
         agentName={activeConnection.actorName}
@@ -201,8 +201,8 @@ export function CallMeetingRoomPage() {
       />
 
       {state.phase === 'awaiting-reconnect' ? (
-        <div className="flex items-center justify-between gap-3 bg-amber-500/90 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm">
-          <span>The call connection dropped. Rejoin the same room when ready.</span>
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-900">
+          <span className="min-w-0">The call connection dropped. Rejoin the same room when ready.</span>
           <Button size="sm" variant="secondary" onClick={reconnect}>
             Reconnect
           </Button>
@@ -223,7 +223,7 @@ export function CallMeetingRoomPage() {
         <CallMediaController choices={effectiveChoices} />
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
-            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col p-3 md:p-4 lg:p-6">
+            <div className="relative flex min-h-0 min-w-0 flex-1 flex-col p-3 md:p-4 lg:p-5">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <p className="text-xs font-medium text-slate-400">{activeConnection.roomName}</p>
                 <div className="flex items-center gap-3">
@@ -261,7 +261,7 @@ export function CallMeetingRoomPage() {
           </div>
 
           {/* Bottom control bar - always visible */}
-          <div className="border-t border-slate-200 bg-white px-4 py-3">
+              <div className="border-t border-slate-200 bg-white px-4 py-2.5">
             <div className="flex items-center justify-center">
               <MediaControlBar
                 choices={effectiveChoices}
@@ -279,8 +279,8 @@ export function CallMeetingRoomPage() {
 
 function CallUnavailableState({ onBack }: { onBack: () => void }) {
   return (
-    <div className="bg-background flex h-full min-h-[420px] flex-col items-center justify-center gap-4 px-6 text-center">
-      <span className="grid size-16 place-items-center rounded-full bg-slate-100 text-slate-400">
+    <div className="bg-background flex h-full min-h-[420px] flex-col items-center justify-center gap-4 rounded-lg border border-slate-200 px-6 text-center">
+      <span className="grid size-12 place-items-center rounded-md bg-slate-100 text-slate-400">
         <PhoneOff className="size-7" />
       </span>
       <div>
@@ -298,8 +298,8 @@ function CallUnavailableState({ onBack }: { onBack: () => void }) {
 
 function CallReplacedState({ onBack }: { onBack: () => void }) {
   return (
-    <div className="bg-background flex h-full min-h-[420px] flex-col items-center justify-center gap-4 px-6 text-center">
-      <span className="grid size-16 place-items-center rounded-full bg-slate-100 text-slate-400">
+    <div className="bg-background flex h-full min-h-[420px] flex-col items-center justify-center gap-4 rounded-lg border border-slate-200 px-6 text-center">
+      <span className="grid size-12 place-items-center rounded-md bg-slate-100 text-slate-400">
         <MonitorSmartphone className="size-7" />
       </span>
       <div>
@@ -318,8 +318,8 @@ function CallReplacedState({ onBack }: { onBack: () => void }) {
 
 function CallWaitingForAgentState({ onBack }: { onBack: () => void }) {
   return (
-    <div className="bg-background flex h-full min-h-[420px] flex-col items-center justify-center gap-4 px-6 text-center">
-      <span className="grid size-16 animate-pulse place-items-center rounded-full bg-slate-100 text-slate-400">
+    <div className="bg-background flex h-full min-h-[420px] flex-col items-center justify-center gap-4 rounded-lg border border-slate-200 px-6 text-center">
+      <span className="grid size-12 animate-pulse place-items-center rounded-md bg-slate-100 text-slate-400">
         <PhoneOff className="size-7" />
       </span>
       <div>

@@ -53,9 +53,9 @@ export function SimulationSelectionPanel({
   const resultCount = groupedSimulations.reduce((total, [, group]) => total + group.length, 0)
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-3">
+    <section className="min-w-0 rounded-md border border-slate-200 bg-slate-50/70 p-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+          <div className="min-w-0">
           <label className="text-sm font-semibold text-slate-800" htmlFor="runner-simulation">
             Simulations
           </label>
@@ -97,11 +97,11 @@ export function SimulationSelectionPanel({
             if (event.key === 'Enter') event.preventDefault()
           }}
           onChange={(event) => setSearchQuery(event.target.value)}
-          className="h-9 w-full rounded-md border border-slate-200 bg-slate-50 pr-3 pl-9 text-xs transition outline-none placeholder:text-slate-400 focus-visible:border-[#9929EA] focus-visible:ring-3 focus-visible:ring-[#9929EA]/20"
+            className="h-9 w-full rounded-md border border-slate-200 bg-white pr-3 pl-9 text-xs transition outline-none placeholder:text-slate-400 focus-visible:border-[#9929EA] focus-visible:ring-3 focus-visible:ring-[#9929EA]/20"
         />
       </div>
 
-      <div className="mt-2 max-h-[min(48vh,26rem)] space-y-3 overflow-y-auto rounded-md border border-slate-200/80 bg-slate-50/50 p-2">
+      <div className="mt-2 max-h-[min(48vh,26rem)] min-w-0 space-y-3 overflow-y-auto rounded-md border border-slate-200/80 bg-white p-2">
         {isLoading ? (
           <p className="py-7 text-center text-sm text-slate-500">Loading simulations…</p>
         ) : hasError ? (
@@ -130,14 +130,14 @@ export function SimulationSelectionPanel({
                   {groupSimulations.length}
                 </span>
               </div>
-              <div className="grid grid-cols-4 gap-1">
+              <div className="grid min-w-0 grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
                 {groupSimulations.map((simulation) => {
                   const selected = selectedIds.includes(simulation.simulationId)
                   return (
                     <label
                       key={simulation.simulationId}
                       className={cn(
-                        'flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 transition-colors focus-within:ring-2 focus-within:ring-[#9929EA]/30',
+                        'flex min-h-10 min-w-0 cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 transition-colors focus-within:ring-2 focus-within:ring-[#9929EA]/30',
                         selected
                           ? 'border-[#DBABFF] bg-[#F5E7FF]/70'
                           : 'border-slate-200 bg-white hover:border-[#DBABFF] hover:bg-[#F5E7FF]/40',

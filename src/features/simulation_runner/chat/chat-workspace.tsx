@@ -55,7 +55,7 @@ export function ChatWorkspace({
     : null
 
   return (
-    <section className="col-span-full flex min-h-0 min-h-[540px] flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="col-span-full flex min-h-0 min-h-[480px] min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white">
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
         <SimulationSidebar
           simulations={simulations}
@@ -71,7 +71,7 @@ export function ChatWorkspace({
           }}
           onStartNewChat={onStartNewChat}
         />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-slate-50/70">
           {activeConversation ? (
             <>
               <ConversationHeader conversation={activeConversation} />

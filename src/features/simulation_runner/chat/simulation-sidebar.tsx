@@ -14,7 +14,7 @@ export function SimulationSidebar({
   onSelect,
 }: SimulationSidebarProps) {
   return (
-    <aside className="flex shrink-0 gap-1 overflow-x-auto border-b border-slate-200 bg-white p-2 lg:w-[220px] lg:flex-col lg:overflow-y-auto lg:border-r lg:border-b-0 lg:p-2">
+    <aside className="flex min-w-0 shrink-0 gap-1 overflow-x-auto border-b border-slate-200 bg-white p-1.5 lg:w-[220px] lg:flex-col lg:overflow-y-auto lg:border-r lg:border-b-0 lg:p-2">
       <p className="hidden px-2 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase lg:block">
         Simulations
       </p>
@@ -25,7 +25,7 @@ export function SimulationSidebar({
             key={simulation.simulationId}
             type="button"
             onClick={() => onSelect(simulation.simulationId)}
-            className={`flex min-w-[200px] rounded-lg px-3 py-2.5 text-left lg:min-w-0 ${
+            className={`flex min-w-[200px] max-w-[280px] rounded-md px-2.5 py-2 text-left focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none lg:min-w-0 ${
               active
                 ? '!border-0 !bg-violet-50 !text-[#9929EA]'
                 : '!border-0 !bg-transparent !text-slate-700 hover:!bg-slate-50'
@@ -45,7 +45,7 @@ export function SimulationSidebar({
                 {simulation.unreadCount > 0 && (
                   <span
                     aria-label={`${simulation.unreadCount} unread message${simulation.unreadCount === 1 ? '' : 's'}`}
-                    className="grid size-5 shrink-0 place-items-center rounded-full bg-violet-600 text-[10px] font-bold text-white"
+                    className="grid size-5 shrink-0 place-items-center rounded-md bg-violet-600 text-[10px] font-bold text-white"
                   >
                     {simulation.unreadCount}
                   </span>

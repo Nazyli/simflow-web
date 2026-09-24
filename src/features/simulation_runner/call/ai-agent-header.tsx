@@ -38,13 +38,13 @@ export function AiAgentHeader({
   }
 
   return (
-    <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-      <div className="flex items-center gap-3">
-        <div className="brand-gradient grid size-9 place-items-center rounded-full text-sm font-bold text-white shadow-lg">
+    <header className="flex min-w-0 items-center justify-between border-b border-slate-200 bg-white px-4 py-2.5">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="grid size-8 shrink-0 place-items-center rounded-md bg-violet-50 text-sm font-bold text-violet-700">
           {agentName.charAt(0).toUpperCase()}
         </div>
-        <div>
-          <p className="text-sm font-semibold text-slate-800">{agentName}</p>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-slate-800">{agentName}</p>
           {level ? <p className="text-xs text-slate-500">{level}</p> : null}
         </div>
       </div>
@@ -54,7 +54,7 @@ export function AiAgentHeader({
             onClick={onToggleChat}
             size="sm"
             variant="ghost"
-            className={`rounded-full p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 ${
+            className={`rounded-md p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 ${
               chatOpen ? 'bg-slate-100 text-slate-800' : ''
             }`}
           >
@@ -64,7 +64,7 @@ export function AiAgentHeader({
         <Button
           onClick={() => void endCall()}
           size="sm"
-          className="gap-2 rounded-full bg-red-500 px-4 text-white shadow-lg transition hover:bg-red-600 hover:shadow-red-500/25"
+          className="gap-2 rounded-md bg-red-600 px-3.5 text-white shadow-sm transition hover:bg-red-700"
         >
           <PhoneOff className="size-4" />
           <span className="hidden sm:inline">End call</span>

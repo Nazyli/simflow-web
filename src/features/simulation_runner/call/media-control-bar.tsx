@@ -67,7 +67,7 @@ function DeviceMenu({
         onClick={onClose}
         type="button"
       />
-      <div className="absolute bottom-full left-1/2 z-50 mb-3 max-h-52 w-56 -translate-x-1/2 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl backdrop-blur-md">
+      <div className="absolute bottom-full left-1/2 z-50 mb-3 max-h-52 w-56 -translate-x-1/2 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
         {fullItems.length === 0 ? (
           <p className="px-3 py-2.5 text-xs text-slate-500">No devices found</p>
         ) : (
@@ -120,11 +120,11 @@ export function MediaControlBar({
   const cameras = useMemo(() => devices.filter((device) => device.kind === 'videoinput'), [devices])
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       <div className="relative flex items-center gap-1">
         <button
           aria-label={choices.audioEnabled ? 'Mute microphone' : 'Enable microphone'}
-          className={`rounded-full p-3 transition-all ${
+            className={`rounded-md p-2.5 transition-all ${
             choices.audioEnabled
               ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
               : 'bg-red-100 text-red-600 hover:bg-red-200'
@@ -157,12 +157,12 @@ export function MediaControlBar({
         />
       </div>
 
-      <div className="h-8 w-px bg-slate-200" />
+      <div className="h-7 w-px bg-slate-200" />
 
       <div className="relative flex items-center gap-1">
         <button
           aria-label={choices.videoEnabled ? 'Turn camera off' : 'Turn camera on'}
-          className={`rounded-full p-3 transition-all ${
+            className={`rounded-md p-2.5 transition-all ${
             choices.videoEnabled
               ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
               : 'bg-red-100 text-red-600 hover:bg-red-200'

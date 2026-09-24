@@ -14,8 +14,8 @@ export function CallChannelPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="border-border bg-card flex h-full min-h-[420px] flex-col items-center justify-center gap-3 rounded-xl border px-6 text-center shadow-sm">
-      <span className="bg-muted text-muted-foreground grid size-12 place-items-center rounded-full">
+    <div className="border-border bg-card flex h-full min-h-[420px] flex-col items-center justify-center gap-3 rounded-lg border px-6 text-center">
+      <span className="bg-muted text-muted-foreground grid size-12 place-items-center rounded-md">
         <PhoneOff className="size-5" />
       </span>
       <div>

@@ -76,7 +76,7 @@ export function ConversationSidebar({
 
   return (
     <>
-      <aside className="flex shrink-0 gap-1 overflow-x-auto border-b border-slate-200 bg-white p-2 lg:w-[280px] lg:flex-col lg:overflow-y-auto lg:border-r lg:border-b-0 lg:p-2">
+      <aside className="flex min-w-0 shrink-0 gap-1 overflow-x-auto border-b border-slate-200 bg-white p-1.5 lg:w-[280px] lg:flex-col lg:overflow-y-auto lg:border-r lg:border-b-0 lg:p-2">
         <p className="hidden px-2 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase lg:block">
           Conversations
         </p>
@@ -84,7 +84,7 @@ export function ConversationSidebar({
           <label className="relative flex-1">
             <Search className="absolute top-2.5 left-3 h-3.5 w-3.5 text-slate-400" />
             <input
-              className={`${inputClass} !py-2 !pl-8 text-xs`}
+              className={`${inputClass} !h-8 !rounded-md !py-1.5 !pl-8 text-xs`}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search name or actor ID"
@@ -105,7 +105,7 @@ export function ConversationSidebar({
           <label className="relative flex-1">
             <Search className="absolute top-2.5 left-3 h-3.5 w-3.5 text-slate-400" />
             <input
-              className={`${inputClass} !py-2 !pl-8 text-xs`}
+              className={`${inputClass} !h-8 !rounded-md !py-1.5 !pl-8 text-xs`}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search"
@@ -128,21 +128,21 @@ export function ConversationSidebar({
               key={actor.actorId}
               type="button"
               onClick={() => onSelect(actor.actorId)}
-              className={`flex min-w-[220px] items-center gap-3 rounded-lg px-3 py-2.5 text-left lg:min-w-0 ${
+              className={`flex min-w-[220px] max-w-[320px] items-center gap-3 rounded-md px-2.5 py-2 text-left focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none lg:min-w-0 ${
                 active
                   ? '!border-0 !bg-violet-50 !text-[#9929EA]'
                   : '!border-0 !bg-transparent !text-slate-700 hover:!bg-slate-50'
               }`}
             >
               <span
-                className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold ${active ? 'bg-[#9929EA] text-white' : 'bg-slate-100 text-slate-500'}`}
+                className={`grid size-8 shrink-0 place-items-center rounded-md text-xs font-bold ${active ? 'bg-[#9929EA] text-white' : 'bg-slate-100 text-slate-500'}`}
               >
                 {actor.actorName.slice(0, 1).toUpperCase()}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-2">
                   <span className="truncate text-sm font-semibold">{actor.actorName}</span>
-                  <span className="shrink-0 rounded-full bg-violet-100 px-1.5 text-[10px] font-semibold text-[#9929EA]">
+                  <span className="shrink-0 rounded-md bg-violet-100 px-1.5 text-[10px] font-semibold text-[#9929EA]">
                     {actor.actorId}
                   </span>
                 </span>
@@ -151,7 +151,7 @@ export function ConversationSidebar({
                   {actor.unreadCount > 0 ? (
                     <span
                       aria-label={`${actor.unreadCount} unread message${actor.unreadCount === 1 ? '' : 's'}`}
-                      className="grid size-5 shrink-0 place-items-center rounded-full bg-violet-600 text-[10px] font-bold text-white"
+                      className="grid size-5 shrink-0 place-items-center rounded-md bg-violet-600 text-[10px] font-bold text-white"
                     >
                       {actor.unreadCount}
                     </span>
@@ -211,7 +211,7 @@ export function ConversationSidebar({
                     key={item.actorId}
                     type="button"
                     onClick={() => handlePick(item.actorId, item.actorName)}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-slate-50"
+                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none hover:bg-slate-50"
                   >
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
                       {item.actorName.slice(0, 1).toUpperCase()}
@@ -221,7 +221,7 @@ export function ConversationSidebar({
                         <span className="truncate text-sm font-semibold text-slate-700">
                           {item.actorName}
                         </span>
-                        <span className="shrink-0 rounded-full bg-violet-100 px-1.5 text-[10px] font-semibold text-[#9929EA]">
+                        <span className="shrink-0 rounded-md bg-violet-100 px-1.5 text-[10px] font-semibold text-[#9929EA]">
                           {item.actorId}
                         </span>
                       </span>

@@ -52,7 +52,7 @@ export function DocumentPreviewDialog({
           <div className="mx-auto flex max-w-[680px] flex-col gap-5">
             {doc.pages.map((page, index) => (
               <section key={index}>
-                <article className="min-h-[720px] bg-white p-6 text-sm leading-7 text-slate-700 shadow-sm sm:p-10">
+                <article className="min-h-[720px] bg-white p-6 text-sm leading-7 text-slate-700 sm:p-10">
                   {isHtmlContent(page) ? (
                     <SafeHtml html={page} />
                   ) : (
