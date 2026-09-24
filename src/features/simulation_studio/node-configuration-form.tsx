@@ -179,19 +179,19 @@ export function NodeConfigurationForm({
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={submit}>
+    <form className="flex min-w-0 flex-col gap-4" onSubmit={submit}>
       {readonly && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-normal text-amber-800">
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-normal text-amber-800">
           Read-only — this simulation has been used and cannot be edited. Duplicate it to make
           changes.
         </div>
       )}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+      <div className="flex min-w-0 items-center justify-between gap-3 border-b border-[#DBE3EC] pb-2.5">
         <div className="flex items-center gap-2">
-          <Sliders className="h-4 w-4 text-purple-600" />
-          <h3 className="text-sm font-semibold">Node Configuration</h3>
+          <Sliders className="h-4 w-4 shrink-0 text-[#9929EA]" />
+          <h3 className="text-sm font-semibold text-slate-900">Node configuration</h3>
         </div>
-        <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[0.625rem] font-bold tracking-wider text-slate-500 uppercase">
+        <span className="max-w-36 truncate rounded-md border border-[#DBE3EC] bg-[#F5E7FF] px-2 py-0.5 text-[0.625rem] font-bold tracking-wider text-[#5B148F] uppercase">
           {node.nodeType}
         </span>
       </div>
@@ -203,7 +203,7 @@ export function NodeConfigurationForm({
         placeholder="e.g. Process Order"
       />
       {node.inputPorts?.length ? (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div className="rounded-md border border-[#DBE3EC] bg-slate-50/80 p-3">
           <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
             Input connections
           </p>
@@ -211,7 +211,7 @@ export function NodeConfigurationForm({
             {node.inputPorts.map((port) => (
               <div key={port.id} className="flex items-center justify-between gap-3 text-xs">
                 <span className="font-medium text-slate-700">{port.label}</span>
-                <span className="rounded-full bg-white px-2 py-0.5 font-semibold text-slate-600 ring-1 ring-slate-200">
+                <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 font-semibold text-slate-600">
                   Max connections: {port.maxConnections ?? 1}
                 </span>
               </div>
@@ -264,7 +264,7 @@ export function NodeConfigurationForm({
         />
       ) : null}
       {error && <p className="text-xs text-red-600">{error}</p>}
-      <div className="grid gap-2">
+      <div className="grid gap-2 border-t border-[#DBE3EC] pt-3">
         <Button type="submit" className="w-full" disabled={readonly}>
           <Save className="h-4 w-4" /> Save Node
         </Button>
@@ -980,10 +980,10 @@ export function EdgeConfigurationForm({
           changes.
         </div>
       )}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+      <div className="flex items-center justify-between border-b border-[#DBE3EC] pb-2.5">
         <div className="flex items-center gap-2">
-          <GitBranch className="h-4 w-4 text-purple-600" />
-          <h3 className="text-sm font-semibold">Edge Inspector</h3>
+          <GitBranch className="h-4 w-4 text-[#9929EA]" />
+          <h3 className="text-sm font-semibold text-slate-900">Edge inspector</h3>
         </div>
       </div>
       <div className="grid gap-2">

@@ -87,6 +87,7 @@ import {
 import { replaceVisualGroups } from '../../shared/api/visual-groups'
 import { LoadingState } from '../../shared/components/async-state'
 import { StatusBadge } from '../../shared/components/status-badge'
+import { PageFrame } from '../../components/layout/page-frame'
 import { buildWorkflowExportFileName } from './workflow-package-logic'
 import type {
   Execution,
@@ -134,7 +135,7 @@ function ZoomSliderPanel() {
 
   return (
     <div
-      className="absolute bottom-[12px] left-[72px] z-10 flex h-9 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-slate-700 shadow-md sm:px-3"
+      className="absolute bottom-3 left-[72px] z-10 flex h-9 items-center gap-2 rounded-md border border-[#C6D2DF] bg-white px-2.5 py-2 text-slate-700 shadow-sm sm:px-3"
       aria-label="Zoom slider"
     >
       <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">
@@ -808,10 +809,7 @@ export function SimulationStudioPage() {
       ),
     [nodeCatalog.data],
   )
-  const paletteGroups = useMemo(
-    () => buildNodePaletteGroups(nodeCatalog.data),
-    [nodeCatalog.data],
-  )
+  const paletteGroups = useMemo(() => buildNodePaletteGroups(nodeCatalog.data), [nodeCatalog.data])
   const selectedNode = useMemo(
     () => apiNodes.find((node) => node.nodeId === selectedNodeId) ?? null,
     [apiNodes, selectedNodeId],
@@ -1246,9 +1244,7 @@ export function SimulationStudioPage() {
       event.stopPropagation()
       addGraphNode.mutate({
         definition,
-        parameters: event.dataTransfer
-          ? readPaletteDragParameters(event.dataTransfer)
-          : undefined,
+        parameters: event.dataTransfer ? readPaletteDragParameters(event.dataTransfer) : undefined,
         position: flowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY }),
       })
     }
@@ -1536,9 +1532,7 @@ export function SimulationStudioPage() {
       toast.error(lockedMessage)
       return
     }
-    const definition = definitions.get(
-      event.dataTransfer.getData(PALETTE_NODE_TYPE_DATA),
-    )
+    const definition = definitions.get(event.dataTransfer.getData(PALETTE_NODE_TYPE_DATA))
     if (!definition || !flowInstance || !simulationId) return
     addGraphNode.mutate({
       definition,
@@ -1604,16 +1598,24 @@ export function SimulationStudioPage() {
 
   if (versionDetail.isPending) {
     return (
-      <div className="grid h-[calc(100vh-64px)] place-items-center bg-slate-50 p-6">
+      <PageFrame
+        mode="workbench"
+        edgeToEdge
+        className="grid h-[calc(100vh-64px)] place-items-center"
+      >
         <LoadingState variant="canvas" />
-      </div>
+      </PageFrame>
     )
   }
 
   if (versionDetail.isError) {
     return (
-      <div className="grid h-[calc(100vh-64px)] place-items-center bg-slate-50 p-6">
-        <div className="max-w-sm rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <PageFrame
+        mode="workbench"
+        edgeToEdge
+        className="grid h-[calc(100vh-64px)] place-items-center"
+      >
+        <div className="max-w-sm rounded-lg border border-[#DBE3EC] bg-white p-6 text-center">
           <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-500" />
           <h2 className="text-sm font-bold text-slate-900">Simulation not found</h2>
           <p className="mt-1 text-xs leading-normal text-slate-500">
@@ -1624,18 +1626,22 @@ export function SimulationStudioPage() {
             Back to simulations
           </Button>
         </div>
-      </div>
+      </PageFrame>
     )
   }
 
   return (
-    <div className="studio-app-container flex h-[calc(100vh-64px)] flex-col overflow-hidden bg-slate-50 text-slate-800">
+    <PageFrame
+      mode="workbench"
+      edgeToEdge
+      className="studio-app-container flex h-[calc(100vh-64px)] min-h-0 min-w-0 flex-col overflow-hidden text-slate-800"
+    >
       {/* Studio Header Bar */}
-      <header className="studio-top-header z-20 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2.5 shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="studio-top-header z-20 flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-[#DBE3EC] bg-white px-3 py-2 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2.5">
           <button
             type="button"
-            className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="shrink-0 rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
             onClick={() => setLeftSidebarOpen((prev) => !prev)}
             title={leftSidebarOpen ? 'Collapse left sidebar' : 'Expand left sidebar'}
           >
@@ -1643,7 +1649,7 @@ export function SimulationStudioPage() {
           </button>
 
           <div className="flex min-w-0 items-center gap-2">
-            <span className="rounded border border-purple-200 bg-purple-50 px-2 py-0.5 text-xs font-bold tracking-wider text-purple-700 uppercase">
+            <span className="shrink-0 text-[0.68rem] font-bold tracking-[0.12em] text-violet-700 uppercase">
               Studio
             </span>
             <nav className="flex min-w-0 items-center gap-1.5" aria-label="Studio breadcrumb">
@@ -1654,19 +1660,19 @@ export function SimulationStudioPage() {
                 GroupSimulations
               </Link>
               <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-              <h1 className="truncate text-base font-bold text-slate-900">
+              <h1 className="truncate text-sm font-semibold text-slate-900">
                 {selectedGroupSimulation?.groupSimulationName ?? 'Loading…'}
               </h1>
             </nav>
           </div>
 
-          <div className="hidden items-center gap-2.5 border-l border-slate-200 pl-3 sm:flex">
+          <div className="hidden min-w-0 items-center gap-2.5 border-l border-[#DBE3EC] pl-3 sm:flex">
             {selectedSimulation ? (
-              <span className="inline-flex h-5 items-center rounded-4xl border border-slate-200 bg-slate-50 px-2 text-[0.66rem] font-semibold text-slate-600">
+              <span className="inline-flex max-w-48 items-center truncate rounded-md border border-[#DBE3EC] bg-slate-50 px-2 py-0.5 text-[0.66rem] font-semibold text-slate-600">
                 {selectedSimulation.simulationName}
               </span>
             ) : (
-              <span className="inline-flex h-5 w-fit items-center rounded-4xl border border-slate-200 bg-slate-50 px-2 text-[0.66rem] font-semibold text-slate-500">
+              <span className="inline-flex items-center rounded-md border border-[#DBE3EC] bg-slate-50 px-2 py-0.5 text-[0.66rem] font-semibold text-slate-500">
                 No Simulation
               </span>
             )}
@@ -1710,9 +1716,9 @@ export function SimulationStudioPage() {
         </div>
 
         {/* Right Header Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
           {selectedGroupSimulation && (
-            <div className="mr-2 hidden items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 p-1 md:flex">
+            <div className="mr-1 hidden items-center gap-1.5 rounded-md border border-[#DBE3EC] bg-slate-50 p-1 md:flex">
               <select
                 className="cursor-pointer bg-transparent px-2 py-1 text-xs font-medium text-slate-700 focus:outline-none"
                 value={simulationId ?? ''}
@@ -1733,7 +1739,7 @@ export function SimulationStudioPage() {
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center gap-1 rounded bg-purple-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-purple-700"
+                    className="flex items-center gap-1 rounded-md bg-[#9929EA] px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-[#7D1FC2]"
                   >
                     <Copy className="h-3 w-3" /> Workflow actions{' '}
                     <ChevronDown className="h-3 w-3" />
@@ -1742,7 +1748,7 @@ export function SimulationStudioPage() {
                 <PopoverContent align="end" className="w-48 p-1">
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-purple-50 hover:text-purple-700"
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-[#F5E7FF] hover:text-[#5B148F]"
                     onClick={() => {
                       setWorkflowActionsOpen(false)
                       openDuplicateDialog()
@@ -1752,7 +1758,7 @@ export function SimulationStudioPage() {
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-purple-50 hover:text-purple-700 disabled:opacity-50"
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-[#F5E7FF] hover:text-[#5B148F] disabled:opacity-50"
                     disabled={exportWorkflow.isPending || !selectedSimulation}
                     onClick={() => {
                       setWorkflowActionsOpen(false)
@@ -1763,7 +1769,7 @@ export function SimulationStudioPage() {
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-purple-50 hover:text-purple-700 disabled:opacity-50"
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-[#F5E7FF] hover:text-[#5B148F] disabled:opacity-50"
                     disabled={!selectedSimulation || importWorkflow.isPending}
                     onClick={openImportPicker}
                   >
@@ -1784,7 +1790,7 @@ export function SimulationStudioPage() {
           {isLocked && (
             <button
               type="button"
-              className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-amber-700"
+              className="flex items-center gap-1.5 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-700"
               onClick={() => openDuplicateDialog()}
               title="Duplicate this locked simulation to make changes"
             >
@@ -1792,7 +1798,7 @@ export function SimulationStudioPage() {
             </button>
           )}
           <button
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:bg-emerald-700 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
             type="button"
             disabled={!selectedSimulation || validating}
             onClick={validateGraph}
@@ -1803,7 +1809,7 @@ export function SimulationStudioPage() {
 
           <button
             type="button"
-            className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-100"
+            className="flex items-center gap-1.5 rounded-md border border-[#C6D2DF] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
             onClick={() => navigate('/simulation')}
           >
             <Play size={14} className="fill-purple-600 text-purple-600" /> Run Simulation
@@ -1811,7 +1817,7 @@ export function SimulationStudioPage() {
 
           <button
             type="button"
-            className="ml-1 rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="ml-1 shrink-0 rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
             onClick={() => setRightSidebarOpen((prev) => !prev)}
             title={rightSidebarOpen ? 'Collapse inspector sidebar' : 'Expand inspector sidebar'}
           >
@@ -1821,12 +1827,12 @@ export function SimulationStudioPage() {
       </header>
 
       {/* Main Studio Workspace Grid */}
-      <div className="studio-main-workspace relative flex flex-1 overflow-hidden">
+      <div className="studio-main-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         {/* Left Sidebar: Node Palette */}
         <aside
-          className={`studio-left-sidebar z-10 flex flex-col border-r border-slate-200 bg-white transition-all duration-200 ${leftSidebarOpen ? 'w-72 min-w-[280px]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
+          className={`studio-left-sidebar z-10 flex min-h-0 flex-col border-r border-[#DBE3EC] bg-white transition-all duration-200 ${leftSidebarOpen ? 'w-64 max-w-[280px] min-w-[240px]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
         >
-          <div className="flex items-center justify-between border-b border-slate-200 p-3">
+          <div className="flex items-center justify-between border-b border-[#DBE3EC] p-2.5">
             <h2 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
               <Layers className="h-4 w-4 text-purple-600" /> Node Palette
             </h2>
@@ -1835,12 +1841,12 @@ export function SimulationStudioPage() {
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3">
-            <p className="mb-3 text-xs text-slate-500">
+          <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+            <p className="mb-2.5 text-xs text-slate-500">
               Drag a node onto the canvas or click to append it.
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {paletteGroups.map((group) => (
                 <section key={group.id} aria-labelledby={`palette-group-${group.id}`}>
                   <div className="mb-1.5 flex items-center justify-between border-b border-slate-100 pb-1">
@@ -1856,7 +1862,9 @@ export function SimulationStudioPage() {
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-start gap-1.5">
+                  <div
+                    className={`flex flex-wrap items-start ${group.density === 'compact' ? 'gap-1' : 'gap-1.5'}`}
+                  >
                     {group.entries.map(({ definition, parameters }) => {
                       const isEditable = Boolean(simulationId) && !isLocked
 
@@ -1879,9 +1887,9 @@ export function SimulationStudioPage() {
                                 borderColor: `${definition.color}55`,
                                 backgroundColor: `${definition.color}0d`,
                               }}
-                              className={`palette-card-item w-fit max-w-full cursor-grab rounded-lg border px-2 py-1.5 text-center transition-all active:cursor-grabbing ${
+                              className={`palette-card-item w-fit max-w-full cursor-grab rounded-md border px-2 py-1.5 text-center transition-colors active:cursor-grabbing ${
                                 isEditable
-                                  ? 'border-slate-200 opacity-100 hover:scale-[1.02] hover:shadow-md'
+                                  ? 'border-slate-200 opacity-100 hover:border-[#C6D2DF] hover:bg-white'
                                   : 'cursor-not-allowed opacity-50'
                               }`}
                             >
@@ -1931,13 +1939,13 @@ export function SimulationStudioPage() {
         </aside>
 
         {/* Center Canvas Area */}
-        <section className="studio-canvas-area relative flex flex-1 flex-col bg-slate-100/70">
-          {/* Floating Canvas Glassmorphism Toolbar */}
-          <div className="floating-canvas-toolbar absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/90 p-1.5 shadow-md backdrop-blur-md">
+        <section className="studio-canvas-area relative flex min-h-0 min-w-0 flex-1 flex-col bg-[#F6F8FB]">
+          {/* Compact canvas toolbar */}
+          <div className="floating-canvas-toolbar absolute top-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-1 rounded-md border border-[#C6D2DF] bg-white p-1 shadow-sm">
             <div className="flex items-center gap-1 border-r border-slate-200 px-1">
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Zoom Out"
                 onClick={() => flowInstance?.zoomOut()}
                 title="Zoom Out"
@@ -1946,7 +1954,7 @@ export function SimulationStudioPage() {
               </button>
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Zoom In"
                 onClick={() => flowInstance?.zoomIn()}
                 title="Zoom In"
@@ -1955,7 +1963,7 @@ export function SimulationStudioPage() {
               </button>
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Fit View"
                 onClick={() => flowInstance?.fitView()}
                 title="Fit Canvas View"
@@ -1964,7 +1972,7 @@ export function SimulationStudioPage() {
               </button>
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Auto layout"
                 onClick={applyAutoLayout}
                 disabled={!simulationId || !apiNodes.length}
@@ -1974,7 +1982,7 @@ export function SimulationStudioPage() {
               </button>
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-1 rounded-lg p-1.5 px-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center justify-center gap-1 rounded-md p-1.5 px-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                 onClick={createGroupFromSelection}
                 disabled={isLocked || selectedWorkflowNodeIds.length < 2}
                 title="Group selected workflow nodes"
@@ -1987,7 +1995,7 @@ export function SimulationStudioPage() {
               <select
                 value={edgePathType}
                 onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
-                className="h-8 cursor-pointer rounded-lg border border-slate-200 bg-white px-1.5 text-xs text-slate-600 transition-colors outline-none hover:bg-slate-50"
+                className="h-8 cursor-pointer rounded-md border border-[#DBE3EC] bg-white px-1.5 text-xs text-slate-600 transition-colors outline-none hover:bg-slate-50"
                 title="Edge path style"
               >
                 <option value="default">Bezier</option>
@@ -1998,7 +2006,7 @@ export function SimulationStudioPage() {
 
               <button
                 type="button"
-                className={`inline-flex items-center justify-center rounded-lg p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${showMiniMap ? 'bg-purple-50 text-purple-700' : 'text-slate-600 hover:bg-slate-100'}`}
+                className={`inline-flex items-center justify-center rounded-md p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${showMiniMap ? 'bg-[#F5E7FF] text-[#5B148F]' : 'text-slate-600 hover:bg-slate-100'}`}
                 onClick={() => setShowMiniMap((curr) => !curr)}
                 title="Toggle Minimap"
               >
@@ -2007,7 +2015,7 @@ export function SimulationStudioPage() {
 
               <button
                 type="button"
-                className={`inline-flex items-center justify-center gap-1 rounded-lg p-1.5 px-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${validationRequested ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-100'}`}
+                className={`inline-flex items-center justify-center gap-1 rounded-md p-1.5 px-2 text-xs font-medium text-emerald-800 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${validationRequested ? 'bg-emerald-50' : 'hover:bg-slate-100'}`}
                 onClick={validateGraph}
                 disabled={validating || !simulationId}
                 title="Validate Graph Structure"
@@ -2020,7 +2028,7 @@ export function SimulationStudioPage() {
           {/* Graph Validation Floating Drawer */}
           {validationRequested && (
             <div
-              className={`animate-slide-up absolute right-4 bottom-4 left-4 z-20 rounded-xl border p-4 shadow-xl backdrop-blur-md md:right-auto md:max-w-md ${validationErrors.length > 0 ? 'border-red-200 bg-red-50 text-red-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'}`}
+              className={`animate-slide-up absolute right-3 bottom-3 left-3 z-20 rounded-md border p-3 md:right-auto md:max-w-md ${validationErrors.length > 0 ? 'border-red-200 bg-red-50 text-red-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'}`}
             >
               <div className="mb-2 flex items-center justify-between">
                 <h3
@@ -2063,7 +2071,7 @@ export function SimulationStudioPage() {
 
           {/* React Flow Canvas Container */}
           <div
-            className="graph h-full w-full flex-1 border-none bg-slate-50"
+            className="graph h-full !min-h-0 w-full min-w-0 flex-1 border-none bg-[#FBFCFE]"
             onDragOver={allowCanvasDrop}
             onDrop={dropPaletteNode}
           >
@@ -2229,7 +2237,7 @@ export function SimulationStudioPage() {
               <NodeSearch
                 position="top-left"
                 placeholder="Search nodes... ⌘K"
-                className="w-[320px] shadow-lg md:min-w-[320px] !m-0"
+                className="!m-0 w-[320px] shadow-lg md:min-w-[320px]"
                 style={{ top: '56px', left: '16px', margin: 0 } as React.CSSProperties}
               />
               <StartNodeViewport
@@ -2243,10 +2251,10 @@ export function SimulationStudioPage() {
 
         {/* Right Sidebar: Tabbed Inspector, Versions, Executions */}
         <aside
-          className={`studio-right-sidebar z-10 flex flex-col border-l border-slate-200 bg-white transition-all duration-200 ${rightSidebarOpen ? 'w-80 min-w-[320px]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
+          className={`studio-right-sidebar z-10 flex min-h-0 flex-col border-l border-[#DBE3EC] bg-white transition-all duration-200 ${rightSidebarOpen ? 'w-[min(22rem,34vw)] max-w-[360px] min-w-[280px]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
         >
           {/* Tab Navigation */}
-          <div className="right-sidebar-tabs flex gap-1 border-b border-slate-200 bg-slate-50 p-1">
+          <div className="right-sidebar-tabs flex gap-1 border-b border-[#DBE3EC] bg-slate-50 p-1">
             <button
               type="button"
               className={`tab-btn flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
@@ -2285,7 +2293,7 @@ export function SimulationStudioPage() {
           </div>
 
           {/* Tab Contents */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-3">
             {/* Inspector Tab */}
             {activeRightTab === 'inspector' && (
               <div className="space-y-4">
@@ -2334,7 +2342,7 @@ export function SimulationStudioPage() {
                   {selectedGroupSimulation && (
                     <button
                       type="button"
-                      className="flex items-center gap-1 rounded bg-purple-600 px-2.5 py-1 text-xs font-medium text-white shadow-xs hover:bg-purple-700"
+                      className="flex items-center gap-1 rounded-md bg-[#9929EA] px-2.5 py-1 text-xs font-medium text-white hover:bg-[#7D1FC2]"
                       onClick={() => openDuplicateDialog()}
                     >
                       <Plus className="h-3 w-3" /> Duplicate
@@ -2350,9 +2358,9 @@ export function SimulationStudioPage() {
                       {versions.data?.map((version) => (
                         <div
                           key={version.simulationId}
-                          className={`cursor-pointer rounded-xl border p-3 transition-all ${
+                          className={`cursor-pointer rounded-md border p-3 transition-colors ${
                             version.simulationId === simulationId
-                              ? 'border-purple-300 bg-purple-50 shadow-xs'
+                              ? 'border-[#C6D2DF] bg-[#F5E7FF]'
                               : 'border-slate-200 bg-white hover:border-slate-300'
                           }`}
                           onClick={() => navigate(`/studio/${version.simulationId}`)}
@@ -2378,7 +2386,7 @@ export function SimulationStudioPage() {
                                   event.stopPropagation()
                                   openDuplicateDialog(version)
                                 }}
-                                className="rounded-md p-1 text-slate-400 transition hover:bg-purple-50 hover:text-purple-600"
+                                className="rounded-md p-1 text-purple-700 transition hover:bg-purple-50 hover:text-purple-800"
                               >
                                 <Copy className="h-3.5 w-3.5" />
                               </button>
@@ -2390,7 +2398,7 @@ export function SimulationStudioPage() {
                                   event.stopPropagation()
                                   setdeleteSimulationTarget(version.simulationId)
                                 }}
-                                className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                                className="rounded-md p-1 text-red-700 transition hover:bg-red-50 hover:text-red-800"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
@@ -2430,8 +2438,8 @@ export function SimulationStudioPage() {
           if (!open) setDeleteExecutionTarget(null)
         }}
       >
-        <DialogContent className="p-6 sm:max-w-md">
-          <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
+        <DialogContent className="p-5 sm:max-w-md">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
             <Trash2 className="h-5 w-5 text-red-600" /> Delete execution log?
           </DialogTitle>
           <DialogDescription>
@@ -2468,8 +2476,8 @@ export function SimulationStudioPage() {
           if (!open) setdeleteSimulationTarget(null)
         }}
       >
-        <DialogContent className="p-6 sm:max-w-md">
-          <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
+        <DialogContent className="p-5 sm:max-w-md">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
             <Trash2 className="h-5 w-5 text-red-600" /> Delete simulation version?
           </DialogTitle>
           <DialogDescription>
@@ -2522,9 +2530,9 @@ export function SimulationStudioPage() {
           if (!open) setDuplicateOpen(false)
         }}
       >
-        <DialogContent className="p-6 sm:max-w-md">
-          <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <Copy className="h-5 w-5 text-purple-600" /> Duplicate simulation
+        <DialogContent className="p-5 sm:max-w-md">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
+            <Copy className="h-5 w-5 text-[#9929EA]" /> Duplicate simulation
           </DialogTitle>
           <DialogDescription>
             Create a copy of this version. You can rename it and update the description before
@@ -2590,7 +2598,7 @@ export function SimulationStudioPage() {
               <Button
                 type="submit"
                 disabled={createDraft.isPending || !duplicateName.trim()}
-                className="bg-purple-600 text-white hover:bg-purple-700"
+                className="bg-[#9929EA] text-white hover:bg-[#7D1FC2]"
               >
                 <Copy className="h-3.5 w-3.5" />
                 {createDraft.isPending ? 'Duplicating…' : 'Duplicate'}
@@ -2599,7 +2607,7 @@ export function SimulationStudioPage() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageFrame>
   )
 }
 
@@ -2639,7 +2647,7 @@ function ExecutionHistoryPanel({
       <div className="max-h-60 space-y-2 overflow-y-auto pr-1">
         {executions.map((execution) => (
           <div
-            className={`w-full cursor-pointer rounded-xl border p-2.5 text-left text-xs transition-all ${
+            className={`w-full cursor-pointer rounded-md border p-2.5 text-left text-xs transition-colors ${
               selectedExecution?.executionId === execution.executionId
                 ? 'border-purple-300 bg-purple-50'
                 : 'border-slate-200 bg-white hover:border-slate-300'
@@ -2671,7 +2679,7 @@ function ExecutionHistoryPanel({
                     event.stopPropagation()
                     onRequestDelete(execution.executionId)
                   }}
-                  className="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                  className="rounded-md p-1 text-red-700 transition hover:bg-red-50 hover:text-red-800"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

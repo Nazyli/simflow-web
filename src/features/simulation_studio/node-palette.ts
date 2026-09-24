@@ -12,6 +12,7 @@ export interface NodePaletteGroup {
   id: string
   label: string
   entries: NodePaletteEntry[]
+  density: 'compact' | 'regular'
 }
 
 export function readPaletteDragParameters(
@@ -33,9 +34,8 @@ export function buildNodePaletteGroups(catalog: NodeCatalog | undefined): NodePa
   if (!catalog) return []
 
   return catalog.paletteGroups
-    .map((group) => ({
-      ...group,
-      entries: catalog.nodes
+    .map((group) => {
+      const entries = catalog.nodes
         .filter((definition) => definition.paletteGroups.includes(group.id))
         .map((definition) => ({
           definition,
@@ -43,7 +43,14 @@ export function buildNodePaletteGroups(catalog: NodeCatalog | undefined): NodePa
             ...definition.parameters,
             ...(definition.paletteParameters[group.id] ?? {}),
           },
-        })),
-    }))
+        }))
+      const density: NodePaletteGroup['density'] = entries.length >= 6 ? 'compact' : 'regular'
+
+      return {
+        ...group,
+        entries,
+        density,
+      }
+    })
     .filter((group) => group.entries.length > 0)
 }

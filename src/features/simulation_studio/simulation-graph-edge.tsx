@@ -156,7 +156,7 @@ export function SimulationGraphEdge({
       />
       <EdgeLabelRenderer>
         <div
-          className={`nodrag nopan pointer-events-auto absolute z-10 flex items-center gap-0.5 rounded-full border p-0.5 shadow-sm backdrop-blur-sm ${isParticipantPath ? 'history-edge-label--participant' : ''} ${isBackgroundEdge ? 'history-edge-label--background' : ''}`}
+          className={`nodrag nopan pointer-events-auto absolute z-10 flex items-center gap-0.5 rounded-md border border-slate-200 bg-white/95 p-0.5 shadow-sm ${selected ? 'border-[#C6D2DF] bg-[#F5E7FF] text-[#5B148F]' : ''} ${isParticipantPath ? 'history-edge-label--participant' : ''} ${isBackgroundEdge ? 'history-edge-label--background' : ''}`}
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px) translateY(${labelOffset}px)`,
           }}
