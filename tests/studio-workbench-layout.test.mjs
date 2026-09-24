@@ -59,6 +59,13 @@ test('Studio prevents two narrow sidebar overlays from being open together', () 
   assert.match(page, /matchMedia\(STUDIO_NARROW_VIEWPORT_QUERY\)/)
   assert.match(page, /setLeftSidebarOpen\(false\)/)
   assert.match(page, /setRightSidebarOpen\(false\)/)
+  assert.match(page, /useState\(\(\) => !isNarrowStudioViewport\(\)\)/g)
+  assert.match(page, /let previousNarrowViewport = mediaQuery\.matches/)
+  assert.match(
+    page,
+    /if \(narrowViewport\) \{[\s\S]*setLeftSidebarOpen\(false\)[\s\S]*setRightSidebarOpen\(false\)[\s\S]*return\n      \}/,
+  )
+  assert.match(page, /setLeftSidebarOpen\(true\)[\s\S]*setRightSidebarOpen\(true\)/)
   assert.match(page, /toggleLeftSidebar/)
   assert.match(page, /toggleRightSidebar/)
   assert.match(page, /if \(narrowViewport && !leftSidebarOpen\) setRightSidebarOpen\(false\)/)

@@ -346,20 +346,29 @@ export function SimulationStudioPage() {
   const [validating, setValidating] = useState(false)
 
   // UI Sidebars & Tabs
-  const [leftSidebarOpen, setLeftSidebarOpen] = useState(true)
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(true)
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(() => !isNarrowStudioViewport())
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(() => !isNarrowStudioViewport())
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
 
     const mediaQuery = window.matchMedia(STUDIO_NARROW_VIEWPORT_QUERY)
+    let previousNarrowViewport = mediaQuery.matches
     const syncSidebarVisibility = () => {
-      if (!mediaQuery.matches) return
-      setLeftSidebarOpen(false)
-      setRightSidebarOpen(false)
+      const narrowViewport = mediaQuery.matches
+      if (narrowViewport === previousNarrowViewport) return
+
+      previousNarrowViewport = narrowViewport
+      if (narrowViewport) {
+        setLeftSidebarOpen(false)
+        setRightSidebarOpen(false)
+        return
+      }
+
+      setLeftSidebarOpen(true)
+      setRightSidebarOpen(true)
     }
 
-    syncSidebarVisibility()
     mediaQuery.addEventListener('change', syncSidebarVisibility)
     return () => mediaQuery.removeEventListener('change', syncSidebarVisibility)
   }, [])
