@@ -1830,7 +1830,7 @@ export function SimulationStudioPage() {
       <div className="studio-main-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         {/* Left Sidebar: Node Palette */}
         <aside
-          className={`studio-left-sidebar z-10 flex min-h-0 flex-col border-r border-[#DBE3EC] bg-white transition-all duration-200 ${leftSidebarOpen ? 'w-64 max-w-[280px] min-w-[240px]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
+          className={`studio-left-sidebar z-10 flex min-h-0 flex-col border-r border-[#DBE3EC] bg-white transition-all duration-200 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:left-0 max-[1100px]:z-20 max-[1100px]:min-w-0 max-[1100px]:shadow-md ${leftSidebarOpen ? 'w-64 max-w-[280px] min-w-[240px] max-[1100px]:w-[min(17.5rem,calc(100vw-1.5rem))] max-[1100px]:max-w-[calc(100vw-1.5rem)]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
         >
           <div className="flex items-center justify-between border-b border-[#DBE3EC] p-2.5">
             <h2 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
@@ -2251,7 +2251,7 @@ export function SimulationStudioPage() {
 
         {/* Right Sidebar: Tabbed Inspector, Versions, Executions */}
         <aside
-          className={`studio-right-sidebar z-10 flex min-h-0 flex-col border-l border-[#DBE3EC] bg-white transition-all duration-200 ${rightSidebarOpen ? 'w-[min(22rem,34vw)] max-w-[360px] min-w-[280px]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
+          className={`studio-right-sidebar z-10 flex min-h-0 flex-col border-l border-[#DBE3EC] bg-white transition-all duration-200 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:right-0 max-[1100px]:z-20 max-[1100px]:min-w-0 max-[1100px]:shadow-md ${rightSidebarOpen ? 'w-[min(22rem,34vw)] max-w-[360px] min-w-[280px] max-[1100px]:w-[min(22rem,calc(100vw-1.5rem))] max-[1100px]:max-w-[calc(100vw-1.5rem)]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
         >
           {/* Tab Navigation */}
           <div className="right-sidebar-tabs flex gap-1 border-b border-[#DBE3EC] bg-slate-50 p-1">

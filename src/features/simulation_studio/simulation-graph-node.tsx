@@ -68,7 +68,7 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
   const outputPos = outputPosition(rotation)
 
   const baseNodeEl = (
-    <BaseNode className="w-[220px] overflow-hidden" style={{ borderColor: nodeData.color }}>
+    <BaseNode className="w-[220px]" style={{ borderColor: nodeData.color }}>
       {nodeData.inputPorts.map((port, index) => (
         <BaseHandle
           key={port.id}
@@ -79,7 +79,7 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
           style={handleOffset(inputPos, index, nodeData.inputPorts.length)}
         />
       ))}
-      <BaseNodeHeader className="mb-0 flex-col items-start justify-start gap-0 py-1">
+      <BaseNodeHeader className="mb-0 min-w-0 flex-col items-start justify-start gap-0 py-1">
         <span className="flex w-full flex-row items-center justify-end gap-1 leading-none">
           <CircleDot
             size={11}
@@ -94,12 +94,12 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
             {nodeData.nodeType}
           </span>
         </span>
-        <span className="-mt-px w-full text-left text-[13px] leading-tight font-semibold break-words whitespace-normal text-slate-800">
+        <span className="-mt-px w-full min-w-0 text-left text-[13px] leading-tight font-semibold break-words whitespace-normal text-slate-800">
           {nodeData.label}
         </span>
       </BaseNodeHeader>
       {nodeData.summary && (
-        <BaseNodeContent className="border-t border-slate-100 pt-1 text-left">
+        <BaseNodeContent className="min-w-0 border-t border-slate-100 pt-1 text-left">
           <p className="text-muted-foreground line-clamp-2 text-xs leading-normal break-words">
             {nodeData.summary}
           </p>

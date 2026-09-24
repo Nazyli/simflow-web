@@ -35,6 +35,23 @@ test('Studio workbench avoids decorative glass framing while retaining graph con
   assert.match(page, /title="Arrange nodes automatically"/)
 })
 
+test('Studio nodes keep React Flow handles outside the text clipping region', () => {
+  const node = source('features/simulation_studio/simulation-graph-node.tsx')
+
+  assert.doesNotMatch(node, /<BaseNode[^>]*overflow-hidden/)
+  assert.match(node, /BaseNodeContent className="[^"]*min-w-0/)
+  assert.match(node, /line-clamp-2/)
+})
+
+test('Studio sidebars become overlays below the workbench breakpoint', () => {
+  const page = source('features/simulation_studio/simulation-studio-page.tsx')
+
+  assert.match(page, /studio-left-sidebar[^\n]*max-\[1100px\]:absolute/)
+  assert.match(page, /studio-left-sidebar[^\n]*max-\[1100px\]:min-w-0/)
+  assert.match(page, /studio-right-sidebar[^\n]*max-\[1100px\]:absolute/)
+  assert.match(page, /studio-right-sidebar[^\n]*max-\[1100px\]:min-w-0/)
+})
+
 test('palette groups expose presentation density without changing drag metadata', () => {
   const palette = source('features/simulation_studio/node-palette.ts')
   const page = source('features/simulation_studio/simulation-studio-page.tsx')
