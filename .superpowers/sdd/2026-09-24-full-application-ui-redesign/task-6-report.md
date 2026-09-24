@@ -48,6 +48,9 @@ queries, mutations, and business logic were not changed.
 Verified against the local Vite server at
 `http://192.168.0.140:5174` using the in-app browser harness:
 
+- Navigating to the root `/documentation` redirected to
+  `/documentation/00-index` and rendered the Documentation frame with 27
+  articles.
 - Desktop/default viewport: `/documentation/00-index` rendered the redesigned
   reference frame with 27 articles.
 - Documentation search accepted `wait for reply` and filtered the navigation to
@@ -57,6 +60,9 @@ Verified against the local Vite server at
   configuration content.
 - `/settings` rendered the Settings page and Reset Database control. The reset
   action was not activated because it is destructive.
+- On `/settings`, clicking Reset Database opened the confirmation dialog and
+  focus landed on the Cancel button. The dialog was dismissed via Cancel; no
+  reset or destructive action was executed.
 
 The in-app browser harness has no viewport override capability. Tablet/mobile
 visual interaction was not executed and is not claimed as a runtime pass.
@@ -76,5 +82,6 @@ table/code/diagram overflow, and settings dialog/result stacking.
 
 ## Commit
 
-The focused Task 6 implementation is committed as `362d52d`. This fix-round
-report update is committed separately as a documentation-only change.
+The focused Task 6 implementation is committed as `362d52d`. The prior
+browser verification report update is committed as `421717e`; this final
+report-only update is committed separately.
