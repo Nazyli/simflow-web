@@ -56,9 +56,9 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
             <span className="text-[10px] font-bold tracking-[0.12em] text-purple-700 uppercase">
               Participant console
             </span>
-            <h1 className="min-w-0 truncate text-base font-bold text-slate-900">
+            <h2 className="min-w-0 truncate text-base font-bold text-slate-900">
               {activeSimulation?.groupSimulationName ?? 'Participant workspace'}
-            </h1>
+            </h2>
             <p className="min-w-0 truncate text-xs text-slate-500">
               {activeExecution
                 ? `${activeSimulation?.simulationName ?? 'Simulation'} · Session ${activeExecution.sessionId}`

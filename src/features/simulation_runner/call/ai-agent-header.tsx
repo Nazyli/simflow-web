@@ -54,6 +54,8 @@ export function AiAgentHeader({
             onClick={onToggleChat}
             size="sm"
             variant="ghost"
+            aria-label={chatOpen ? 'Hide in-call messages' : 'Show in-call messages'}
+            aria-pressed={chatOpen}
             className={`rounded-md p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 ${
               chatOpen ? 'bg-slate-100 text-slate-800' : ''
             }`}

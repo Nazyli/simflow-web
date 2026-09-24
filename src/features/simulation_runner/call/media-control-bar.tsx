@@ -124,7 +124,7 @@ export function MediaControlBar({
       <div className="relative flex items-center gap-1">
         <button
           aria-label={choices.audioEnabled ? 'Mute microphone' : 'Enable microphone'}
-            className={`rounded-md p-2.5 transition-all ${
+          className={`grid size-11 place-items-center rounded-md transition-all ${
             choices.audioEnabled
               ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
               : 'bg-red-100 text-red-600 hover:bg-red-200'
@@ -162,7 +162,7 @@ export function MediaControlBar({
       <div className="relative flex items-center gap-1">
         <button
           aria-label={choices.videoEnabled ? 'Turn camera off' : 'Turn camera on'}
-            className={`rounded-md p-2.5 transition-all ${
+          className={`grid size-11 place-items-center rounded-md transition-all ${
             choices.videoEnabled
               ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
               : 'bg-red-100 text-red-600 hover:bg-red-200'
