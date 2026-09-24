@@ -81,7 +81,7 @@ export function SimulationGraphEdge({
   const targetBoundary = edgeData?.collapsedTargetRect
     ? pointOnRectBoundary(edgeData.collapsedTargetRect, { x: sourceX, y: sourceY })
     : undefined
-  const stroke = selected ? '#5b46c5' : style.color
+  const stroke = selected ? '#9929EA' : style.color
   const labelOffset = -18
 
   const effectiveSourceX = sourceBoundary?.x ?? sourceX

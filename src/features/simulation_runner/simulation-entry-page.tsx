@@ -48,7 +48,7 @@ export function SimulationEntryPage() {
     <main className="simulation-runner-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
       <header className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
+          <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
             <Play size={15} />
           </span>
           <div className="min-w-0">
@@ -110,7 +110,7 @@ export function SimulationEntryPage() {
           <button
             type="submit"
             disabled={!actorId || !participantId.trim() || !simulationIds.length || start.isPending}
-            className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#5b46c5] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#4b38ac] focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50 sm:w-auto"
+            className="!m-0 !inline-flex w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#9929EA] !px-3.5 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#7d1fc2] focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50 sm:w-auto"
           >
             <Play size={15} />{' '}
             {start.isPending ? 'Starting simulations…' : 'Start selected simulations'}

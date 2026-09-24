@@ -156,7 +156,7 @@ export function AttachmentPickerDialog({
                         checked={selectedCount > 0 && !allSelected ? 'indeterminate' : allSelected}
                         onCheckedChange={() => toggleDocument(document)}
                       />
-                      <FileText size={16} className="shrink-0 text-[#5b46c5]" />
+                      <FileText size={16} className="shrink-0 text-[#9929EA]" />
                       <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#1a1a2e]">
                         {document.documentName ?? 'Untitled document'}
                       </span>
@@ -200,7 +200,7 @@ export function AttachmentPickerDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="button" onClick={confirm} className="bg-[#5b46c5] hover:bg-[#4b38ac]">
+            <Button type="button" onClick={confirm} className="bg-[#9929EA] hover:bg-[#7d1fc2]">
               Attach
             </Button>
           </div>

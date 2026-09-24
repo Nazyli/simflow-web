@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import plusJakartaSansLatinWoff2 from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url'
 
 import { Button } from '../../../components/ui/button'
 import type { TemplatePlaceholder } from '../../../shared/types/simulation'
@@ -250,7 +251,7 @@ export function EmailContentEditor({
         <iframe
           title="Email preview"
           sandbox=""
-          srcDoc={buildEmailPreviewDocument(value)}
+          srcDoc={buildEmailPreviewDocument(value, plusJakartaSansLatinWoff2)}
           className="h-80 w-full rounded-lg border bg-slate-50"
         />
       )}

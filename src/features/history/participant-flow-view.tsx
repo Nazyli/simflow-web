@@ -503,7 +503,7 @@ export function ParticipantFlowCanvas({
           Visited node ({view.visitedCount})
         </span>
         {currentState && (
-          <span className="flex items-center gap-1.5 text-[#5b46c5]">
+          <span className="flex items-center gap-1.5 text-[#9929EA]">
             ● Current state: {currentState}
           </span>
         )}

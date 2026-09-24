@@ -41,7 +41,7 @@ const STATUS_TONES: Record<string, string> = {
   completed: 'bg-emerald-50 text-emerald-600',
   failed: 'bg-red-50 text-red-600',
   cancelled: 'bg-slate-100 text-slate-500',
-  total: 'bg-purple-50 text-[#5b46c5]',
+  total: 'bg-purple-50 text-[#9929EA]',
 }
 
 function StatusIcon({ status }: { status: string }) {
@@ -247,7 +247,7 @@ export function ParticipantHistoryPage() {
     <main className="history-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
+          <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
             <Layers size={18} />
           </span>
           <div className="min-w-0">

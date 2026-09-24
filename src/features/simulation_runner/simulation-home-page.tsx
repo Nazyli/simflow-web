@@ -18,7 +18,7 @@ export function SimulationHomePage() {
               className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md"
             >
               <div className="flex items-center justify-between">
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-violet-50 text-[#5b46c5] transition group-hover:bg-violet-100">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-violet-50 text-[#9929EA] transition group-hover:bg-violet-100">
                   <Icon size={18} />
                 </span>
                 {unread > 0 && (
@@ -32,7 +32,7 @@ export function SimulationHomePage() {
               </div>
               <h3 className="mt-3 text-sm font-bold text-slate-900">{label}</h3>
               <p className="mt-0.5 text-xs text-slate-500">{description}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#5b46c5]">
+              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#9929EA]">
                 Open <ChevronRight size={14} />
               </span>
             </Link>

@@ -27,7 +27,7 @@ export function SimulationSidebar({
             onClick={() => onSelect(simulation.simulationId)}
             className={`flex min-w-[200px] rounded-lg px-3 py-2.5 text-left lg:min-w-0 ${
               active
-                ? '!border-0 !bg-violet-50 !text-[#5b46c5]'
+                ? '!border-0 !bg-violet-50 !text-[#9929EA]'
                 : '!border-0 !bg-transparent !text-slate-700 hover:!bg-slate-50'
             }`}
           >

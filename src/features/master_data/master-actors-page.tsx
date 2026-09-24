@@ -64,7 +64,7 @@ export function MasterActorsPage() {
   const actors = actorsQuery.data ?? []
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-6">
+    <div className="master-actors-page mx-auto max-w-[1500px] space-y-6 p-5">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="mb-1 text-xs font-semibold tracking-[0.18em] text-violet-600 uppercase">

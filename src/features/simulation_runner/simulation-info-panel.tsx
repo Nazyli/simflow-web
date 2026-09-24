@@ -38,7 +38,7 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
           setVisible(true)
           persistPanelVisible(true)
         }}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-500 shadow-sm transition hover:text-[#5b46c5]"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-500 shadow-sm transition hover:text-[#9929EA]"
       >
         <ChevronDown size={14} /> Show simulation info
       </button>
@@ -49,7 +49,7 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
     <div>
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
+          <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
             <Play size={18} />
           </span>
           <div className="min-w-0">
@@ -68,7 +68,7 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-            <UserRound size={14} className="shrink-0 text-[#5b46c5]" />
+            <UserRound size={14} className="shrink-0 text-[#9929EA]" />
             <div className="min-w-0">
               <small className="block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
                 Participant
@@ -79,7 +79,7 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-            <Clock3 size={14} className="shrink-0 text-[#5b46c5]" />
+            <Clock3 size={14} className="shrink-0 text-[#9929EA]" />
             <div>
               <small className="block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
                 Elapsed

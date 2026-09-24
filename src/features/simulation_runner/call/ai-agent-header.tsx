@@ -40,7 +40,7 @@ export function AiAgentHeader({
   return (
     <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-lg">
+        <div className="brand-gradient grid size-9 place-items-center rounded-full text-sm font-bold text-white shadow-lg">
           {agentName.charAt(0).toUpperCase()}
         </div>
         <div>

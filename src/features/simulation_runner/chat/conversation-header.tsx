@@ -18,7 +18,7 @@ export function ConversationHeader({ conversation }: ConversationHeaderProps) {
   const count = conversation.messages.length
   return (
     <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#5b46c5] text-xs font-bold text-white">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#9929EA] text-xs font-bold text-white">
         {conversation.actorName.slice(0, 1).toUpperCase()}
       </span>
       <div className="min-w-0">

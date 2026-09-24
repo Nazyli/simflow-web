@@ -156,10 +156,10 @@ export function SimulationListPage() {
   const pickerBest = pickerGroup ? bestSimulation(pickerGroup) : undefined
 
   return (
-    <main className="min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
+    <main className="simulation-list-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
       <header className="mb-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
+          <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
             <FolderKanban size={16} />
           </span>
           <div className="min-w-0">
@@ -193,7 +193,7 @@ export function SimulationListPage() {
       )}
 
       {groups.data && groups.data.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {groups.data.map((group) => {
             const sims = group.simulations ?? []
             const lockedCount = sims.filter((s) => s.isLocked).length
@@ -201,67 +201,61 @@ export function SimulationListPage() {
             return (
               <article
                 key={group.groupSimulationId}
-                className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm transition-colors hover:border-purple-300 hover:shadow-md"
+                className="group relative flex flex-col rounded-lg border border-slate-200 bg-white shadow-sm transition-colors hover:border-[#DBABFF] hover:shadow-md"
               >
+                <div className="absolute top-2 right-2 z-10 flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    aria-label={`Edit ${group.groupSimulationName}`}
+                    title="Edit simulation details"
+                    className="rounded-md bg-white/90 p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                    onClick={() => setFormGroup(group)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${group.groupSimulationName}`}
+                    title="Delete simulation"
+                    className="rounded-md bg-white/90 p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                    onClick={() => setDeleteTarget(group)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
                 <button
                   type="button"
-                  className="flex flex-1 flex-col gap-2 p-4 text-left"
+                  className="flex flex-1 flex-col gap-1.5 p-3 pr-24 text-left"
                   onClick={() => openGroup(group)}
                 >
-                  <div className="flex w-full items-center justify-between gap-2">
-                    <h2 className="truncate text-sm font-bold text-slate-900">
+                  <div className="flex w-full items-center gap-2">
+                    <h2 className="line-clamp-2 text-xs leading-4 font-semibold tracking-[-0.005em] text-slate-900">
                       {group.groupSimulationName}
                     </h2>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                  </div>
+                  <p className="truncate text-[11px] leading-4 text-slate-500">
+                    {group.groupSimulationDesc || 'No description provided.'}
+                  </p>
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 pt-0.5 text-[10px] font-medium text-slate-500">
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-[#F5E7FF] px-1.5 py-0.5 text-[9px] font-semibold text-[#5B148F]">
                       <Layers className="h-3 w-3" />
                       {sims.length} simulation{sims.length === 1 ? '' : 's'}
                     </span>
-                  </div>
-                  <p className="line-clamp-2 min-h-8 text-xs leading-normal text-slate-500">
-                    {group.groupSimulationDesc || 'No description provided.'}
-                  </p>
-                  <div className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-[11px] font-medium text-slate-500">
-                    <span className="text-xs text-slate-400">
-                      {primarySim?.simulationName ?? 'No versions yet'}
-                    </span>
                     {primarySim?.isLocked && (
                       <span
-                        className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
+                        className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700"
                         title={`Used ${primarySim.executionCount ?? 0} time${(primarySim.executionCount ?? 0) === 1 ? '' : 's'}`}
                       >
                         <Lock className="h-3 w-3" /> Locked • Used {primarySim.executionCount ?? 0}
                       </span>
                     )}
                     {!primarySim?.isLocked && lockedCount > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                      <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">
                         <Lock className="h-3 w-3" /> {lockedCount} locked
                       </span>
                     )}
                   </div>
                 </button>
-                <footer className="flex items-center justify-between border-t border-slate-100 px-4 py-2">
-                  <span className="text-[11px] text-slate-400">Click to open in builder</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      aria-label={`Edit ${group.groupSimulationName}`}
-                      title="Edit simulation details"
-                      className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-                      onClick={() => setFormGroup(group)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Delete ${group.groupSimulationName}`}
-                      title="Delete simulation"
-                      className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                      onClick={() => setDeleteTarget(group)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </footer>
               </article>
             )
           })}

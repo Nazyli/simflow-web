@@ -33,7 +33,7 @@ interface DocumentTypeMeta {
 }
 
 export const DOCUMENT_TYPE_META: Record<DocumentType, DocumentTypeMeta> = {
-  document: { label: 'Document', color: '#5b46c5', bg: '#ede9fe' },
+  document: { label: 'Document', color: '#9929EA', bg: '#f5e7ff' },
 }
 
 export const DOCUMENT_STATUS_META: Record<

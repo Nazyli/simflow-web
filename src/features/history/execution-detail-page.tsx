@@ -109,7 +109,7 @@ export function ExecutionDetailPage() {
                 <ArrowLeft size={14} />
                 Back
               </Button>
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
+              <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
                 <Layers size={18} />
               </span>
               <div className="min-w-0">

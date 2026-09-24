@@ -121,7 +121,7 @@ function ParticipantTile({
                 className="pointer-events-none absolute size-20 scale-165 md:size-24"
               />
             ) : null}
-            <div className="relative z-10 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-bold text-white shadow-lg md:size-24 md:text-3xl">
+            <div className="brand-gradient relative z-10 flex size-20 items-center justify-center rounded-full text-2xl font-bold text-white shadow-lg md:size-24 md:text-3xl">
               {getInitials(participant.name || participant.identity)}
             </div>
           </div>

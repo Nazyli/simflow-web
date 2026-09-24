@@ -230,7 +230,7 @@ function DocumentationArticle({ html }: { html: string }) {
           securityLevel: 'strict',
           theme: 'base',
           themeVariables: {
-            fontFamily: 'Geist Variable, Inter, ui-sans-serif, system-ui, sans-serif',
+            fontFamily: 'Plus Jakarta Sans Variable, sans-serif',
             primaryColor: '#dbeafe',
             primaryTextColor: '#1e3a8a',
             primaryBorderColor: '#2563eb',

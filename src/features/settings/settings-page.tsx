@@ -34,7 +34,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="settings-page mx-auto max-w-2xl p-5">
       <h1 className="mb-6 text-lg font-semibold text-slate-700">Settings</h1>
 
       <section className="rounded-xl border border-slate-200 bg-white p-6">

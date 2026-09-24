@@ -6,7 +6,7 @@ import { isHtmlContent, stripHtmlToText } from './sanitize'
 import { formatEmailDate } from './utils'
 
 const AVATAR_COLORS = [
-  '#5b46c5',
+  '#9929EA',
   '#039be5',
   '#0b8043',
   '#d50000',
@@ -101,7 +101,7 @@ export function ConversationSidebar({
                   {unread && (
                     <span
                       aria-label={`${thread.unreadCount} unread email${thread.unreadCount === 1 ? '' : 's'}`}
-                      className="min-w-[18px] shrink-0 rounded-full bg-[#5b46c5] px-1.5 text-center text-[10px] leading-4 font-bold text-white"
+                      className="min-w-[18px] shrink-0 rounded-full bg-[#9929EA] px-1.5 text-center text-[10px] leading-4 font-bold text-white"
                     >
                       {thread.unreadCount}
                     </span>

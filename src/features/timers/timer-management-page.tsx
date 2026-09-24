@@ -133,7 +133,7 @@ const STATUS_TONES: Record<string, string> = {
   retry: 'bg-amber-50 text-amber-600',
   completed: 'bg-emerald-50 text-emerald-600',
   failed: 'bg-red-50 text-red-600',
-  total: 'bg-purple-50 text-[#5b46c5]',
+  total: 'bg-purple-50 text-[#9929EA]',
 }
 
 function StatusIcon({ status }: { status: string }) {
@@ -153,13 +153,13 @@ function StatusIcon({ status }: { status: string }) {
 function CountdownCell({ timer, now }: { timer: TransParticipantTimer; now: number }) {
   const parts = countdown(timer.dueAt, now)
   const tone =
-    parts.total <= 60 ? 'text-red-600' : parts.total <= 300 ? 'text-amber-600' : 'text-[#5b46c5]'
+    parts.total <= 60 ? 'text-red-600' : parts.total <= 300 ? 'text-amber-600' : 'text-[#9929EA]'
   return (
     <div className="min-w-[110px]">
       <strong className={`text-sm font-bold tabular-nums ${tone}`}>{countdownLabel(parts)}</strong>
       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
         <i
-          className="block h-full rounded-full bg-gradient-to-r from-[#7c6ae6] to-[#4f46e5]"
+          className="brand-gradient block h-full rounded-full"
           style={{ width: `${progress(timer, now)}%` }}
         />
       </div>
@@ -416,7 +416,7 @@ export function TimerManagementPage() {
               </button>
               <button
                 onClick={() => setRescheduleTarget(timer)}
-                className="rounded-lg bg-[#5b46c5] px-2 py-1 text-[11px] font-semibold text-white shadow-none transition hover:bg-[#4b38ac]"
+                className="rounded-lg bg-[#9929EA] px-2 py-1 text-[11px] font-semibold text-white shadow-none transition hover:bg-[#7d1fc2]"
               >
                 Reschedule
               </button>
@@ -430,7 +430,7 @@ export function TimerManagementPage() {
     <main className="timer-management-page min-h-[calc(100vh-64px)] w-full bg-slate-50 p-5">
       <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] text-white shadow-sm">
+          <span className="brand-gradient grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white shadow-sm">
             <Clock size={18} />
           </span>
           <div className="min-w-0">
@@ -444,7 +444,7 @@ export function TimerManagementPage() {
           </div>
         </div>
         <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-white text-[#5b46c5] shadow-sm">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-white text-[#9929EA] shadow-sm">
             <Clock size={15} />
           </span>
           <div>
@@ -532,7 +532,7 @@ function DialogButton({
 }) {
   const styles =
     variant === 'primary'
-      ? 'border-transparent bg-[#5b46c5] text-white hover:bg-[#4b38ac]'
+      ? 'border-transparent bg-[#9929EA] text-white hover:bg-[#7d1fc2]'
       : variant === 'danger'
         ? 'border-red-200 text-red-600 hover:bg-red-50'
         : 'border-slate-200 text-slate-600 hover:bg-slate-50'

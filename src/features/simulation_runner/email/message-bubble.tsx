@@ -12,7 +12,7 @@ interface MessageBubbleProps {
 }
 
 function avatarColor(message: EmailMessage, participantId: string): string {
-  return isOwnEmail(message, participantId) ? '#039be5' : '#5b46c5'
+  return isOwnEmail(message, participantId) ? '#039be5' : '#9929EA'
 }
 
 export function MessageBubble({

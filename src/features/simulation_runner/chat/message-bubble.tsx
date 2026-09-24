@@ -36,7 +36,7 @@ export function MessageBubble({ message, participantId }: MessageBubbleProps) {
         <div
           className={`mt-0.5 block max-w-full rounded-2xl px-3.5 py-2 text-left text-sm leading-relaxed break-words whitespace-pre-wrap ${
             own
-              ? 'rounded-br-md bg-[#5b46c5] text-white'
+              ? 'rounded-br-md bg-[#9929EA] text-white'
               : 'rounded-bl-md border border-slate-200 bg-white text-slate-800'
           }`}
         >

@@ -1,6 +1,6 @@
 import { tokenizeTemplate } from './template-placeholder-logic'
 
-export function buildEmailPreviewDocument(content: string): string {
+export function buildEmailPreviewDocument(content: string, fontUrl?: string): string {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -9,12 +9,13 @@ export function buildEmailPreviewDocument(content: string): string {
     <title>Email preview</title>
     <style>
       :root { color-scheme: light; }
+      ${fontUrl ? `@font-face { font-family: 'Plus Jakarta Sans Variable'; font-style: normal; font-display: swap; font-weight: 200 800; src: url('${fontUrl}') format('woff2-variations'); }` : ''}
       * { box-sizing: border-box; }
       html, body { margin: 0; min-height: 100%; }
       body {
         background: #f8fafc;
         color: #0f172a;
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: 'Plus Jakarta Sans Variable', Arial, sans-serif;
         font-size: 14px;
         line-height: 1.5;
         padding: 24px;
