@@ -8,12 +8,16 @@ function source(file) {
   return readFileSync(new URL(file, root), 'utf8')
 }
 
-test('Runner route boundaries expose one meaningful main landmark each', () => {
+test('the shared shell owns the Runner main landmark', () => {
+  const sidebar = source('components/ui/sidebar.tsx')
+  const appShell = source('app/layouts/app-shell.tsx')
   const entry = source('features/simulation_runner/simulation-entry-page.tsx')
   const layout = source('features/simulation_runner/simulation-run-layout.tsx')
 
-  assert.match(entry, /<main\s+className="simulation-runner-page/)
-  assert.match(layout, /<main\s+className="simulation-runner-page/)
+  assert.match(sidebar, /const SidebarInset[\s\S]*?<main\b/)
+  assert.match(appShell, /<SidebarInset[\s\S]*?<div className="app-content/)
+  assert.doesNotMatch(entry, /<main\b/)
+  assert.doesNotMatch(layout, /<main\b/)
 })
 
 test('Runner home and info panel keep a single page-level heading', () => {
