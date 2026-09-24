@@ -39,7 +39,6 @@ import {
   Play,
   Plus,
   Save,
-  ChevronRight,
   Sliders,
   History,
   Layers,
@@ -57,7 +56,7 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import dagre from 'dagre'
 import { ApiError } from '../../shared/api/client'
@@ -1682,7 +1681,7 @@ export function SimulationStudioPage() {
       className="studio-app-container flex h-[calc(100vh-64px)] min-h-0 min-w-0 flex-col overflow-hidden text-slate-800"
     >
       {/* Studio Header Bar */}
-      <header className="studio-top-header z-20 flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-[#DBE3EC] bg-white px-3 py-2 sm:px-4">
+      <header className="studio-top-header z-20 flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-[#DBE3EC] bg-white px-3 py-0 sm:px-4">
         <div className="flex min-w-0 items-center gap-2.5">
           <button
             type="button"
@@ -1697,18 +1696,11 @@ export function SimulationStudioPage() {
             <span className="shrink-0 text-[0.68rem] font-bold tracking-[0.12em] text-violet-700 uppercase">
               Studio
             </span>
-            <nav className="flex min-w-0 items-center gap-1.5" aria-label="Studio breadcrumb">
-              <Link
-                to="/studio"
-                className="shrink-0 text-sm font-semibold text-slate-500 transition-colors hover:text-purple-700"
-              >
-                GroupSimulations
-              </Link>
-              <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+            <div className="flex min-w-0 items-center">
               <h1 className="truncate text-sm font-semibold text-slate-900">
                 {selectedGroupSimulation?.groupSimulationName ?? 'Loading…'}
               </h1>
-            </nav>
+            </div>
           </div>
 
           <div className="hidden min-w-0 items-center gap-2.5 border-l border-[#DBE3EC] pl-3 sm:flex">
@@ -2116,7 +2108,7 @@ export function SimulationStudioPage() {
 
           {/* React Flow Canvas Container */}
           <div
-            className="graph h-full !min-h-0 w-full min-w-0 flex-1 border-none bg-[#FBFCFE]"
+            className="graph studio-canvas-graph h-full !min-h-0 w-full min-w-0 flex-1 border-none bg-[#FBFCFE]"
             onDragOver={allowCanvasDrop}
             onDrop={dropPaletteNode}
           >

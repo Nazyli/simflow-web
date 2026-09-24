@@ -423,6 +423,9 @@ button:disabled {
   border-radius: var(--radius-lg);
   background: #fbfcfe;
 }
+.graph.studio-canvas-graph {
+  border-radius: 0;
+}
 .graph:not(:has(.react-flow__node))::before {
   position: absolute;
   z-index: 4;
