@@ -99,6 +99,16 @@ Setiap Actor yang dikonfigurasi mendapat port sendiri. Balasan ke `actor-a` memi
 
 **Contoh:** Aktifkan jika waktu tunggu baru boleh dihitung setelah participant membaca pesan.
 
+### Max Wrong Actor Attempts (`max_wrong_actor_attempts`)
+
+**Apa fungsinya?** Membatasi berapa kali participant boleh mengirim balasan ke Actor yang tidak termasuk `reply_targets` saat wait masih aktif.
+
+**Apa yang harus diisi?** Integer positif atau `null`; default `null` berarti unlimited dan mempertahankan perilaku saat ini.
+
+**Wajib diisi?** Tidak. Backend tetap mengirim key ini pada konfigurasi resolved meskipun nilainya `null`.
+
+**Contoh:** `3` membuat tiga percobaan wrong actor menjadi batas dan memunculkan port `wrong_actor_limit_reached`. Setelah batas tercapai, wait memilih port tersebut dengan `error_code` `wrong_actor_limit_reached` dan timer dibatalkan. Sebelum batas tercapai, sistem membalas `Maaf saya sedang sibuk` dan wait tetap menunggu. Jika nilainya `null`, port khusus tidak muncul.
+
 ## Required / Optional configuration
 
 Status wajib atau opsional setiap setting dijelaskan pada bagian Konfigurasi di atas. Jika Node tidak memiliki setting, bagian Konfigurasi menyatakan bahwa informasi tersebut tidak tersedia atau tidak berlaku.
@@ -111,6 +121,7 @@ Hubungkan setiap port Actor ke jalur pemrosesan yang sesuai. `timeout` dapat men
 
 - `reply_targets` kosong, memiliki ID duplikat, atau memakai ID port cadangan `timeout`/`failed`.
 - `timeout_seconds` kosong, nol, atau negatif saat timeout aktif.
+- `max_wrong_actor_attempts` harus `null` atau integer positif.
 - Menganggap `timeout` adalah error teknis.
 - Menghubungkan `Check Reply Attachment` dari channel chat.
 

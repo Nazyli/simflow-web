@@ -18,6 +18,7 @@ Gunakan halaman ini untuk mencari setting tanpa membaca seluruh halaman Node. La
 | Wait for Reply | `enable_timeout` | Ya | Menentukan apakah batas waktu aktif. |
 | Wait for Reply | `timeout_seconds` | Kondisional | Wajib positif jika timeout aktif; default `600`. |
 | Wait for Reply | `is_read` | Kondisional | Menentukan perilaku timer setelah pesan dibaca; default `false`. |
+| Wait for Reply | `max_wrong_actor_attempts` | Tidak | Integer positif untuk membatasi balasan ke Actor yang salah; default `null` berarti unlimited. |
 | Wait for Read | `channel` | Tidak | Channel pesan; default `chat`. |
 | Wait for Read | `enable_timeout` | Ya | Mengaktifkan timeout; default `true`. |
 | Wait for Read | `timeout_seconds` | Kondisional | Wajib positif jika aktif; default `600`. |
