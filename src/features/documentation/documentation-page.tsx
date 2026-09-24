@@ -1,6 +1,9 @@
 import { ArrowLeft, ArrowRight, BookOpen, ChevronDown, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, NavLink, useParams } from 'react-router-dom'
+import { PageFrame } from '../../components/layout/page-frame'
+import { PageHeader } from '../../components/layout/page-header'
+import { SurfaceSection } from '../../components/layout/surface-section'
 import { ErrorState, LoadingState } from '@/shared/components/async-state'
 import {
   DOCUMENTATION_ENTRIES,
@@ -55,19 +58,19 @@ function DocumentationNav({
 
   return (
     <div className={mobile ? 'pt-3' : ''}>
-      <div className="mb-5 border-b border-slate-200 px-3 pb-4">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="grid size-8 place-items-center rounded-lg bg-violet-100 text-violet-700">
-            <BookOpen size={16} />
-          </span>
+      <div className="mb-5 border-b border-slate-200 pb-4">
+        <div className="mb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <strong className="block text-sm font-bold tracking-tight text-slate-800">
+            <span className="block text-[0.68rem] font-bold tracking-[0.14em] text-violet-700 uppercase">
+              Browse
+            </span>
+            <strong className="mt-1 block text-sm font-bold tracking-tight text-slate-900">
               Documentation
             </strong>
-            <span className="block text-[0.7rem] text-slate-400">
-              {query ? `${resultCount} matches` : `${DOCUMENTATION_ENTRIES.length} articles`}
-            </span>
           </div>
+          <span className="shrink-0 pt-0.5 text-right text-[0.7rem] text-slate-400">
+            {query ? `${resultCount} matches` : `${DOCUMENTATION_ENTRIES.length} articles`}
+          </span>
         </div>
         <label className="relative block">
           <Search
@@ -345,8 +348,14 @@ export function DocumentationPage() {
   if (!entry) return <Navigate to="/documentation/00-index" replace />
 
   return (
-    <div className="documentation-page bg-slate-50">
-      <details className="mb-5 rounded-lg border border-slate-200 bg-white p-3 lg:hidden">
+    <PageFrame mode="reference" className="documentation-page">
+      <PageHeader
+        eyebrow="Reference"
+        title="Documentation"
+        description="Browse node behavior, configuration guidance, and workflow references."
+      />
+
+      <details className="rounded-lg border border-slate-200 bg-white p-3 lg:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-slate-700">
           <span className="flex items-center gap-2">
             <BookOpen size={16} className="text-violet-600" />
@@ -363,7 +372,7 @@ export function DocumentationPage() {
         />
       </details>
 
-      <div className="grid w-full min-w-0 items-start gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="grid w-full min-w-0 items-start gap-8 lg:grid-cols-[240px_minmax(0,960px)]">
         <aside className="sticky top-20 hidden max-h-[calc(100vh-7rem)] overflow-y-auto lg:block">
           <DocumentationNav
             query={documentationQuery}
@@ -379,11 +388,13 @@ export function DocumentationPage() {
           )}
           {state.status === 'error' && <ErrorState message={state.message} />}
           {state.status === 'ready' && (
-            <DocumentationArticle html={renderMarkdown(state.markdown)} />
+            <SurfaceSection className="rounded-xl border border-slate-200 bg-white p-6 max-[620px]:rounded-lg max-[620px]:p-4">
+              <DocumentationArticle html={renderMarkdown(state.markdown)} />
+            </SurfaceSection>
           )}
           <DocumentPager entry={entry} />
         </main>
       </div>
-    </div>
+    </PageFrame>
   )
 }
