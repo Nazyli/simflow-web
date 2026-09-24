@@ -116,7 +116,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
   }
 
   return (
-    <Sidebar collapsible="icon" className="overflow-x-hidden border-slate-200/80">
+    <Sidebar collapsible="icon" className="z-20 overflow-x-hidden border-slate-200/80">
       <SidebarHeader className="h-12 min-h-12 gap-0 overflow-hidden border-b border-sidebar-border/70 p-0">
         <SidebarMenu className="h-full gap-0">
           <SidebarMenuItem className="flex h-full items-center">

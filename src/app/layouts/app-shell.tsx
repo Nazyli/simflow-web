@@ -31,15 +31,15 @@ function Breadcrumb() {
 
 export function AppShell({ children }: PropsWithChildren) {
   return (
-    <SidebarProvider defaultOpen={true} className="bg-slate-100">
+    <SidebarProvider defaultOpen={true} className="overflow-x-hidden bg-slate-100">
       <AppSidebar items={navigation} />
 
-      <SidebarInset className="bg-slate-100">
-        <header className="sticky top-0 z-10 flex min-h-[48px] items-center gap-2 border-b border-slate-200 bg-[rgb(251,252,254)]/95 px-[26px] backdrop-blur-md max-[900px]:px-[18px] max-[620px]:min-h-[48px] max-[620px]:px-3">
+      <SidebarInset className="min-w-0 overflow-x-hidden bg-slate-100">
+        <header className="sticky top-0 z-10 flex min-h-[48px] w-full min-w-0 items-center gap-2 overflow-hidden border-b border-slate-200 bg-[rgb(251,252,254)]/95 px-[26px] backdrop-blur-md max-[900px]:px-[18px] max-[620px]:min-h-[48px] max-[620px]:px-3">
           <SidebarTrigger className="shrink-0 text-slate-500" />
           <Breadcrumb />
         </header>
-        <div className="app-content mx-0 mt-0 max-w-none p-7 max-[900px]:px-[18px] max-[900px]:py-[22px] max-[620px]:p-3">
+        <div className="app-content min-w-0 max-w-none">
           {children}
         </div>
       </SidebarInset>
