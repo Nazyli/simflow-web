@@ -19,7 +19,7 @@ import {
   getGroupSimulations,
   updateGroupSimulation,
 } from '../../shared/api/simulations'
-import { EmptyState, ErrorState, LoadingState } from '../../shared/components/async-state'
+import { ErrorState } from '../../shared/components/async-state'
 import type { GroupSimulation, Simulation } from '../../shared/types/simulation'
 
 function apiErrorMessage(error: unknown): string {
@@ -178,19 +178,30 @@ export function SimulationListPage() {
         }
       />
 
-      {groups.isPending && <LoadingState variant="runner" />}
+      {groups.isPending && (
+        <div
+          role="status"
+          aria-label="Loading data…"
+          className="min-w-0 border-b border-slate-200 px-1 py-2 text-sm text-slate-500"
+        >
+          Loading data…
+        </div>
+      )}
       {groups.isError && <ErrorState message="Unable to load simulations." />}
 
       {groups.data && groups.data.length === 0 && (
-        <EmptyState
-          title="No simulations yet"
-          description="Create your first simulation group to start building scenarios with nodes, ports, and edges."
-          action={
-            <Button type="button" onClick={() => setFormGroup('new')}>
-              <Plus className="h-4 w-4" /> Create your first simulation
-            </Button>
-          }
-        />
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-slate-800">No simulations yet</h2>
+            <p className="mt-1 max-w-[560px] text-xs leading-relaxed text-slate-500">
+              Create your first simulation group to start building scenarios with nodes, ports, and
+              edges.
+            </p>
+          </div>
+          <Button type="button" onClick={() => setFormGroup('new')}>
+            <Plus className="h-4 w-4" /> Create your first simulation
+          </Button>
+        </div>
       )}
 
       {groups.data && groups.data.length > 0 && (
@@ -219,7 +230,7 @@ export function SimulationListPage() {
                       type="button"
                       aria-label={`Delete ${group.groupSimulationName}`}
                       title="Delete simulation"
-                    className="rounded-md bg-white/90 p-1.5 text-slate-400 transition-colors hover:text-red-600"
+                      className="rounded-md bg-white/90 p-1.5 text-slate-400 transition-colors hover:text-red-600"
                       onClick={() => setDeleteTarget(group)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

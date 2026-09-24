@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ListTree, Route, Trash2 } from 'lucide-react'
+import { Layers, ListTree, Route, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -209,7 +209,14 @@ export function ParticipantHistoryPage() {
     <PageFrame mode="operations" className="history-page">
       <PageHeader
         eyebrow="Observability"
-        title="Simulation execution history"
+        title={
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="brand-gradient grid size-8 shrink-0 place-items-center rounded-lg text-white">
+              <Layers size={16} />
+            </span>
+            <span>Simulation execution history</span>
+          </span>
+        }
         description="Every simulation execution across simulation sessions."
       />
 

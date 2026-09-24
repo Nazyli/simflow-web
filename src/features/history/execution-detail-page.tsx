@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Check, Copy, Layers, ListTree, RefreshCw, Route } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PageFrame } from '../../components/layout/page-frame'
 import { PageHeader } from '../../components/layout/page-header'
@@ -78,13 +78,37 @@ export function ExecutionDetailPage() {
     }
   }, [activeTab, pollInterval, id, queryClient])
 
-  if (!id) return <ErrorState message="No execution ID provided." />
+  if (!id) {
+    return (
+      <ExecutionDetailState>
+        <ErrorState message="No execution ID provided." />
+      </ExecutionDetailState>
+    )
+  }
 
-  if (history.isPending) return <LoadingState />
-  if (history.isError) return <ErrorState message="Unable to load execution details." />
+  if (history.isPending) {
+    return (
+      <ExecutionDetailState>
+        <LoadingState />
+      </ExecutionDetailState>
+    )
+  }
+  if (history.isError) {
+    return (
+      <ExecutionDetailState>
+        <ErrorState message="Unable to load execution details." />
+      </ExecutionDetailState>
+    )
+  }
 
   const data = history.data?.find((item) => item.executionId === id)
-  if (!data) return <ErrorState message="Execution not found." />
+  if (!data) {
+    return (
+      <ExecutionDetailState>
+        <ErrorState message="Execution not found." />
+      </ExecutionDetailState>
+    )
+  }
 
   const title = `${data.groupSimulationName ?? 'Simulation unavailable'} · ${data.simulationName ?? '—'}`
   const isFinalStatus = ['completed', 'failed', 'cancelled'].includes(data.status)
@@ -244,6 +268,30 @@ export function ExecutionDetailPage() {
           />
         </TabsContent>
       </Tabs>
+    </PageFrame>
+  )
+}
+
+function ExecutionDetailState({ children }: { children: ReactNode }) {
+  return (
+    <PageFrame
+      mode="operations"
+      edgeToEdge
+      className="history-detail-page min-h-[calc(100dvh-58px)] w-full overflow-hidden"
+    >
+      <PageHeader
+        className="border-b border-slate-200 bg-white px-6 py-4 max-[900px]:px-[18px] max-[620px]:px-3 max-[620px]:py-3"
+        eyebrow="Participant flow"
+        title={
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="brand-gradient grid size-8 shrink-0 place-items-center rounded-lg text-white">
+              <Layers size={16} />
+            </span>
+            <span>Participant flow</span>
+          </span>
+        }
+      />
+      <div className="min-w-0 p-6 max-[900px]:px-[18px] max-[620px]:p-3">{children}</div>
     </PageFrame>
   )
 }
