@@ -32,8 +32,8 @@ export function SummaryStrip({
         className,
       )}
     >
-      {items.map((item) => (
-        <div key={item.label} className="min-w-0 px-3.5 py-3">
+      {items.map((item, index) => (
+        <div key={`${index}:${item.label}`} className="min-w-0 px-4 py-3">
           <dt className="truncate text-[0.68rem] font-semibold tracking-[0.08em] text-slate-500 uppercase">
             {item.label}
           </dt>

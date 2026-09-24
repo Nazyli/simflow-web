@@ -6,7 +6,7 @@ export function PageToolbar({ children, className }: { children: ReactNode; clas
   return (
     <div
       className={cn(
-        'flex max-w-full min-w-0 flex-wrap items-center gap-2.5 [&>*]:max-w-full',
+        'flex w-full max-w-full min-w-0 flex-wrap items-center gap-2 overflow-x-auto [&>*]:max-w-full [&>*]:min-w-0 [&>*]:shrink [&>*]:whitespace-normal',
         className,
       )}
     >

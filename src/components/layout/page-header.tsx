@@ -29,7 +29,7 @@ export function PageHeader({
           {title}
         </h1>
         {description && (
-          <p className="mt-1.5 max-w-[72ch] text-sm leading-relaxed break-words text-slate-500">
+          <p className="mt-2 max-w-[72ch] text-sm leading-relaxed break-words text-slate-500">
             {description}
           </p>
         )}
@@ -40,7 +40,7 @@ export function PageHeader({
         )}
       </div>
       {actions && (
-        <div className="flex max-w-full min-w-0 shrink-0 flex-wrap items-center justify-start gap-2 sm:justify-end [&>*]:max-w-full">
+        <div className="flex w-full max-w-full min-w-0 shrink-0 flex-wrap items-center justify-start gap-2 overflow-x-auto sm:w-auto sm:justify-end [&>*]:max-w-full [&>*]:min-w-0 [&>*]:shrink [&>*]:whitespace-normal">
           {actions}
         </div>
       )}

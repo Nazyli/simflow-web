@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 export type PageFrameMode = 'workbench' | 'operations' | 'reference'
 
 const modeClasses: Record<PageFrameMode, string> = {
-  workbench: 'space-y-3',
+  workbench: 'space-y-3 max-[900px]:px-0 max-[900px]:py-0 max-[620px]:p-0',
   operations: 'space-y-6',
   reference: 'space-y-8',
 }
