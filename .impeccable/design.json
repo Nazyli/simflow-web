@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T00:00:00+07:00",
+  "title": "Design System: SimFlow Frontend",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "SimFlow Violet",
+        "canonical": "#9929EA",
+        "tonalRamp": ["#32104D", "#53137E", "#7217AD", "#9929EA", "#B45DEB", "#C989F1", "#E0B5F8", "#F5E7FF"]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Cool Canvas",
+        "canonical": "#F6F8FB",
+        "tonalRamp": ["#172033", "#334155", "#475569", "#64748B", "#94A3B8", "#CBD5E1", "#E2E8F0", "#F6F8FB"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#1E293B", "#334155", "#475569", "#64748B", "#94A3B8", "#CBD5E1", "#E2E8F0", "#FFFFFF"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Compact Display",
+        "purpose": "Page titles and strong entry points only."
+      },
+      "body": {
+        "displayName": "Operational Body",
+        "purpose": "Readable daily-use interface copy."
+      }
+    },
+    "shadows": [
+      {
+        "name": "hover-lift",
+        "value": "0 4px 12px rgba(15, 23, 42, 0.08)",
+        "purpose": "Subtle elevation for interactive cards on hover."
+      },
+      {
+        "name": "overlay",
+        "value": "0 18px 45px rgba(15, 23, 42, 0.14)",
+        "purpose": "Soft separation for dialogs, popovers, and floating panels."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Short transitions for hover, focus, and disclosure states."
+      }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "620px" },
+      { "name": "tablet", "value": "900px" },
+      { "name": "workbench", "value": "1100px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Compact violet action for the primary task on a surface.",
+      "html": "<button class=\"ds-btn-primary\">Save changes</button>",
+      "css": ".ds-btn-primary { background: #9929EA; color: #fff; padding: 8px 14px; border: 0; border-radius: 8px; font: 600 12px/1.35 'Plus Jakarta Sans Variable', Arial, sans-serif; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: #7D1FC2; } .ds-btn-primary:focus-visible { outline: 2px solid #9929EA; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Quiet secondary action for toolbars and contextual controls.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #64748B; padding: 6px 8px; border: 0; border-radius: 8px; font: 600 12px/1.35 'Plus Jakarta Sans Variable', Arial, sans-serif; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-ghost:hover { background: #F8FAFC; color: #172033; } .ds-btn-ghost:focus-visible { outline: 2px solid #9929EA; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Neutral field with a clear focus treatment.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search simulations\" />",
+      "css": ".ds-input { width: 100%; background: #fff; color: #172033; padding: 8px 10px; border: 1px solid #DBE3EC; border-radius: 8px; font: 400 14px/1.5 'Plus Jakarta Sans Variable', Arial, sans-serif; transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-input::placeholder { color: #94A3B8; } .ds-input:focus-visible { border-color: #C6D2DF; outline: 2px solid rgba(153, 41, 234, 0.22); outline-offset: 1px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat operational surface with restrained interactive lift.",
+      "html": "<article class=\"ds-card\"><h2>Customer onboarding</h2><p>Workflow description.</p></article>",
+      "css": ".ds-card { background: #fff; color: #172033; padding: 16px; border: 1px solid #DBE3EC; border-radius: 8px; box-shadow: none; transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-card:hover { border-color: #818CF8; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08); }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Compact state indicator used only when the state carries meaning.",
+      "html": "<span class=\"ds-status-badge\">Ready</span>",
+      "css": ".ds-status-badge { display: inline-flex; align-items: center; background: #F8FAFC; color: #64748B; padding: 4px 6px; border: 1px solid #E2E8F0; border-radius: 6px; font: 600 10px/1.35 'Plus Jakarta Sans Variable', Arial, sans-serif; }"
+    },
+    {
+      "name": "Navigation Item",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Scannable navigation row with quiet hover and clear active contrast.",
+      "html": "<a class=\"ds-nav-item ds-nav-item-active\" href=\"/studio\"><span>Studio</span></a>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; color: #64748B; padding: 8px 10px; border-radius: 8px; font: 600 13px/1.35 'Plus Jakarta Sans Variable', Arial, sans-serif; text-decoration: none; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav-item:hover { background: #F8FAFC; color: #172033; } .ds-nav-item-active { background: #F5E7FF; color: #5B148F; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Quiet control room",
+    "overview": "SimFlow is an operational workflow tool, so the interface should feel calm, dense, and dependable during repeated daily use. Visual hierarchy comes from typography, proximity, alignment, and restrained contrast rather than decoration. The primary accent is reserved for actions, active states, focus, and selected surfaces.",
+    "keyCharacteristics": [
+      "Quiet, professional, and information-dense.",
+      "Flat surfaces with structural borders and selective elevation.",
+      "One recognizable violet accent used sparingly and consistently.",
+      "Responsive layouts that use available space without page-level overflow."
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Violet is an interaction signal, not a decorative fill.", "section": "colors" },
+      { "name": "The No-Display-Costume Rule", "body": "Do not use gradient text, oversized headings, all-caps decoration, or monospace text unless the content is genuinely code or measurement data.", "section": "typography" },
+      { "name": "The Flat-by-Default Rule", "body": "A surface should earn elevation through interaction or overlay behavior.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Plus Jakarta Sans Variable throughout the application UI.",
+      "Do use spacing, typography, alignment, and contrast to establish hierarchy.",
+      "Do keep responsive overflow local to the region that needs it."
+    ],
+    "donts": [
+      "Don't use large decorative gradients, glassmorphism, glow, or heavy shadowed cards.",
+      "Don't turn every element into a pill, card, badge, or nested surface.",
+      "Don't create page-level horizontal scrolling to solve a local layout problem."
+    ]
+  }
+}

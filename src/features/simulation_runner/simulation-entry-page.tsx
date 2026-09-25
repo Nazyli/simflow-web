@@ -48,7 +48,7 @@ export function SimulationEntryPage() {
 
   return (
     <PageFrame mode="workbench" className="simulation-runner-page min-h-[calc(100vh-64px)] w-full">
-      <div className="mx-auto flex w-full max-w-[1480px] min-w-0 flex-col gap-4">
+      <div className="flex w-full min-w-0 flex-col gap-4">
         <PageHeader
           title="Run a simulation"
           description="Set the participant context, choose one or more published simulations, and open the runner workspace."

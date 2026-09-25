@@ -211,17 +211,25 @@ export function SimulationListPage() {
               const sims = group.simulations ?? []
               const lockedCount = sims.filter((s) => s.isLocked).length
               const primarySim = sims[0]
+              const statusLabel = primarySim?.isLocked
+                ? `Locked • Used ${primarySim.executionCount ?? 0}`
+                : lockedCount > 0
+                  ? `${lockedCount} locked`
+                  : 'Ready'
+              const statusClassName = primarySim?.isLocked || lockedCount > 0
+                ? 'border-amber-200 bg-amber-50 text-amber-700'
+                : 'border-slate-200 bg-slate-50 text-slate-500'
               return (
                 <article
                   key={group.groupSimulationId}
-                  className="group relative flex min-w-0 flex-col rounded-lg border border-slate-200 bg-white transition-colors hover:border-[#DBABFF] hover:shadow-sm"
+                  className="group relative flex min-h-[174px] min-w-0 flex-col rounded-lg border border-slate-200 bg-white transition-all duration-150 hover:border-indigo-400 hover:shadow-md"
                 >
-                  <div className="absolute top-2 right-2 z-10 flex items-center gap-0.5">
+                  <div className="absolute top-3 right-3 z-10 flex items-center gap-0.5 rounded-md border border-slate-200 bg-white p-0.5 shadow-sm">
                     <button
                       type="button"
                       aria-label={`Edit ${group.groupSimulationName}`}
                       title="Edit simulation details"
-                      className="rounded-md bg-white/90 p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                      className="rounded p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700"
                       onClick={() => setFormGroup(group)}
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -230,7 +238,7 @@ export function SimulationListPage() {
                       type="button"
                       aria-label={`Delete ${group.groupSimulationName}`}
                       title="Delete simulation"
-                      className="rounded-md bg-white/90 p-1.5 text-slate-400 transition-colors hover:text-red-600"
+                      className="rounded p-1.5 text-slate-400 transition-colors duration-150 hover:text-red-600"
                       onClick={() => setDeleteTarget(group)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -238,38 +246,33 @@ export function SimulationListPage() {
                   </div>
                   <button
                     type="button"
-                    className="flex flex-1 flex-col gap-1.5 p-3 pr-24 text-left"
+                    className="flex flex-1 flex-col gap-2 p-3 pr-24 text-left"
                     onClick={() => openGroup(group)}
                   >
-                    <div className="flex w-full items-center gap-2">
-                      <h2 className="line-clamp-2 text-xs leading-4 font-semibold tracking-[-0.005em] text-slate-900">
-                        {group.groupSimulationName}
-                      </h2>
-                    </div>
-                    <p className="truncate text-[11px] leading-4 text-slate-500">
+                    <h2 className="line-clamp-2 text-[13px] leading-5 font-semibold tracking-[-0.01em] text-slate-900">
+                      {group.groupSimulationName}
+                    </h2>
+                    <p className="line-clamp-2 text-xs leading-5 text-slate-500">
                       {group.groupSimulationDesc || 'No description provided.'}
                     </p>
-                    <div className="flex min-w-0 flex-wrap items-center gap-2 pt-0.5 text-[10px] font-medium text-slate-500">
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-[#F5E7FF] px-1.5 py-0.5 text-[9px] font-semibold text-[#5B148F]">
-                        <Layers className="h-3 w-3" />
-                        {sims.length} simulation{sims.length === 1 ? '' : 's'}
-                      </span>
-                      {primarySim?.isLocked && (
-                        <span
-                          className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700"
-                          title={`Used ${primarySim.executionCount ?? 0} time${(primarySim.executionCount ?? 0) === 1 ? '' : 's'}`}
-                        >
-                          <Lock className="h-3 w-3" /> Locked • Used{' '}
-                          {primarySim.executionCount ?? 0}
-                        </span>
-                      )}
-                      {!primarySim?.isLocked && lockedCount > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">
-                          <Lock className="h-3 w-3" /> {lockedCount} locked
-                        </span>
-                      )}
-                    </div>
                   </button>
+                  <div className="flex min-h-10 items-center justify-between gap-3 border-t border-slate-100 px-3 py-2.5">
+                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                      <Layers className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                      {sims.length} simulation{sims.length === 1 ? '' : 's'}
+                    </span>
+                    <span
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-1 text-[10px] font-semibold ${statusClassName}`}
+                      title={
+                        primarySim?.isLocked
+                          ? `Used ${primarySim.executionCount ?? 0} time${(primarySim.executionCount ?? 0) === 1 ? '' : 's'}`
+                          : undefined
+                      }
+                    >
+                      {(primarySim?.isLocked || lockedCount > 0) && <Lock className="h-3 w-3" />}
+                      {statusLabel}
+                    </span>
+                  </div>
                 </article>
               )
             })}

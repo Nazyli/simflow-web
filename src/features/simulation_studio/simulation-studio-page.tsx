@@ -1696,11 +1696,12 @@ export function SimulationStudioPage() {
             <span className="shrink-0 text-[0.68rem] font-bold tracking-[0.12em] text-violet-700 uppercase">
               Studio
             </span>
-            <div className="flex min-w-0 items-center">
-              <h1 className="truncate text-sm font-semibold text-slate-900">
-                {selectedGroupSimulation?.groupSimulationName ?? 'Loading…'}
-              </h1>
-            </div>
+            <span className="shrink-0 text-[0.68rem] font-semibold text-slate-300" aria-hidden="true">
+              |
+            </span>
+            <h1 className="min-w-0 truncate text-[0.68rem] font-bold tracking-[0.12em] text-slate-500">
+              {selectedGroupSimulation?.groupSimulationName ?? 'Loading…'}
+            </h1>
           </div>
 
           <div className="hidden min-w-0 items-center gap-2.5 border-l border-[#DBE3EC] pl-3 sm:flex">
