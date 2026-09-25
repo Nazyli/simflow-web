@@ -19,8 +19,8 @@
 }
 
 :root {
-  color: #e5e7eb;
-  background: #111827;
+  color: #172033;
+  background: #f6f8fb;
   font-family: 'Plus Jakarta Sans Variable', sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -255,19 +255,13 @@ body {
     margin-top: 1.9rem;
   }
 }
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-button {
+button:not(:disabled) {
   cursor: pointer;
 }
 
 .graph {
   height: 680px;
-  border: 1px solid #374151;
+  border: 1px solid var(--color-border);
 }
 .react-flow__edge.invalid-edge .react-flow__edge-path {
   stroke: #ef4444;
@@ -356,8 +350,8 @@ button {
 
 /* Light default theme. */
 :root {
-  color: #1e293b;
-  background: #f8fafc;
+  color: #172033;
+  background: #f6f8fb;
 }
 :root {
   --color-canvas: #f6f8fb;
@@ -369,7 +363,7 @@ button {
   --color-border-strong: #c6d2df;
   --color-brand-primary: #9929ea;
   --color-brand-secondary: #dbabff;
-  --brand-gradient: linear-gradient(89.36deg, #992aeb 0.55%, #dbabff 96.36%);
+  --brand-gradient: #9929ea;
   --color-primary: #9929ea;
   --color-primary-hover: #7d1fc2;
   --status-active: #047857;
@@ -409,6 +403,14 @@ body {
   background: var(--color-canvas);
   font-family: var(--font-sans);
 }
+html,
+body,
+#root {
+  min-height: 100%;
+}
+body {
+  overflow-x: hidden;
+}
 button:disabled {
   cursor: not-allowed;
   opacity: 0.56;
@@ -432,29 +434,16 @@ button:disabled {
   top: 50%;
   left: 50%;
   width: min(340px, calc(100% - 40px));
-  padding: 72px 24px 22px;
+  padding: 24px;
   transform: translate(-50%, -50%);
-  border: 1px dashed #b9c6d6;
-  border-radius: var(--radius-lg);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
   color: var(--color-text-muted);
-  background: linear-gradient(145deg, #fff, #f8fafc);
-  box-shadow: var(--shadow-md);
-  content: 'Start with a trigger node. Drag a card from the palette, then connect actions and events to shape your simulation.';
+  background: var(--color-surface);
+  content: 'Add a trigger node to start.';
   font-size: var(--text-sm);
   line-height: 1.6;
   text-align: center;
-}
-.graph:not(:has(.react-flow__node))::after {
-  position: absolute;
-  z-index: 5;
-  top: calc(50% - 80px);
-  left: calc(50% - 20px);
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: #ede9fe;
-  box-shadow: inset 0 0 0 1px #ddd6fe;
-  content: '';
 }
 @media (max-width: 760px) {
   .graph {
@@ -475,9 +464,9 @@ button:disabled {
   }
 }
 :where(button, a, input, select, textarea, [role='button']):focus-visible {
-  outline: 3px solid #9929ea;
+  outline: 2px solid var(--color-brand-primary);
   outline-offset: 2px;
-  box-shadow: 0 0 0 5px #f5e7ff;
+  box-shadow: 0 0 0 4px var(--accent);
 }
 .canvas-pan-active .graph,
 .canvas-pan-active .graph * {

@@ -4,7 +4,7 @@ description: Restrained, production-grade workflow tooling for building and oper
 colors:
   primary: "#9929EA"
   secondary: "#DBABFF"
-  brand-gradient: "linear-gradient(89.36deg, #992AEB 0.55%, #DBABFF 96.36%)"
+  brand-accent-fill: "#9929EA"
   canvas: "#F6F8FB"
   surface: "#FFFFFF"
   text-primary: "#172033"
@@ -104,7 +104,7 @@ The palette combines a cool near-white canvas, white working surfaces, slate tex
 
 - **SimFlow Violet** (`{colors.primary}`): Primary actions, active navigation, focus rings, and selected controls.
 - **Soft Violet** (`{colors.secondary}`): Secondary brand expression and restrained hover or supporting accents.
-- **Brand Gradient** (`{colors.brand-gradient}`): Existing brand-specific surfaces only, never as a general page background or text treatment.
+- **Brand Accent Fill** (`{colors.brand-accent-fill}`): Small brand-specific surfaces only, never as a general page background or text treatment.
 
 ### Neutral
 
@@ -215,7 +215,7 @@ Navigation uses concise labels, consistent icon sizing, and a quiet active state
 
 ### Don't:
 
-- **Don't** revive the old violet-to-indigo brand gradient for new elements.
+- **Don't** reintroduce decorative gradients for new elements.
 - **Don't** use large decorative gradients, glassmorphism, glow, or heavy shadowed cards.
 - **Don't** turn every element into a pill, card, badge, or nested surface.
 - **Don't** introduce a different color for each navigation item or feature.

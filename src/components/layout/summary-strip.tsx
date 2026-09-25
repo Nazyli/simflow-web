@@ -28,18 +28,18 @@ export function SummaryStrip({
   return (
     <dl
       className={cn(
-        'grid min-w-0 grid-cols-2 divide-x divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white/70 sm:grid-cols-3 lg:grid-cols-5',
+        'grid min-w-0 auto-cols-[minmax(112px,1fr)] grid-flow-col divide-x divide-slate-200 overflow-x-auto rounded-md border border-slate-200 bg-white',
         className,
       )}
     >
       {items.map((item, index) => (
-        <div key={`${index}:${item.label}`} className="min-w-0 px-4 py-3">
+        <div key={`${index}:${item.label}`} className="min-w-[112px] px-3.5 py-2.5">
           <dt className="truncate text-[0.68rem] font-semibold tracking-[0.08em] text-slate-500 uppercase">
             {item.label}
           </dt>
           <dd
             className={cn(
-              'mt-1 text-lg leading-tight font-bold break-words tabular-nums',
+              'mt-0.5 text-base leading-tight font-semibold break-words tabular-nums',
               toneClasses[item.tone ?? 'neutral'],
             )}
           >

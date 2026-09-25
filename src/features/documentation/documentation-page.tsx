@@ -349,11 +349,7 @@ export function DocumentationPage() {
 
   return (
     <PageFrame mode="reference" className="documentation-page">
-      <PageHeader
-        eyebrow="Reference"
-        title="Documentation"
-        description="Browse node behavior, configuration guidance, and workflow references."
-      />
+      <PageHeader title="Documentation" />
 
       <details className="rounded-lg border border-slate-200 bg-white p-3 lg:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-slate-700">

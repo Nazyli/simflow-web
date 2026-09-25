@@ -18,18 +18,18 @@ export function PageHeader({
   className?: string
 }) {
   return (
-    <header className={cn('flex min-w-0 flex-wrap items-start justify-between gap-4', className)}>
+    <header className={cn('flex min-w-0 flex-wrap items-center justify-between gap-3', className)}>
       <div className="min-w-0 flex-1">
         {eyebrow && (
           <p className="mb-1 text-[0.68rem] font-bold tracking-[0.12em] text-violet-700 uppercase">
             {eyebrow}
           </p>
         )}
-        <h1 className="min-w-0 text-xl leading-tight font-bold tracking-[-0.02em] break-words text-slate-900 max-[620px]:text-lg">
+        <h1 className="min-w-0 text-lg leading-tight font-semibold tracking-[-0.02em] break-words text-slate-900 max-[620px]:text-base">
           {title}
         </h1>
         {description && (
-          <p className="mt-2 max-w-[72ch] text-sm leading-relaxed break-words text-slate-500">
+          <p className="mt-1 max-w-[72ch] text-sm leading-relaxed break-words text-slate-500">
             {description}
           </p>
         )}
@@ -40,7 +40,7 @@ export function PageHeader({
         )}
       </div>
       {actions && (
-        <div className="flex w-full max-w-full min-w-0 shrink-0 flex-wrap items-center justify-start gap-2 overflow-x-auto sm:w-auto sm:justify-end [&>*]:max-w-full [&>*]:min-w-0 [&>*]:shrink [&>*]:whitespace-normal">
+        <div className="flex w-full max-w-full min-w-0 shrink-0 flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end [&>*]:max-w-full [&>*]:min-w-0 [&>*]:shrink [&>*]:whitespace-normal">
           {actions}
         </div>
       )}

@@ -71,12 +71,13 @@ export function DataTable<T extends { id: string }>({
   )
   function select(id: string) {
     const next = new Set(selected)
-    next.has(id) ? next.delete(id) : next.add(id)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
     setSelected(next)
     onSelectionChange?.(rows.filter((row) => next.has(row.id)))
   }
   return (
-    <section className="min-w-0">
+    <section className="min-w-0 overflow-hidden rounded-md border border-slate-200 bg-white">
       <div className="flex min-w-0 flex-wrap items-center gap-2 border-b border-slate-100 bg-white px-3.5 py-3">
         <Input
           aria-label="Filter rows"
@@ -105,7 +106,8 @@ export function DataTable<T extends { id: string }>({
                     onCheckedChange={() =>
                       setVisible((current) => {
                         const next = new Set(current)
-                        next.has(column.id) ? next.delete(column.id) : next.add(column.id)
+                        if (next.has(column.id)) next.delete(column.id)
+                        else next.add(column.id)
                         return next
                       })
                     }
@@ -188,7 +190,7 @@ export function DataTable<T extends { id: string }>({
           </TableBody>
         </Table>
       </div>
-      <footer className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-white px-3.5 py-2.5 text-[0.72rem] text-slate-500">
+      <footer className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/60 px-3.5 py-2.5 text-[0.72rem] text-slate-500">
         <span>
           {filtered.length} records{selectable ? ` · ${selected.size} selected` : ''}
         </span>

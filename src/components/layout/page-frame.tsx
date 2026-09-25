@@ -24,7 +24,7 @@ export function PageFrame({
   return (
     <div
       className={cn(
-        'max-w-none min-w-0 bg-[#F6F8FB] p-6 max-[900px]:px-[18px] max-[900px]:py-[22px] max-[620px]:p-3',
+        'w-full max-w-none min-w-0 bg-[#F6F8FB] p-6 max-[900px]:px-[18px] max-[900px]:py-[22px] max-[620px]:p-3',
         modeClasses[mode],
         edgeToEdge && 'p-0 max-[900px]:px-0 max-[900px]:py-0 max-[620px]:p-0',
         className,

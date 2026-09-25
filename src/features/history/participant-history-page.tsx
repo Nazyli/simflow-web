@@ -208,16 +208,14 @@ export function ParticipantHistoryPage() {
   return (
     <PageFrame mode="operations" className="history-page">
       <PageHeader
-        eyebrow="Observability"
         title={
           <span className="flex min-w-0 items-center gap-2">
-            <span className="brand-gradient grid size-8 shrink-0 place-items-center rounded-lg text-white">
-              <Layers size={16} />
+            <span className="grid size-7 shrink-0 place-items-center rounded-md bg-slate-100 text-slate-600">
+              <Layers size={14} aria-hidden="true" />
             </span>
-            <span>Simulation execution history</span>
+            <span>Execution history</span>
           </span>
         }
-        description="Every simulation execution across simulation sessions."
       />
 
       <SummaryStrip items={summaryItems} />

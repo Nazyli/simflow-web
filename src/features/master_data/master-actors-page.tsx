@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Pencil, Plus, Users } from 'lucide-react'
+import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '../../components/ui/button'
@@ -69,16 +69,7 @@ export function MasterActorsPage() {
   return (
     <PageFrame mode="operations" className="master-actors-page mx-auto max-w-[1500px]">
       <PageHeader
-        eyebrow="Master Data"
-        title={
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-100 text-violet-700">
-              <Users size={16} />
-            </span>
-            <span>Actors</span>
-          </span>
-        }
-        description="Manage the people and personalities available to your simulations."
+        title="Actors"
         actions={
           <Button type="button" onClick={openCreate}>
             <Plus /> Add actor
@@ -99,7 +90,7 @@ export function MasterActorsPage() {
           <div className="px-5 py-10 text-left">
             <h2 className="text-base font-semibold text-slate-800">No actors yet</h2>
             <p className="mt-1 max-w-sm text-sm text-slate-500">
-              Add the first actor profile to use in chat, email, call, or AI workflows.
+              Add an actor profile to use in a workflow.
             </p>
             <Button type="button" className="mt-4" onClick={openCreate}>
               <Plus /> Add actor
@@ -135,8 +126,8 @@ export function MasterActorsPage() {
                       <span
                         className={
                           actor.isParticipant
-                            ? 'rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700'
-                            : 'rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500'
+                            ? 'rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700'
+                            : 'rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500'
                         }
                       >
                         {actor.isParticipant ? 'Yes' : 'No'}

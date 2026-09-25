@@ -49,14 +49,8 @@ export function SimulationEntryPage() {
   return (
     <PageFrame mode="workbench" className="simulation-runner-page min-h-[calc(100vh-64px)] w-full">
       <div className="flex w-full min-w-0 flex-col gap-4">
-        <PageHeader
-          title="Run a simulation"
-          description="Set the participant context, choose one or more published simulations, and open the runner workspace."
-        />
-        <form
-          className="grid min-w-0 gap-4 rounded-lg border border-slate-200 bg-white p-4"
-          onSubmit={begin}
-        >
+        <PageHeader title="Run simulation" />
+        <form className="grid min-w-0 gap-5 border-y border-slate-200 py-4" onSubmit={begin}>
           <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             <div className={`${formGroupClass} min-w-0`}>
               <label className={formLabelClass} htmlFor="runner-actor">

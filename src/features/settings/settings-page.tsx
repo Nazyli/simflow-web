@@ -38,11 +38,7 @@ export function SettingsPage() {
 
   return (
     <PageFrame mode="reference" className="settings-page mx-auto w-full max-w-3xl">
-      <PageHeader
-        eyebrow="Configuration"
-        title="Settings"
-        description="Manage the local demo environment and its seeded simulation data."
-      />
+      <PageHeader title="Settings" />
 
       <SurfaceSection
         title="Reset demo data"

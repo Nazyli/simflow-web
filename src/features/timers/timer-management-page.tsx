@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Clock, Play, RefreshCw } from 'lucide-react'
+import { Play, RefreshCw } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { PageFrame } from '../../components/layout/page-frame'
@@ -405,30 +405,14 @@ export function TimerManagementPage() {
   return (
     <PageFrame mode="operations" className="timer-management-page">
       <PageHeader
-        eyebrow="Scheduler observability"
-        title={
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-100 text-violet-700">
-              <Clock size={16} />
-            </span>
-            <span>Timer management</span>
-          </span>
-        }
-        description="Timers refresh automatically while countdowns update in real time."
+        title="Timers"
         actions={
           <PageToolbar className="sm:justify-end">
-            <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2">
-              <span className="grid size-7 place-items-center rounded-md bg-violet-50 text-[#9929EA]">
-                <Clock size={14} />
+            <div className="flex items-baseline gap-2 rounded-md border border-slate-200 bg-white px-3 py-2">
+              <span className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+                WIB
               </span>
-              <div>
-                <small className="block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
-                  Current time (WIB)
-                </small>
-                <strong className="block text-sm text-slate-800 tabular-nums">
-                  {formatClock(now)}
-                </strong>
-              </div>
+              <strong className="text-sm text-slate-800 tabular-nums">{formatClock(now)}</strong>
             </div>
           </PageToolbar>
         }

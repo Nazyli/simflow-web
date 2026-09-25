@@ -53,15 +53,12 @@ export function SimulationSelectionPanel({
   const resultCount = groupedSimulations.reduce((total, [, group]) => total + group.length, 0)
 
   return (
-    <section className="min-w-0 rounded-md border border-slate-200 bg-slate-50/70 p-3">
+    <section className="min-w-0 rounded-md border border-slate-200 bg-white p-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
+        <div className="min-w-0">
           <label className="text-sm font-semibold text-slate-800" htmlFor="runner-simulation">
             Simulations
           </label>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Search and select one or more simulations to run.
-          </p>
         </div>
         <div className="flex items-center justify-between gap-3 sm:justify-end">
           <span
@@ -97,7 +94,7 @@ export function SimulationSelectionPanel({
             if (event.key === 'Enter') event.preventDefault()
           }}
           onChange={(event) => setSearchQuery(event.target.value)}
-            className="h-9 w-full rounded-md border border-slate-200 bg-white pr-3 pl-9 text-xs transition outline-none placeholder:text-slate-400 focus-visible:border-[#9929EA] focus-visible:ring-3 focus-visible:ring-[#9929EA]/20"
+          className="h-9 w-full rounded-md border border-slate-200 bg-slate-50 pr-3 pl-9 text-xs transition outline-none placeholder:text-slate-400 focus-visible:border-[#9929EA] focus-visible:ring-3 focus-visible:ring-[#9929EA]/20"
         />
       </div>
 

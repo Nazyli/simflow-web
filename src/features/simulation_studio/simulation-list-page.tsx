@@ -161,16 +161,7 @@ export function SimulationListPage() {
   return (
     <PageFrame mode="operations" className="simulation-list-page">
       <PageHeader
-        eyebrow="Simulation Builder"
-        title={
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="brand-gradient grid size-8 shrink-0 place-items-center rounded-lg text-white">
-              <FolderKanban size={16} />
-            </span>
-            <span>Simulations</span>
-          </span>
-        }
-        description="Open a simulation in the builder, or create a new simulation group."
+        title="Simulations"
         actions={
           <Button type="button" onClick={() => setFormGroup('new')}>
             <Plus className="h-4 w-4" /> New Simulation
@@ -194,12 +185,11 @@ export function SimulationListPage() {
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-slate-800">No simulations yet</h2>
             <p className="mt-1 max-w-[560px] text-xs leading-relaxed text-slate-500">
-              Create your first simulation group to start building scenarios with nodes, ports, and
-              edges.
+              Create a group to start building.
             </p>
           </div>
           <Button type="button" onClick={() => setFormGroup('new')}>
-            <Plus className="h-4 w-4" /> Create your first simulation
+            <Plus className="h-4 w-4" /> Create simulation
           </Button>
         </div>
       )}
@@ -216,20 +206,21 @@ export function SimulationListPage() {
                 : lockedCount > 0
                   ? `${lockedCount} locked`
                   : 'Ready'
-              const statusClassName = primarySim?.isLocked || lockedCount > 0
-                ? 'border-amber-200 bg-amber-50 text-amber-700'
-                : 'border-slate-200 bg-slate-50 text-slate-500'
+              const statusClassName =
+                primarySim?.isLocked || lockedCount > 0
+                  ? 'border-amber-200 bg-amber-50 text-amber-700'
+                  : 'border-slate-200 bg-slate-50 text-slate-500'
               return (
                 <article
                   key={group.groupSimulationId}
-                  className="group relative flex min-h-[174px] min-w-0 flex-col rounded-lg border border-slate-200 bg-white transition-all duration-150 hover:border-indigo-400 hover:shadow-md"
+                  className="group relative flex min-h-[158px] min-w-0 flex-col rounded-md border border-slate-200 bg-white transition-colors duration-150 hover:border-violet-300"
                 >
-                  <div className="absolute top-3 right-3 z-10 flex items-center gap-0.5 rounded-md border border-slate-200 bg-white p-0.5 shadow-sm">
+                  <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-0.5">
                     <button
                       type="button"
                       aria-label={`Edit ${group.groupSimulationName}`}
                       title="Edit simulation details"
-                      className="rounded p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700"
+                      className="rounded-md p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700"
                       onClick={() => setFormGroup(group)}
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -238,7 +229,7 @@ export function SimulationListPage() {
                       type="button"
                       aria-label={`Delete ${group.groupSimulationName}`}
                       title="Delete simulation"
-                      className="rounded p-1.5 text-slate-400 transition-colors duration-150 hover:text-red-600"
+                      className="rounded-md p-1.5 text-slate-400 transition-colors duration-150 hover:bg-red-50 hover:text-red-600"
                       onClick={() => setDeleteTarget(group)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -252,9 +243,11 @@ export function SimulationListPage() {
                     <h2 className="line-clamp-2 text-[13px] leading-5 font-semibold tracking-[-0.01em] text-slate-900">
                       {group.groupSimulationName}
                     </h2>
-                    <p className="line-clamp-2 text-xs leading-5 text-slate-500">
-                      {group.groupSimulationDesc || 'No description provided.'}
-                    </p>
+                    {group.groupSimulationDesc && (
+                      <p className="line-clamp-2 text-xs leading-5 text-slate-500">
+                        {group.groupSimulationDesc}
+                      </p>
+                    )}
                   </button>
                   <div className="flex min-h-10 items-center justify-between gap-3 border-t border-slate-100 px-3 py-2.5">
                     <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-slate-500">
