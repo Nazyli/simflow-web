@@ -179,19 +179,22 @@ export function NodeConfigurationForm({
   }
 
   return (
-    <form className="flex min-w-0 flex-col gap-4" onSubmit={submit}>
+    <form
+      className="node-configuration-form flex min-w-0 flex-col gap-3 text-xs [&_label]:text-xs [&_input]:h-7 [&_input]:px-2 [&_input]:py-1 [&_input]:text-xs [&_textarea]:min-h-14 [&_textarea]:px-2 [&_textarea]:py-1.5 [&_textarea]:text-xs [&_button[data-slot=select-trigger]]:text-xs"
+      onSubmit={submit}
+    >
       {readonly && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-normal text-amber-800">
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-normal text-amber-800">
           Read-only — this simulation has been used and cannot be edited. Duplicate it to make
           changes.
         </div>
       )}
-      <div className="flex min-w-0 items-center justify-between gap-3 border-b border-[#DBE3EC] pb-2.5">
-        <div className="flex items-center gap-2">
-          <Sliders className="h-4 w-4 shrink-0 text-[#9929EA]" />
-          <h3 className="text-sm font-semibold text-slate-900">Node configuration</h3>
+      <div className="flex min-w-0 items-center justify-between gap-3 border-b border-[#DBE3EC] pb-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <Sliders className="h-3.5 w-3.5 shrink-0 text-[#9929EA]" />
+          <h3 className="text-xs font-semibold text-slate-900">Node configuration</h3>
         </div>
-        <span className="max-w-36 truncate rounded-md border border-[#DBE3EC] bg-[#F5E7FF] px-2 py-0.5 text-[0.625rem] font-bold tracking-wider text-[#5B148F] uppercase">
+        <span className="max-w-36 truncate whitespace-nowrap rounded-md border border-[#DBE3EC] bg-[#F5E7FF] px-1.5 py-0.5 text-[0.5rem] font-bold tracking-wider text-[#5B148F] uppercase">
           {node.nodeType}
         </span>
       </div>
@@ -203,15 +206,15 @@ export function NodeConfigurationForm({
         placeholder="e.g. Process Order"
       />
       {node.inputPorts?.length ? (
-        <div className="rounded-md border border-[#DBE3EC] bg-slate-50/80 p-3">
-          <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+        <div className="rounded-md border border-[#DBE3EC] bg-slate-50/80 p-2">
+          <p className="text-[9px] font-bold tracking-wider text-slate-500 uppercase">
             Input connections
           </p>
-          <div className="mt-2 space-y-1.5">
+          <div className="mt-1.5 space-y-1">
             {node.inputPorts.map((port) => (
-              <div key={port.id} className="flex items-center justify-between gap-3 text-xs">
+              <div key={port.id} className="flex items-center justify-between gap-2 text-[11px]">
                 <span className="font-medium text-slate-700">{port.label}</span>
-                <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 font-semibold text-slate-600">
+                <span className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
                   Max connections: {port.maxConnections ?? 1}
                 </span>
               </div>
@@ -263,20 +266,21 @@ export function NodeConfigurationForm({
           onChange={(patch) => setConfiguration((current) => ({ ...current, ...patch }))}
         />
       ) : null}
-      {error && <p className="text-xs text-red-600">{error}</p>}
-      <div className="grid gap-2 border-t border-[#DBE3EC] pt-3">
-        <Button type="submit" className="w-full" disabled={readonly}>
-          <Save className="h-4 w-4" /> Save Node
+      {error && <p className="text-[11px] text-red-600">{error}</p>}
+      <div className="grid gap-1.5 border-t border-[#DBE3EC] pt-2">
+        <Button type="submit" size="xs" className="w-full" disabled={readonly}>
+          <Save className="h-3.5 w-3.5" /> Save Node
         </Button>
         {!readonly && (
-          <p className="text-center text-[11px] text-slate-400">
+          <p className="text-center text-[10px] text-slate-400">
             Changes save automatically when you stop typing.
           </p>
         )}
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           <Button
             type="button"
             variant="outline"
+            size="xs"
             className="flex-1"
             onClick={onDuplicate}
             disabled={readonly}
@@ -286,6 +290,7 @@ export function NodeConfigurationForm({
           <Button
             type="button"
             variant="destructive"
+            size="xs"
             className="flex-1"
             onClick={onDelete}
             disabled={readonly}
@@ -407,17 +412,17 @@ function AttachmentOpenConfigurationFields({
   }
 
   return (
-    <div className="grid gap-4 rounded-lg border border-emerald-100 bg-emerald-50/40 p-3">
+    <div className="grid gap-3 rounded-lg border border-emerald-100 bg-emerald-50/40 p-2">
       <div className="grid gap-1.5">
         <Label htmlFor="source-send-email-node">Source email</Label>
         <Select
           value={sourceNodeId}
           onValueChange={(value) => onChange({ sourceSendEmailNodeId: value, attachmentIds: [] })}
         >
-          <SelectTrigger id="source-send-email-node" className="w-full bg-white">
+          <SelectTrigger id="source-send-email-node" size="sm" className="w-full bg-white">
             <SelectValue placeholder="Choose a Send Email node" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="[&_[data-slot=select-item]]:text-xs">
             {sourceNodes.map((candidate) => (
               <SelectItem key={candidate.nodeId} value={candidate.nodeId}>
                 {candidate.nodeName}
@@ -445,10 +450,10 @@ function AttachmentOpenConfigurationFields({
           }
           disabled={!emailId}
         >
-          <SelectTrigger id="attachment-selection" className="w-full bg-white">
+          <SelectTrigger id="attachment-selection" size="sm" className="w-full bg-white">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="[&_[data-slot=select-item]]:text-xs">
             <SelectItem value="selected">Selected attachments</SelectItem>
             <SelectItem value="all">All attachments in this email</SelectItem>
           </SelectContent>
@@ -480,10 +485,10 @@ function AttachmentOpenConfigurationFields({
           onValueChange={(value) => onChange({ completionMode: value })}
           disabled={!emailId}
         >
-          <SelectTrigger id="completion-mode" className="w-full bg-white">
+          <SelectTrigger id="completion-mode" size="sm" className="w-full bg-white">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="[&_[data-slot=select-item]]:text-xs">
             <SelectItem value="minimum">At least N attachments opened</SelectItem>
             <SelectItem value="all">All qualifying attachments opened</SelectItem>
           </SelectContent>
@@ -612,10 +617,10 @@ function CatalogParameterField({
           onValueChange={(next) => onChange(next)}
           disabled={!hasOptions}
         >
-          <SelectTrigger id={name} className="w-full">
+          <SelectTrigger id={name} size="sm" className="w-full">
             <SelectValue placeholder={hasOptions ? `Select ${label}` : 'Add groups first'} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="[&_[data-slot=select-item]]:text-xs">
             {groupOptions.map((option) => (
               <SelectItem key={option.id} value={option.id}>
                 {option.label}
@@ -639,10 +644,10 @@ function CatalogParameterField({
           value={typeof value === 'string' && value ? value : undefined}
           onValueChange={onChange}
         >
-          <SelectTrigger id={name} className="w-full">
+        <SelectTrigger id={name} size="sm" className="w-full">
             <SelectValue placeholder={`Select ${label}`} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="[&_[data-slot=select-item]]:text-xs">
             {select.map((option) => (
               <SelectItem key={option.id} value={option.id}>
                 {option.label}
@@ -783,7 +788,7 @@ function ConversationGroupGroupsField({
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
+              size="icon-xs"
               aria-label={`Remove group ${index + 1}`}
               onClick={() => removeGroup(index)}
             >
@@ -854,7 +859,7 @@ function ClassificationLabelsField({
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
+              size="icon-xs"
               aria-label={`Remove label ${index + 1}`}
               onClick={() => removeLabel(index)}
             >

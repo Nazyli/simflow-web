@@ -348,7 +348,7 @@ export function DocumentationPage() {
   if (!entry) return <Navigate to="/documentation/00-index" replace />
 
   return (
-    <PageFrame mode="reference" className="documentation-page">
+    <PageFrame mode="reference" density="comfortable" className="documentation-page">
       <PageHeader title="Documentation" />
 
       <details className="rounded-lg border border-slate-200 bg-white p-3 lg:hidden">

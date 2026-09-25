@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 export type PageFrameMode = 'workbench' | 'operations' | 'reference'
+export type PageFrameDensity = 'compact' | 'comfortable'
 
 const modeClasses: Record<PageFrameMode, string> = {
   workbench: 'space-y-3',
@@ -10,15 +11,23 @@ const modeClasses: Record<PageFrameMode, string> = {
   reference: 'space-y-8',
 }
 
+const compactModeClasses: Record<PageFrameMode, string> = {
+  workbench: '',
+  operations: 'min-[901px]:space-y-5',
+  reference: 'min-[901px]:space-y-7',
+}
+
 export function PageFrame({
   children,
   className,
   mode = 'operations',
+  density = 'compact',
   edgeToEdge = false,
 }: {
   children: ReactNode
   className?: string
   mode?: PageFrameMode
+  density?: PageFrameDensity
   edgeToEdge?: boolean
 }) {
   return (
@@ -26,6 +35,9 @@ export function PageFrame({
       className={cn(
         'w-full max-w-none min-w-0 bg-[#F6F8FB] p-6 max-[900px]:px-[18px] max-[900px]:py-[22px] max-[620px]:p-3',
         modeClasses[mode],
+        density === 'compact' && 'app-density-compact',
+        density === 'compact' && compactModeClasses[mode],
+        density === 'compact' && !edgeToEdge && 'min-[901px]:p-5',
         edgeToEdge && 'p-0 max-[900px]:px-0 max-[900px]:py-0 max-[620px]:p-0',
         className,
       )}

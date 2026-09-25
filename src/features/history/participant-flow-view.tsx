@@ -100,7 +100,7 @@ function ZoomSliderPanel() {
   const clamped = Math.min(STUDIO_ZOOM_SLIDER_MAX, Math.max(STUDIO_ZOOM_SLIDER_MIN, percent))
   return (
     <div
-      className="absolute bottom-[12px] left-[72px] z-10 flex h-9 items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-slate-700 shadow-md sm:px-3"
+      className="absolute bottom-3 left-[72px] z-10 flex h-8 items-center gap-1.5 rounded-md border border-[#C6D2DF] bg-white px-2 py-1 text-slate-700 shadow-sm sm:px-2.5"
       aria-label="Zoom slider"
     >
       <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">
@@ -116,10 +116,10 @@ function ZoomSliderPanel() {
           const clampedNext = Math.min(STUDIO_MAX_ZOOM, Math.max(STUDIO_MIN_ZOOM, next))
           zoomTo(clampedNext)
         }}
-        className="w-20 sm:w-28 lg:w-36"
+        className="w-16 sm:w-20 lg:w-28"
         aria-label="Zoom level"
       />
-      <span className="w-9 shrink-0 text-right text-xs font-medium text-slate-700 tabular-nums sm:w-10">
+      <span className="w-8 shrink-0 text-right text-[11px] font-medium text-slate-700 tabular-nums sm:w-9">
         {clamped}%
       </span>
     </div>

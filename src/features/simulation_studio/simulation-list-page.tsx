@@ -213,14 +213,14 @@ export function SimulationListPage() {
               return (
                 <article
                   key={group.groupSimulationId}
-                  className="group relative flex min-h-[158px] min-w-0 flex-col rounded-md border border-slate-200 bg-white transition-colors duration-150 hover:border-violet-300"
+                  className="group relative flex min-h-32 min-w-0 flex-col rounded-md border border-slate-200 bg-white transition-colors duration-150 hover:border-violet-300"
                 >
                   <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-0.5">
                     <button
                       type="button"
                       aria-label={`Edit ${group.groupSimulationName}`}
                       title="Edit simulation details"
-                      className="rounded-md p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700"
+                      className="rounded-md p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700 max-[640px]:min-h-11 max-[640px]:min-w-11"
                       onClick={() => setFormGroup(group)}
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -229,7 +229,7 @@ export function SimulationListPage() {
                       type="button"
                       aria-label={`Delete ${group.groupSimulationName}`}
                       title="Delete simulation"
-                      className="rounded-md p-1.5 text-slate-400 transition-colors duration-150 hover:bg-red-50 hover:text-red-600"
+                      className="rounded-md p-1.5 text-slate-400 transition-colors duration-150 hover:bg-red-50 hover:text-red-600 max-[640px]:min-h-11 max-[640px]:min-w-11"
                       onClick={() => setDeleteTarget(group)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

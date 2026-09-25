@@ -20,10 +20,13 @@ export function SurfaceSection({
   return (
     <section
       aria-labelledby={title ? titleId : undefined}
-      className={cn('min-w-0 border-b border-slate-200 pb-5 last:border-b-0', className)}
+      className={cn(
+        'app-surface-section min-w-0 border-b border-slate-200 pb-5 last:border-b-0',
+        className,
+      )}
     >
       {(title || description || actions) && (
-        <header className="mb-4 flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <header className="app-surface-section__header mb-4 flex min-w-0 flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             {title && (
               <h2

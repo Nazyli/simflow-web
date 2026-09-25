@@ -18,7 +18,12 @@ export function PageHeader({
   className?: string
 }) {
   return (
-    <header className={cn('flex min-w-0 flex-wrap items-center justify-between gap-3', className)}>
+    <header
+      className={cn(
+        'app-page-header flex min-w-0 flex-wrap items-center justify-between gap-3',
+        className,
+      )}
+    >
       <div className="min-w-0 flex-1">
         {eyebrow && (
           <p className="mb-1 text-[0.68rem] font-bold tracking-[0.12em] text-violet-700 uppercase">

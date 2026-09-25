@@ -28,12 +28,15 @@ export function SummaryStrip({
   return (
     <dl
       className={cn(
-        'grid min-w-0 auto-cols-[minmax(112px,1fr)] grid-flow-col divide-x divide-slate-200 overflow-x-auto rounded-md border border-slate-200 bg-white',
+        'app-summary-strip grid min-w-0 auto-cols-[minmax(112px,1fr)] grid-flow-col divide-x divide-slate-200 overflow-x-auto rounded-md border border-slate-200 bg-white',
         className,
       )}
     >
       {items.map((item, index) => (
-        <div key={`${index}:${item.label}`} className="min-w-[112px] px-3.5 py-2.5">
+        <div
+          key={`${index}:${item.label}`}
+          className="app-summary-strip__item min-w-[112px] px-3.5 py-2.5"
+        >
           <dt className="truncate text-[0.68rem] font-semibold tracking-[0.08em] text-slate-500 uppercase">
             {item.label}
           </dt>

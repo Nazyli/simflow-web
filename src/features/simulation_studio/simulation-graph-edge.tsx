@@ -156,7 +156,7 @@ export function SimulationGraphEdge({
       />
       <EdgeLabelRenderer>
         <div
-          className={`nodrag nopan pointer-events-auto absolute z-10 flex items-center gap-0.5 rounded-md border border-slate-200 bg-white/95 p-0.5 shadow-sm ${selected ? 'border-[#C6D2DF] bg-[#F5E7FF] text-[#5B148F]' : ''} ${isParticipantPath ? 'history-edge-label--participant' : ''} ${isBackgroundEdge ? 'history-edge-label--background' : ''}`}
+          className={`nodrag nopan pointer-events-auto absolute z-10 flex items-center gap-0.5 rounded-md border border-slate-200 bg-white/75 p-0.5 shadow-sm ${selected ? 'border-[#C6D2DF] bg-[#F5E7FF]/80 text-[#5B148F]' : ''} ${isParticipantPath ? 'history-edge-label--participant' : ''} ${isBackgroundEdge ? 'history-edge-label--background' : ''}`}
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px) translateY(${labelOffset}px)`,
           }}
@@ -165,7 +165,7 @@ export function SimulationGraphEdge({
             type="button"
             variant="ghost"
             size="xs"
-            className="text-foreground/80 hover:bg-background/50 hover:text-foreground h-auto gap-1 rounded-full px-2 py-0.5 text-[0.65rem] font-medium"
+            className="text-foreground/80 hover:bg-background/50 hover:text-foreground h-auto gap-0.5 rounded-full px-1 py-0 text-[0.65rem] font-medium"
           >
             <span className="max-w-[180px] truncate">{label}</span>
           </Button>

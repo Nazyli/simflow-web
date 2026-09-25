@@ -75,7 +75,7 @@ export function MasterPickerField({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon-xs"
                   aria-label={`Remove ${item}`}
                   onClick={() => onChange(removePickerValue(values, item))}
                 >
@@ -84,7 +84,7 @@ export function MasterPickerField({
               </div>
             ))}
           </div>
-          <Button type="button" variant="outline" onClick={openPicker}>
+          <Button type="button" variant="outline" size="xs" onClick={openPicker}>
             <PackageSearch /> {pickerAddButtonLabel(label)}
           </Button>
         </div>
@@ -105,7 +105,7 @@ export function MasterPickerField({
               onChange={(event) => onChange(event.target.value)}
             />
           )}
-          <Button type="button" variant="outline" onClick={openPicker}>
+          <Button type="button" variant="outline" size="xs" onClick={openPicker}>
             <PackageSearch /> {pickerSelectButtonLabel(label)}
           </Button>
         </div>
