@@ -68,7 +68,7 @@ export function SimulationEntryPage() {
 
   return (
     <PageFrame mode="workbench" className="simulation-runner-page min-h-[calc(100vh-64px)] w-full">
-      <div className="flex w-full min-w-0 flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-[1280px] min-w-0 flex-col gap-4">
         <PageHeader
           title="Run simulation"
           description="Set the participant context, then choose the simulations to launch together."
