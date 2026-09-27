@@ -1,4 +1,4 @@
-import { FileText, ExternalLink, BookOpen, Eye, Search } from 'lucide-react'
+import { BookOpen, Edit3, ExternalLink, Eye, FileText, Plus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { isHtmlContent, stripHtmlToText } from '../../../shared/html'
 import { inputClass } from '../../../shared/form-classes'
@@ -10,6 +10,9 @@ interface DocumentWorkspaceProps {
   selectedId: string | null
   onSelectDocument: (id: string) => void
   onOpenPreview: (doc: SimulationDocument) => void
+  editor?: React.ReactNode
+  onCreateDocument?: () => void
+  onEditDocument?: (doc: SimulationDocument) => void
 }
 
 export function DocumentWorkspace({
@@ -17,6 +20,9 @@ export function DocumentWorkspace({
   selectedId,
   onSelectDocument,
   onOpenPreview,
+  editor = null,
+  onCreateDocument,
+  onEditDocument,
 }: DocumentWorkspaceProps) {
   const selected = documents.find((d) => d.id === selectedId) ?? null
 
@@ -39,9 +45,21 @@ export function DocumentWorkspace({
       <div className="flex h-full min-h-0 flex-col lg:flex-row">
         {/* Sidebar list */}
         <aside className="flex min-w-0 shrink-0 flex-col border-b border-slate-200 bg-white lg:w-[340px] lg:border-r lg:border-b-0">
-          <p className="px-3 pt-3 pb-2 text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">
-            Documents
-          </p>
+          <div className="flex items-center justify-between px-3 pt-3 pb-2">
+            <p className="text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">
+              Documents
+            </p>
+            {onCreateDocument ? (
+              <button
+                type="button"
+                onClick={onCreateDocument}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-indigo-700 transition-colors hover:bg-indigo-50 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none"
+              >
+                <Plus size={13} />
+                New
+              </button>
+            ) : null}
+          </div>
           <label className="relative px-3 pb-2">
             <Search className="pointer-events-none absolute top-2.5 left-6 h-3.5 w-3.5 text-[#9aa0a6]" />
             <input
@@ -114,8 +132,14 @@ export function DocumentWorkspace({
 
         {/* Detail panel */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {selected ? (
-            <DocumentDetail document={selected} onOpenPreview={onOpenPreview} />
+          {editor ? (
+            editor
+          ) : selected ? (
+            <DocumentDetail
+              document={selected}
+              onOpenPreview={onOpenPreview}
+              onEditDocument={onEditDocument}
+            />
           ) : (
             <div className="flex flex-1 items-center justify-center bg-[#f6f8fb] px-6 text-center">
               <div className="flex flex-col items-center gap-3">
@@ -148,9 +172,11 @@ export function DocumentWorkspace({
 function DocumentDetail({
   document: doc,
   onOpenPreview,
+  onEditDocument,
 }: {
   document: SimulationDocument
   onOpenPreview: (doc: SimulationDocument) => void
+  onEditDocument?: (doc: SimulationDocument) => void
 }) {
   const typeMeta = DOCUMENT_TYPE_META[doc.type]
   const statusMeta = DOCUMENT_STATUS_META[doc.status]
@@ -176,6 +202,16 @@ function DocumentDetail({
             </span>
           </div>
         </div>
+        {onEditDocument ? (
+          <button
+            type="button"
+            onClick={() => onEditDocument(doc)}
+            className="ml-3 inline-flex shrink-0 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-indigo-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none"
+          >
+            <Edit3 size={13} />
+            Edit document
+          </button>
+        ) : null}
       </div>
 
       {/* Content body */}

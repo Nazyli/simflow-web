@@ -1,11 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import { useEffect, useMemo, useState } from 'react'
 import {
+  createDocument,
   getDocuments,
   openDocument,
+  updateDocument,
+  type DocumentWriteInput,
   type RuntimeSimulationDocument,
 } from '../../shared/api/documents'
+import {
+  isDocumentDraftDirty,
+  serializeDocumentDraft,
+  type DocumentEditorDraft,
+} from './document/document-editor-logic'
+import {
+  beginCreateDocument,
+  beginEditDocument,
+  createInitialDocumentEditorState,
+  finishDocumentSave,
+  recordDocumentSaveFailure,
+} from './document/document-channel-editor-logic'
+import { DocumentEditor } from './document/document-editor'
 import { DocumentPreviewDialog } from './document/document-preview-dialog'
 import { DocumentWorkspace } from './document/document-workspace'
 import { mapRuntimeDocument, type SimulationDocument } from './document/types'
@@ -14,7 +31,7 @@ import { useSimulationRun } from './simulation-run-context'
 export function DocumentChannelPage() {
   const { participantId } = useSimulationRun()
   const queryClient = useQueryClient()
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [editorState, setEditorState] = useState(createInitialDocumentEditorState)
   const [previewDoc, setPreviewDoc] = useState<SimulationDocument | null>(null)
 
   const documentsQuery = useQuery({
@@ -39,7 +56,51 @@ export function DocumentChannelPage() {
             record.participantDocId === updated.participantDocId ? updated : record,
           ),
       )
+      setEditorState((current) => ({
+        ...current,
+        mode: 'read',
+        selectedId: updated.participantDocId,
+        draft: null,
+        savedDraft: null,
+        error: null,
+      }))
       setPreviewDoc(mapRuntimeDocument(updated))
+    },
+  })
+
+  const saveMutation = useMutation({
+    mutationFn: ({
+      mode,
+      documentId,
+      input,
+    }: {
+      mode: 'create' | 'edit'
+      documentId: string | null
+      input: DocumentWriteInput
+    }) => {
+      if (mode === 'create') return createDocument(participantId, input)
+      if (!documentId) throw new Error('The document could not be identified.')
+      return updateDocument(participantId, documentId, input)
+    },
+    onSuccess: (saved) => {
+      queryClient.setQueryData<RuntimeSimulationDocument[]>(
+        ['documents', participantId],
+        (current) => {
+          if (!current) return [saved]
+          const exists = current.some((record) => record.participantDocId === saved.participantDocId)
+          return exists
+            ? current.map((record) =>
+                record.participantDocId === saved.participantDocId ? saved : record,
+              )
+            : [saved, ...current]
+        },
+      )
+      setEditorState((current) => finishDocumentSave(current, saved))
+      toast.success('Document saved.')
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Unable to save the document.'
+      setEditorState((current) => recordDocumentSaveFailure(current, message))
     },
   })
 
@@ -47,9 +108,88 @@ export function DocumentChannelPage() {
     () => (documentsQuery.data ?? []).map(mapRuntimeDocument),
     [documentsQuery.data],
   )
+  const selectedId = editorState.selectedId
+  const editorDraft = editorState.draft
+  const isEditorDirty = Boolean(
+    editorDraft &&
+      editorState.savedDraft &&
+      isDocumentDraftDirty(editorDraft, editorState.savedDraft),
+  )
+
+  useEffect(() => {
+    if (!isEditorDirty) return
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isEditorDirty])
+
+  function canLeaveEditor() {
+    return !isEditorDirty || window.confirm('You have unsaved changes. Leave the editor?')
+  }
+
+  function showReadDocument(id: string | null) {
+    setEditorState({
+      ...createInitialDocumentEditorState(),
+      selectedId: id,
+    })
+  }
+
+  function handleSelectDocument(id: string) {
+    if (id === selectedId && editorState.mode === 'read') return
+    if (!canLeaveEditor()) return
+    showReadDocument(id)
+  }
+
+  function handleCreateDocument() {
+    if (!canLeaveEditor()) return
+    if (!participantId.trim()) {
+      toast.error('Choose an active participant before creating a document.')
+      return
+    }
+    setEditorState((current) => beginCreateDocument(current))
+  }
+
+  function handleEditDocument(doc: SimulationDocument) {
+    if (!canLeaveEditor()) return
+    const record = (documentsQuery.data ?? []).find(
+      (item) => item.participantDocId === doc.id,
+    )
+    if (!record) {
+      toast.error('The selected document is no longer available.')
+      return
+    }
+    setEditorState((current) => beginEditDocument(current, record))
+  }
+
+  function handleCancelEditor() {
+    if (!canLeaveEditor()) return
+    showReadDocument(editorState.mode === 'edit' ? editorState.selectedId : null)
+  }
+
+  function handleEditorChange(draft: DocumentEditorDraft) {
+    setEditorState((current) => ({ ...current, draft, error: null }))
+  }
+
+  function handleSaveEditor() {
+    if (!editorDraft || editorState.mode === 'read') return
+    if (!participantId.trim()) {
+      setEditorState((current) =>
+        recordDocumentSaveFailure(current, 'Choose an active participant before saving.'),
+      )
+      return
+    }
+    saveMutation.mutate({
+      mode: editorState.mode,
+      documentId: editorDraft.participantDocId,
+      input: serializeDocumentDraft(editorDraft),
+    })
+  }
 
   function handleOpenPreview(doc: SimulationDocument) {
-    setSelectedId(doc.id)
+    showReadDocument(doc.id)
     if (!openMutation.isPending) {
       openMutation.mutate({ participantId, documentId: doc.id })
     }
@@ -88,8 +228,24 @@ export function DocumentChannelPage() {
       <DocumentWorkspace
         documents={documents}
         selectedId={selectedId}
-        onSelectDocument={setSelectedId}
+        onSelectDocument={handleSelectDocument}
         onOpenPreview={handleOpenPreview}
+        onCreateDocument={handleCreateDocument}
+        onEditDocument={handleEditDocument}
+        editor={
+          editorDraft ? (
+            <DocumentEditor
+              draft={editorDraft}
+              savedDraft={editorState.savedDraft ?? editorDraft}
+              mode={editorState.mode === 'create' ? 'create' : 'edit'}
+              isSaving={saveMutation.isPending}
+              error={editorState.error}
+              onChange={handleEditorChange}
+              onSave={handleSaveEditor}
+              onCancel={handleCancelEditor}
+            />
+          ) : null
+        }
       />
       {previewDoc ? (
         <DocumentPreviewDialog
