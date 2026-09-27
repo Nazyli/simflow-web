@@ -8,7 +8,7 @@ import { PageHeader } from '../../components/layout/page-header'
 import { startExecutionBatch } from '../../shared/api/executions'
 import { getPublishedSimulations } from '../../shared/api/simulations'
 import { ErrorState } from '../../shared/components/async-state'
-import { formGroupClass, formLabelClass, inputClass } from '../../shared/form-classes'
+import { inputClass } from '../../shared/form-classes'
 import {
   DEFAULT_RUNNER_PARTICIPANT_PROFILE,
   PARTICIPANT_GENDERS,
@@ -20,6 +20,9 @@ import { readActorId, writeActorId } from './simulation-run-context'
 import { SimulationSelectionPanel } from './simulation-selection-panel'
 
 const randomParticipantId = () => String(Math.floor(10000 + Math.random() * 90000))
+const runnerInputClass = `${inputClass} !h-8 !rounded-md !px-2 !py-1 !text-xs`
+const runnerFormGroupClass = 'flex flex-col gap-1'
+const runnerFormLabelClass = 'text-[0.68rem] leading-4 font-semibold text-slate-700'
 
 export function SimulationEntryPage() {
   const client = useQueryClient()
@@ -78,55 +81,55 @@ export function SimulationEntryPage() {
           <div className="runner-entry-grid min-w-0">
             <section
               aria-labelledby="runner-profile-title"
-              className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
+              className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-2.5">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-50 text-violet-700">
-                    <UserRound aria-hidden="true" size={16} strokeWidth={2} />
+                <div className="flex min-w-0 items-start gap-2">
+                  <span className="grid size-7 shrink-0 place-items-center rounded-md bg-violet-50 text-violet-700">
+                    <UserRound aria-hidden="true" size={14} strokeWidth={2} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[0.68rem] font-bold tracking-[0.12em] text-violet-700 uppercase">
+                    <p className="text-[0.6rem] font-bold tracking-[0.1em] text-violet-700 uppercase">
                       Participant setup
                     </p>
                     <h2
                       id="runner-profile-title"
-                      className="mt-1 text-base font-semibold tracking-[-0.01em] text-slate-900"
+                      className="mt-0.5 text-sm font-semibold tracking-[-0.01em] text-slate-900"
                     >
                       Participant profile
                     </h2>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[0.68rem] font-semibold text-slate-500">
+                <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.6rem] font-semibold text-slate-500">
                   Required
                 </span>
               </div>
-              <p className="mt-3 max-w-[34ch] text-xs leading-relaxed text-slate-500">
+              <p className="mt-2 max-w-[34ch] text-[0.68rem] leading-normal text-slate-500">
                 These values are saved with the participant session and used by the simulation
                 runtime.
               </p>
 
-              <fieldset className="mt-5 space-y-3.5">
+              <fieldset className="mt-3 space-y-2.5">
                 <legend className="sr-only">Participant details</legend>
-                <div className={formGroupClass}>
-                  <label className={formLabelClass} htmlFor="runner-full-name">
+                <div className={runnerFormGroupClass}>
+                  <label className={runnerFormLabelClass} htmlFor="runner-full-name">
                     Full name
                   </label>
                   <input
                     id="runner-full-name"
-                    className={inputClass}
+                    className={runnerInputClass}
                     required
                     value={participantFullName}
                     onChange={(event) => setParticipantFullName(event.target.value)}
                   />
                 </div>
-                <div className={formGroupClass}>
-                  <label className={formLabelClass} htmlFor="runner-gender">
+                <div className={runnerFormGroupClass}>
+                  <label className={runnerFormLabelClass} htmlFor="runner-gender">
                     Gender
                   </label>
                   <select
                     id="runner-gender"
-                    className={inputClass}
+                    className={runnerInputClass}
                     required
                     value={participantGender}
                     onChange={(event) =>
@@ -140,13 +143,13 @@ export function SimulationEntryPage() {
                     ))}
                   </select>
                 </div>
-                <div className={formGroupClass}>
-                  <label className={formLabelClass} htmlFor="runner-language">
+                <div className={runnerFormGroupClass}>
+                  <label className={runnerFormLabelClass} htmlFor="runner-language">
                     Language
                   </label>
                   <select
                     id="runner-language"
-                    className={inputClass}
+                    className={runnerInputClass}
                     required
                     value={participantLanguage}
                     onChange={(event) =>
@@ -160,25 +163,25 @@ export function SimulationEntryPage() {
                     ))}
                   </select>
                 </div>
-                <div className={formGroupClass}>
-                  <label className={formLabelClass} htmlFor="runner-actor">
+                <div className={runnerFormGroupClass}>
+                  <label className={runnerFormLabelClass} htmlFor="runner-actor">
                     Participant actor
                   </label>
                   <input
                     id="runner-actor"
-                    className={inputClass}
+                    className={runnerInputClass}
                     required
                     value={actorId}
                     onChange={(event) => setActorId(event.target.value)}
                   />
                 </div>
-                <div className={formGroupClass}>
-                  <label className={formLabelClass} htmlFor="runner-participant">
+                <div className={runnerFormGroupClass}>
+                  <label className={runnerFormLabelClass} htmlFor="runner-participant">
                     Participant ID
                   </label>
                   <input
                     id="runner-participant"
-                    className={inputClass}
+                    className={runnerInputClass}
                     required
                     value={participantId}
                     placeholder="5-digit ID"
@@ -187,7 +190,7 @@ export function SimulationEntryPage() {
                 </div>
               </fieldset>
 
-              <div className="mt-5 rounded-lg border border-slate-200/80 bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-slate-500">
+              <div className="mt-3 rounded-md border border-slate-200/80 bg-slate-50 px-2 py-2 text-[0.68rem] leading-normal text-slate-500">
                 The participant ID links this run to the latest session history.
               </div>
             </section>
