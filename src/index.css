@@ -691,3 +691,16 @@ button:disabled {
 .react-flow__edgelabel-renderer {
   z-index: 9999 !important;
 }
+
+.runner-entry-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  align-items: start;
+  gap: 1rem;
+}
+
+@media (max-width: 480px) {
+  .runner-entry-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
