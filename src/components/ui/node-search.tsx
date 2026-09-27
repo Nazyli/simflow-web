@@ -19,6 +19,13 @@ import {
 } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
 
+const nodeSearchCommandClasses = [
+  'bg-popover rounded-lg border shadow-md md:min-w-[15rem]',
+  '[&_[cmdk-empty]]:py-3 [&_[cmdk-empty]]:text-[0.6875rem] [&_[cmdk-group-heading]]:px-1 [&_[cmdk-group-heading]]:py-0.5 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group]]:p-0',
+  '[&_[cmdk-input-wrapper]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-3 [&_[cmdk-input-wrapper]_svg]:w-3 [&_[cmdk-input]]:h-7 [&_[cmdk-input]]:px-1 [&_[cmdk-input]]:py-0.5 [&_[cmdk-input]]:text-[0.6875rem] max-[760px]:[&_[cmdk-input]]:h-11 max-[760px]:[&_[cmdk-input]]:text-xs',
+  '[&_[cmdk-item]]:min-h-0 [&_[cmdk-item]]:gap-1 [&_[cmdk-item]]:px-1 [&_[cmdk-item]]:py-0.5 [&_[cmdk-item]]:text-[0.6875rem] max-[760px]:[&_[cmdk-item]]:min-h-11 max-[760px]:[&_[cmdk-item]]:text-xs [&_[cmdk-item]_svg]:size-3 [&_[cmdk-list]]:max-h-44',
+].join(' ')
+
 export interface NodeSearchProps extends Omit<PanelProps, 'children'> {
   /**
    * Custom search function — should return nodes matching the search string.
@@ -127,7 +134,13 @@ export function NodeSearchInternal({
 
   return (
     <>
-      <CommandInput placeholder={placeholder} onValueChange={onChange} value={searchString} onFocus={onFocus} />
+      <CommandInput
+        placeholder={placeholder}
+        onValueChange={onChange}
+        value={searchString}
+        onFocus={onFocus}
+        onBlur={() => onOpenChange?.(false)}
+      />
       {open ? (
         <CommandList>
           {searchResults.length === 0 ? (
@@ -154,10 +167,19 @@ export function NodeSearchInternal({
                 // For visualGroup, show type as secondary hint; otherwise nodeType
                 const secondary = groupName ? nodeType || 'visualGroup' : nodeType
                 return (
-                  <CommandItem key={node.id} value={node.id} onSelect={() => onSelect(node)}>
-                    <span className="flex flex-col">
-                      <span>{label}</span>
-                      {secondary ? <span className="text-muted-foreground text-xs">{secondary}</span> : null}
+                  <CommandItem
+                    key={node.id}
+                    value={node.id}
+                    onPointerDown={(event) => event.preventDefault()}
+                    onSelect={() => onSelect(node)}
+                  >
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate">{label}</span>
+                      {secondary ? (
+                        <span className="text-muted-foreground truncate text-[10px] leading-3">
+                          {secondary}
+                        </span>
+                      ) : null}
                     </span>
                   </CommandItem>
                 )
@@ -207,7 +229,7 @@ export function NodeSearch({
     >
       <Command
         shouldFilter={false}
-        className={cn('rounded-lg border shadow-md md:min-w-[350px] bg-popover', className)}
+        className={cn(nodeSearchCommandClasses, className)}
       >
         <NodeSearchInternal
           onSearch={onSearch}

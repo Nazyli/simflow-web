@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-25T00:00:00+07:00",
+  "generatedAt": "2026-09-25T18:58:45+07:00",
   "title": "Design System: SimFlow Frontend",
   "extensions": {
     "colorMeta": {
@@ -89,7 +89,7 @@
       "refersTo": "card",
       "description": "Flat operational surface with restrained interactive lift.",
       "html": "<article class=\"ds-card\"><h2>Customer onboarding</h2><p>Workflow description.</p></article>",
-      "css": ".ds-card { background: #fff; color: #172033; padding: 16px; border: 1px solid #DBE3EC; border-radius: 8px; box-shadow: none; transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-card:hover { border-color: #818CF8; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08); }"
+      "css": ".ds-card { background: #fff; color: #172033; padding: 16px; border: 1px solid #DBE3EC; border-radius: 8px; box-shadow: none; transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-card:hover { border-color: #C6D2DF; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08); }"
     },
     {
       "name": "Status Badge",
@@ -106,6 +106,14 @@
       "description": "Scannable navigation row with quiet hover and clear active contrast.",
       "html": "<a class=\"ds-nav-item ds-nav-item-active\" href=\"/studio\"><span>Studio</span></a>",
       "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; color: #64748B; padding: 8px 10px; border-radius: 8px; font: 600 13px/1.35 'Plus Jakarta Sans Variable', Arial, sans-serif; text-decoration: none; transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav-item:hover { background: #F8FAFC; color: #172033; } .ds-nav-item-active { background: #F5E7FF; color: #5B148F; }"
+    },
+    {
+      "name": "Compact Node Search",
+      "kind": "custom",
+      "refersTo": "input",
+      "description": "Dense node lookup shared by Studio and History, with compact desktop rows and accessible mobile hit areas.",
+      "html": "<section class=\"ds-node-search\" role=\"search\" aria-label=\"Search workflow nodes\"><label class=\"ds-node-search-label\" for=\"ds-node-search-input\">Search nodes</label><input class=\"ds-node-search-input\" id=\"ds-node-search-input\" type=\"search\" placeholder=\"Search nodes...\" /><ul class=\"ds-node-search-results\" role=\"listbox\" aria-label=\"Node results\"><li class=\"ds-node-search-result\" role=\"option\" aria-selected=\"false\"><span>Send chat</span><small>send_chat</small></li><li class=\"ds-node-search-result\" role=\"option\" aria-selected=\"false\"><span>Wait for reply</span><small>wait_for_reply</small></li></ul></section>",
+      "css": ".ds-node-search { width: 240px; max-width: calc(100vw - 24px); overflow: hidden; background: #fff; color: #172033; border: 1px solid #DBE3EC; border-radius: 8px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08); font-family: 'Plus Jakarta Sans Variable', Arial, sans-serif; } .ds-node-search-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; } .ds-node-search-input { width: 100%; height: 28px; padding: 4px 8px; border: 0; border-bottom: 1px solid #DBE3EC; outline: none; color: #172033; font: 400 .6875rem/1.35 'Plus Jakarta Sans Variable', Arial, sans-serif; } .ds-node-search-input:focus-visible { box-shadow: inset 0 0 0 2px #9929EA; } .ds-node-search-results { max-height: 176px; margin: 0; padding: 0; overflow: auto; list-style: none; } .ds-node-search-result { display: flex; min-height: 26px; flex-direction: column; justify-content: center; gap: 2px; padding: 2px 4px; font-size: .6875rem; line-height: 1.25; } .ds-node-search-result[aria-selected=true], .ds-node-search-result:hover { background: #F5E7FF; color: #5B148F; } .ds-node-search-result small { color: #64748B; font-size: .6875rem; line-height: 12px; } @media (max-width: 760px) { .ds-node-search-input { height: 44px; font-size: 12px; } .ds-node-search-result { min-height: 44px; font-size: 12px; } }"
     }
   ],
   "narrative": {

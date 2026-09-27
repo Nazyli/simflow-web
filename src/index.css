@@ -511,8 +511,8 @@ button:disabled {
   }
 }
 .graph .react-flow__controls-button {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
 @media (max-width: 760px) {
   .graph .react-flow__controls-button {

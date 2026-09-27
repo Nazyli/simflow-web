@@ -100,7 +100,7 @@ function ZoomSliderPanel() {
   const clamped = Math.min(STUDIO_ZOOM_SLIDER_MAX, Math.max(STUDIO_ZOOM_SLIDER_MIN, percent))
   return (
     <div
-      className="absolute bottom-3 left-[72px] z-10 flex h-8 items-center gap-1.5 rounded-md border border-[#C6D2DF] bg-white px-2 py-1 text-slate-700 shadow-sm sm:px-2.5"
+      className="absolute bottom-3 left-[72px] z-10 flex h-7 items-center gap-1 rounded-md border border-[#C6D2DF] bg-white px-1.5 py-0.5 text-slate-700 shadow-sm sm:px-2"
       aria-label="Zoom slider"
     >
       <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">
@@ -116,10 +116,10 @@ function ZoomSliderPanel() {
           const clampedNext = Math.min(STUDIO_MAX_ZOOM, Math.max(STUDIO_MIN_ZOOM, next))
           zoomTo(clampedNext)
         }}
-        className="w-16 sm:w-20 lg:w-28"
+        className="w-14 sm:w-18 lg:w-24"
         aria-label="Zoom level"
       />
-      <span className="w-8 shrink-0 text-right text-[11px] font-medium text-slate-700 tabular-nums sm:w-9">
+      <span className="w-7 shrink-0 text-right text-[10px] font-medium text-slate-700 tabular-nums sm:w-8">
         {clamped}%
       </span>
     </div>
@@ -593,7 +593,7 @@ export function ParticipantFlowCanvas({
                 <NodeSearch
                   position="top-left"
                   placeholder="Search nodes... ⌘K"
-                  className="ml-2 w-[320px] shadow-lg md:min-w-[320px]"
+                  className="ml-2 w-[min(15rem,calc(100vw-1.5rem))] shadow-lg md:min-w-[15rem]"
                 />
                 <ParticipantFocusViewport focusNodeId={view.focusNodeId} nodeCount={nodes.length} />
                 <PathTravelingDot path={combinedPath} color={PATH_COLOR} />

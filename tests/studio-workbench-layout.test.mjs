@@ -75,12 +75,45 @@ test('Node Palette sidebar uses compact width and dense node cards', () => {
 
 test('Studio canvas toolbar and node search use compact control sizing', () => {
   const page = source('features/simulation_studio/simulation-studio-page.tsx')
+  const history = source('features/history/participant-flow-view.tsx')
   const command = source('components/ui/command.tsx')
+  const nodeSearch = source('components/ui/node-search.tsx')
 
   assert.match(page, /floating-canvas-toolbar[^\n]*gap-0\.5[^\n]*p-0\.5/)
-  assert.equal((page.match(/h-7 w-7[^\n]*p-0\.5/g) ?? []).length, 5)
+  assert.equal((page.match(/h-\[22px\] w-\[22px\][^\n]*p-0\.5/g) ?? []).length, 5)
+  assert.equal(
+    (
+      page.match(
+        /<Minus size=\{11\}\s*\/>|<Plus size=\{11\}\s*\/>|<Maximize size=\{11\}\s*\/>|<Layers size=\{11\}\s*\/>|<MapPin size=\{11\}\s*\/>/g,
+      ) ?? []
+    ).length,
+    6,
+  )
+  assert.match(
+    page,
+    /h-\[22px\] cursor-pointer rounded-md border border-\[#DBE3EC\] bg-white px-1 text-\[10px\]/,
+  )
+  assert.equal((page.match(/min-h-\[22px\] items-center[^\n]*text-\[10px\]/g) ?? []).length, 2)
+  assert.match(page, /max-\[760px\]:h-11 max-\[760px\]:w-11/)
+  assert.match(page, /max-\[760px\]:min-h-11/)
   assert.match(command, /flex h-9 w-full rounded-md bg-transparent py-2 text-xs/)
   assert.match(command, /max-\[760px\]:h-11/)
+  assert.match(nodeSearch, /\[&_\[cmdk-input\]\]:h-7/)
+  assert.match(nodeSearch, /\[&_\[cmdk-empty\]\]:text-\[0\.6875rem\]/)
+  assert.match(nodeSearch, /\[&_\[cmdk-list\]\]:max-h-44/)
+  assert.match(nodeSearch, /\[&_\[cmdk-item\]\]:py-0\.5/)
+  assert.match(nodeSearch, /\[&_\[cmdk-input\]\]:text-\[0\.6875rem\]/)
+  assert.match(nodeSearch, /\[&_\[cmdk-item\]\]:text-\[0\.6875rem\]/)
+  assert.match(nodeSearch, /max-\[760px\]:\[&_\[cmdk-item\]\]:min-h-11/)
+  assert.match(nodeSearch, /text-\[10px\] leading-3/)
+  assert.equal(
+    (
+      `${page}\n${history}`.match(
+        /w-\[min\(15rem,calc\(100vw-1\.5rem\)\)\][^\n]*md:min-w-\[15rem\]/g,
+      ) ?? []
+    ).length,
+    2,
+  )
 })
 
 test('Studio and History Flow share compact canvas controls and zoom panel sizing', () => {
@@ -89,11 +122,11 @@ test('Studio and History Flow share compact canvas controls and zoom panel sizin
   const styles = source('index.css')
 
   assert.doesNotMatch(styles, /\.graph \.react-flow__controls \{\s*transform: scale\(1\.15\)/)
-  assert.match(styles, /\.graph \.react-flow__controls-button \{\s*width: 28px;\s*height: 28px;/)
+  assert.match(styles, /\.graph \.react-flow__controls-button \{\s*width: 24px;\s*height: 24px;/)
   assert.match(styles, /\.graph \.react-flow__controls-button[\s\S]*?@media \(max-width: 760px\)[\s\S]*?width: 44px;\s*height: 44px;/)
-  assert.equal((`${page}\n${history}`.match(/flex h-8 items-center gap-1\.5 rounded-md border border-\[#C6D2DF\][^\n]*shadow-sm/g) ?? []).length, 2)
-  assert.equal((`${page}\n${history}`.match(/className="w-16 sm:w-20 lg:w-28"/g) ?? []).length, 2)
-  assert.equal((`${page}\n${history}`.match(/w-8 shrink-0 text-right text-\[11px\]/g) ?? []).length, 2)
+  assert.equal((`${page}\n${history}`.match(/flex h-7 items-center gap-1 rounded-md border border-\[#C6D2DF\][^\n]*shadow-sm/g) ?? []).length, 2)
+  assert.equal((`${page}\n${history}`.match(/className="w-14 sm:w-18 lg:w-24"/g) ?? []).length, 2)
+  assert.equal((`${page}\n${history}`.match(/w-7 shrink-0 text-right text-\[10px\]/g) ?? []).length, 2)
 })
 
 test('Studio right sidebar uses a narrower desktop width and compact mobile overlay', () => {

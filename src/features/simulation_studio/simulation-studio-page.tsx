@@ -143,7 +143,7 @@ function ZoomSliderPanel() {
 
   return (
     <div
-      className="absolute bottom-3 left-[72px] z-10 flex h-8 items-center gap-1.5 rounded-md border border-[#C6D2DF] bg-white px-2 py-1 text-slate-700 shadow-sm sm:px-2.5"
+      className="absolute bottom-3 left-[72px] z-10 flex h-7 items-center gap-1 rounded-md border border-[#C6D2DF] bg-white px-1.5 py-0.5 text-slate-700 shadow-sm sm:px-2"
       aria-label="Zoom slider"
     >
       <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">
@@ -159,10 +159,10 @@ function ZoomSliderPanel() {
           const clampedNext = Math.min(STUDIO_MAX_ZOOM, Math.max(STUDIO_MIN_ZOOM, next))
           zoomTo(clampedNext)
         }}
-        className="w-16 sm:w-20 lg:w-28"
+        className="w-14 sm:w-18 lg:w-24"
         aria-label="Zoom level"
       />
-      <span className="w-8 shrink-0 text-right text-[11px] font-medium text-slate-700 tabular-nums sm:w-9">
+      <span className="w-7 shrink-0 text-right text-[10px] font-medium text-slate-700 tabular-nums sm:w-8">
         {clamped}%
       </span>
     </div>
@@ -1981,51 +1981,51 @@ export function SimulationStudioPage() {
           {/* Compact canvas toolbar */}
           <div className="floating-canvas-toolbar absolute top-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-0.5 rounded-md border border-[#C6D2DF] bg-white p-0.5 shadow-sm">
             <div className="flex items-center gap-0.5 border-r border-slate-200 px-0.5">
-              <button
+            <button
                 type="button"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
+                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
                 aria-label="Zoom Out"
                 onClick={() => flowInstance?.zoomOut()}
                 title="Zoom Out"
               >
-                <Minus size={14} />
+                <Minus size={11} />
               </button>
               <button
                 type="button"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
+                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
                 aria-label="Zoom In"
                 onClick={() => flowInstance?.zoomIn()}
                 title="Zoom In"
               >
-                <Plus size={14} />
+                <Plus size={11} />
               </button>
               <button
                 type="button"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
+                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
                 aria-label="Fit View"
                 onClick={() => flowInstance?.fitView()}
                 title="Fit Canvas View"
               >
-                <Maximize size={14} />
+                <Maximize size={11} />
               </button>
               <button
                 type="button"
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
+                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
                 aria-label="Auto layout"
                 onClick={applyAutoLayout}
                 disabled={!simulationId || !apiNodes.length}
                 title="Arrange nodes automatically"
               >
-                <Layers size={14} />
+                <Layers size={11} />
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-7 items-center justify-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:min-h-11"
+                className="inline-flex min-h-[22px] items-center justify-center gap-1 rounded-md px-1 py-0.5 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:min-h-11"
                 onClick={createGroupFromSelection}
                 disabled={isLocked || selectedWorkflowNodeIds.length < 2}
                 title="Group selected workflow nodes"
               >
-                <Layers size={14} /> Group
+                <Layers size={11} /> Group
               </button>
             </div>
 
@@ -2033,7 +2033,7 @@ export function SimulationStudioPage() {
               <select
                 value={edgePathType}
                 onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
-                className="h-7 cursor-pointer rounded-md border border-[#DBE3EC] bg-white px-1 text-[11px] text-slate-600 transition-colors outline-none hover:bg-slate-50 max-[760px]:h-11"
+                className="h-[22px] cursor-pointer rounded-md border border-[#DBE3EC] bg-white px-1 text-[10px] text-slate-600 transition-colors outline-none hover:bg-slate-50 max-[760px]:h-11"
                 title="Edge path style"
               >
                 <option value="default">Bezier</option>
@@ -2044,21 +2044,21 @@ export function SimulationStudioPage() {
 
               <button
                 type="button"
-                className={`inline-flex h-7 w-7 items-center justify-center rounded-md p-0.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11 ${showMiniMap ? 'bg-[#F5E7FF] text-[#5B148F]' : 'text-slate-600 hover:bg-slate-100'}`}
+                className={`inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11 ${showMiniMap ? 'bg-[#F5E7FF] text-[#5B148F]' : 'text-slate-600 hover:bg-slate-100'}`}
                 onClick={() => setShowMiniMap((curr) => !curr)}
                 title="Toggle Minimap"
               >
-                <MapPin size={14} />
+                <MapPin size={11} />
               </button>
 
               <button
                 type="button"
-                className={`inline-flex min-h-7 items-center justify-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-medium text-emerald-800 transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:min-h-11 ${validationRequested ? 'bg-emerald-50' : 'hover:bg-slate-100'}`}
+                className={`inline-flex min-h-[22px] items-center justify-center gap-1 rounded-md px-1 py-0.5 text-[10px] font-medium text-emerald-800 transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:min-h-11 ${validationRequested ? 'bg-emerald-50' : 'hover:bg-slate-100'}`}
                 onClick={validateGraph}
                 disabled={validating || !simulationId}
                 title="Validate Graph Structure"
               >
-                <ClipboardCheck size={15} /> {validating ? 'Validating…' : 'Validate'}
+                <ClipboardCheck size={11} /> {validating ? 'Validating…' : 'Validate'}
               </button>
             </div>
           </div>
@@ -2275,7 +2275,7 @@ export function SimulationStudioPage() {
               <NodeSearch
                 position="top-left"
                 placeholder="Search nodes... ⌘K"
-                className="!m-0 w-[320px] shadow-lg md:min-w-[320px]"
+                className="!m-0 w-[min(15rem,calc(100vw-1.5rem))] shadow-lg md:min-w-[15rem]"
                 style={{ top: '56px', left: '16px', margin: 0 } as React.CSSProperties}
               />
               <StartNodeViewport
