@@ -8,13 +8,13 @@ function Breadcrumb() {
   const location = useLocation()
   const segments = location.pathname.split('/').filter(Boolean)
   const basePath = `/${segments[0] ?? 'studio'}`
-  const title = pageNames[basePath] ?? 'Workspace'
+  const title = pageNames[basePath] ?? 'Studio'
   return (
     <nav
-      className="flex items-center gap-2 overflow-hidden text-[0.76rem] whitespace-nowrap text-slate-400 max-[620px]:mr-auto max-[620px]:max-w-[180px]"
+      className="flex items-center gap-1.5 overflow-hidden text-[11px] whitespace-nowrap text-slate-400 max-[620px]:mr-auto max-[620px]:max-w-[180px]"
       aria-label="Breadcrumb"
     >
-      <span>Simulation Builder</span>
+      <span>SimFlow</span>
       <span>/</span>
       <strong className="font-semibold text-slate-600">{title}</strong>
       {segments.length > 1 && (
@@ -35,13 +35,11 @@ export function AppShell({ children }: PropsWithChildren) {
       <AppSidebar items={navigation} />
 
       <SidebarInset className="min-w-0 overflow-x-hidden bg-slate-100">
-        <header className="sticky top-0 z-10 flex min-h-[48px] w-full min-w-0 items-center gap-2 overflow-hidden border-b border-slate-200 bg-[rgb(251,252,254)]/95 px-[26px] backdrop-blur-md max-[900px]:px-[18px] max-[620px]:min-h-[48px] max-[620px]:px-3">
+        <header className="sticky top-0 z-10 flex min-h-10 w-full min-w-0 items-center gap-1.5 overflow-hidden border-b border-slate-200 bg-[#fbfcfe] px-5 max-[900px]:px-[18px] max-[620px]:min-h-10 max-[620px]:px-3">
           <SidebarTrigger className="shrink-0 text-slate-500" />
           <Breadcrumb />
         </header>
-        <div className="app-content min-w-0 max-w-none">
-          {children}
-        </div>
+        <div className="app-content max-w-none min-w-0">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   )
