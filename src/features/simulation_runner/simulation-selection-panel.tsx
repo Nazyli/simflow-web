@@ -10,6 +10,7 @@ interface SimulationSelectionPanelProps {
   onSelectionChange: (ids: string[]) => void
   isLoading?: boolean
   hasError?: boolean
+  className?: string
 }
 
 export function SimulationSelectionPanel({
@@ -18,6 +19,7 @@ export function SimulationSelectionPanel({
   onSelectionChange,
   isLoading = false,
   hasError = false,
+  className,
 }: SimulationSelectionPanelProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -53,7 +55,7 @@ export function SimulationSelectionPanel({
   const resultCount = groupedSimulations.reduce((total, [, group]) => total + group.length, 0)
 
   return (
-    <section className="min-w-0 rounded-md border border-slate-200 bg-white p-3">
+    <section className={cn('min-w-0 rounded-md border border-slate-200 bg-white p-3', className)}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <label className="text-sm font-semibold text-slate-800" htmlFor="runner-simulation">
