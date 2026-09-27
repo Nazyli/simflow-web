@@ -1,5 +1,10 @@
 import { apiClient } from './client'
 
+export interface DocumentWriteInput {
+  documentName: string
+  contents: Array<{ page: number; content: string }>
+}
+
 export interface RuntimeDocumentContent {
   participantDocContentId: string
   participantDocId: string | null
@@ -37,4 +42,20 @@ export const openDocument = (participantId: string, documentId: string) =>
   apiClient<RuntimeSimulationDocument>(
     `/web/documents/${encodeURIComponent(documentId)}/open?participantId=${encodeURIComponent(participantId)}`,
     { method: 'POST' },
+  )
+
+export const createDocument = (participantId: string, input: DocumentWriteInput) =>
+  apiClient<RuntimeSimulationDocument>(
+    `/web/documents?participantId=${encodeURIComponent(participantId)}`,
+    { method: 'POST', body: JSON.stringify(input) },
+  )
+
+export const updateDocument = (
+  participantId: string,
+  documentId: string,
+  input: DocumentWriteInput,
+) =>
+  apiClient<RuntimeSimulationDocument>(
+    `/web/documents/${encodeURIComponent(documentId)}?participantId=${encodeURIComponent(participantId)}`,
+    { method: 'PUT', body: JSON.stringify(input) },
   )
