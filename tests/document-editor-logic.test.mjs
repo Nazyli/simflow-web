@@ -4,6 +4,7 @@ import test from 'node:test'
 import {
   createEmptyDocumentDraft,
   draftFromRuntimeDocument,
+  appendDocumentDraftPage,
   isDocumentDraftDirty,
   normalizeEditorHtml,
   serializeDocumentDraft,
@@ -54,4 +55,21 @@ test('normalizes empty content and leaves meaningful HTML intact in the node tes
   assert.equal(normalizeEditorHtml(''), '')
   assert.equal(normalizeEditorHtml('  '), '')
   assert.equal(normalizeEditorHtml('<p>Meaningful</p>'), '<p>Meaningful</p>')
+})
+
+test('appends sequential empty pages without mutating the source draft', () => {
+  const draft = createEmptyDocumentDraft()
+  const withSecondPage = appendDocumentDraftPage(draft)
+  const withThirdPage = appendDocumentDraftPage(withSecondPage)
+
+  assert.deepEqual(draft.contents, [{ page: 1, content: '' }])
+  assert.deepEqual(withSecondPage.contents, [
+    { page: 1, content: '' },
+    { page: 2, content: '' },
+  ])
+  assert.deepEqual(withThirdPage.contents, [
+    { page: 1, content: '' },
+    { page: 2, content: '' },
+    { page: 3, content: '' },
+  ])
 })

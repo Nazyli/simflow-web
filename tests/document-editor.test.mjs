@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { createEmptyDocumentDraft } from '../src/features/simulation_runner/document/document-editor-logic.ts'
+import {
+  appendDocumentDraftPage,
+  createEmptyDocumentDraft,
+  isDocumentDraftDirty,
+} from '../src/features/simulation_runner/document/document-editor-logic.ts'
 import {
   canSaveDocumentEditor,
   editorSaveStatus,
@@ -30,4 +34,13 @@ test('save status exposes text for saving, errors, dirty drafts, and saved draft
   assert.equal(editorSaveStatus({ isSaving: false, isDirty: true, error: 'Failed' }), 'Failed')
   assert.equal(editorSaveStatus({ isSaving: false, isDirty: true, error: null }), 'Unsaved changes')
   assert.equal(editorSaveStatus({ isSaving: false, isDirty: false, error: null }), 'Saved')
+})
+
+test('adding a page makes the document dirty and exposes the next page number', () => {
+  const saved = updateEditorName(createEmptyDocumentDraft(), 'Guide')
+  const draft = appendDocumentDraftPage(saved)
+
+  assert.equal(draft.contents.at(-1)?.page, 2)
+  assert.equal(draft.contents.at(-1)?.content, '')
+  assert.equal(isDocumentDraftDirty(draft, saved), true)
 })

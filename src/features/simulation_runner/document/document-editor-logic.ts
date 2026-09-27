@@ -47,6 +47,14 @@ export function updateDraftPage(
   }
 }
 
+export function appendDocumentDraftPage(draft: DocumentEditorDraft): DocumentEditorDraft {
+  const lastPage = draft.contents.at(-1)?.page ?? 0
+  return {
+    ...draft,
+    contents: [...draft.contents, { page: lastPage + 1, content: '' }],
+  }
+}
+
 export function normalizeEditorHtml(value: string): string {
   const trimmed = value.trim()
   if (!trimmed || /^<(?:br|div><br\s*\/?>|p><br\s*\/?>)\s*\/?>(?:<\/div>|<\/p>)?$/i.test(trimmed)) {

@@ -5,6 +5,7 @@ import {
   Link2,
   List,
   ListOrdered,
+  Plus,
   Redo2,
   Save,
   Underline,
@@ -17,6 +18,7 @@ import { Button } from '../../../components/ui/button'
 import { inputClass } from '../../../shared/form-classes'
 import {
   isDocumentDraftDirty,
+  appendDocumentDraftPage,
   updateDraftPage,
   type DocumentEditorDraft,
 } from './document-editor-logic'
@@ -45,6 +47,7 @@ export function DocumentEditor({
 }) {
   const editorRefs = useRef<Record<number, HTMLDivElement | null>>({})
   const activeEditorRef = useRef<HTMLDivElement | null>(null)
+  const pageToFocusRef = useRef<number | null>(null)
   const isDirty = isDocumentDraftDirty(draft, savedDraft)
   const saveDisabled = disabled || isSaving || !isDirty || !canSaveDocumentEditor(draft, isSaving)
 
@@ -52,6 +55,11 @@ export function DocumentEditor({
     for (const page of draft.contents) {
       const editor = editorRefs.current[page.page]
       if (editor && editor.innerHTML !== page.content) editor.innerHTML = page.content
+    }
+    const pageToFocus = pageToFocusRef.current
+    if (pageToFocus !== null && editorRefs.current[pageToFocus]) {
+      editorRefs.current[pageToFocus]?.focus()
+      pageToFocusRef.current = null
     }
   }, [draft])
 
@@ -72,6 +80,13 @@ export function DocumentEditor({
 
   function handlePageInput(page: number, content: string) {
     onChange(updateDraftPage(draft, page, content))
+  }
+
+  function handleAddPage() {
+    if (disabled || isSaving) return
+    const nextDraft = appendDocumentDraftPage(draft)
+    pageToFocusRef.current = nextDraft.contents.at(-1)?.page ?? null
+    onChange(nextDraft)
   }
 
   return (
@@ -173,6 +188,29 @@ export function DocumentEditor({
               />
             </section>
           ))}
+          <div className="flex flex-col items-center gap-2 py-1">
+            <div className="flex w-full items-center gap-3" aria-hidden="true">
+              <span className="h-px flex-1 border-t border-dashed border-slate-300" />
+              <span className="text-[10px] font-semibold tracking-[0.12em] text-slate-400 uppercase">
+                End of document
+              </span>
+              <span className="h-px flex-1 border-t border-dashed border-slate-300" />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 rounded-full border-dashed border-slate-300 bg-white px-5 text-xs font-semibold text-indigo-700 shadow-sm hover:border-indigo-300 hover:bg-indigo-50"
+              disabled={disabled || isSaving}
+              aria-label="Add page"
+              onClick={handleAddPage}
+            >
+              <Plus size={15} />
+              Add page
+            </Button>
+            <p className="text-center text-[11px] text-slate-400">
+              New pages are added at the end of this document.
+            </p>
+          </div>
         </div>
       </div>
     </div>
