@@ -56,7 +56,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
     const hasChildren = Boolean(children?.length)
     const expanded = expandedGroups[path] ?? isActive
     const itemClassName =
-      'h-9 rounded-md px-2.5 text-[13px] text-sidebar-foreground/75 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-[#F5E7FF] data-[active=true]:font-semibold data-[active=true]:text-[#5B148F]'
+      'h-8 rounded-md px-2 text-[11px] text-sidebar-foreground/75 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-[#F5E7FF] data-[active=true]:font-semibold data-[active=true]:text-[#5B148F]'
 
     if (hasChildren) {
       return (
@@ -87,7 +87,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
                     <SidebarMenuSubButton
                       asChild
                       isActive={childActive}
-                      className="h-8 rounded-md text-xs text-sidebar-foreground/65 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-[#F5E7FF] data-[active=true]:font-semibold data-[active=true]:text-[#5B148F]"
+                      className="h-8 rounded-md text-[11px] text-sidebar-foreground/65 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-[#F5E7FF] data-[active=true]:font-semibold data-[active=true]:text-[#5B148F]"
                     >
                       <NavLink to={childPath}>
                         {ChildIcon && <ChildIcon size={15} strokeWidth={1.8} />}
@@ -122,7 +122,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
           <SidebarMenuItem className="flex h-full items-center">
             <SidebarMenuButton
               size="lg"
-              className="h-full gap-2.5 rounded-md px-2 text-[13px] font-semibold tracking-[-0.01em] text-slate-800 transition-colors duration-150 hover:bg-slate-50 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
+              className="h-full gap-2 rounded-md px-2 text-[11px] font-semibold tracking-[-0.01em] text-slate-800 transition-colors duration-150 hover:bg-slate-50 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2"
             >
               <span className="grid size-7 shrink-0 place-items-center rounded-md bg-[#9929EA] text-white">
                 <Bot size={15} strokeWidth={2.2} />
@@ -161,7 +161,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
             SB
           </span>
           <div className="min-w-0 leading-tight group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-xs font-semibold text-slate-700">Simulation Builder</p>
+            <p className="truncate text-[11px] font-semibold text-slate-700">Simulation Builder</p>
             <p className="truncate text-[10px] text-slate-400">Workspace</p>
           </div>
         </div>
