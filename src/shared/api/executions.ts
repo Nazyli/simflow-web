@@ -1,5 +1,6 @@
 import { apiClient } from './client'
 import type { Execution } from '../types/simulation'
+import type { RunnerParticipantProfile } from '../../features/simulation_runner/runner-participant-profile'
 
 export interface NodeExecution {
   nodeExecutionId: string
@@ -33,6 +34,10 @@ export interface BatchExecutionResponse {
 export const startExecutionBatch = (payload: {
   participantId: string
   simulationIds: string[]
+  participantFullName: string
+  participantGender: RunnerParticipantProfile['participantGender']
+  participantLanguage: RunnerParticipantProfile['participantLanguage']
+  participantActorId: string
   context?: Record<string, unknown>
 }) =>
   apiClient<BatchExecutionResponse>('/web/executions/batch', {
