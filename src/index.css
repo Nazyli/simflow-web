@@ -694,7 +694,7 @@ button:disabled {
 
 .runner-entry-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 4fr);
   align-items: start;
   gap: 1rem;
 }
