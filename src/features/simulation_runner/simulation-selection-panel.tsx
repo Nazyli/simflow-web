@@ -56,24 +56,24 @@ export function SimulationSelectionPanel({
 
   return (
     <section className={cn('min-w-0 rounded-md border border-slate-200 bg-white p-3', className)}>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="runner-simulation">
+          <label className="text-xs font-semibold text-slate-800" htmlFor="runner-simulation">
             Simulations
           </label>
         </div>
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
+        <div className="flex items-center justify-between gap-2 sm:justify-end">
           <span
             aria-live="polite"
             aria-atomic="true"
-            className="rounded-md bg-[#F5E7FF] px-2 py-1 text-[11px] font-semibold text-[#5B148F]"
+            className="rounded bg-[#F5E7FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#5B148F]"
           >
             {selectedIds.length} selected
           </span>
           {selectedIds.length > 0 && (
             <button
               type="button"
-              className="rounded px-1.5 py-1 text-[11px] font-semibold text-[#9929EA] transition-colors hover:bg-[#F5E7FF] focus-visible:ring-2 focus-visible:ring-[#9929EA]/40 focus-visible:outline-none"
+              className="rounded px-1 py-0.5 text-[10px] font-semibold text-[#9929EA] transition-colors hover:bg-[#F5E7FF] focus-visible:ring-2 focus-visible:ring-[#9929EA]/40 focus-visible:outline-none"
               onClick={() => onSelectionChange([])}
             >
               Clear selection
@@ -82,10 +82,10 @@ export function SimulationSelectionPanel({
         </div>
       </div>
 
-      <div className="relative mt-3">
+      <div className="relative mt-2">
         <Search
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400"
+          className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-slate-400"
         />
         <input
           id="runner-simulation"
@@ -96,47 +96,47 @@ export function SimulationSelectionPanel({
             if (event.key === 'Enter') event.preventDefault()
           }}
           onChange={(event) => setSearchQuery(event.target.value)}
-          className="h-9 w-full rounded-md border border-slate-200 bg-slate-50 pr-3 pl-9 text-xs transition outline-none placeholder:text-slate-400 focus-visible:border-[#9929EA] focus-visible:ring-3 focus-visible:ring-[#9929EA]/20"
+          className="h-8 w-full rounded-md border border-slate-200 bg-slate-50 pr-2 pl-8 text-[11px] transition outline-none placeholder:text-slate-400 focus-visible:border-[#9929EA] focus-visible:ring-3 focus-visible:ring-[#9929EA]/20"
         />
       </div>
 
-      <div className="mt-2 max-h-[min(48vh,26rem)] min-w-0 space-y-3 overflow-y-auto rounded-md border border-slate-200/80 bg-white p-2">
+      <div className="mt-1.5 max-h-[min(48vh,26rem)] min-w-0 space-y-2 overflow-y-auto rounded-md border border-slate-200/80 bg-white p-1.5">
         {isLoading ? (
-          <p className="py-7 text-center text-sm text-slate-500">Loading simulations…</p>
+          <p className="py-5 text-center text-xs text-slate-500">Loading simulations…</p>
         ) : hasError ? (
-          <p className="py-7 text-center text-sm text-rose-700">
+          <p className="py-5 text-center text-[11px] text-rose-700">
             Unable to load published simulations. Refresh the page to try again.
           </p>
         ) : simulations.length === 0 ? (
-          <p className="py-7 text-center text-sm text-slate-500">
+          <p className="py-5 text-center text-xs text-slate-500">
             No published simulations are available.
           </p>
         ) : groupedSimulations.length === 0 ? (
-          <p className="py-7 text-center text-sm text-slate-500">
+          <p className="py-5 text-center text-xs text-slate-500">
             No simulations match “{searchQuery.trim()}”. Try another name or group.
           </p>
         ) : (
           groupedSimulations.map(([groupName, groupSimulations]) => (
-            <section key={groupName} aria-label={groupName} className="space-y-1.5">
-              <div className="flex items-center justify-between gap-3 px-1">
+            <section key={groupName} aria-label={groupName} className="space-y-1">
+              <div className="flex items-center justify-between gap-2 px-1">
                 <h2
                   title={groupName}
-                  className="min-w-0 truncate text-[11px] font-semibold text-slate-600"
+                  className="min-w-0 truncate text-[10px] font-semibold text-slate-600"
                 >
                   {groupName}
                 </h2>
-                <span className="shrink-0 text-[11px] text-slate-400 tabular-nums">
+                <span className="shrink-0 text-[10px] text-slate-400 tabular-nums">
                   {groupSimulations.length}
                 </span>
               </div>
-              <div className="grid min-w-0 grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid min-w-0 grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-4">
                 {groupSimulations.map((simulation) => {
                   const selected = selectedIds.includes(simulation.simulationId)
                   return (
                     <label
                       key={simulation.simulationId}
                       className={cn(
-                        'flex min-h-10 min-w-0 cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 transition-colors focus-within:ring-2 focus-within:ring-[#9929EA]/30',
+                        'flex min-h-9 min-w-0 cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 transition-colors focus-within:ring-2 focus-within:ring-[#9929EA]/30',
                         selected
                           ? 'border-[#DBABFF] bg-[#F5E7FF]/70'
                           : 'border-slate-200 bg-white hover:border-[#DBABFF] hover:bg-[#F5E7FF]/40',
@@ -146,7 +146,7 @@ export function SimulationSelectionPanel({
                         checked={selected}
                         onCheckedChange={() => toggleSimulation(simulation.simulationId)}
                       />
-                      <span className="min-w-0 truncate text-xs leading-4 font-medium text-slate-800">
+                      <span className="min-w-0 truncate text-[11px] leading-4 font-medium text-slate-800">
                         {simulation.simulationName}
                       </span>
                     </label>
@@ -158,7 +158,7 @@ export function SimulationSelectionPanel({
         )}
       </div>
       {!isLoading && !hasError && simulations.length > 0 && (
-        <p role="status" className="mt-1.5 text-right text-[10px] text-slate-500">
+        <p role="status" className="mt-1 text-right text-[10px] text-slate-500">
           Showing {resultCount} of {simulations.length} simulations
         </p>
       )}
