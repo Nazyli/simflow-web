@@ -196,9 +196,9 @@ export function SimulationEntryPage() {
                     !simulationIds.length ||
                     start.isPending
                   }
-                  className="!m-0 !inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg !border-0 !bg-[#9929EA] !px-4 !py-2 text-sm font-semibold !text-white shadow-sm transition hover:!bg-[#7d1fc2] focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                  className="!m-0 !inline-flex min-h-9 w-fit items-center justify-center gap-1 rounded-md !border-0 !bg-[#9929EA] !px-3 !py-1.5 text-xs font-semibold !text-white shadow-sm transition hover:!bg-[#7d1fc2] focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <Play aria-hidden="true" size={15} />{' '}
+                  <Play aria-hidden="true" size={14} />{' '}
                   {start.isPending ? 'Starting simulationsâ€¦' : 'Start selected simulations'}
                 </button>
               </div>
