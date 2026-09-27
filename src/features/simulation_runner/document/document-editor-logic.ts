@@ -24,7 +24,10 @@ export function draftFromRuntimeDocument(record: RuntimeSimulationDocument): Doc
   const contents = [...record.contents]
     .filter((content) => content.page !== null)
     .sort((left, right) => (left.page ?? 0) - (right.page ?? 0))
-    .map((content) => ({ page: content.page ?? 1, content: content.content ?? '' }))
+    .map((content) => ({
+      page: content.page ?? 1,
+      content: normalizeEditorHtml(content.content ?? ''),
+    }))
 
   return {
     participantDocId: record.participantDocId,
