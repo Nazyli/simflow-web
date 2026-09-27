@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Play, UserRound } from 'lucide-react'
+import { Play } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -80,36 +80,10 @@ export function SimulationEntryPage() {
         <form className="min-w-0" onSubmit={begin}>
           <div className="runner-entry-grid min-w-0">
             <section
-              aria-labelledby="runner-profile-title"
+              aria-label="Participant profile"
               className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-2">
-                  <span className="grid size-7 shrink-0 place-items-center rounded-md bg-violet-50 text-violet-700">
-                    <UserRound aria-hidden="true" size={14} strokeWidth={2} />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[0.6rem] font-bold tracking-[0.1em] text-violet-700 uppercase">
-                      Participant setup
-                    </p>
-                    <h2
-                      id="runner-profile-title"
-                      className="mt-0.5 text-sm font-semibold tracking-[-0.01em] text-slate-900"
-                    >
-                      Participant profile
-                    </h2>
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.6rem] font-semibold text-slate-500">
-                  Required
-                </span>
-              </div>
-              <p className="mt-2 max-w-[34ch] text-[0.68rem] leading-normal text-slate-500">
-                These values are saved with the participant session and used by the simulation
-                runtime.
-              </p>
-
-              <fieldset className="mt-3 space-y-2.5">
+              <fieldset className="space-y-2.5">
                 <legend className="sr-only">Participant details</legend>
                 <div className={runnerFormGroupClass}>
                   <label className={runnerFormLabelClass} htmlFor="runner-full-name">
@@ -196,23 +170,9 @@ export function SimulationEntryPage() {
             </section>
 
             <section
-              aria-labelledby="runner-simulations-title"
+              aria-label="Choose simulations"
               className="flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
             >
-              <div className="mb-3 min-w-0">
-                <p className="text-[0.68rem] font-bold tracking-[0.12em] text-violet-700 uppercase">
-                  Run scope
-                </p>
-                <h2
-                  id="runner-simulations-title"
-                  className="mt-1 text-base font-semibold tracking-[-0.01em] text-slate-900"
-                >
-                  Choose simulations
-                </h2>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                  Select one or more published simulations for this participant.
-                </p>
-              </div>
               <SimulationSelectionPanel
                 className="border-0 bg-transparent p-0 shadow-none"
                 simulations={simulations.data ?? []}
