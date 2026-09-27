@@ -136,7 +136,7 @@ export function SimulationSelectionPanel({
                     <label
                       key={simulation.simulationId}
                       className={cn(
-                        'flex min-h-9 min-w-0 cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 transition-colors focus-within:ring-2 focus-within:ring-[#9929EA]/30',
+                        'flex min-h-9 min-w-0 cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] transition-colors focus-within:ring-2 focus-within:ring-[#9929EA]/30',
                         selected
                           ? 'border-[#DBABFF] bg-[#F5E7FF]/70'
                           : 'border-slate-200 bg-white hover:border-[#DBABFF] hover:bg-[#F5E7FF]/40',
