@@ -75,7 +75,7 @@ export function SimulationEntryPage() {
           eyebrow="Runner"
         />
         <form className="min-w-0" onSubmit={begin}>
-          <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(18rem,0.78fr)_minmax(0,1.55fr)]">
+          <div className="grid min-w-0 items-start gap-4 md:grid-cols-2">
             <section
               aria-labelledby="runner-profile-title"
               className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)]"
