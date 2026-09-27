@@ -10,7 +10,7 @@ Gunakan setelah undangan berhasil atau saat Simulation langsung memulai percakap
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Invite to Call] -->|joined| B[Start Call]
     B -->|success| C[Send Call Speech]
@@ -21,22 +21,22 @@ flowchart LR
     class A wait
     class B,C action
     class D terminal
-~~~
+```
 
 Participant yang sudah bergabung diteruskan ke sesi call; speech dapat dikirim setelah `success`.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Menjalankan pembuatan sesi call. |
+| Input | Tipe | Wajib | Keterangan                       |
+| ----- | ---- | :---: | -------------------------------- |
+| Input | Flow |  Ya   | Menjalankan pembuatan sesi call. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `success` | Sesi call berhasil dibuat. | Untuk speech atau wait call. |
-| `failed` | Call tidak dapat dimulai. | Untuk error handling. |
+| Output Port | Arti                       | Kapan digunakan?             |
+| ----------- | -------------------------- | ---------------------------- |
+| `success`   | Sesi call berhasil dibuat. | Untuk speech atau wait call. |
+| `failed`    | Call tidak dapat dimulai.  | Untuk error handling.        |
 
 ## Output yang dihasilkan
 

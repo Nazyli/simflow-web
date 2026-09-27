@@ -107,7 +107,7 @@ export function ActorCrudDialog({
           <DialogDescription>
             {editing
               ? 'Update the actor profile used by simulations and conversations.'
-              : 'Create an actor profile that can be selected in simulation nodes.'}
+              : 'Used by workflow nodes.'}
           </DialogDescription>
         </DialogHeader>
 

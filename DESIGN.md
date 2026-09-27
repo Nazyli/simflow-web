@@ -2,81 +2,81 @@
 name: SimFlow Frontend
 description: Restrained, production-grade workflow tooling for building and operating simulations.
 colors:
-  primary: "#9929EA"
-  secondary: "#DBABFF"
-  brand-accent-fill: "#9929EA"
-  canvas: "#F6F8FB"
-  surface: "#FFFFFF"
-  text-primary: "#172033"
-  text-secondary: "#64748B"
-  border: "#DBE3EC"
-  border-strong: "#C6D2DF"
-  accent-tint: "#F5E7FF"
-  accent-text: "#5B148F"
-  destructive: "#DC2626"
-  status-amber-bg: "#FFFBEB"
-  status-amber-border: "#FDE68A"
-  status-amber-text: "#B45309"
+  primary: '#9929EA'
+  secondary: '#DBABFF'
+  brand-accent-fill: '#9929EA'
+  canvas: '#F6F8FB'
+  surface: '#FFFFFF'
+  text-primary: '#172033'
+  text-secondary: '#64748B'
+  border: '#DBE3EC'
+  border-strong: '#C6D2DF'
+  accent-tint: '#F5E7FF'
+  accent-text: '#5B148F'
+  destructive: '#DC2626'
+  status-amber-bg: '#FFFBEB'
+  status-amber-border: '#FDE68A'
+  status-amber-text: '#B45309'
 typography:
   display:
-    fontFamily: "Plus Jakarta Sans Variable, Arial, sans-serif"
-    fontSize: "clamp(1.5rem, 3vw, 2rem)"
+    fontFamily: 'Plus Jakarta Sans Variable, Arial, sans-serif'
+    fontSize: 'clamp(1.5rem, 3vw, 2rem)'
     fontWeight: 600
     lineHeight: 1.2
-    letterSpacing: "-0.02em"
+    letterSpacing: '-0.02em'
   title:
-    fontFamily: "Plus Jakarta Sans Variable, Arial, sans-serif"
-    fontSize: "1.125rem"
+    fontFamily: 'Plus Jakarta Sans Variable, Arial, sans-serif'
+    fontSize: '1.125rem'
     fontWeight: 600
     lineHeight: 1.35
-    letterSpacing: "-0.015em"
+    letterSpacing: '-0.015em'
   body:
-    fontFamily: "Plus Jakarta Sans Variable, Arial, sans-serif"
-    fontSize: "0.875rem"
+    fontFamily: 'Plus Jakarta Sans Variable, Arial, sans-serif'
+    fontSize: '0.875rem'
     fontWeight: 400
     lineHeight: 1.5
   label:
-    fontFamily: "Plus Jakarta Sans Variable, Arial, sans-serif"
-    fontSize: "0.75rem"
+    fontFamily: 'Plus Jakarta Sans Variable, Arial, sans-serif'
+    fontSize: '0.75rem'
     fontWeight: 600
     lineHeight: 1.35
-    letterSpacing: "0.01em"
+    letterSpacing: '0.01em'
 rounded:
-  sm: "6px"
-  md: "8px"
-  lg: "10px"
+  sm: '6px'
+  md: '8px'
+  lg: '10px'
 spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "12px"
-  lg: "16px"
-  xl: "24px"
-  xxl: "32px"
+  xs: '4px'
+  sm: '8px'
+  md: '12px'
+  lg: '16px'
+  xl: '24px'
+  xxl: '32px'
 components:
   button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "#FFFFFF"
-    typography: "{typography.label}"
-    rounded: "{rounded.md}"
-    padding: "8px 14px"
+    backgroundColor: '{colors.primary}'
+    textColor: '#FFFFFF'
+    typography: '{typography.label}'
+    rounded: '{rounded.md}'
+    padding: '8px 14px'
   button-primary-hover:
-    backgroundColor: "#7D1FC2"
+    backgroundColor: '#7D1FC2'
   button-ghost:
-    backgroundColor: "transparent"
-    textColor: "{colors.text-secondary}"
-    typography: "{typography.label}"
-    rounded: "{rounded.md}"
-    padding: "6px 8px"
+    backgroundColor: 'transparent'
+    textColor: '{colors.text-secondary}'
+    typography: '{typography.label}'
+    rounded: '{rounded.md}'
+    padding: '6px 8px'
   input:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.text-primary}"
-    rounded: "{rounded.md}"
-    padding: "8px 10px"
+    backgroundColor: '{colors.surface}'
+    textColor: '{colors.text-primary}'
+    rounded: '{rounded.md}'
+    padding: '8px 10px'
   card:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.text-primary}"
-    rounded: "{rounded.md}"
-    padding: "16px"
+    backgroundColor: '{colors.surface}'
+    textColor: '{colors.text-primary}'
+    rounded: '{rounded.md}'
+    padding: '16px'
 ---
 
 # Design System: SimFlow Frontend

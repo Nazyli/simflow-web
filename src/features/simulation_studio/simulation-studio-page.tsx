@@ -143,7 +143,7 @@ function ZoomSliderPanel() {
 
   return (
     <div
-      className="absolute bottom-3 left-[72px] z-10 flex h-7 items-center gap-1 rounded-md border border-[#C6D2DF] bg-white px-1.5 py-0.5 text-slate-700 shadow-sm sm:px-2"
+      className="absolute bottom-3 left-[72px] z-10 flex h-7 items-center gap-1 rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-slate-700 shadow-sm sm:px-2"
       aria-label="Zoom slider"
     >
       <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">
@@ -1659,7 +1659,7 @@ export function SimulationStudioPage() {
         edgeToEdge
         className="grid h-[calc(100vh-64px)] place-items-center"
       >
-        <div className="max-w-sm rounded-lg border border-[#DBE3EC] bg-white p-6 text-center">
+        <div className="max-w-sm rounded-lg border border-slate-200 bg-white p-6 text-center">
           <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-amber-500" />
           <h2 className="text-sm font-bold text-slate-900">Simulation not found</h2>
           <p className="mt-1 text-xs leading-normal text-slate-500">
@@ -1681,7 +1681,7 @@ export function SimulationStudioPage() {
       className="studio-app-container flex h-[calc(100vh-64px)] min-h-0 min-w-0 flex-col overflow-hidden text-slate-800"
     >
       {/* Studio Header Bar */}
-      <header className="studio-top-header z-20 flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-[#DBE3EC] bg-white px-3 py-1 sm:px-4">
+      <header className="studio-top-header z-20 flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-1 sm:px-4">
         <div className="flex min-w-0 items-center gap-2.5">
           <button
             type="button"
@@ -1696,7 +1696,10 @@ export function SimulationStudioPage() {
             <span className="shrink-0 text-[0.68rem] font-bold tracking-[0.12em] text-violet-700 uppercase">
               Studio
             </span>
-            <span className="shrink-0 text-[0.68rem] font-semibold text-slate-300" aria-hidden="true">
+            <span
+              className="shrink-0 text-[0.68rem] font-semibold text-slate-300"
+              aria-hidden="true"
+            >
               |
             </span>
             <h1 className="min-w-0 truncate text-[0.68rem] font-bold tracking-[0.12em] text-slate-500">
@@ -1704,13 +1707,13 @@ export function SimulationStudioPage() {
             </h1>
           </div>
 
-          <div className="hidden min-w-0 items-center gap-2.5 border-l border-[#DBE3EC] pl-3 sm:flex">
+          <div className="hidden min-w-0 items-center gap-2.5 border-l border-slate-200 pl-3 sm:flex">
             {selectedSimulation ? (
-              <span className="inline-flex max-w-48 items-center truncate rounded-md border border-[#DBE3EC] bg-slate-50 px-2 py-0.5 text-[0.66rem] font-semibold text-slate-600">
+              <span className="inline-flex max-w-48 items-center truncate rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-600">
                 {selectedSimulation.simulationName}
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-md border border-[#DBE3EC] bg-slate-50 px-2 py-0.5 text-[0.66rem] font-semibold text-slate-500">
+              <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500">
                 No Simulation
               </span>
             )}
@@ -1756,7 +1759,7 @@ export function SimulationStudioPage() {
         {/* Right Header Actions */}
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
           {selectedGroupSimulation && (
-            <div className="mr-1 hidden items-center gap-1 rounded-md border border-[#DBE3EC] bg-slate-50 p-0.5 md:flex">
+            <div className="mr-1 hidden items-center gap-1 rounded-md border border-slate-200 bg-slate-50 p-0.5 md:flex">
               <select
                 className="h-6 cursor-pointer bg-transparent px-2 text-[11px] font-medium text-slate-700 focus:outline-none"
                 value={simulationId ?? ''}
@@ -1777,7 +1780,7 @@ export function SimulationStudioPage() {
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className="flex h-6 items-center gap-1 rounded-md border border-[#C6D2DF] bg-white px-2 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                    className="flex h-6 items-center gap-1 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
                   >
                     <Copy className="h-3 w-3" /> Workflow actions{' '}
                     <ChevronDown className="h-3 w-3" />
@@ -1786,7 +1789,7 @@ export function SimulationStudioPage() {
                 <PopoverContent align="end" className="w-48 p-1">
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-[#F5E7FF] hover:text-[#5B148F]"
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-violet-50 hover:text-violet-800"
                     onClick={() => {
                       setWorkflowActionsOpen(false)
                       openDuplicateDialog()
@@ -1796,7 +1799,7 @@ export function SimulationStudioPage() {
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-[#F5E7FF] hover:text-[#5B148F] disabled:opacity-50"
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-violet-50 hover:text-violet-800 disabled:opacity-50"
                     disabled={exportWorkflow.isPending || !selectedSimulation}
                     onClick={() => {
                       setWorkflowActionsOpen(false)
@@ -1807,7 +1810,7 @@ export function SimulationStudioPage() {
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-[#F5E7FF] hover:text-[#5B148F] disabled:opacity-50"
+                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-violet-50 hover:text-violet-800 disabled:opacity-50"
                     disabled={!selectedSimulation || importWorkflow.isPending}
                     onClick={openImportPicker}
                   >
@@ -1836,7 +1839,7 @@ export function SimulationStudioPage() {
             </button>
           )}
           <button
-            className="flex h-6 items-center gap-1.5 rounded-md border border-[#C6D2DF] bg-white px-2 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+            className="flex h-6 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
             type="button"
             disabled={!selectedSimulation || validating}
             onClick={validateGraph}
@@ -1847,7 +1850,7 @@ export function SimulationStudioPage() {
 
           <button
             type="button"
-            className="flex h-6 items-center gap-1.5 rounded-md bg-[#9929EA] px-2 text-[11px] font-semibold text-white transition-colors hover:bg-[#7D1FC2]"
+            className="bg-primary text-primary-foreground hover:bg-primary/80 flex h-6 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors"
             onClick={() => navigate('/simulation')}
           >
             <Play size={12} /> Run Simulation
@@ -1870,7 +1873,7 @@ export function SimulationStudioPage() {
         <aside
           className={`studio-left-sidebar z-10 flex min-h-0 flex-col border-r border-[#DBE3EC] bg-white transition-all duration-200 max-[1100px]:absolute max-[1100px]:inset-y-0 max-[1100px]:left-0 max-[1100px]:z-20 max-[1100px]:min-w-0 max-[1100px]:shadow-md ${leftSidebarOpen ? 'w-56 max-w-[240px] min-w-[220px] max-[1100px]:w-[min(15rem,calc(100vw-1.5rem))] max-[1100px]:max-w-[calc(100vw-1.5rem)]' : 'w-0 min-w-0 overflow-hidden opacity-0'}`}
         >
-          <div className="flex items-center justify-between border-b border-[#DBE3EC] p-2">
+          <div className="flex items-center justify-between border-b border-slate-200 p-2">
             <h2 className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
               <Layers className="h-3.5 w-3.5 text-purple-600" /> Node Palette
             </h2>
@@ -1962,14 +1965,14 @@ export function SimulationStudioPage() {
                     className="mt-1 inline-flex items-center justify-center gap-1 rounded-md bg-amber-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
                     onClick={() => openDuplicateDialog()}
                   >
-                    <Copy className="h-3 w-3" /> Duplicate to Edit
+                    <Copy className="h-3 w-3" /> Duplicate and edit
                   </button>
                 </div>
               )}
               {!selectedSimulation && !isLocked && (
                 <div className="col-span-2 mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                   <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-                  Select or create a version to start editing nodes.
+                  Select or create a version to edit nodes.
                 </div>
               )}
             </div>
@@ -1981,7 +1984,7 @@ export function SimulationStudioPage() {
           {/* Compact canvas toolbar */}
           <div className="floating-canvas-toolbar absolute top-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-0.5 rounded-md border border-[#C6D2DF] bg-white p-0.5 shadow-sm">
             <div className="flex items-center gap-0.5 border-r border-slate-200 px-0.5">
-            <button
+              <button
                 type="button"
                 className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
                 aria-label="Zoom Out"

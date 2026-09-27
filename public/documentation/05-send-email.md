@@ -10,7 +10,7 @@ Gunakan untuk mengirim instruksi, informasi, reminder, atau pesan follow-up mela
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Send Email] -->|success| B[Wait for Reply]
     A -->|failed| C([End])
@@ -20,22 +20,22 @@ flowchart LR
     class A action
     class B wait
     class C terminal
-~~~
+```
 
 Email yang berhasil dikirim dapat diikuti oleh penantian balasan; kegagalan diarahkan ke error handling.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Menjalankan pengiriman email. |
+| Input | Tipe | Wajib | Keterangan                    |
+| ----- | ---- | :---: | ----------------------------- |
+| Input | Flow |  Ya   | Menjalankan pengiriman email. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `success` | Email berhasil dikirim. | Untuk melanjutkan workflow atau menunggu balasan. |
-| `failed` | Email gagal dikirim. | Untuk error handling atau `End`. |
+| Output Port | Arti                    | Kapan digunakan?                                  |
+| ----------- | ----------------------- | ------------------------------------------------- |
+| `success`   | Email berhasil dikirim. | Untuk melanjutkan workflow atau menunggu balasan. |
+| `failed`    | Email gagal dikirim.    | Untuk error handling atau `End`.                  |
 
 ## Output yang dihasilkan
 

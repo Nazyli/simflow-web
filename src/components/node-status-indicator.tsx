@@ -11,11 +11,7 @@ type NodeStatusIndicatorProps = {
  * Renders a conic-gradient spinner clipped to rounded border.
  * Only shows when status === 'active' (waiting/running). Otherwise passthrough.
  */
-export function NodeStatusIndicator({
-  children,
-  status,
-  className,
-}: NodeStatusIndicatorProps) {
+export function NodeStatusIndicator({ children, status, className }: NodeStatusIndicatorProps) {
   const isActive = status === 'active'
   if (!isActive) return <>{children}</>
 
@@ -28,9 +24,9 @@ export function NodeStatusIndicator({
     >
       <div
         aria-hidden="true"
-        className="node-status-indicator__spinner pointer-events-none absolute aspect-square w-[140%] top-1/2 left-1/2"
+        className="node-status-indicator__spinner pointer-events-none absolute top-1/2 left-1/2 aspect-square w-[140%]"
       />
-      <div className="relative rounded-[calc(var(--radius)-2px)] bg-card overflow-hidden">
+      <div className="bg-card relative overflow-hidden rounded-[calc(var(--radius)-2px)]">
         {children}
       </div>
     </div>

@@ -75,6 +75,7 @@ export function SimulationGraphEdge({
   const isBackgroundEdge = edgeData?.emphasis === 'background'
   const edgeType = edgeData?.edgeType ?? 'default'
   const onDelete = edgeData?.onDelete
+  const onPathReady = edgeData?.onPathReady
   const sourceBoundary = edgeData?.collapsedSourceRect
     ? pointOnRectBoundary(edgeData.collapsedSourceRect, { x: targetX, y: targetY })
     : undefined
@@ -103,7 +104,7 @@ export function SimulationGraphEdge({
   // Report this edge's rendered path + endpoint so the parent can build one
   // dot that travels the whole participant path sequentially.
   useEffect(() => {
-    edgeData?.onPathReady?.(_id, {
+    onPathReady?.(_id, {
       path: edgePath,
       sx: effectiveSourceX,
       sy: effectiveSourceY,
@@ -117,7 +118,7 @@ export function SimulationGraphEdge({
     effectiveSourceY,
     effectiveTargetX,
     effectiveTargetY,
-    edgeData?.onPathReady,
+    onPathReady,
   ])
 
   return (
@@ -149,7 +150,6 @@ export function SimulationGraphEdge({
           stroke,
           strokeWidth: isParticipantPath ? 2.25 : selected ? 2.5 : 1.5,
           opacity: isBackgroundEdge ? 0.56 : 1,
-          filter: isParticipantPath ? 'drop-shadow(0 0 3px rgba(124,58,237,0.5))' : undefined,
           strokeDasharray:
             style.lineStyle === 'dashed' ? '6 4' : style.lineStyle === 'dotted' ? '2 3' : undefined,
         }}
@@ -165,7 +165,7 @@ export function SimulationGraphEdge({
             type="button"
             variant="ghost"
             size="xs"
-            className="text-foreground/80 hover:bg-background/50 hover:text-foreground h-auto gap-0.5 rounded-full px-1 py-0 text-[0.65rem] font-medium"
+            className="text-foreground/80 hover:bg-background/50 hover:text-foreground h-auto gap-0.5 rounded-md px-1 py-0 text-xs font-medium"
           >
             <span className="max-w-[180px] truncate">{label}</span>
           </Button>

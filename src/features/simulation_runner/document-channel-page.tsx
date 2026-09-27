@@ -26,7 +26,7 @@ import { DocumentEditor } from './document/document-editor'
 import { DocumentPreviewDialog } from './document/document-preview-dialog'
 import { DocumentWorkspace } from './document/document-workspace'
 import { mapRuntimeDocument, type SimulationDocument } from './document/types'
-import { useSimulationRun } from './simulation-run-context'
+import { useSimulationRun } from './simulation-run-context-core'
 
 export function DocumentChannelPage() {
   const { participantId } = useSimulationRun()
@@ -87,7 +87,9 @@ export function DocumentChannelPage() {
         ['documents', participantId],
         (current) => {
           if (!current) return [saved]
-          const exists = current.some((record) => record.participantDocId === saved.participantDocId)
+          const exists = current.some(
+            (record) => record.participantDocId === saved.participantDocId,
+          )
           return exists
             ? current.map((record) =>
                 record.participantDocId === saved.participantDocId ? saved : record,
@@ -112,8 +114,8 @@ export function DocumentChannelPage() {
   const editorDraft = editorState.draft
   const isEditorDirty = Boolean(
     editorDraft &&
-      editorState.savedDraft &&
-      isDocumentDraftDirty(editorDraft, editorState.savedDraft),
+    editorState.savedDraft &&
+    isDocumentDraftDirty(editorDraft, editorState.savedDraft),
   )
 
   useEffect(() => {
@@ -154,9 +156,7 @@ export function DocumentChannelPage() {
 
   function handleEditDocument(doc: SimulationDocument) {
     if (!canLeaveEditor()) return
-    const record = (documentsQuery.data ?? []).find(
-      (item) => item.participantDocId === doc.id,
-    )
+    const record = (documentsQuery.data ?? []).find((item) => item.participantDocId === doc.id)
     if (!record) {
       toast.error('The selected document is no longer available.')
       return
@@ -199,13 +199,13 @@ export function DocumentChannelPage() {
     const failed = documentsQuery.isError
     return (
       <div className="flex h-full min-h-[420px] flex-col items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white px-6 text-center">
-        <span className="grid h-12 w-12 place-items-center rounded-full bg-[#f1f3f4]">
-          <FileText size={20} className="text-[#9aa0a6]" />
+        <span className="grid h-12 w-12 place-items-center rounded-full bg-slate-100">
+          <FileText size={20} className="text-slate-400" />
         </span>
-        <p className="text-sm font-medium text-[#1a1a2e]">
+        <p className="text-sm font-medium text-slate-900">
           {failed ? 'Failed to load documents' : 'Loading documents…'}
         </p>
-        <p className="mt-1 max-w-sm text-xs text-[#5f6368]">
+        <p className="mt-1 max-w-sm text-xs text-slate-500">
           {failed
             ? 'Documents could not be retrieved for this participant. Check the connection and try again.'
             : 'Fetching shared documents for this simulation session.'}

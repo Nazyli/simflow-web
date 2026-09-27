@@ -10,7 +10,7 @@ Gunakan untuk skenario yang terdiri dari beberapa kelompok percakapan berurutan.
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Conversation Group] -->|success| B[Next Node]
     A -->|failed| C([End])
@@ -20,22 +20,22 @@ flowchart LR
     class A wait
     class B action
     class C terminal
-~~~
+```
 
 Workflow baru melanjutkan setelah semua subgroup selesai.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Memulai penantian subgroup. |
+| Input | Tipe | Wajib | Keterangan                  |
+| ----- | ---- | :---: | --------------------------- |
+| Input | Flow |  Ya   | Memulai penantian subgroup. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `success` | Semua subgroup selesai. | Untuk melanjutkan workflow. |
-| `failed` | Group tidak dapat diselesaikan. | Untuk error handling. |
+| Output Port | Arti                            | Kapan digunakan?            |
+| ----------- | ------------------------------- | --------------------------- |
+| `success`   | Semua subgroup selesai.         | Untuk melanjutkan workflow. |
+| `failed`    | Group tidak dapat diselesaikan. | Untuk error handling.       |
 
 ## Output yang dihasilkan
 

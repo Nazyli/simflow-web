@@ -56,7 +56,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
     const hasChildren = Boolean(children?.length)
     const expanded = expandedGroups[path] ?? isActive
     const itemClassName =
-      'h-8 rounded-md px-2 text-[11px] text-sidebar-foreground/75 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-[#F5E7FF] data-[active=true]:font-semibold data-[active=true]:text-[#5B148F]'
+      'h-8 rounded-md px-2 text-xs text-sidebar-foreground/75 transition-colors duration-150 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-[#F5E7FF] data-[active=true]:font-semibold data-[active=true]:text-[#5B148F]'
 
     if (hasChildren) {
       return (
@@ -85,7 +85,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
                     <SidebarMenuSubButton
                       asChild
                       isActive={childActive}
-                      className="text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-8 rounded-md text-[11px] transition-colors duration-150 data-[active=true]:bg-[#F5E7FF] data-[active=true]:font-semibold data-[active=true]:text-[#5B148F]"
+                      className="text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-8 rounded-md text-xs transition-colors duration-150 data-[active=true]:bg-[#F5E7FF] data-[active=true]:font-semibold data-[active=true]:text-[#5B148F]"
                     >
                       <NavLink to={childPath}>
                         {ChildIcon && <ChildIcon size={15} strokeWidth={1.8} />}
@@ -115,17 +115,17 @@ export function AppSidebar({ items }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon" className="z-20 overflow-x-hidden border-slate-200/80">
-      <SidebarHeader className="border-sidebar-border/70 h-12 min-h-12 gap-0 overflow-hidden border-b p-0">
+      <SidebarHeader className="border-sidebar-border/70 h-10 min-h-10 gap-0 overflow-hidden border-b p-0">
         <SidebarMenu className="h-full gap-0">
           <SidebarMenuItem className="flex h-full items-center">
             <SidebarMenuButton
               size="lg"
-              className="h-full gap-2 rounded-md px-2 text-[11px] font-semibold tracking-[-0.01em] text-slate-800 transition-colors duration-150 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2 hover:bg-slate-50"
+              className="h-full gap-2 rounded-md px-2 text-xs font-semibold tracking-[-0.01em] text-slate-800 transition-colors duration-150 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2 hover:bg-slate-50"
             >
               <span className="grid size-7 shrink-0 place-items-center rounded-md bg-[#9929EA] text-white">
                 <Bot size={15} strokeWidth={2.2} />
               </span>
-              <span className="group-data-[collapsible=icon]:hidden">Simulation Builder</span>
+              <span className="group-data-[collapsible=icon]:hidden">SimFlow</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -133,7 +133,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
 
       <SidebarContent className="gap-0 overflow-x-hidden">
         <SidebarGroup className="px-2 py-3">
-          <SidebarGroupLabel className="px-2 text-[10px] font-semibold tracking-[0.12em] text-slate-400 uppercase">
+          <SidebarGroupLabel className="px-2 text-xs font-semibold tracking-[0.08em] text-slate-400 uppercase">
             Workspace
           </SidebarGroupLabel>
           <SidebarMenu className="gap-0.5">{primaryItems.map(renderItem)}</SidebarMenu>
@@ -142,7 +142,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
         <SidebarSeparator className="mx-2" />
 
         <SidebarGroup className="px-2 py-3">
-          <SidebarGroupLabel className="px-2 text-[10px] font-semibold tracking-[0.12em] text-slate-400 uppercase">
+          <SidebarGroupLabel className="px-2 text-xs font-semibold tracking-[0.08em] text-slate-400 uppercase">
             Resources
           </SidebarGroupLabel>
           <SidebarMenu className="gap-0.5">{resourceItems.map(renderItem)}</SidebarMenu>
@@ -151,16 +151,6 @@ export function AppSidebar({ items }: AppSidebarProps) {
 
       <SidebarFooter className="border-sidebar-border/70 gap-1 border-t px-2 py-2">
         {settingsItem && <SidebarMenu className="gap-0.5">{renderItem(settingsItem)}</SidebarMenu>}
-        <SidebarSeparator className="mx-0 my-1" />
-        <div className="flex h-10 items-center gap-2 rounded-md px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-500">
-            SB
-          </span>
-          <div className="min-w-0 leading-tight group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-[11px] font-semibold text-slate-700">Simulation Builder</p>
-            <p className="truncate text-[10px] text-slate-400">Workspace</p>
-          </div>
-        </div>
       </SidebarFooter>
 
       <SidebarRail />

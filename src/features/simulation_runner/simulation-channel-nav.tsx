@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { channelNavigation, channelPath } from './simulation-channels'
-import { useSimulationRun } from './simulation-run-context'
+import { useSimulationRun } from './simulation-run-context-core'
 
 export function SimulationChannelNav() {
   const { participantId, unreadCounts } = useSimulationRun()

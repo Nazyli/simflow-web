@@ -10,7 +10,7 @@ Gunakan saat workflow perlu memulai percakapan, memberi instruksi, atau mengirim
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A([Start]) --> B[Send Chat]
     B -->|success| C[Wait for Reply]
@@ -21,22 +21,22 @@ flowchart LR
     class A,D terminal
     class B action
     class C wait
-~~~
+```
 
 Workflow mengirim chat. Jika berhasil, workflow dapat menunggu balasan; jika gagal, jalur error dijalankan.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Menjalankan Node setelah Node sebelumnya selesai. |
+| Input | Tipe | Wajib | Keterangan                                        |
+| ----- | ---- | :---: | ------------------------------------------------- |
+| Input | Flow |  Ya   | Menjalankan Node setelah Node sebelumnya selesai. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `success` | Chat berhasil dikirim. | Untuk melanjutkan workflow. |
-| `failed` | Chat gagal dikirim. | Untuk error handling atau `End`. |
+| Output Port | Arti                   | Kapan digunakan?                 |
+| ----------- | ---------------------- | -------------------------------- |
+| `success`   | Chat berhasil dikirim. | Untuk melanjutkan workflow.      |
+| `failed`    | Chat gagal dikirim.    | Untuk error handling atau `End`. |
 
 ## Output yang dihasilkan
 

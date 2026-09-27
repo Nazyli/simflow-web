@@ -1,7 +1,8 @@
 import { Navigate, Outlet, useParams } from 'react-router-dom'
 import { SimulationChannelNav } from './simulation-channel-nav'
 import { SimulationInfoPanel } from './simulation-info-panel'
-import { SimulationRunProvider, useSimulationRun } from './simulation-run-context'
+import { SimulationRunProvider } from './simulation-run-context'
+import { useSimulationRun } from './simulation-run-context-core'
 import { PageFrame } from '../../components/layout/page-frame'
 
 function SimulationRunShell() {

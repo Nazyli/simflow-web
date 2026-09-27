@@ -78,5 +78,8 @@ export function isDocumentDraftDirty(
   draft: DocumentEditorDraft,
   savedDraft: DocumentEditorDraft,
 ): boolean {
-  return JSON.stringify(serializeDocumentDraft(draft)) !== JSON.stringify(serializeDocumentDraft(savedDraft))
+  return (
+    JSON.stringify(serializeDocumentDraft(draft)) !==
+    JSON.stringify(serializeDocumentDraft(savedDraft))
+  )
 }

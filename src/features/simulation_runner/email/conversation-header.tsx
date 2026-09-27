@@ -21,7 +21,7 @@ export function ConversationHeader({ thread, messages }: ConversationHeaderProps
           {thread.latestSubject || '(no subject)'}
         </p>
       </div>
-      <span className="ml-4 shrink-0 text-xs text-[#5f6368]">
+      <span className="ml-4 shrink-0 text-xs text-slate-500">
         {count} message{count === 1 ? '' : 's'}
       </span>
     </div>

@@ -10,7 +10,7 @@ Gunakan sebelum participant diminta membaca dokumen atau sebelum memakai `Wait f
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Add Document] -->|success| B[Wait for Document Open]
     A -->|failed| C([End])
@@ -20,22 +20,22 @@ flowchart LR
     class A action
     class B logic
     class C terminal
-~~~
+```
 
 Dokumen ditambahkan terlebih dahulu, kemudian workflow dapat menunggu hingga participant membukanya.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Menjalankan penambahan dokumen. |
+| Input | Tipe | Wajib | Keterangan                      |
+| ----- | ---- | :---: | ------------------------------- |
+| Input | Flow |  Ya   | Menjalankan penambahan dokumen. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `success` | Dokumen berhasil tersedia atau sudah tersedia. | Untuk melanjutkan workflow. |
-| `failed` | Dokumen tidak dapat ditambahkan. | Untuk error handling. |
+| Output Port | Arti                                           | Kapan digunakan?            |
+| ----------- | ---------------------------------------------- | --------------------------- |
+| `success`   | Dokumen berhasil tersedia atau sudah tersedia. | Untuk melanjutkan workflow. |
+| `failed`    | Dokumen tidak dapat ditambahkan.               | Untuk error handling.       |
 
 ## Output yang dihasilkan
 

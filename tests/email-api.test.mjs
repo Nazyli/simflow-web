@@ -119,4 +119,3 @@ test('sorts attachment preview pages in ascending page order', () => {
     ['page-1', 'page-2'],
   )
 })
-

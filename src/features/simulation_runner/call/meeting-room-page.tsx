@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../../components/ui/button'
 import type { CallConnection } from '../../../shared/api/agent-call'
 import { getCallConnection, getCallRoomConnection } from '../../../shared/api/agent-call'
-import { useSimulationRun } from '../simulation-run-context'
+import { useSimulationRun } from '../simulation-run-context-core'
 import {
   CALL_CONNECTION_STORAGE_KEY,
   CALL_PREJOIN_STORAGE_KEY,
@@ -202,7 +202,9 @@ export function CallMeetingRoomPage() {
 
       {state.phase === 'awaiting-reconnect' ? (
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-900">
-          <span className="min-w-0">The call connection dropped. Rejoin the same room when ready.</span>
+          <span className="min-w-0">
+            The call connection dropped. Rejoin the same room when ready.
+          </span>
           <Button size="sm" variant="secondary" onClick={reconnect}>
             Reconnect
           </Button>
@@ -261,7 +263,7 @@ export function CallMeetingRoomPage() {
           </div>
 
           {/* Bottom control bar - always visible */}
-              <div className="border-t border-slate-200 bg-white px-4 py-2.5">
+          <div className="border-t border-slate-200 bg-white px-4 py-2.5">
             <div className="flex items-center justify-center">
               <MediaControlBar
                 choices={effectiveChoices}

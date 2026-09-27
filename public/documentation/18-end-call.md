@@ -10,7 +10,7 @@ Gunakan saat workflow memutuskan percakapan suara harus dihentikan.
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[End Call] -->|success| B([End])
     A -->|failed| C[Handle Error]
@@ -19,22 +19,22 @@ flowchart LR
     class A action
     class B terminal
     class C action
-~~~
+```
 
 Workflow berakhir setelah call berhasil dihentikan; failure dapat diteruskan ke penanganan error.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Menjalankan permintaan pengakhiran call. |
+| Input | Tipe | Wajib | Keterangan                               |
+| ----- | ---- | :---: | ---------------------------------------- |
+| Input | Flow |  Ya   | Menjalankan permintaan pengakhiran call. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `success` | Call berhasil diakhiri. | Untuk `End` atau langkah berikutnya. |
-| `failed` | Permintaan mengakhiri call gagal. | Untuk error handling. |
+| Output Port | Arti                              | Kapan digunakan?                     |
+| ----------- | --------------------------------- | ------------------------------------ |
+| `success`   | Call berhasil diakhiri.           | Untuk `End` atau langkah berikutnya. |
+| `failed`    | Permintaan mengakhiri call gagal. | Untuk error handling.                |
 
 ## Output yang dihasilkan
 

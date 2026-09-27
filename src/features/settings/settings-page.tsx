@@ -28,7 +28,7 @@ export function SettingsPage() {
     try {
       const res = await resetDatabase()
       setResult(res)
-      toast.success('Database reset completed')
+      toast.success('Demo data reset completed')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Reset failed')
     } finally {
@@ -60,7 +60,7 @@ export function SettingsPage() {
           className="gap-2"
         >
           <Database size={14} />
-          {loading ? 'Resetting...' : 'Reset Database'}
+          {loading ? 'Resetting demo data…' : 'Reset demo data'}
         </Button>
 
         {result && (
@@ -83,10 +83,9 @@ export function SettingsPage() {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reset Database</DialogTitle>
+            <DialogTitle>Reset demo data</DialogTitle>
             <DialogDescription>
-              This will run alembic downgrade, re-migrate to head, and re-seed all demo data. All
-              existing simulation data will be permanently lost.
+              This will re-run migrations and seed data. Existing simulation data will be lost.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -94,7 +93,7 @@ export function SettingsPage() {
               <Button variant="outline">Cancel</Button>
             </DialogClose>
             <Button variant="destructive" onClick={handleReset}>
-              Yes, reset everything
+              Reset demo data
             </Button>
           </DialogFooter>
         </DialogContent>

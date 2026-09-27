@@ -42,6 +42,7 @@ const nodeRenderers = {
 const edgeRenderers = { simulation: SimulationGraphEdge }
 const MASTER_COLOR = '#94a3b8'
 const PATH_COLOR = '#7c3aed'
+const EMPTY_VISUAL_GROUPS: VisualGroup[] = []
 
 type EdgePathReport = { path: string; sx: number; sy: number; tx: number; ty: number }
 
@@ -79,14 +80,7 @@ function PathTravelingDot({ path, color }: { path: string | null; color: string 
       style={{ transform: `translate(${x}px, ${y}px) scale(${zoom})`, transformOrigin: '0 0' }}
       aria-hidden
     >
-      <circle
-        r="7"
-        fill={color}
-        fillOpacity={1}
-        stroke="#fff"
-        strokeWidth={1.5}
-        style={{ filter: 'drop-shadow(0 0 5px rgba(124,58,237,0.8))' }}
-      >
+      <circle r="7" fill={color} fillOpacity={1} stroke="#fff" strokeWidth={1.5}>
         <animateMotion dur={`${duration}s`} repeatCount="indefinite" path={path} />
       </circle>
     </svg>
@@ -201,12 +195,10 @@ export function ParticipantFlowCanvas({
   simulationId,
   executionId,
   currentState,
-  executionStatus,
 }: {
   simulationId: string
   executionId: string
   currentState: string | null
-  executionStatus?: string | null
 }) {
   const graph = useQuery({
     queryKey: ['graph', simulationId],
@@ -248,30 +240,28 @@ export function ParticipantFlowCanvas({
     })
   }, [])
 
-  const apiVisualGroups = graph.data?.visualGroups ?? []
+  const apiVisualGroups = graph.data?.visualGroups ?? EMPTY_VISUAL_GROUPS
 
   useEffect(() => {
     setLocalGroups(apiVisualGroups)
   }, [apiVisualGroups])
 
-  const effectiveGroups =
-    localGroups.length > 0 || apiVisualGroups.length === 0 ? localGroups : apiVisualGroups
   const groupsForRender = useMemo(() => {
     if (localGroups.length === 0 && apiVisualGroups.length > 0) return apiVisualGroups
-    return effectiveGroups
-  }, [localGroups, apiVisualGroups, effectiveGroups])
+    return localGroups
+  }, [localGroups, apiVisualGroups])
 
-  const handleToggleGroup = (groupId: string) => {
-    setLocalGroups((prev) => {
-      const base = prev.length > 0 ? prev : apiVisualGroups
-      return base.map((g) =>
-        g.visualGroupId === groupId ? { ...g, isCollapsed: !g.isCollapsed } : g,
-      )
-    })
-  }
-
-  const isExecutionActive =
-    !executionStatus || !['completed', 'failed', 'cancelled'].includes(executionStatus ?? '')
+  const handleToggleGroup = useCallback(
+    (groupId: string) => {
+      setLocalGroups((prev) => {
+        const base = prev.length > 0 ? prev : apiVisualGroups
+        return base.map((g) =>
+          g.visualGroupId === groupId ? { ...g, isCollapsed: !g.isCollapsed } : g,
+        )
+      })
+    },
+    [apiVisualGroups],
+  )
 
   const view = useMemo(() => {
     const apiNodes: ApiNode[] = graph.data?.nodes ?? []
@@ -432,7 +422,8 @@ export function ParticipantFlowCanvas({
     nodeCatalog.data,
     nodeExecutions.data,
     groupsForRender,
-    isExecutionActive,
+    handleEdgePathReady,
+    handleToggleGroup,
   ])
 
   // Participant path order: node executions sorted by sequence number → the

@@ -128,21 +128,21 @@ export function ConversationSidebar({
               key={actor.actorId}
               type="button"
               onClick={() => onSelect(actor.actorId)}
-              className={`flex min-w-[220px] max-w-[320px] items-center gap-3 rounded-md px-2.5 py-2 text-left focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none lg:min-w-0 ${
+              className={`flex max-w-[320px] min-w-[220px] items-center gap-3 rounded-md px-2.5 py-2 text-left focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none lg:min-w-0 ${
                 active
-                  ? '!border-0 !bg-violet-50 !text-[#9929EA]'
+                  ? '!text-primary !border-0 !bg-violet-50'
                   : '!border-0 !bg-transparent !text-slate-700 hover:!bg-slate-50'
               }`}
             >
               <span
-                className={`grid size-8 shrink-0 place-items-center rounded-md text-xs font-bold ${active ? 'bg-[#9929EA] text-white' : 'bg-slate-100 text-slate-500'}`}
+                className={`grid size-8 shrink-0 place-items-center rounded-md text-xs font-bold ${active ? 'bg-primary text-primary-foreground' : 'bg-slate-100 text-slate-500'}`}
               >
                 {actor.actorName.slice(0, 1).toUpperCase()}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-2">
                   <span className="truncate text-sm font-semibold">{actor.actorName}</span>
-                  <span className="shrink-0 rounded-md bg-violet-100 px-1.5 text-[10px] font-semibold text-[#9929EA]">
+                  <span className="text-primary shrink-0 rounded-md bg-violet-100 px-1.5 text-xs font-semibold">
                     {actor.actorId}
                   </span>
                 </span>
@@ -183,7 +183,7 @@ export function ConversationSidebar({
               <Input
                 value={dialogSearch}
                 onChange={(e) => setDialogSearch(e.target.value)}
-                placeholder="Cari nama atau actor ID"
+                placeholder="Search actor or ID"
                 className="pl-8"
               />
             </label>
@@ -191,18 +191,18 @@ export function ConversationSidebar({
           <div className="min-h-[240px] flex-1 overflow-y-auto px-2 pb-4">
             {masterQuery.isLoading ? (
               <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-                <p className="text-xs text-slate-400">Memuat actors...</p>
+                <p className="text-xs text-slate-400">Loading actors…</p>
               </div>
             ) : availableActors.length === 0 ? (
               <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
                 <MessageSquare size={18} className="text-slate-300" />
                 <p className="text-xs text-slate-400">No actors available</p>
-                <p className="text-[11px] text-slate-400">Semua actor sudah memiliki percakapan.</p>
+                <p className="text-xs text-slate-400">All actors already have conversations.</p>
               </div>
             ) : filteredMaster.length === 0 ? (
               <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
                 <MessageSquare size={18} className="text-slate-300" />
-                <p className="text-xs text-slate-400">Tidak ada actor cocok</p>
+                <p className="text-xs text-slate-400">No matching actors</p>
               </div>
             ) : (
               <div className="flex flex-col gap-1 px-2">
@@ -211,7 +211,7 @@ export function ConversationSidebar({
                     key={item.actorId}
                     type="button"
                     onClick={() => handlePick(item.actorId, item.actorName)}
-                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none hover:bg-slate-50"
+                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none"
                   >
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
                       {item.actorName.slice(0, 1).toUpperCase()}
@@ -221,7 +221,7 @@ export function ConversationSidebar({
                         <span className="truncate text-sm font-semibold text-slate-700">
                           {item.actorName}
                         </span>
-                        <span className="shrink-0 rounded-md bg-violet-100 px-1.5 text-[10px] font-semibold text-[#9929EA]">
+                        <span className="text-primary shrink-0 rounded-md bg-violet-100 px-1.5 text-xs font-semibold">
                           {item.actorId}
                         </span>
                       </span>
@@ -232,7 +232,7 @@ export function ConversationSidebar({
               </div>
             )}
             {masterQuery.isError ? (
-              <p className="px-6 pt-2 text-xs text-red-500">Gagal memuat daftar actor.</p>
+              <p className="px-6 pt-2 text-xs text-red-500">Failed to load actors.</p>
             ) : null}
           </div>
         </DialogContent>

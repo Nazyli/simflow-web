@@ -14,15 +14,15 @@ Hubungkan `started` ke action pertama, misalnya `Send Chat`.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
+| Input     | Tipe          | Wajib | Keterangan                               |
+| --------- | ------------- | :---: | ---------------------------------------- |
 | Tidak ada | Tidak berlaku | Tidak | `Start` tidak menerima connection masuk. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `started` | Simulation berhasil dimulai. | Untuk menuju langkah pertama. |
+| Output Port | Arti                         | Kapan digunakan?              |
+| ----------- | ---------------------------- | ----------------------------- |
+| `started`   | Simulation berhasil dimulai. | Untuk menuju langkah pertama. |
 
 ## Output yang dihasilkan
 
@@ -38,8 +38,8 @@ Status wajib atau opsional setiap setting dijelaskan pada bagian Konfigurasi di 
 
 ## Connection
 
-| Dari | Port | Dapat terhubung ke | Keterangan |
-|---|---|---|---|
+| Dari      | Port      | Dapat terhubung ke           | Keterangan                                   |
+| --------- | --------- | ---------------------------- | -------------------------------------------- |
 | Tidak ada | Tidak ada | `started` ke Node berikutnya | Tidak boleh ada connection masuk ke `Start`. |
 
 ## Kesalahan Umum

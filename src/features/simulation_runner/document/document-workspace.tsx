@@ -73,7 +73,7 @@ export function DocumentWorkspace({
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
                 <FileText size={20} className="text-[#9aa0a6]" />
-                <p className="text-xs text-[#5f6368]">
+                <p className="text-xs text-slate-500">
                   {documents.length ? 'No matching documents.' : 'No documents yet.'}
                 </p>
               </div>
@@ -87,7 +87,7 @@ export function DocumentWorkspace({
                     key={doc.id}
                     type="button"
                     onClick={() => onSelectDocument(doc.id)}
-                     className={`group flex w-full min-w-0 items-stretch gap-0 border-b border-slate-200 text-left transition-colors last:border-b-0 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none hover:bg-slate-50 ${active ? 'bg-violet-50' : 'bg-white'}`}
+                    className={`group flex w-full min-w-0 items-stretch gap-0 border-b border-slate-200 text-left transition-colors last:border-b-0 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none ${active ? 'bg-violet-50' : 'bg-white'}`}
                   >
                     {/* Type ribbon */}
                     <span
@@ -97,7 +97,7 @@ export function DocumentWorkspace({
                     />
                     <span className="flex min-w-0 flex-1 items-start gap-3 px-3 py-3">
                       <span
-                         className="grid size-8 shrink-0 place-items-center rounded-md text-[10px] font-bold"
+                        className="grid size-8 shrink-0 place-items-center rounded-md text-[10px] font-bold"
                         style={{ backgroundColor: typeMeta.bg, color: typeMeta.color }}
                       >
                         {typeMeta.label.charAt(0)}
@@ -105,11 +105,11 @@ export function DocumentWorkspace({
                       <span className="min-w-0 flex-1">
                         <span className="flex items-baseline justify-between gap-2">
                           <span
-                            className={`truncate text-sm ${active ? 'font-semibold text-[#1a1a2e]' : 'font-normal text-[#5f6368]'}`}
+                            className={`truncate text-sm ${active ? 'font-semibold text-slate-900' : 'font-normal text-slate-500'}`}
                           >
                             {doc.title}
                           </span>
-                          <span className="shrink-0 text-[11px] text-[#5f6368]">
+                          <span className="shrink-0 text-xs text-slate-500">
                             {formatDocumentDate(doc.sharedAt)}
                           </span>
                         </span>
@@ -119,7 +119,7 @@ export function DocumentWorkspace({
                           >
                             {statusMeta.label}
                           </span>
-                          <span className="truncate text-xs text-[#5f6368]">{doc.sharedBy}</span>
+                          <span className="truncate text-xs text-slate-500">{doc.sharedBy}</span>
                         </span>
                       </span>
                     </span>
@@ -141,19 +141,19 @@ export function DocumentWorkspace({
               onEditDocument={onEditDocument}
             />
           ) : (
-            <div className="flex flex-1 items-center justify-center bg-[#f6f8fb] px-6 text-center">
+            <div className="flex flex-1 items-center justify-center bg-[var(--color-canvas)] px-6 text-center">
               <div className="flex flex-col items-center gap-3">
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-[#f1f3f4]">
-                  <FileText size={20} className="text-[#9aa0a6]" />
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-slate-100">
+                  <FileText size={20} className="text-slate-400" />
                 </span>
                 <div>
-                  <p className="text-sm font-medium text-[#1a1a2e]">
+                  <p className="text-sm font-medium text-slate-900">
                     {documents.length ? 'Select a document' : 'No documents yet'}
                   </p>
-                  <p className="mt-1 text-xs text-[#5f6368]">
+                  <p className="mt-1 text-xs text-slate-500">
                     {documents.length
                       ? 'Choose a document from the list to preview its contents.'
-                      : 'Documents from simulation simulations will appear here.'}
+                      : 'Documents from simulations will appear here.'}
                   </p>
                 </div>
               </div>
@@ -182,7 +182,7 @@ function DocumentDetail({
   const statusMeta = DOCUMENT_STATUS_META[doc.status]
 
   return (
-      <div className="flex min-w-0 flex-1 flex-col bg-[#f6f8fb]">
+    <div className="flex min-w-0 flex-1 flex-col bg-[#f6f8fb]">
       {/* Header bar */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2.5">
         <div className="min-w-0 flex-1">

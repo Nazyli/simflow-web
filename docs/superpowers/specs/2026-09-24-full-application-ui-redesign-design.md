@@ -32,16 +32,16 @@ The sidebar already has a dedicated visual system and is out of scope for this r
 
 ### Color roles
 
-| Role | Value | Usage |
-| --- | --- | --- |
-| Application canvas | `#F6F8FB` | Main page background |
-| Surface | `#FFFFFF` | Tables, forms, panels, dialogs |
-| Primary text | `#172033` | Headings and important values |
-| Secondary text | `#64748B` | Descriptions, metadata, helper text |
-| Border | `#DBE3EC` | Structural separation |
-| Strong border | `#C6D2DF` | Focused or emphasized controls |
-| Accent | `#9929EA` | Primary actions, active states, focus |
-| Accent tint | `#F5E7FF` | Active and selected backgrounds |
+| Role               | Value     | Usage                                 |
+| ------------------ | --------- | ------------------------------------- |
+| Application canvas | `#F6F8FB` | Main page background                  |
+| Surface            | `#FFFFFF` | Tables, forms, panels, dialogs        |
+| Primary text       | `#172033` | Headings and important values         |
+| Secondary text     | `#64748B` | Descriptions, metadata, helper text   |
+| Border             | `#DBE3EC` | Structural separation                 |
+| Strong border      | `#C6D2DF` | Focused or emphasized controls        |
+| Accent             | `#9929EA` | Primary actions, active states, focus |
+| Accent tint        | `#F5E7FF` | Active and selected backgrounds       |
 
 The accent is not used as a decorative fill across large areas. Gradients remain limited to existing brand-specific areas outside the content redesign.
 
@@ -142,4 +142,3 @@ If an existing page already has a suitable structure, it should be adapted rathe
 - Run the Impeccable detector on changed UI files.
 - Check desktop, tablet, and mobile layout behavior for page-level overflow, focus visibility, wrapping, and table scrolling.
 - Confirm all existing routes remain reachable and all existing actions retain their behavior.
-

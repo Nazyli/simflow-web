@@ -10,7 +10,7 @@ Gunakan ketika workflow perlu melanjutkan langkah setelah call berakhir, baik ka
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Wait for Call End] -->|success| B[Next Node]
     A -->|disconnected| C[Handle Disconnect]
@@ -21,23 +21,23 @@ flowchart LR
     class A wait
     class B,C action
     class D terminal
-~~~
+```
 
 Call yang selesai normal menuju `success`; call yang terputus dapat ditangani berbeda melalui `disconnected`.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Memulai penantian akhir call. |
+| Input | Tipe | Wajib | Keterangan                    |
+| ----- | ---- | :---: | ----------------------------- |
+| Input | Flow |  Ya   | Memulai penantian akhir call. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `success` | Call berakhir. | Untuk melanjutkan workflow. |
-| `disconnected` | Call terputus. | Untuk menangani disconnect. |
-| `failed` | Penantian gagal. | Untuk error handling. |
+| Output Port    | Arti             | Kapan digunakan?            |
+| -------------- | ---------------- | --------------------------- |
+| `success`      | Call berakhir.   | Untuk melanjutkan workflow. |
+| `disconnected` | Call terputus.   | Untuk menangani disconnect. |
+| `failed`       | Penantian gagal. | Untuk error handling.       |
 
 ## Output yang dihasilkan
 

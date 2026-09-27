@@ -2,27 +2,27 @@
 
 ## Pemeriksaan Node
 
-| # | Node | Status |
-|---:|---|:---:|
-| 1 | Start | ✅ |
-| 2 | Send Chat | ✅ |
-| 3 | Send Email | ✅ |
-| 4 | Add Document | ✅ |
-| 5 | Wait for Document Open | ✅ |
-| 6 | Wait for Reply | ✅ |
-| 7 | Wait for Read | ✅ |
-| 8 | Check Reply Attachment | ✅ |
-| 9 | Wait for Attachment Open | ✅ |
-| 10 | AI Classification | ✅ |
-| 11 | Invite to Call | ✅ |
-| 12 | Start Call | ✅ |
-| 13 | Send Call Speech | ✅ |
-| 14 | Wait for Call Utterance | ✅ |
-| 15 | Wait for Call End | ✅ |
-| 16 | End Call | ✅* |
-| 17 | Conversation Group | ✅ |
-| 18 | Loop | ✅ |
-| 19 | End | ✅ |
+|   # | Node                     | Status |
+| --: | ------------------------ | :----: |
+|   1 | Start                    |   ✅   |
+|   2 | Send Chat                |   ✅   |
+|   3 | Send Email               |   ✅   |
+|   4 | Add Document             |   ✅   |
+|   5 | Wait for Document Open   |   ✅   |
+|   6 | Wait for Reply           |   ✅   |
+|   7 | Wait for Read            |   ✅   |
+|   8 | Check Reply Attachment   |   ✅   |
+|   9 | Wait for Attachment Open |   ✅   |
+|  10 | AI Classification        |   ✅   |
+|  11 | Invite to Call           |   ✅   |
+|  12 | Start Call               |   ✅   |
+|  13 | Send Call Speech         |   ✅   |
+|  14 | Wait for Call Utterance  |   ✅   |
+|  15 | Wait for Call End        |   ✅   |
+|  16 | End Call                 |  ✅*   |
+|  17 | Conversation Group       |   ✅   |
+|  18 | Loop                     |   ✅   |
+|  19 | End                      |   ✅   |
 
 **Jumlah Node didokumentasikan: 19.**
 

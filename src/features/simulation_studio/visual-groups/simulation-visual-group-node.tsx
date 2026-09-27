@@ -74,7 +74,7 @@ export function SimulationVisualGroupNode({ id, data, selected }: NodeProps<Visu
         </div>
       </NodeToolbar>
       <div
-        className="visual-group-node h-full w-full overflow-visible rounded-xl border-2 bg-white/60 shadow-sm backdrop-blur-[1px]"
+        className="visual-group-node h-full w-full overflow-visible rounded-xl border-2 bg-white shadow-sm"
         style={{ borderColor: group.style.color, borderStyle }}
       >
         <Handle

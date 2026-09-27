@@ -11,7 +11,7 @@ import {
 import { eventsUrl } from '../../shared/api/client'
 import { ChatWorkspace } from './chat/chat-workspace'
 import type { ChatActor, ChatMessage, ChatSimulation } from './chat/types'
-import { useSimulationRun } from './simulation-run-context'
+import { useSimulationRun } from './simulation-run-context-core'
 
 export function ChatChannelPage() {
   const { participantId, isChatPending, sendChat, markChatRead } = useSimulationRun()

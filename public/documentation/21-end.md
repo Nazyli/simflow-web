@@ -14,9 +14,9 @@ Hubungkan output `success` dari Node terakhir ke `End`.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Menerima alur dari Node sebelumnya. |
+| Input | Tipe | Wajib | Keterangan                          |
+| ----- | ---- | :---: | ----------------------------------- |
+| Input | Flow |  Ya   | Menerima alur dari Node sebelumnya. |
 
 ## Output Port
 

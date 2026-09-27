@@ -10,7 +10,7 @@ Gunakan sebelum `Start Call` ketika participant perlu menerima dan membuka undan
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Invite to Call] -->|joined| B[Start Call]
     A -->|timeout| C[Send Reminder]
@@ -21,23 +21,23 @@ flowchart LR
     class A wait
     class B,C action
     class D terminal
-~~~
+```
 
 Jika participant bergabung, call dapat dimulai. Jika tidak, workflow dapat mengirim reminder.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Menjalankan pengiriman undangan. |
+| Input | Tipe | Wajib | Keterangan                       |
+| ----- | ---- | :---: | -------------------------------- |
+| Input | Flow |  Ya   | Menjalankan pengiriman undangan. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `joined` | Participant bergabung sebelum deadline. | Untuk memulai call. |
-| `timeout` | Participant belum bergabung sampai deadline. | Untuk reminder atau akhir. |
-| `failed` | Undangan gagal diproses. | Untuk error handling. |
+| Output Port | Arti                                         | Kapan digunakan?           |
+| ----------- | -------------------------------------------- | -------------------------- |
+| `joined`    | Participant bergabung sebelum deadline.      | Untuk memulai call.        |
+| `timeout`   | Participant belum bergabung sampai deadline. | Untuk reminder atau akhir. |
+| `failed`    | Undangan gagal diproses.                     | Untuk error handling.      |
 
 ## Output yang dihasilkan
 

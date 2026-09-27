@@ -72,17 +72,13 @@ export function projectWorkflowEdges(
           ? sourceGroup.visualGroupId
           : undefined,
       visualSourceHandleId:
-        sourceGroup?.isCollapsed && !isInternalCollapsedEdge
-          ? 'visual-group-source'
-          : undefined,
+        sourceGroup?.isCollapsed && !isInternalCollapsedEdge ? 'visual-group-source' : undefined,
       visualTargetNodeId:
         targetGroup?.isCollapsed && !isInternalCollapsedEdge
           ? targetGroup.visualGroupId
           : undefined,
       visualTargetHandleId:
-        targetGroup?.isCollapsed && !isInternalCollapsedEdge
-          ? 'visual-group-target'
-          : undefined,
+        targetGroup?.isCollapsed && !isInternalCollapsedEdge ? 'visual-group-target' : undefined,
     }
   })
 }

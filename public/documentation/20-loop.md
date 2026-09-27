@@ -10,7 +10,7 @@ Gunakan saat suatu rangkaian langkah perlu diulang dalam jumlah terbatas.
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Loop] -->|repeat| B[Loop Body]
     B --> A
@@ -20,23 +20,23 @@ flowchart LR
     classDef terminal fill:#dcfce7,stroke:#16a34a,color:#14532d
     class A flow
     class C terminal
-~~~
+```
 
 Port `repeat` menjalankan body pengulangan. Jalur `limit_reached` dipakai saat batas iterasi terkonfigurasi tercapai. Jalur `failed` hanya untuk hard limit atau error teknis.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Memulai atau melanjutkan pengulangan. |
+| Input | Tipe | Wajib | Keterangan                            |
+| ----- | ---- | :---: | ------------------------------------- |
+| Input | Flow |  Ya   | Memulai atau melanjutkan pengulangan. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `repeat` | Masih boleh mengulang. | Menuju body pengulangan. |
-| `limit_reached` | Batas iterasi terkonfigurasi tercapai. | Menuju fallback bisnis. |
-| `failed` | Hard limit atau error teknis. | Menuju error handling atau `End`. |
+| Output Port     | Arti                                   | Kapan digunakan?                  |
+| --------------- | -------------------------------------- | --------------------------------- |
+| `repeat`        | Masih boleh mengulang.                 | Menuju body pengulangan.          |
+| `limit_reached` | Batas iterasi terkonfigurasi tercapai. | Menuju fallback bisnis.           |
+| `failed`        | Hard limit atau error teknis.          | Menuju error handling atau `End`. |
 
 ## Output yang dihasilkan
 

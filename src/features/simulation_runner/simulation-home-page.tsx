@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/layout/page-header'
 import { channelNavigation, channelPath } from './simulation-channels'
-import { useSimulationRun } from './simulation-run-context'
+import { useSimulationRun } from './simulation-run-context-core'
 
 export function SimulationHomePage() {
   const { participantId, unreadCounts } = useSimulationRun()
@@ -28,7 +28,7 @@ export function SimulationHomePage() {
               className="group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-white p-3.5 transition hover:border-violet-300 hover:bg-violet-50/30 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:outline-none"
             >
               <div className="flex items-center justify-between">
-                <span className="grid size-8 place-items-center rounded-md bg-violet-50 text-[#9929EA] transition group-hover:bg-violet-100">
+                <span className="text-primary grid size-8 place-items-center rounded-md bg-violet-50 transition group-hover:bg-violet-100">
                   <Icon size={18} />
                 </span>
                 {unread > 0 && (
@@ -42,7 +42,7 @@ export function SimulationHomePage() {
               </div>
               <h3 className="mt-3 min-w-0 truncate text-sm font-bold text-slate-900">{label}</h3>
               <p className="mt-0.5 min-w-0 text-xs leading-relaxed text-slate-500">{description}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#9929EA]">
+              <span className="text-primary mt-3 inline-flex items-center gap-1 text-xs font-semibold">
                 Open <ChevronRight size={14} />
               </span>
             </Link>

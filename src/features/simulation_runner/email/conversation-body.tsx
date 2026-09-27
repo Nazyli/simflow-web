@@ -26,7 +26,7 @@ export function ConversationBody({
     return (
       <div className="min-h-0 flex-1 overflow-y-auto bg-[#f6f8fb]">
         <div className="mx-auto flex max-w-3xl items-center justify-center px-4 py-10">
-          <span className="text-xs text-[#5f6368]">No emails in this conversation yet.</span>
+          <span className="text-xs text-slate-500">No emails in this conversation yet.</span>
         </div>
       </div>
     )

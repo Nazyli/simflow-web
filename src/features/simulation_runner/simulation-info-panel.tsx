@@ -38,7 +38,7 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
           setVisible(true)
           persistPanelVisible(true)
         }}
-        className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-violet-200 hover:text-[#9929EA] focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none"
+        className="hover:text-primary flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-violet-200 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none"
       >
         <ChevronDown size={14} /> Show simulation info
       </button>
@@ -68,7 +68,7 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
         </div>
         <div className="flex max-w-full min-w-0 flex-wrap items-center gap-1.5">
           <div className="flex min-w-0 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-            <UserRound size={14} className="shrink-0 text-[#9929EA]" />
+            <UserRound size={14} className="text-primary shrink-0" />
             <div className="min-w-0">
               <small className="block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
                 Participant
@@ -79,7 +79,7 @@ export function SimulationInfoPanel({ participantId }: { participantId: string }
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-            <Clock3 size={14} className="shrink-0 text-[#9929EA]" />
+            <Clock3 size={14} className="text-primary shrink-0" />
             <div>
               <small className="block text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
                 Elapsed

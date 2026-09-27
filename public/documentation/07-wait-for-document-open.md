@@ -22,12 +22,12 @@ Satu input port `input`. Node tidak memerlukan data input.
 
 ## Konfigurasi
 
-| Field | Wajib | Default | Aturan |
-| --- | --- | --- | --- |
-| `document_id` | Ya | — | ID dokumen dari resource picker `documents`. |
-| `required_open_count` | Ya | `1` | Integer positif. |
-| `enable_timeout` | Ya | `true` | Jika `false`, node menunggu tanpa batas waktu dan port `timeout` tidak tersedia. |
-| `timeout_seconds` | Saat timeout aktif | `600` | Integer positif dalam detik. |
+| Field                 | Wajib              | Default | Aturan                                                                           |
+| --------------------- | ------------------ | ------- | -------------------------------------------------------------------------------- |
+| `document_id`         | Ya                 | —       | ID dokumen dari resource picker `documents`.                                     |
+| `required_open_count` | Ya                 | `1`     | Integer positif.                                                                 |
+| `enable_timeout`      | Ya                 | `true`  | Jika `false`, node menunggu tanpa batas waktu dan port `timeout` tidak tersedia. |
+| `timeout_seconds`     | Saat timeout aktif | `600`   | Integer positif dalam detik.                                                     |
 
 ## Output ports
 
@@ -46,7 +46,14 @@ Participant telah membuka dokumen hingga jumlah yang diminta. Data berisi `execu
     "required_open_count": { "type": "integer", "minimum": 1 },
     "completed_at": { "type": "string", "format": "date-time" }
   },
-  "required": ["execution_id", "node_execution_id", "document_id", "open_count", "required_open_count", "completed_at"]
+  "required": [
+    "execution_id",
+    "node_execution_id",
+    "document_id",
+    "open_count",
+    "required_open_count",
+    "completed_at"
+  ]
 }
 ```
 
@@ -66,7 +73,15 @@ Deadline tercapai sebelum jumlah pembukaan terpenuhi. Port ini hanya tersedia sa
     "timeout_seconds": { "type": "integer" },
     "timed_out_at": { "type": "string", "format": "date-time" }
   },
-  "required": ["execution_id", "node_execution_id", "document_id", "open_count", "required_open_count", "timeout_seconds", "timed_out_at"]
+  "required": [
+    "execution_id",
+    "node_execution_id",
+    "document_id",
+    "open_count",
+    "required_open_count",
+    "timeout_seconds",
+    "timed_out_at"
+  ]
 }
 ```
 

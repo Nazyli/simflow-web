@@ -22,7 +22,11 @@ import {
   updateDraftPage,
   type DocumentEditorDraft,
 } from './document-editor-logic'
-import { canSaveDocumentEditor, editorSaveStatus, updateEditorName } from './document-editor-ui-logic'
+import {
+  canSaveDocumentEditor,
+  editorSaveStatus,
+  updateEditorName,
+} from './document-editor-ui-logic'
 
 export function DocumentEditor({
   draft,
@@ -113,7 +117,13 @@ export function DocumentEditor({
             >
               {editorSaveStatus({ isSaving, isDirty, error })}
             </span>
-            <Button type="button" variant="ghost" size="sm" disabled={disabled || isSaving} onClick={onCancel}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={disabled || isSaving}
+              onClick={onCancel}
+            >
               <X size={14} />
               Cancel
             </Button>
@@ -125,32 +135,80 @@ export function DocumentEditor({
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-slate-50/80 p-1">
-          <ToolbarButton label="Bold" onMouseDown={(event) => { event.preventDefault(); applyCommand('bold') }}>
+          <ToolbarButton
+            label="Bold"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              applyCommand('bold')
+            }}
+          >
             <Bold size={14} />
           </ToolbarButton>
-          <ToolbarButton label="Italic" onMouseDown={(event) => { event.preventDefault(); applyCommand('italic') }}>
+          <ToolbarButton
+            label="Italic"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              applyCommand('italic')
+            }}
+          >
             <Italic size={14} />
           </ToolbarButton>
-          <ToolbarButton label="Underline" onMouseDown={(event) => { event.preventDefault(); applyCommand('underline') }}>
+          <ToolbarButton
+            label="Underline"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              applyCommand('underline')
+            }}
+          >
             <Underline size={14} />
           </ToolbarButton>
-          <ToolbarButton label="Heading" onMouseDown={(event) => { event.preventDefault(); applyCommand('formatBlock', 'h2') }}>
+          <ToolbarButton
+            label="Heading"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              applyCommand('formatBlock', 'h2')
+            }}
+          >
             <Heading3 size={14} />
           </ToolbarButton>
-          <ToolbarButton label="Bulleted list" onMouseDown={(event) => { event.preventDefault(); applyCommand('insertUnorderedList') }}>
+          <ToolbarButton
+            label="Bulleted list"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              applyCommand('insertUnorderedList')
+            }}
+          >
             <List size={14} />
           </ToolbarButton>
-          <ToolbarButton label="Numbered list" onMouseDown={(event) => { event.preventDefault(); applyCommand('insertOrderedList') }}>
+          <ToolbarButton
+            label="Numbered list"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              applyCommand('insertOrderedList')
+            }}
+          >
             <ListOrdered size={14} />
           </ToolbarButton>
           <ToolbarButton label="Add link" onMouseDown={handleLinkMouseDown}>
             <Link2 size={14} />
           </ToolbarButton>
           <span className="mx-1 h-4 w-px bg-slate-200" aria-hidden="true" />
-          <ToolbarButton label="Undo" onMouseDown={(event) => { event.preventDefault(); applyCommand('undo') }}>
+          <ToolbarButton
+            label="Undo"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              applyCommand('undo')
+            }}
+          >
             <Undo2 size={14} />
           </ToolbarButton>
-          <ToolbarButton label="Redo" onMouseDown={(event) => { event.preventDefault(); applyCommand('redo') }}>
+          <ToolbarButton
+            label="Redo"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              applyCommand('redo')
+            }}
+          >
             <Redo2 size={14} />
           </ToolbarButton>
         </div>
@@ -199,7 +257,7 @@ export function DocumentEditor({
             <Button
               type="button"
               variant="outline"
-              className="min-h-11 rounded-full border-dashed border-slate-300 bg-white px-5 text-xs font-semibold text-indigo-700 shadow-sm hover:border-indigo-300 hover:bg-indigo-50"
+              className="min-h-11 rounded-md border-dashed border-slate-300 bg-white px-4 text-xs font-semibold text-indigo-700 shadow-none hover:border-indigo-300 hover:bg-indigo-50"
               disabled={disabled || isSaving}
               aria-label="Add page"
               onClick={handleAddPage}
@@ -207,9 +265,6 @@ export function DocumentEditor({
               <Plus size={15} />
               Add page
             </Button>
-            <p className="text-center text-[11px] text-slate-400">
-              New pages are added at the end of this document.
-            </p>
           </div>
         </div>
       </div>

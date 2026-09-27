@@ -6,17 +6,17 @@
 
 ## Istilah yang digunakan
 
-| Istilah | Arti sederhana |
-|---|---|
-| Simulation | Skenario utama yang ingin dijalankan. |
-| Version | Versi dari sebuah Simulation yang berisi graph workflow. |
-| Workflow | Urutan langkah yang dijalankan oleh Simulation. |
-| Node | Satu langkah dalam workflow, misalnya mengirim chat atau menunggu balasan. |
-| Input Port | Titik masuk untuk menerima alur dari Node sebelumnya. |
-| Output Port | Titik keluar yang menentukan jalur berikutnya. |
-| Connection / Edge | Garis penghubung dari Output Port ke Input Port. |
-| Actor | Karakter atau pihak yang berinteraksi dengan participant. |
-| Participant | Orang yang menjalankan atau mengikuti Simulation. |
+| Istilah           | Arti sederhana                                                             |
+| ----------------- | -------------------------------------------------------------------------- |
+| Simulation        | Skenario utama yang ingin dijalankan.                                      |
+| Version           | Versi dari sebuah Simulation yang berisi graph workflow.                   |
+| Workflow          | Urutan langkah yang dijalankan oleh Simulation.                            |
+| Node              | Satu langkah dalam workflow, misalnya mengirim chat atau menunggu balasan. |
+| Input Port        | Titik masuk untuk menerima alur dari Node sebelumnya.                      |
+| Output Port       | Titik keluar yang menentukan jalur berikutnya.                             |
+| Connection / Edge | Garis penghubung dari Output Port ke Input Port.                           |
+| Actor             | Karakter atau pihak yang berinteraksi dengan participant.                  |
+| Participant       | Orang yang menjalankan atau mengikuti Simulation.                          |
 
 ## Bagaimana workflow berjalan?
 

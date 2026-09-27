@@ -72,7 +72,13 @@ export function ButtonEdge({
     <>
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
       {isAnimated && (
-        <circle r="5" fill={dotColor} stroke="#fff" strokeWidth={1} style={{ pointerEvents: 'none' }}>
+        <circle
+          r="5"
+          fill={dotColor}
+          stroke="#fff"
+          strokeWidth={1}
+          style={{ pointerEvents: 'none' }}
+        >
           <animateMotion dur="2s" repeatCount="indefinite" path={edgePath} />
         </circle>
       )}

@@ -66,14 +66,14 @@ export function SimulationSelectionPanel({
           <span
             aria-live="polite"
             aria-atomic="true"
-            className="rounded bg-[#F5E7FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#5B148F]"
+            className="rounded bg-violet-50 px-1.5 py-0.5 text-xs font-semibold text-violet-800"
           >
             {selectedIds.length} selected
           </span>
           {selectedIds.length > 0 && (
             <button
               type="button"
-              className="rounded px-1 py-0.5 text-[10px] font-semibold text-[#9929EA] transition-colors hover:bg-[#F5E7FF] focus-visible:ring-2 focus-visible:ring-[#9929EA]/40 focus-visible:outline-none"
+              className="text-primary focus-visible:ring-primary/40 rounded px-1 py-0.5 text-xs font-semibold transition-colors hover:bg-violet-50 focus-visible:ring-2 focus-visible:outline-none"
               onClick={() => onSelectionChange([])}
             >
               Clear selection
@@ -138,8 +138,8 @@ export function SimulationSelectionPanel({
                       className={cn(
                         'flex min-h-9 min-w-0 cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] transition-colors focus-within:ring-2 focus-within:ring-[#9929EA]/30',
                         selected
-                          ? 'border-[#DBABFF] bg-[#F5E7FF]/70'
-                          : 'border-slate-200 bg-white hover:border-[#DBABFF] hover:bg-[#F5E7FF]/40',
+                          ? 'border-violet-300 bg-violet-50/70'
+                          : 'border-slate-200 bg-white hover:border-violet-300 hover:bg-violet-50/40',
                       )}
                     >
                       <Checkbox

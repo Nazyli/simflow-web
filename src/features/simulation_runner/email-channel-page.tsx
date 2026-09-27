@@ -14,7 +14,7 @@ import { AttachmentPreviewDialog } from './email/attachment-preview-dialog'
 import { AttachmentPickerDialog, type AttachmentSelection } from './email/attachment-picker-dialog'
 import { EmailWorkspace } from './email/email-workspace'
 import type { EmailAttachment, EmailInboxThread, EmailMessage } from './email/types'
-import { useSimulationRun } from './simulation-run-context'
+import { useSimulationRun } from './simulation-run-context-core'
 
 export function EmailChannelPage() {
   const queryClient = useQueryClient()

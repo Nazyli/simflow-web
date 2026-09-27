@@ -10,7 +10,7 @@ Gunakan setelah `Send Chat` atau `Send Email` jika langkah berikutnya baru boleh
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Send Chat] --> B{Wait for Read}
     B -->|read| C[Next Node]
@@ -22,23 +22,23 @@ flowchart LR
     class A,C,D action
     class B wait
     class E terminal
-~~~
+```
 
 Workflow melanjutkan saat pesan dibaca, atau menjalankan reminder saat deadline terlewati.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Memulai penantian status read dari pesan sebelumnya. |
+| Input | Tipe | Wajib | Keterangan                                           |
+| ----- | ---- | :---: | ---------------------------------------------------- |
+| Input | Flow |  Ya   | Memulai penantian status read dari pesan sebelumnya. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `read` | Pesan telah dibaca. | Untuk melanjutkan workflow. |
-| `timeout` | Pesan belum dibaca sampai deadline. | Untuk reminder atau jalur alternatif. |
-| `failed` | Penantian gagal. | Untuk error handling. |
+| Output Port | Arti                                | Kapan digunakan?                      |
+| ----------- | ----------------------------------- | ------------------------------------- |
+| `read`      | Pesan telah dibaca.                 | Untuk melanjutkan workflow.           |
+| `timeout`   | Pesan belum dibaca sampai deadline. | Untuk reminder atau jalur alternatif. |
+| `failed`    | Penantian gagal.                    | Untuk error handling.                 |
 
 ## Output yang dihasilkan
 

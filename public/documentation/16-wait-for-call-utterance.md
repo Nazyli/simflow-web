@@ -10,7 +10,7 @@ Gunakan setelah `Send Call Speech` saat workflow perlu menunggu jawaban suara.
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Send Call Speech] --> B[Wait for Call Utterance]
     B -->|success| C[AI Classification]
@@ -23,22 +23,22 @@ flowchart LR
     class B wait
     class C ai
     class D terminal
-~~~
+```
 
 Ucapan participant tersedia pada output `success` untuk diproses langkah berikutnya.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Memulai penantian ucapan. |
+| Input | Tipe | Wajib | Keterangan                |
+| ----- | ---- | :---: | ------------------------- |
+| Input | Flow |  Ya   | Memulai penantian ucapan. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `success` | Participant berbicara. | Untuk memproses ucapan. |
-| `failed` | Penantian gagal. | Untuk error handling. |
+| Output Port | Arti                   | Kapan digunakan?        |
+| ----------- | ---------------------- | ----------------------- |
+| `success`   | Participant berbicara. | Untuk memproses ucapan. |
+| `failed`    | Penantian gagal.       | Untuk error handling.   |
 
 ## Output yang dihasilkan
 

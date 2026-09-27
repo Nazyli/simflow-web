@@ -16,13 +16,13 @@ import {
   type ParticipantGender,
   type ParticipantLanguage,
 } from './runner-participant-profile'
-import { readActorId, writeActorId } from './simulation-run-context'
+import { readActorId, writeActorId } from './simulation-run-storage'
 import { SimulationSelectionPanel } from './simulation-selection-panel'
 
 const randomParticipantId = () => String(Math.floor(10000 + Math.random() * 90000))
 const runnerInputClass = `${inputClass} !h-8 !rounded-md !px-2 !py-1 !text-xs`
 const runnerFormGroupClass = 'flex flex-col gap-1'
-const runnerFormLabelClass = 'text-[0.68rem] leading-4 font-semibold text-slate-700'
+const runnerFormLabelClass = 'text-xs leading-4 font-semibold text-slate-700'
 
 export function SimulationEntryPage() {
   const client = useQueryClient()
@@ -51,7 +51,8 @@ export function SimulationEntryPage() {
       client.invalidateQueries({ queryKey: ['participant-executions', normalizedParticipantId] })
       client.invalidateQueries({ queryKey: ['notification-activity', normalizedParticipantId] })
       navigate(`/simulation/${encodeURIComponent(normalizedParticipantId)}`)
-      toast.success(`${result.runs.length} simulation simulation(s) ready.`)
+      const count = result.runs.length
+      toast.success(`${count} simulation${count === 1 ? '' : 's'} ready.`)
     },
     onError: () => toast.error('Unable to start or resume the selected simulations.'),
   })
@@ -75,7 +76,6 @@ export function SimulationEntryPage() {
         <PageHeader
           title="Run simulation"
           description="Set the participant context, then choose the simulations to launch together."
-          eyebrow="Runner"
         />
         <form className="min-w-0" onSubmit={begin}>
           <div className="runner-entry-grid min-w-0">
@@ -178,7 +178,7 @@ export function SimulationEntryPage() {
                 hasError={simulations.isError}
               />
               <div className="mt-3 flex min-w-0 flex-col-reverse gap-2 border-t border-slate-200 pt-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-[11px] text-slate-500">
+                <p className="text-xs text-slate-500">
                   {simulationIds.length
                     ? `${simulationIds.length} simulation${simulationIds.length === 1 ? '' : 's'} ready to run.`
                     : 'Select at least one simulation to continue.'}
@@ -192,10 +192,10 @@ export function SimulationEntryPage() {
                     !simulationIds.length ||
                     start.isPending
                   }
-                  className="!m-0 !inline-flex min-h-8 w-fit items-center justify-center gap-1 rounded-md !border-0 !bg-[#9929EA] !px-2.5 !py-1 text-[11px] font-semibold !text-white shadow-sm transition hover:!bg-[#7d1fc2] focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  className="!bg-primary !text-primary-foreground hover:!bg-primary/80 focus-visible:ring-primary/40 !m-0 !inline-flex min-h-8 w-fit items-center justify-center gap-1 rounded-md !border-0 !px-2.5 !py-1 text-xs font-semibold shadow-sm transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Play aria-hidden="true" size={13} />{' '}
-                  {start.isPending ? 'Startingâ€¦' : 'Run selected'}
+                  {start.isPending ? 'Starting…' : 'Run selected'}
                 </button>
               </div>
               {start.isError && (

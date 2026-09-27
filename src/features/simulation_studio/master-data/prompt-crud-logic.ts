@@ -14,9 +14,7 @@ export function promptDialogInitialForm(
 ): PromptFormValues {
   if (!selectedPromptId) return emptyPromptForm()
   const selectedPrompt = records.find((record) => record.promptId === selectedPromptId)
-  return selectedPrompt
-    ? { content: selectedPrompt.content ?? '' }
-    : emptyPromptForm()
+  return selectedPrompt ? { content: selectedPrompt.content ?? '' } : emptyPromptForm()
 }
 
 export function validatePromptForm(values: PromptFormValues): string | null {

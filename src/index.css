@@ -21,7 +21,8 @@
 :root {
   color: #172033;
   background: #f6f8fb;
-  font-family: 'Plus Jakarta Sans Variable', sans-serif;
+  font-family:
+    'Plus Jakarta Sans Variable', sans-serif; /* impeccable-disable-line overused-font -- project typography is defined by DESIGN.md */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -208,7 +209,8 @@ body {
 }
 .documentation-article blockquote {
   margin: 1.2rem 0;
-  border-left: 3px solid #c4b5fd;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.625rem;
   background: #faf9ff;
   padding: 0.75rem 1rem;
   color: #596579;
@@ -282,10 +284,12 @@ button:not(:disabled) {
   cursor: grab;
 }
 .react-flow__node.history-node-visited {
-  filter: drop-shadow(0 0 6px rgba(220, 38, 38, 0.4));
+  outline: 2px solid rgb(220 38 38 / 0.45);
+  outline-offset: 1px;
 }
 .react-flow__node.history-node-current {
-  filter: drop-shadow(0 0 10px rgba(91, 70, 197, 0.65));
+  outline: 2px solid rgb(91 70 197 / 0.65);
+  outline-offset: 1px;
 }
 
 /* NodeStatusIndicator — border variant (orbiting conic-gradient) */
@@ -324,7 +328,6 @@ button:not(:disabled) {
 }
 .history-legend-line--path {
   border-top: 2.5px solid #7c3aed;
-  box-shadow: 0 0 6px rgba(124, 58, 237, 0.72);
 }
 .history-legend-node {
   display: inline-block;
@@ -332,7 +335,7 @@ button:not(:disabled) {
   height: 10px;
   border-radius: 999px;
   background: rgba(124, 58, 237, 0.22);
-  box-shadow: 0 0 0 2px #7c3aed;
+  border: 2px solid #7c3aed;
 }
 
 .history-flow-canvas .history-edge-background {
@@ -342,17 +345,11 @@ button:not(:disabled) {
   border-color: rgba(196, 181, 253, 0.9);
   background: rgba(255, 255, 255, 0.78);
   color: #5b21b6;
-  box-shadow: 0 3px 12px rgba(124, 58, 237, 0.18);
 }
 .history-edge-label--background {
   opacity: 0.52;
 }
 
-/* Light default theme. */
-:root {
-  color: #172033;
-  background: #f6f8fb;
-}
 :root {
   --color-canvas: #f6f8fb;
   --color-surface: #ffffff;
@@ -363,7 +360,6 @@ button:not(:disabled) {
   --color-border-strong: #c6d2df;
   --color-brand-primary: #9929ea;
   --color-brand-secondary: #dbabff;
-  --brand-gradient: #9929ea;
   --color-primary: #9929ea;
   --color-primary-hover: #7d1fc2;
   --status-active: #047857;
@@ -389,6 +385,8 @@ button:not(:disabled) {
   --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.04);
   --shadow-md: 0 12px 28px rgb(15 23 42 / 0.08);
   --font-sans: 'Plus Jakarta Sans Variable', sans-serif;
+  --font-size-label: 0.8125rem;
+  --font-size-micro: 0.75rem;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -396,12 +394,11 @@ button:not(:disabled) {
   --text-xl: 1.5rem;
 }
 body {
-  background: #f8fafc;
-}
-body {
   color: var(--color-text);
   background: var(--color-canvas);
   font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 html,
 body,
@@ -553,8 +550,15 @@ button:disabled {
   animation: slide-up 0.2s ease-out forwards;
 }
 
-.brand-gradient {
-  background: var(--brand-gradient);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @theme inline {
@@ -646,6 +650,7 @@ button:disabled {
 .lk-audio-bar {
   width: 4px;
   background-color: #4ade80;
+  /* impeccable-disable-next-line layout-transition -- live audio level is represented by bar height */
   transition: height 0.2s ease;
 }
 
@@ -671,7 +676,8 @@ button:disabled {
 }
 
 .react-flow__node.history-node-current--active {
-  filter: drop-shadow(0 0 10px rgba(79, 70, 229, 0.55));
+  outline: 2px solid rgb(79 70 229 / 0.55);
+  outline-offset: 1px;
 }
 
 @media (prefers-reduced-motion: reduce) {

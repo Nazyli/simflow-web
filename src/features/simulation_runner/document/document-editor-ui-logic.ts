@@ -1,6 +1,9 @@
 import type { DocumentEditorDraft } from './document-editor-logic'
 
-export function updateEditorName(draft: DocumentEditorDraft, documentName: string): DocumentEditorDraft {
+export function updateEditorName(
+  draft: DocumentEditorDraft,
+  documentName: string,
+): DocumentEditorDraft {
   return { ...draft, documentName }
 }
 

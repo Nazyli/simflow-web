@@ -8,19 +8,46 @@
         "role": "primary",
         "displayName": "SimFlow Violet",
         "canonical": "#9929EA",
-        "tonalRamp": ["#32104D", "#53137E", "#7217AD", "#9929EA", "#B45DEB", "#C989F1", "#E0B5F8", "#F5E7FF"]
+        "tonalRamp": [
+          "#32104D",
+          "#53137E",
+          "#7217AD",
+          "#9929EA",
+          "#B45DEB",
+          "#C989F1",
+          "#E0B5F8",
+          "#F5E7FF"
+        ]
       },
       "canvas": {
         "role": "neutral",
         "displayName": "Cool Canvas",
         "canonical": "#F6F8FB",
-        "tonalRamp": ["#172033", "#334155", "#475569", "#64748B", "#94A3B8", "#CBD5E1", "#E2E8F0", "#F6F8FB"]
+        "tonalRamp": [
+          "#172033",
+          "#334155",
+          "#475569",
+          "#64748B",
+          "#94A3B8",
+          "#CBD5E1",
+          "#E2E8F0",
+          "#F6F8FB"
+        ]
       },
       "surface": {
         "role": "neutral",
         "displayName": "Surface White",
         "canonical": "#FFFFFF",
-        "tonalRamp": ["#1E293B", "#334155", "#475569", "#64748B", "#94A3B8", "#CBD5E1", "#E2E8F0", "#FFFFFF"]
+        "tonalRamp": [
+          "#1E293B",
+          "#334155",
+          "#475569",
+          "#64748B",
+          "#94A3B8",
+          "#CBD5E1",
+          "#E2E8F0",
+          "#FFFFFF"
+        ]
       }
     },
     "typographyMeta": {
@@ -126,9 +153,21 @@
       "Responsive layouts that use available space without page-level overflow."
     ],
     "rules": [
-      { "name": "The One Accent Rule", "body": "Violet is an interaction signal, not a decorative fill.", "section": "colors" },
-      { "name": "The No-Display-Costume Rule", "body": "Do not use gradient text, oversized headings, all-caps decoration, or monospace text unless the content is genuinely code or measurement data.", "section": "typography" },
-      { "name": "The Flat-by-Default Rule", "body": "A surface should earn elevation through interaction or overlay behavior.", "section": "elevation" }
+      {
+        "name": "The One Accent Rule",
+        "body": "Violet is an interaction signal, not a decorative fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Display-Costume Rule",
+        "body": "Do not use gradient text, oversized headings, all-caps decoration, or monospace text unless the content is genuinely code or measurement data.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-by-Default Rule",
+        "body": "A surface should earn elevation through interaction or overlay behavior.",
+        "section": "elevation"
+      }
     ],
     "dos": [
       "Do use Plus Jakarta Sans Variable throughout the application UI.",

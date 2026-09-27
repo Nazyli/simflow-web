@@ -27,10 +27,12 @@
 ### Task 1: Reuse shared Markdown editor in Actor CRUD
 
 **Files:**
+
 - Modify: `src/features/master_data/actor-crud-dialog.tsx`
 - Test: `tests/master-actor.test.mjs`
 
 **Interfaces:**
+
 - Consumes: `PromptContentEditor` props `{ id, value, disabled, onValueChange }`.
 - Produces: Actor add/edit dialog with Markdown and Preview modes bound to `form.personaDesc`.
 

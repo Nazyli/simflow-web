@@ -61,10 +61,7 @@ function DocumentationNav({
       <div className="mb-5 border-b border-slate-200 pb-4">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className="block text-[0.68rem] font-bold tracking-[0.14em] text-violet-700 uppercase">
-              Browse
-            </span>
-            <strong className="mt-1 block text-sm font-bold tracking-tight text-slate-900">
+            <strong className="block text-sm font-bold tracking-tight text-slate-900">
               Documentation
             </strong>
           </div>
@@ -83,7 +80,7 @@ function DocumentationNav({
             type="search"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Search documentation..."
+            placeholder="Search docs..."
             aria-label="Search documentation"
             className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pr-8 pl-9 text-xs text-slate-700 transition-colors outline-none placeholder:text-slate-400 focus:border-violet-300 focus:bg-white focus:ring-3 focus:ring-violet-100"
           />
@@ -145,12 +142,12 @@ function DocumentationNav({
         ))}
         {query && isSearchIndexLoading && (
           <p className="px-3 py-5 text-xs leading-relaxed text-slate-500" role="status">
-            Searching documentation contents...
+            Searching...
           </p>
         )}
         {filteredSections.length === 0 && !isSearchIndexLoading && (
           <p className="px-3 py-5 text-xs leading-relaxed text-slate-500" role="status">
-            No documentation matches "{query}".
+            No matches for "{query}".
           </p>
         )}
       </nav>
@@ -355,7 +352,7 @@ export function DocumentationPage() {
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-slate-700">
           <span className="flex items-center gap-2">
             <BookOpen size={16} className="text-violet-600" />
-            Browse documentation
+            Sections
           </span>
           <ChevronDown size={16} className="text-slate-400" />
         </summary>

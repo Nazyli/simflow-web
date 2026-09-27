@@ -67,12 +67,12 @@ export function ConversationSidebar({
               key={thread.rootId}
               type="button"
               onClick={() => onSelect(thread.rootId)}
-               className={`flex w-full min-w-0 items-center gap-3 border-b border-slate-200 px-3 py-2.5 text-left transition-colors last:border-b-0 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none hover:bg-slate-50 ${
-                 active ? 'bg-violet-50' : 'bg-white'
+              className={`flex w-full min-w-0 items-center gap-3 border-b border-slate-200 px-3 py-2.5 text-left transition-colors last:border-b-0 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:outline-none ${
+                active ? 'bg-violet-50' : 'bg-white'
               }`}
             >
               <span
-                 className="grid size-8 shrink-0 place-items-center rounded-md text-xs font-medium text-white"
+                className="grid size-8 shrink-0 place-items-center rounded-md text-xs font-medium text-white"
                 style={{ backgroundColor: avatarBg(thread.latestSenderId) }}
               >
                 {thread.latestSenderId.slice(0, 1).toUpperCase()}
@@ -81,17 +81,17 @@ export function ConversationSidebar({
                 <span className="flex items-baseline justify-between gap-2">
                   <span
                     className={`truncate text-sm ${
-                      unread ? 'font-semibold text-[#1a1a2e]' : 'font-normal text-[#5f6368]'
+                      unread ? 'font-semibold text-slate-900' : 'font-normal text-slate-500'
                     }`}
                   >
                     {thread.latestSubject || '(no subject)'}
                   </span>
-                  <span className="shrink-0 text-[11px] text-[#5f6368]">
+                  <span className="shrink-0 text-xs text-slate-500">
                     {formatEmailDate(thread.latestCreatedDate)}
                   </span>
                 </span>
                 <span className="flex items-center justify-between gap-2">
-                  <span className="truncate text-xs text-[#5f6368]">
+                  <span className="truncate text-xs text-slate-500">
                     {thread.latestContent
                       ? isHtmlContent(thread.latestContent)
                         ? stripHtmlToText(thread.latestContent) || 'No preview'
@@ -101,7 +101,7 @@ export function ConversationSidebar({
                   {unread && (
                     <span
                       aria-label={`${thread.unreadCount} unread email${thread.unreadCount === 1 ? '' : 's'}`}
-                      className="min-w-[18px] shrink-0 rounded-md bg-[#9929EA] px-1.5 text-center text-[10px] leading-4 font-bold text-white"
+                      className="bg-primary text-primary-foreground min-w-[18px] shrink-0 rounded-md px-1.5 text-center text-xs leading-4 font-bold"
                     >
                       {thread.unreadCount}
                     </span>
@@ -114,7 +114,7 @@ export function ConversationSidebar({
         {filteredThreads.length === 0 && (
           <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
             <Mail size={20} className="text-[#9aa0a6]" />
-            <p className="text-xs text-[#5f6368]">
+            <p className="text-xs text-slate-500">
               {threads.length ? 'No matching threads.' : 'No emails yet.'}
             </p>
           </div>

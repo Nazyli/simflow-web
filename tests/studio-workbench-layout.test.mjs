@@ -40,9 +40,12 @@ test('workflow edge labels use tighter padding and translucent backgrounds', () 
   const styles = source('index.css')
 
   assert.match(edge, /rounded-md border border-slate-200 bg-white\/75 p-0\.5 shadow-sm/)
-  assert.match(edge, /rounded-full px-1 py-0 text-\[0\.65rem\] font-medium/)
+  assert.match(edge, /rounded-md px-1 py-0 text-xs font-medium/)
   assert.match(edge, /bg-\[#F5E7FF\]\/80/)
-  assert.match(styles, /\.history-edge-label--participant \{[^}]*background: rgba\(255, 255, 255, 0\.78\);/)
+  assert.match(
+    styles,
+    /\.history-edge-label--participant \{[^}]*background: rgba\(255, 255, 255, 0\.78\);/,
+  )
 })
 
 test('Studio nodes keep React Flow handles outside the text clipping region', () => {
@@ -67,10 +70,19 @@ test('Node Palette sidebar uses compact width and dense node cards', () => {
 
   assert.match(page, /leftSidebarOpen \? 'w-56 max-w-\[240px\] min-w-\[220px\]/)
   assert.match(page, /max-\[1100px\]:w-\[min\(15rem,calc\(100vw-1\.5rem\)\)\]/)
-  assert.match(page, /className="flex items-center justify-between border-b border-\[#DBE3EC\] p-2"/)
-  assert.match(page, /<h2 className="flex items-center gap-1\.5 text-\[10px\] font-bold tracking-wider text-slate-500 uppercase">/)
-  assert.match(page, /palette-card-item w-fit max-w-full cursor-grab rounded-md border px-1\.5 py-1/)
-  assert.match(page, /<strong className="w-full text-\[10px\] leading-tight font-semibold text-slate-800">/)
+  assert.match(page, /className="flex items-center justify-between border-b border-slate-200 p-2"/)
+  assert.match(
+    page,
+    /<h2 className="flex items-center gap-1\.5 text-\[10px\] font-bold tracking-wider text-slate-500 uppercase">/,
+  )
+  assert.match(
+    page,
+    /palette-card-item w-fit max-w-full cursor-grab rounded-md border px-1\.5 py-1/,
+  )
+  assert.match(
+    page,
+    /<strong className="w-full text-\[10px\] leading-tight font-semibold text-slate-800">/,
+  )
 })
 
 test('Studio canvas toolbar and node search use compact control sizing', () => {
@@ -123,10 +135,20 @@ test('Studio and History Flow share compact canvas controls and zoom panel sizin
 
   assert.doesNotMatch(styles, /\.graph \.react-flow__controls \{\s*transform: scale\(1\.15\)/)
   assert.match(styles, /\.graph \.react-flow__controls-button \{\s*width: 24px;\s*height: 24px;/)
-  assert.match(styles, /\.graph \.react-flow__controls-button[\s\S]*?@media \(max-width: 760px\)[\s\S]*?width: 44px;\s*height: 44px;/)
-  assert.equal((`${page}\n${history}`.match(/flex h-7 items-center gap-1 rounded-md border border-\[#C6D2DF\][^\n]*shadow-sm/g) ?? []).length, 2)
+  assert.match(
+    styles,
+    /\.graph \.react-flow__controls-button[\s\S]*?@media \(max-width: 760px\)[\s\S]*?width: 44px;\s*height: 44px;/,
+  )
+  assert.match(page, /flex h-7 items-center gap-1 rounded-md border border-slate-300/)
+  assert.match(
+    history,
+    /inline-flex h-7 items-center justify-center rounded-lg border border-slate-200/,
+  )
   assert.equal((`${page}\n${history}`.match(/className="w-14 sm:w-18 lg:w-24"/g) ?? []).length, 2)
-  assert.equal((`${page}\n${history}`.match(/w-7 shrink-0 text-right text-\[10px\]/g) ?? []).length, 2)
+  assert.equal(
+    (`${page}\n${history}`.match(/w-7 shrink-0 text-right text-\[10px\]/g) ?? []).length,
+    2,
+  )
 })
 
 test('Studio right sidebar uses a narrower desktop width and compact mobile overlay', () => {
@@ -177,14 +199,23 @@ test('Studio header reserves the brand color for Run and softens supporting acti
     return className
   }
 
-  assert.match(buttonClasses('Run Simulation'), /bg-\[#9929EA\]/)
-  assert.match(buttonClasses('Validate'), /border border-\[#C6D2DF\] bg-white/)
-  assert.match(buttonClasses('Workflow actions'), /border border-\[#C6D2DF\] bg-white/)
+  assert.match(buttonClasses('Run Simulation'), /bg-primary/)
+  assert.match(buttonClasses('Validate'), /border border-(?:slate-300|\[#C6D2DF\]) bg-white/)
+  assert.match(
+    buttonClasses('Workflow actions'),
+    /border border-(?:slate-300|\[#C6D2DF\]) bg-white/,
+  )
   assert.match(buttonClasses('Duplicate to Edit'), /border-amber-200 bg-amber-50 .*text-amber-800/)
   for (const label of ['Run Simulation', 'Validate', 'Duplicate to Edit']) {
-    assert.match(buttonClasses(label), /h-6 items-center gap-1\.5 rounded-md[^"]*px-2 text-\[11px\]/)
+    assert.match(
+      buttonClasses(label),
+      /h-6 items-center gap-1\.5 rounded-md[^"]*px-2 text-(?:xs|\[11px\])/,
+    )
   }
-  assert.match(buttonClasses('Workflow actions'), /h-6 items-center gap-1 rounded-md[^"]*px-2 text-\[11px\]/)
+  assert.match(
+    buttonClasses('Workflow actions'),
+    /h-6 items-center gap-1 rounded-md[^"]*px-2 text-(?:xs|\[11px\])/,
+  )
   assert.equal((header.match(/h-7 w-7 shrink-0 items-center/g) ?? []).length, 2)
 })
 
@@ -199,7 +230,7 @@ test('Node configuration header keeps its title left and centers the type badge 
   assert.match(header, /flex min-w-0 items-center gap-2/)
   assert.match(header, /h-3\.5 w-3\.5 shrink-0/)
   assert.match(header, /text-xs font-semibold text-slate-900/)
-  assert.match(header, /max-w-36 truncate[^"]*text-\[0\.5rem\]/)
+  assert.match(header, /max-w-36 truncate[^"]*text-xs/)
 })
 
 test('Node configuration fields and actions use compact local sizing', () => {
@@ -212,7 +243,11 @@ test('Node configuration fields and actions use compact local sizing', () => {
   assert.match(form, /\[&_input\]:text-xs/)
   assert.match(form, /\[&_textarea\]:min-h-14/)
   assert.match(form, /\[&_button\[data-slot=select-trigger\]\]:text-xs/)
-  assert.equal((form.match(/<SelectContent className="\[&_\[data-slot=select-item\]\]:text-xs"/g) ?? []).length, 5)
+  assert.equal(
+    (form.match(/<SelectContent className="\[&_\[data-slot=select-item\]\]:text-xs"/g) ?? [])
+      .length,
+    5,
+  )
   assert.equal((form.match(/size="sm"/g) ?? []).length, 5)
   assert.match(form, /<Button type="submit" size="xs"/)
   assert.equal((form.match(/size="icon-xs"/g) ?? []).length, 2)

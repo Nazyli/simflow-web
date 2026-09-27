@@ -92,14 +92,14 @@ export function DataTable<T extends { id: string }>({
         {toolbarActions}
         {showColumnToggle && (
           <details className="group relative ml-auto">
-            <summary className="cursor-pointer text-[0.72rem] font-semibold text-slate-500 group-open:text-violet-600">
+            <summary className="cursor-pointer text-xs font-semibold text-slate-500 group-open:text-violet-600">
               Columns
             </summary>
             <div className="absolute top-full right-0 z-20 mt-1.5 grid min-w-[150px] gap-0.5 rounded-lg border border-slate-200 bg-white p-1.5 shadow-lg">
               {columns.map((column) => (
                 <label
                   key={column.id}
-                  className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-[0.72rem] text-slate-600 hover:bg-slate-50"
+                  className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
                 >
                   <Checkbox
                     checked={visible.has(column.id)}
@@ -121,7 +121,7 @@ export function DataTable<T extends { id: string }>({
       </div>
       <div className="min-w-0">
         <Table className="min-w-max">
-          <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:bg-slate-50 [&_th]:text-[0.66rem] [&_th]:font-bold [&_th]:tracking-[0.06em] [&_th]:uppercase">
+          <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:bg-slate-50 [&_th]:text-xs [&_th]:font-bold [&_th]:tracking-[0.06em] [&_th]:uppercase">
             <TableRow>
               {selectable && (
                 <TableHead className="w-9">
@@ -139,9 +139,15 @@ export function DataTable<T extends { id: string }>({
                 </TableHead>
               )}
               {shownColumns.map((column) => (
-                <TableHead key={column.id}>
+                <TableHead
+                  key={column.id}
+                  aria-sort={
+                    sort?.id === column.id ? (sort.desc ? 'descending' : 'ascending') : 'none'
+                  }
+                >
                   <button
                     type="button"
+                    aria-label={`Sort by ${column.header}`}
                     onClick={() =>
                       setSort((current) =>
                         current?.id === column.id
@@ -149,7 +155,7 @@ export function DataTable<T extends { id: string }>({
                           : { id: column.id, desc: false },
                       )
                     }
-                    className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[0.66rem] font-bold tracking-[0.06em] text-slate-500 uppercase transition hover:text-violet-600"
+                    className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-xs font-bold tracking-[0.06em] text-slate-500 uppercase transition hover:text-violet-600"
                   >
                     {column.header}
                     {sort?.id === column.id ? (sort.desc ? ' ↓' : ' ↑') : ''}
@@ -171,7 +177,7 @@ export function DataTable<T extends { id: string }>({
                   </TableCell>
                 )}
                 {shownColumns.map((column) => (
-                  <TableCell key={column.id} className="text-[0.78rem] text-slate-700">
+                  <TableCell key={column.id} className="text-sm text-slate-700">
                     {column.cell(row)}
                   </TableCell>
                 ))}
@@ -181,7 +187,7 @@ export function DataTable<T extends { id: string }>({
               <TableRow>
                 <TableCell
                   colSpan={shownColumns.length + (selectable ? 1 : 0)}
-                  className="py-6 text-center text-[0.78rem] text-slate-400"
+                  className="py-6 text-center text-sm text-slate-400"
                 >
                   No matching records.
                 </TableCell>
@@ -190,7 +196,7 @@ export function DataTable<T extends { id: string }>({
           </TableBody>
         </Table>
       </div>
-      <footer className="app-data-table__footer flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/60 px-3.5 py-2.5 text-[0.72rem] text-slate-500">
+      <footer className="app-data-table__footer flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/60 px-3.5 py-2.5 text-xs text-slate-500">
         <span>
           {filtered.length} records{selectable ? ` · ${selected.size} selected` : ''}
         </span>

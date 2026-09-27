@@ -1,5 +1,5 @@
 import { AlertCircle, Inbox } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import type { ReactNode } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -10,6 +10,7 @@ export function LoadingState({
   label?: string
   variant?: 'table' | 'simulation' | 'canvas' | 'runner'
 }) {
+  const reduceMotion = useReducedMotion()
   const rows = variant === 'canvas' ? 1 : variant === 'runner' ? 4 : 3
   const widths = ['w-full', 'w-[84%]', 'w-[68%]']
   const containerClass =
@@ -22,9 +23,9 @@ export function LoadingState({
     <motion.section
       role="status"
       aria-label={label}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={reduceMotion ? undefined : { opacity: 0 }}
+      animate={reduceMotion ? undefined : { opacity: 1 }}
+      exit={reduceMotion ? undefined : { opacity: 0 }}
       className={containerClass}
     >
       <span className="sr-only">{label}</span>
@@ -44,16 +45,18 @@ export function LoadingState({
   )
 }
 
-export function ErrorState({ message }: { message: string }) {
+export function ErrorState({ message, action }: { message: string; action?: ReactNode }) {
+  const reduceMotion = useReducedMotion()
   return (
     <motion.p
       role="alert"
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={reduceMotion ? undefined : { opacity: 0, y: 4 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700"
     >
       <AlertCircle size={16} />
-      <span>{message} Check your connection and retry.</span>
+      <span className="min-w-0 flex-1">{message}</span>
+      {action}
     </motion.p>
   )
 }
@@ -67,10 +70,11 @@ export function EmptyState({
   description: string
   action?: ReactNode
 }) {
+  const reduceMotion = useReducedMotion()
   return (
     <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       className="grid justify-items-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white p-12 text-center text-slate-400"
     >
       <span className="grid size-10 place-items-center rounded-xl bg-violet-100 text-violet-600">

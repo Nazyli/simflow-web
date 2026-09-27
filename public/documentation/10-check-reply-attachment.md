@@ -10,7 +10,7 @@ Gunakan hanya setelah salah satu output port Actor yang dikonfigurasi pada `Wait
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Wait for Reply] -->|actor-a| B{Check Reply Attachment}
     B -->|has_attachment| C[Process Attachment]
@@ -24,23 +24,23 @@ flowchart LR
     class B condition
     class C,D action
     class E terminal
-~~~
+```
 
 Balasan dengan attachment dan balasan tanpa attachment dapat ditangani melalui jalur yang berbeda.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow dari port Actor | Ya | Harus berasal langsung dari port Actor pada `Wait for Reply` email. |
+| Input | Tipe                 | Wajib | Keterangan                                                          |
+| ----- | -------------------- | :---: | ------------------------------------------------------------------- |
+| Input | Flow dari port Actor |  Ya   | Harus berasal langsung dari port Actor pada `Wait for Reply` email. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `has_attachment` | Balasan memiliki satu atau lebih attachment. | Untuk memproses attachment. |
-| `no_attachment` | Balasan tidak memiliki attachment. | Untuk meminta attachment atau melanjutkan alur. |
-| `failed` | Balasan atau attachment tidak dapat dibaca. | Untuk error handling. |
+| Output Port      | Arti                                         | Kapan digunakan?                                |
+| ---------------- | -------------------------------------------- | ----------------------------------------------- |
+| `has_attachment` | Balasan memiliki satu atau lebih attachment. | Untuk memproses attachment.                     |
+| `no_attachment`  | Balasan tidak memiliki attachment.           | Untuk meminta attachment atau melanjutkan alur. |
+| `failed`         | Balasan atau attachment tidak dapat dibaca.  | Untuk error handling.                           |
 
 ## Output yang dihasilkan
 

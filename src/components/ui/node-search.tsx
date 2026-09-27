@@ -1,12 +1,6 @@
 import { useCallback, useState } from 'react'
 
-import {
-  Panel,
-  useReactFlow,
-  type BuiltInEdge,
-  type Node,
-  type PanelProps,
-} from '@xyflow/react'
+import { Panel, useReactFlow, type BuiltInEdge, type Node, type PanelProps } from '@xyflow/react'
 
 import {
   Command,
@@ -65,13 +59,11 @@ export function NodeSearchInternal({
           (data?.group as Record<string, unknown> | undefined)?.groupName ?? '',
         ).toLowerCase()
         const label = String(
-          (data?.group as Record<string, unknown> | undefined)?.groupName ??
-            data?.label ??
-            '',
+          (data?.group as Record<string, unknown> | undefined)?.groupName ?? data?.label ?? '',
         ).toLowerCase()
         // support both data.nodeType and node.type
         const nodeType = String(
-          (data?.nodeType ?? (node as unknown as Record<string, unknown>)?.type ?? ''),
+          data?.nodeType ?? (node as unknown as Record<string, unknown>)?.type ?? '',
         ).toLowerCase()
         const id = String(node.id).toLowerCase()
         return (
@@ -115,7 +107,9 @@ export function NodeSearchInternal({
 
   const defaultOnSelectNode = useCallback(
     (node: Node) => {
-      setNodes((nodes) => nodes.map((n) => (n.id === node.id ? { ...n, selected: true } : { ...n, selected: false })))
+      setNodes((nodes) =>
+        nodes.map((n) => (n.id === node.id ? { ...n, selected: true } : { ...n, selected: false })),
+      )
       void fitView({ nodes: [node], duration: 500 })
     },
     [fitView, setNodes],
@@ -155,9 +149,8 @@ export function NodeSearchInternal({
             <CommandGroup heading="Nodes">
               {searchResults.map((node) => {
                 const data = node.data as Record<string, unknown>
-                const groupName = (data?.group as Record<string, unknown> | undefined)?.groupName as
-                  | string
-                  | undefined
+                const groupName = (data?.group as Record<string, unknown> | undefined)
+                  ?.groupName as string | undefined
                 const label = String(groupName ?? data?.label ?? node.id)
                 const nodeType = String(
                   (data?.nodeType as string | undefined) ??
@@ -215,7 +208,11 @@ export function NodeSearch({
   const onOpenChange = controlledOnOpenChange ?? setInternalOpen
 
   // Separate Panel className from Command className
-  const { className: panelClassName, style: panelStyle, ...restPanelProps } = panelProps as PanelProps & {
+  const {
+    className: panelClassName,
+    style: panelStyle,
+    ...restPanelProps
+  } = panelProps as PanelProps & {
     className?: string
     style?: React.CSSProperties
   }
@@ -227,10 +224,7 @@ export function NodeSearch({
       style={panelStyle}
       {...restPanelProps}
     >
-      <Command
-        shouldFilter={false}
-        className={cn(nodeSearchCommandClasses, className)}
-      >
+      <Command shouldFilter={false} className={cn(nodeSearchCommandClasses, className)}>
         <NodeSearchInternal
           onSearch={onSearch}
           onSelectNode={onSelectNode}

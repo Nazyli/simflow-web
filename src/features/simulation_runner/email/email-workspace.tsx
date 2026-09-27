@@ -73,16 +73,16 @@ export function EmailWorkspace({
               />
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center bg-[#f6f8fb] px-6 text-center">
+            <div className="flex flex-1 items-center justify-center bg-[var(--color-canvas)] px-6 text-center">
               <div className="flex flex-col items-center gap-3">
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-[#f1f3f4]">
-                  <Inbox size={20} className="text-[#9aa0a6]" />
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-slate-100">
+                  <Inbox size={20} className="text-slate-400" />
                 </span>
                 <div>
-                  <p className="text-sm font-medium text-[#1a1a2e]">
+                  <p className="text-sm font-medium text-slate-900">
                     {threads.length ? 'Select a conversation' : 'No emails yet'}
                   </p>
-                  <p className="mt-1 text-xs text-[#5f6368]">
+                  <p className="mt-1 text-xs text-slate-500">
                     {threads.length
                       ? 'Choose an email thread from the list to read and reply.'
                       : 'Email messages from simulation actors will appear here.'}

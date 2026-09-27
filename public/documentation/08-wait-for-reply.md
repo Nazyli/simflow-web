@@ -10,7 +10,7 @@ Gunakan setelah `Send Chat` atau `Send Email` ketika langkah berikutnya bergantu
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Send Chat] --> B{Wait for Reply}
     B -->|actor-a| C[Process Reply A]
@@ -23,23 +23,23 @@ flowchart LR
     class A,C,D,E action
     class B wait
     class F terminal
-~~~
+```
 
 Setiap Actor yang dikonfigurasi mendapat port sendiri. Balasan ke `actor-a` memilih port `actor-a`; balasan ke `actor-b` memilih port `actor-b`. Jika tidak ada balasan, cabang `timeout` dapat mengirim reminder.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Memulai penantian untuk pesan sebelumnya. |
+| Input | Tipe | Wajib | Keterangan                                |
+| ----- | ---- | :---: | ----------------------------------------- |
+| Input | Flow |  Ya   | Memulai penantian untuk pesan sebelumnya. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
+| Output Port  | Arti                                               | Kapan digunakan?                             |
+| ------------ | -------------------------------------------------- | -------------------------------------------- |
 | `<actor_id>` | Participant membalas ke Actor dengan ID yang sama. | Untuk memproses jawaban dari Actor tersebut. |
-| `timeout` | Tidak ada balasan sampai deadline. | Untuk follow-up atau jalur alternatif. |
-| `failed` | Penantian gagal didaftarkan/diproses. | Untuk error handling. |
+| `timeout`    | Tidak ada balasan sampai deadline.                 | Untuk follow-up atau jalur alternatif.       |
+| `failed`     | Penantian gagal didaftarkan/diproses.              | Untuk error handling.                        |
 
 ## Output yang dihasilkan
 

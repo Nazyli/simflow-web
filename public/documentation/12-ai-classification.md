@@ -10,7 +10,7 @@ Gunakan untuk memisahkan alur berdasarkan intent atau kategori jawaban participa
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Wait for Reply] --> B{AI Classification}
     B -->|complaint| C[Handle Complaint]
@@ -24,22 +24,22 @@ flowchart LR
     class B ai
     class C,D action
     class E terminal
-~~~
+```
 
 Port label pada diagram harus sama dengan label yang dikonfigurasi pada Node.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Menjalankan proses classification. |
+| Input | Tipe | Wajib | Keterangan                         |
+| ----- | ---- | :---: | ---------------------------------- |
+| Input | Flow |  Ya   | Menjalankan proses classification. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| Satu port per label | Hasil classification sesuai label. | Untuk menjalankan cabang label tersebut. |
-| `failed` | Classification tidak dapat diselesaikan. | Untuk error handling. |
+| Output Port         | Arti                                     | Kapan digunakan?                         |
+| ------------------- | ---------------------------------------- | ---------------------------------------- |
+| Satu port per label | Hasil classification sesuai label.       | Untuk menjalankan cabang label tersebut. |
+| `failed`            | Classification tidak dapat diselesaikan. | Untuk error handling.                    |
 
 ## Output yang dihasilkan
 

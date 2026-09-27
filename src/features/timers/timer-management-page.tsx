@@ -135,13 +135,13 @@ function progress(timer: TransParticipantTimer, now: number) {
 function CountdownCell({ timer, now }: { timer: TransParticipantTimer; now: number }) {
   const parts = countdown(timer.dueAt, now)
   const tone =
-    parts.total <= 60 ? 'text-red-600' : parts.total <= 300 ? 'text-amber-600' : 'text-[#9929EA]'
+    parts.total <= 60 ? 'text-red-600' : parts.total <= 300 ? 'text-amber-600' : 'text-primary'
   return (
     <div className="min-w-[110px]">
       <strong className={`text-sm font-bold tabular-nums ${tone}`}>{countdownLabel(parts)}</strong>
       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
         <i
-          className="brand-gradient block h-full rounded-full"
+          className="bg-primary block h-full rounded-full"
           style={{ width: `${progress(timer, now)}%` }}
         />
       </div>
@@ -392,7 +392,7 @@ export function TimerManagementPage() {
               </button>
               <button
                 onClick={() => setRescheduleTarget(timer)}
-                className="rounded-lg bg-[#9929EA] px-2 py-1 text-[11px] font-semibold text-white shadow-none transition hover:bg-[#7d1fc2]"
+                className="bg-primary text-primary-foreground hover:bg-primary/80 rounded-lg px-2 py-1 text-xs font-semibold shadow-none transition"
               >
                 Reschedule
               </button>

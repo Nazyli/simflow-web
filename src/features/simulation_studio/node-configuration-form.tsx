@@ -180,7 +180,7 @@ export function NodeConfigurationForm({
 
   return (
     <form
-      className="node-configuration-form flex min-w-0 flex-col gap-3 text-xs [&_label]:text-xs [&_input]:h-7 [&_input]:px-2 [&_input]:py-1 [&_input]:text-xs [&_textarea]:min-h-14 [&_textarea]:px-2 [&_textarea]:py-1.5 [&_textarea]:text-xs [&_button[data-slot=select-trigger]]:text-xs"
+      className="node-configuration-form flex min-w-0 flex-col gap-3 text-xs [&_button[data-slot=select-trigger]]:text-xs [&_input]:h-7 [&_input]:px-2 [&_input]:py-1 [&_input]:text-xs [&_label]:text-xs [&_textarea]:min-h-14 [&_textarea]:px-2 [&_textarea]:py-1.5 [&_textarea]:text-xs"
       onSubmit={submit}
     >
       {readonly && (
@@ -189,12 +189,12 @@ export function NodeConfigurationForm({
           changes.
         </div>
       )}
-      <div className="flex min-w-0 items-center justify-between gap-3 border-b border-[#DBE3EC] pb-2">
+      <div className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-200 pb-2">
         <div className="flex min-w-0 items-center gap-2">
-          <Sliders className="h-3.5 w-3.5 shrink-0 text-[#9929EA]" />
+          <Sliders className="text-primary h-3.5 w-3.5 shrink-0" />
           <h3 className="text-xs font-semibold text-slate-900">Node configuration</h3>
         </div>
-        <span className="max-w-36 truncate whitespace-nowrap rounded-md border border-[#DBE3EC] bg-[#F5E7FF] px-1.5 py-0.5 text-[0.5rem] font-bold tracking-wider text-[#5B148F] uppercase">
+        <span className="max-w-36 truncate rounded-md border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-xs font-bold tracking-wider whitespace-nowrap text-violet-800 uppercase">
           {node.nodeType}
         </span>
       </div>
@@ -206,7 +206,7 @@ export function NodeConfigurationForm({
         placeholder="e.g. Process Order"
       />
       {node.inputPorts?.length ? (
-        <div className="rounded-md border border-[#DBE3EC] bg-slate-50/80 p-2">
+        <div className="rounded-md border border-slate-200 bg-slate-50/80 p-2">
           <p className="text-[9px] font-bold tracking-wider text-slate-500 uppercase">
             Input connections
           </p>
@@ -267,7 +267,7 @@ export function NodeConfigurationForm({
         />
       ) : null}
       {error && <p className="text-[11px] text-red-600">{error}</p>}
-      <div className="grid gap-1.5 border-t border-[#DBE3EC] pt-2">
+      <div className="grid gap-1.5 border-t border-slate-200 pt-2">
         <Button type="submit" size="xs" className="w-full" disabled={readonly}>
           <Save className="h-3.5 w-3.5" /> Save Node
         </Button>
@@ -644,7 +644,7 @@ function CatalogParameterField({
           value={typeof value === 'string' && value ? value : undefined}
           onValueChange={onChange}
         >
-        <SelectTrigger id={name} size="sm" className="w-full">
+          <SelectTrigger id={name} size="sm" className="w-full">
             <SelectValue placeholder={`Select ${label}`} />
           </SelectTrigger>
           <SelectContent className="[&_[data-slot=select-item]]:text-xs">
@@ -985,9 +985,9 @@ export function EdgeConfigurationForm({
           changes.
         </div>
       )}
-      <div className="flex items-center justify-between border-b border-[#DBE3EC] pb-2.5">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
         <div className="flex items-center gap-2">
-          <GitBranch className="h-4 w-4 text-[#9929EA]" />
+          <GitBranch className="text-primary h-4 w-4" />
           <h3 className="text-sm font-semibold text-slate-900">Edge inspector</h3>
         </div>
       </div>

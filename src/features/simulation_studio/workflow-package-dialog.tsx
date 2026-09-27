@@ -26,7 +26,7 @@ export function WorkflowPackageDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-5 sm:max-w-lg">
         <DialogTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
-          <Upload className="h-5 w-5 text-[#9929EA]" /> Import workflow JSON
+          <Upload className="text-primary h-5 w-5" /> Import workflow JSON
         </DialogTitle>
         <DialogDescription>
           Import creates a new draft in the current group. Existing workflows and master-data will
@@ -34,7 +34,7 @@ export function WorkflowPackageDialog({
         </DialogDescription>
 
         {workflowPackage ? (
-          <div className="space-y-3 rounded-md border border-[#DBE3EC] bg-slate-50/80 p-3 text-sm">
+          <div className="space-y-3 rounded-md border border-slate-200 bg-slate-50/80 p-3 text-sm">
             <div>
               <p className="text-xs font-medium text-slate-500">File</p>
               <p className="truncate font-semibold text-slate-800">{packageFileName}</p>
@@ -82,7 +82,7 @@ export function WorkflowPackageDialog({
           </Button>
           <Button
             type="button"
-            className="bg-[#9929EA] text-white hover:bg-[#7D1FC2]"
+            className="bg-primary text-primary-foreground hover:bg-primary/80"
             disabled={!workflowPackage || importing}
             onClick={onImport}
           >

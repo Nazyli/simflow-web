@@ -130,10 +130,9 @@ export function ExecutionDetailPage() {
       >
         <PageHeader
           className="shrink-0 border-b border-slate-200 bg-white px-6 py-4 max-[900px]:px-[18px] max-[620px]:px-3 max-[620px]:py-3"
-          eyebrow="Participant flow"
           title={
             <span className="flex min-w-0 items-center gap-2">
-              <span className="brand-gradient grid size-8 shrink-0 place-items-center rounded-lg text-white">
+              <span className="bg-primary grid size-8 shrink-0 place-items-center rounded-lg text-white">
                 <Layers size={16} />
               </span>
               <span className="min-w-0 break-words">{title}</span>
@@ -257,7 +256,6 @@ export function ExecutionDetailPage() {
             simulationId={data.simulationId}
             executionId={data.executionId}
             currentState={data.currentNodeId}
-            executionStatus={data.status}
           />
         </TabsContent>
 
@@ -281,10 +279,9 @@ function ExecutionDetailState({ children }: { children: ReactNode }) {
     >
       <PageHeader
         className="border-b border-slate-200 bg-white px-6 py-4 max-[900px]:px-[18px] max-[620px]:px-3 max-[620px]:py-3"
-        eyebrow="Participant flow"
         title={
           <span className="flex min-w-0 items-center gap-2">
-            <span className="brand-gradient grid size-8 shrink-0 place-items-center rounded-lg text-white">
+            <span className="bg-primary grid size-8 shrink-0 place-items-center rounded-lg text-white">
               <Layers size={16} />
             </span>
             <span>Participant flow</span>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/button'
 import { DocumentChannelPage as DocumentChannelPageImpl } from './document-channel-page'
 import { EmailChannelPage as EmailChannelPageImpl } from './email-channel-page'
-import { useSimulationRun } from './simulation-run-context'
+import { useSimulationRun } from './simulation-run-context-core'
 
 export function EmailChannelPage() {
   return <EmailChannelPageImpl />

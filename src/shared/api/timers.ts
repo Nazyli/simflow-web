@@ -32,4 +32,6 @@ export const rescheduleTimer = (participantTimerId: string, dueAt: string) =>
     body: JSON.stringify({ dueAt: dueAt }),
   })
 export const runTimerNow = (participantTimerId: string) =>
-  apiClient<TransParticipantTimer>(`/admin/timers/${participantTimerId}/run-now`, { method: 'POST' })
+  apiClient<TransParticipantTimer>(`/admin/timers/${participantTimerId}/run-now`, {
+    method: 'POST',
+  })

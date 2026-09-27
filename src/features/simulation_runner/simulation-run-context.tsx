@@ -1,11 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import {
   markChatMessageRead,
   sendParticipantChat,
   type ChatActorItem,
-  type ChatMarkAsReadResult,
   type ChatMessage,
   type ChatSimulationItem,
 } from '../../shared/api/chat'
@@ -13,59 +12,14 @@ import { eventsUrl } from '../../shared/api/client'
 import {
   markEmailThreadAsRead,
   sendParticipantEmail,
-  type EmailMarkAsReadResult,
   type ParticipantEmailAttachmentInput,
 } from '../../shared/api/email'
 import { getNotificationActivity, type NotificationActivity } from '../../shared/api/notifications'
+import { SimulationRunContext } from './simulation-run-context-core'
 import type { Channel } from './simulation-channels'
-
-export const ACTOR_STORAGE_KEY = 'simflow-runner-actor-id'
-export const DEFAULT_ACTOR_ID = 'participant-001-ambj-01-platform'
-export function readActorId(): string {
-  try {
-    return localStorage.getItem(ACTOR_STORAGE_KEY) ?? DEFAULT_ACTOR_ID
-  } catch {
-    return DEFAULT_ACTOR_ID
-  }
-}
-export function writeActorId(actorId: string): void {
-  try {
-    localStorage.setItem(ACTOR_STORAGE_KEY, actorId)
-  } catch {
-    // Ignore storage failures; the default actor id is used as a fallback.
-  }
-}
+import { readActorId } from './simulation-run-storage'
 
 const CHANNELS: Channel[] = ['chat', 'email', 'call', 'document']
-
-export interface SimulationRunContextValue {
-  participantId: string
-  unreadCounts: Record<Channel, number>
-  runnerParticipantId: string
-  isChatPending: boolean
-  sendChat: (input: { simulationId: string; target: string; content: string }) => void
-  markChatRead: (simulationId: string, actorId: string) => Promise<ChatMarkAsReadResult>
-  isEmailPending: boolean
-  sendEmail: (input: {
-    simulationId: string
-    target: string
-    subject: string
-    content: string
-    parentEmailId?: string
-    replyToEmailId?: string
-    attachments?: ParticipantEmailAttachmentInput[]
-  }) => void
-  markEmailThreadRead: (simulationId: string, rootId: string) => Promise<EmailMarkAsReadResult>
-  refresh: () => void
-}
-
-const SimulationRunContext = createContext<SimulationRunContextValue | null>(null)
-
-export function useSimulationRun(): SimulationRunContextValue {
-  const value = useContext(SimulationRunContext)
-  if (!value) throw new Error('useSimulationRun must be used within SimulationRunProvider')
-  return value
-}
 
 export function SimulationRunProvider({
   participantId,

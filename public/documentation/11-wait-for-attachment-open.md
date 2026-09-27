@@ -10,7 +10,7 @@ Gunakan setelah `Send Email` jika Anda perlu memastikan satu atau beberapa attac
 
 ## Contoh
 
-~~~mermaid
+```mermaid
 flowchart LR
     A[Send Email] --> B{Wait for Attachment Open}
     B -->|opened| C[Continue]
@@ -22,23 +22,23 @@ flowchart LR
     class A,C,D action
     class B wait
     class E terminal
-~~~
+```
 
 Workflow melanjutkan saat syarat pembukaan terpenuhi, mengirim reminder saat timeout, atau menangani failure.
 
 ## Input
 
-| Input | Tipe | Wajib | Keterangan |
-|---|---|:---:|---|
-| Input | Flow | Ya | Menjalankan penantian attachment. |
+| Input | Tipe | Wajib | Keterangan                        |
+| ----- | ---- | :---: | --------------------------------- |
+| Input | Flow |  Ya   | Menjalankan penantian attachment. |
 
 ## Output Port
 
-| Output Port | Arti | Kapan digunakan? |
-|---|---|---|
-| `opened` | Syarat attachment terbuka terpenuhi. | Untuk melanjutkan workflow. |
-| `timeout` | Masih ada attachment yang belum dibuka sampai deadline. | Untuk reminder atau jalur alternatif. |
-| `failed` | Penantian gagal. | Untuk error handling. |
+| Output Port | Arti                                                    | Kapan digunakan?                      |
+| ----------- | ------------------------------------------------------- | ------------------------------------- |
+| `opened`    | Syarat attachment terbuka terpenuhi.                    | Untuk melanjutkan workflow.           |
+| `timeout`   | Masih ada attachment yang belum dibuka sampai deadline. | Untuk reminder atau jalur alternatif. |
+| `failed`    | Penantian gagal.                                        | Untuk error handling.                 |
 
 ## Output yang dihasilkan
 

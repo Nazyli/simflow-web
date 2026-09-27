@@ -44,10 +44,7 @@ test('updateDocument puts the full page set for the selected runtime document', 
     ],
   })
 
-  assert.equal(
-    request.path,
-    '/web/documents/document%2F2?participantId=participant%2F1',
-  )
+  assert.equal(request.path, '/web/documents/document%2F2?participantId=participant%2F1')
   assert.equal(request.init.method, 'PUT')
   assert.deepEqual(JSON.parse(request.init.body).contents, [
     { page: 1, content: '<p>One</p>' },
