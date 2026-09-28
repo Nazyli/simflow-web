@@ -16,11 +16,13 @@ import { cn } from '@/lib/utils'
 const nodeSearchCommandClasses = [
   'bg-popover rounded-lg border shadow-md md:min-w-[15rem]',
   '[&_[cmdk-empty]]:py-3 [&_[cmdk-empty]]:text-[0.6875rem] [&_[cmdk-group-heading]]:px-1 [&_[cmdk-group-heading]]:py-0.5 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group]]:p-0',
-  '[&_[cmdk-input-wrapper]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-3 [&_[cmdk-input-wrapper]_svg]:w-3 [&_[cmdk-input]]:h-7 [&_[cmdk-input]]:px-1 [&_[cmdk-input]]:py-0.5 [&_[cmdk-input]]:text-[0.6875rem] max-[760px]:[&_[cmdk-input]]:h-11 max-[760px]:[&_[cmdk-input]]:text-xs',
-  '[&_[cmdk-item]]:min-h-0 [&_[cmdk-item]]:gap-1 [&_[cmdk-item]]:px-1 [&_[cmdk-item]]:py-0.5 [&_[cmdk-item]]:text-[0.6875rem] max-[760px]:[&_[cmdk-item]]:min-h-11 max-[760px]:[&_[cmdk-item]]:text-xs [&_[cmdk-item]_svg]:size-3 [&_[cmdk-list]]:max-h-44',
+  '[&_[cmdk-input-wrapper]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-3 [&_[cmdk-input-wrapper]_svg]:w-3 [&_[cmdk-input]]:h-7 [&_[cmdk-input]]:px-1 [&_[cmdk-input]]:py-0.5 [&_[cmdk-input]]:text-[0.6875rem] max-[760px]:[&_[cmdk-input]]:h-6 max-[760px]:[&_[cmdk-input]]:text-xs',
+  '[&_[cmdk-item]]:min-h-0 [&_[cmdk-item]]:gap-1 [&_[cmdk-item]]:px-1 [&_[cmdk-item]]:py-0.5 [&_[cmdk-item]]:text-[0.6875rem] max-[760px]:[&_[cmdk-item]]:min-h-6 max-[760px]:[&_[cmdk-item]]:text-xs [&_[cmdk-item]_svg]:size-3 [&_[cmdk-list]]:max-h-44',
 ].join(' ')
 
 export interface NodeSearchProps extends Omit<PanelProps, 'children'> {
+  /** Optional classes for the React Flow panel wrapper, separate from the command surface. */
+  panelClassName?: string
   /**
    * Custom search function — should return nodes matching the search string.
    * By default does lowercase substring match against node.data.label, node.data.nodeType and node.id
@@ -169,7 +171,7 @@ export function NodeSearchInternal({
                     <span className="flex min-w-0 flex-col">
                       <span className="truncate">{label}</span>
                       {secondary ? (
-                        <span className="text-muted-foreground truncate text-[10px] leading-3">
+                        <span className="text-muted-foreground truncate text-xs leading-4">
                           {secondary}
                         </span>
                       ) : null}
@@ -192,6 +194,7 @@ export function NodeSearchInternal({
  */
 export function NodeSearch({
   className,
+  panelClassName,
   onSearch,
   onSelectNode,
   open: controlledOpen,
@@ -207,13 +210,8 @@ export function NodeSearch({
   const open = isControlled ? controlledOpen : internalOpen
   const onOpenChange = controlledOnOpenChange ?? setInternalOpen
 
-  // Separate Panel className from Command className
-  const {
-    className: panelClassName,
-    style: panelStyle,
-    ...restPanelProps
-  } = panelProps as PanelProps & {
-    className?: string
+  // Keep panel positioning classes separate from the command surface classes.
+  const { style: panelStyle, ...restPanelProps } = panelProps as PanelProps & {
     style?: React.CSSProperties
   }
 

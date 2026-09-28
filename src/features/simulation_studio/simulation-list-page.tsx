@@ -1,16 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { FolderKanban, Layers, Lock, Pencil, Plus, Save, Trash2 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import {
+  ArrowUpRight,
+  Boxes,
+  FolderKanban,
+  Layers,
+  Lock,
+  Pencil,
+  Plus,
+  Save,
+  Search,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Button } from '../../components/ui/button'
 import { PageFrame } from '../../components/layout/page-frame'
-import { PageHeader } from '../../components/layout/page-header'
-import { SurfaceSection } from '../../components/layout/surface-section'
+import { Button } from '../../components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Textarea } from '../../components/ui/textarea'
+import { SurfaceSection } from '../../components/layout/surface-section'
 import { ApiError } from '../../shared/api/client'
 import {
   createGroupSimulation,
@@ -21,6 +32,7 @@ import {
 } from '../../shared/api/simulations'
 import { ErrorState } from '../../shared/components/async-state'
 import type { GroupSimulation, Simulation } from '../../shared/types/simulation'
+import { filterSimulationGroups, getSimulationListSummary } from './simulation-list-logic'
 
 function apiErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -36,8 +48,7 @@ function apiErrorMessage(error: unknown): string {
 }
 
 function bestSimulation(group: GroupSimulation): Simulation | undefined {
-  const sims = group.simulations ?? []
-  return sims[0]
+  return group.simulations?.[0]
 }
 
 export function SimulationListPage() {
@@ -46,8 +57,14 @@ export function SimulationListPage() {
   const [pickerGroup, setPickerGroup] = useState<GroupSimulation | null>(null)
   const [formGroup, setFormGroup] = useState<GroupSimulation | 'new' | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<GroupSimulation | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const groups = useQuery({ queryKey: ['group-simulations'], queryFn: getGroupSimulations })
+  const summary = useMemo(() => getSimulationListSummary(groups.data ?? []), [groups.data])
+  const filteredGroups = useMemo(
+    () => filterSimulationGroups(groups.data ?? [], searchQuery),
+    [groups.data, searchQuery],
+  )
 
   const create = useMutation({
     mutationFn: async (
@@ -119,13 +136,13 @@ export function SimulationListPage() {
   })
 
   function openGroup(group: GroupSimulation) {
-    const sims = group.simulations ?? []
-    if (sims.length === 0) {
+    const simulations = group.simulations ?? []
+    if (simulations.length === 0) {
       bootstrapSimulation.mutate(group.groupSimulationId)
       return
     }
-    if (sims.length === 1) {
-      navigate(`/studio/${sims[0].simulationId}`)
+    if (simulations.length === 1) {
+      navigate(`/studio/${simulations[0].simulationId}`)
       return
     }
     setPickerGroup(group)
@@ -148,8 +165,8 @@ export function SimulationListPage() {
       create.mutate({
         groupSimulationName: groupName,
         groupSimulationDesc: groupDesc,
-        simulationName: simulationName,
-        channelName: channelName,
+        simulationName,
+        channelName,
         duration,
       })
     }
@@ -159,121 +176,199 @@ export function SimulationListPage() {
   const pickerBest = pickerGroup ? bestSimulation(pickerGroup) : undefined
 
   return (
-    <PageFrame mode="operations" className="simulation-list-page">
-      <PageHeader
-        title="Simulations"
-        actions={
-          <Button type="button" onClick={() => setFormGroup('new')}>
-            <Plus className="h-4 w-4" /> New Simulation
-          </Button>
-        }
-      />
+    <PageFrame
+      mode="operations"
+      className="simulation-list-page !space-y-0 bg-[#f4f5f8] p-4 sm:p-6"
+    >
+      <div className="mx-auto w-full max-w-[1500px] space-y-3">
+        <section className="rounded-sm border border-slate-200 bg-white px-5 py-4 shadow-sm sm:px-6 sm:py-5">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-[-0.035em] text-slate-900">
+                Simulation registry
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">Build and manage workflow simulations.</p>
+            </div>
+            <Button type="button" onClick={() => setFormGroup('new')} className="h-9 gap-2 px-3.5">
+              <Plus className="h-4 w-4" /> New simulation
+            </Button>
+          </div>
+        </section>
 
-      {groups.isPending && (
-        <div
-          role="status"
-          aria-label="Loading data…"
-          className="min-w-0 border-b border-slate-200 px-1 py-2 text-sm text-slate-500"
+        <dl
+          aria-label="Registry summary"
+          className="flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-slate-200 py-2.5 text-sm"
         >
-          Loading data…
-        </div>
-      )}
-      {groups.isError && <ErrorState message="Unable to load simulations." />}
+          <div className="flex items-baseline gap-1.5">
+            <dt className="text-slate-500">Groups</dt>
+            <dd className="font-semibold text-slate-900 tabular-nums">{summary.groups}</dd>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <dt className="text-slate-500">Versions</dt>
+            <dd className="font-semibold text-slate-900 tabular-nums">{summary.versions}</dd>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <dt className="text-slate-500">Ready</dt>
+            <dd className="font-semibold text-slate-900 tabular-nums">{summary.ready}</dd>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <dt className="text-slate-500">Locked</dt>
+            <dd className="font-semibold text-slate-900 tabular-nums">{summary.locked}</dd>
+          </div>
+        </dl>
 
-      {groups.data && groups.data.length === 0 && (
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4">
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-slate-800">No simulations yet</h2>
-            <p className="mt-1 max-w-[560px] text-xs leading-relaxed text-slate-500">
-              Create a group to start building.
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+          <div>
+            <h2 className="text-xl font-semibold tracking-[-0.035em] text-slate-900">
+              Simulation groups
+            </h2>
+          </div>
+          <label className="relative block w-full sm:max-w-[290px]">
+            <span className="sr-only">Search simulation groups</span>
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search groups, versions, channels"
+              className="h-10 w-full rounded-sm border border-slate-200 bg-white pr-3 pl-9 text-sm text-slate-800 shadow-sm transition outline-none placeholder:text-slate-400 focus:border-[#8e7ee2] focus:ring-4 focus:ring-[#8e7ee2]/15"
+            />
+          </label>
+        </div>
+
+        {groups.isPending && (
+          <div
+            role="status"
+            aria-label="Loading data"
+            className="rounded-sm border border-slate-200 bg-white px-4 py-4 text-sm text-slate-500"
+          >
+            Loading simulation registry...
+          </div>
+        )}
+        {groups.isError && <ErrorState message="Unable to load simulations." />}
+
+        {groups.data && groups.data.length === 0 && (
+          <div className="flex min-h-[250px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+            <span className="grid size-12 place-items-center rounded-2xl bg-[#f1efff] text-[#6651c7]">
+              <Boxes className="h-5 w-5" />
+            </span>
+            <h2 className="mt-4 text-base font-semibold text-slate-900">No simulations yet</h2>
+            <p className="mt-1 max-w-[420px] text-sm leading-relaxed text-slate-500">
+              Create a group to give your first workflow a home.
             </p>
+            <Button type="button" onClick={() => setFormGroup('new')} className="mt-5 gap-2">
+              <Plus className="h-4 w-4" /> Create simulation
+            </Button>
           </div>
-          <Button type="button" onClick={() => setFormGroup('new')}>
-            <Plus className="h-4 w-4" /> Create simulation
-          </Button>
-        </div>
-      )}
+        )}
 
-      {groups.data && groups.data.length > 0 && (
-        <SurfaceSection className="border-b-0 pb-0">
-          <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {groups.data.map((group) => {
-              const sims = group.simulations ?? []
-              const lockedCount = sims.filter((s) => s.isLocked).length
-              const primarySim = sims[0]
-              const statusLabel = primarySim?.isLocked
-                ? `Locked • Used ${primarySim.executionCount ?? 0}`
-                : lockedCount > 0
-                  ? `${lockedCount} locked`
-                  : 'Ready'
-              const statusClassName =
-                primarySim?.isLocked || lockedCount > 0
-                  ? 'border-amber-200 bg-amber-50 text-amber-700'
-                  : 'border-slate-200 bg-slate-50 text-slate-500'
-              return (
-                <article
-                  key={group.groupSimulationId}
-                  className="group relative flex min-h-32 min-w-0 flex-col rounded-md border border-slate-200 bg-white transition-colors duration-150 hover:border-violet-300"
+        {groups.data && groups.data.length > 0 && (
+          <SurfaceSection className="border-b-0 p-0">
+            {filteredGroups.length === 0 ? (
+              <div className="flex min-h-[210px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+                <Search className="h-5 w-5 text-slate-400" />
+                <h2 className="mt-3 text-base font-semibold text-slate-900">
+                  No groups match that search
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Try a different name, version, or channel.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSearchQuery('')}
+                  className="mt-4"
                 >
-                  <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-0.5">
-                    <button
-                      type="button"
-                      aria-label={`Edit ${group.groupSimulationName}`}
-                      title="Edit simulation details"
-                      className="rounded-md p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700 max-[640px]:min-h-11 max-[640px]:min-w-11"
-                      onClick={() => setFormGroup(group)}
+                  Clear search
+                </Button>
+              </div>
+            ) : (
+              <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {filteredGroups.map((group) => {
+                  const simulations = group.simulations ?? []
+                  const lockedCount = simulations.filter((simulation) => simulation.isLocked).length
+                  const primarySimulation = simulations[0]
+                  const statusLabel = lockedCount > 0 ? `${lockedCount} locked` : 'Ready to edit'
+                  const statusClassName =
+                    lockedCount > 0
+                      ? 'border-[#f5dca3] bg-[#fff8e9] text-[#9a6815]'
+                      : 'border-[#cfe7d5] bg-[#f1fbf3] text-[#347047]'
+                  return (
+                    <article
+                      key={group.groupSimulationId}
+                      className="group flex min-w-0 flex-col rounded-sm border border-slate-200 bg-white p-5 shadow-[0_4px_18px_rgba(22,31,54,0.035)] transition duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_14px_30px_rgba(22,31,54,0.09)]"
                     >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Delete ${group.groupSimulationName}`}
-                      title="Delete simulation"
-                      className="rounded-md p-1.5 text-slate-400 transition-colors duration-150 hover:bg-red-50 hover:text-red-600 max-[640px]:min-h-11 max-[640px]:min-w-11"
-                      onClick={() => setDeleteTarget(group)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="flex flex-1 flex-col gap-2 p-3 pr-24 text-left"
-                    onClick={() => openGroup(group)}
-                  >
-                    <h2 className="line-clamp-2 text-[13px] leading-5 font-semibold tracking-[-0.01em] text-slate-900">
-                      {group.groupSimulationName}
-                    </h2>
-                    {group.groupSimulationDesc && (
-                      <p className="line-clamp-2 text-xs leading-5 text-slate-500">
-                        {group.groupSimulationDesc}
-                      </p>
-                    )}
-                  </button>
-                  <div className="flex min-h-10 items-center justify-between gap-3 border-t border-slate-100 px-3 py-2.5">
-                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-slate-500">
-                      <Layers className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                      {sims.length} simulation{sims.length === 1 ? '' : 's'}
-                    </span>
-                    <span
-                      className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-1 text-[10px] font-semibold ${statusClassName}`}
-                      title={
-                        primarySim?.isLocked
-                          ? `Used ${primarySim.executionCount ?? 0} time${(primarySim.executionCount ?? 0) === 1 ? '' : 's'}`
-                          : undefined
-                      }
-                    >
-                      {(primarySim?.isLocked || lockedCount > 0) && <Lock className="h-3 w-3" />}
-                      {statusLabel}
-                    </span>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-        </SurfaceSection>
-      )}
+                      <div className="flex items-start justify-between gap-3">
+                        <button
+                          type="button"
+                          className="min-w-0 flex-1 text-left"
+                          onClick={() => openGroup(group)}
+                        >
+                          <h3 className="truncate text-base font-semibold tracking-[-0.025em] text-slate-900">
+                            {group.groupSimulationName}
+                          </h3>
+                          <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-slate-500">
+                            {group.groupSimulationDesc ||
+                              'A workspace for connected workflow versions.'}
+                          </p>
+                        </button>
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <button
+                            type="button"
+                            aria-label={`Edit ${group.groupSimulationName}`}
+                            title="Edit simulation details"
+                            className="grid min-h-10 min-w-10 place-items-center rounded-lg text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-700 max-[640px]:min-h-11 max-[640px]:min-w-11"
+                            onClick={() => setFormGroup(group)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Delete ${group.groupSimulationName}`}
+                            title="Delete simulation"
+                            className="grid min-h-10 min-w-10 place-items-center rounded-lg text-red-500 transition-colors duration-150 hover:bg-red-50 hover:text-red-600 max-[640px]:min-h-11 max-[640px]:min-w-11"
+                            onClick={() => setDeleteTarget(group)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-end justify-between gap-3 border-t border-slate-100 pt-1">
+                        <div className="min-w-0">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-semibold ${statusClassName}`}
+                          >
+                            {lockedCount > 0 ? (
+                              <Lock className="h-3 w-3" />
+                            ) : (
+                              <ShieldCheck className="h-3 w-3" />
+                            )}
+                            {statusLabel}
+                          </span>
+                          <p className="mt-2 truncate text-xs text-slate-400">
+                            {simulations.length} version{simulations.length === 1 ? '' : 's'}
+                            {primarySimulation?.channelName
+                              ? ` · ${primarySimulation.channelName}`
+                              : ''}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openGroup(group)}
+                          className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#6651c7] transition-colors hover:text-[#4c3ca8]"
+                        >
+                          Open builder <ArrowUpRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            )}
+          </SurfaceSection>
+        )}
+      </div>
 
-      {/* Version Picker Dialog */}
       <Dialog
         open={Boolean(pickerGroup)}
         onOpenChange={(open) => {
@@ -282,38 +377,30 @@ export function SimulationListPage() {
       >
         <DialogContent className="p-6 sm:max-w-md">
           <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <Layers className="h-5 w-5 text-purple-600" /> Choose a simulation
+            <Layers className="h-5 w-5 text-[#6651c7]" /> Choose a simulation
           </DialogTitle>
           <DialogDescription>
             {pickerGroup?.groupSimulationName} has {pickerGroup?.simulations?.length ?? 0}{' '}
             simulations. Pick the one you want to open in the builder.
           </DialogDescription>
-
           <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
             {(pickerGroup?.simulations ?? []).map((simulation) => (
               <button
                 key={simulation.simulationId}
                 type="button"
-                className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${
-                  simulation.simulationId === pickerBest?.simulationId
-                    ? 'border-purple-300 bg-purple-50'
-                    : 'border-slate-200 bg-white hover:border-slate-300'
-                }`}
+                className={`flex w-full items-center justify-between rounded-sm border p-3 text-left transition-all ${simulation.simulationId === pickerBest?.simulationId ? 'border-[#c8bffb] bg-[#f5f2ff]' : 'border-slate-200 bg-white hover:border-slate-300'}`}
                 onClick={() => navigate(`/studio/${simulation.simulationId}`)}
               >
                 <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                   {simulation.simulationName}
                   {simulation.isLocked && (
-                    <span
-                      className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
-                      title={`Used ${simulation.executionCount ?? 0} times`}
-                    >
-                      <Lock className="h-3 w-3" /> Locked • {simulation.executionCount ?? 0}
+                    <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-xs font-semibold text-amber-700">
+                      <Lock className="h-3 w-3" /> Locked · {simulation.executionCount ?? 0}
                     </span>
                   )}
                 </span>
                 {simulation.simulationId === pickerBest?.simulationId && (
-                  <span className="text-[10px] font-bold tracking-wider text-purple-600 uppercase">
+                  <span className="text-xs font-bold tracking-wider text-[#6651c7] uppercase">
                     Default
                   </span>
                 )}
@@ -323,7 +410,6 @@ export function SimulationListPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Create / Edit Group Dialog */}
       <Dialog
         open={Boolean(formGroup)}
         onOpenChange={(open) => {
@@ -332,10 +418,9 @@ export function SimulationListPage() {
       >
         <DialogContent className="p-6 sm:max-w-md">
           <DialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
-            <FolderKanban className="h-5 w-5 text-purple-600" />{' '}
-            {editing ? 'Edit Simulation Group' : 'Create Simulation Group'}
+            <FolderKanban className="h-5 w-5 text-[#6651c7]" />{' '}
+            {editing ? 'Edit simulation group' : 'Create simulation group'}
           </DialogTitle>
-
           <form
             className="flex flex-col gap-4"
             key={editing?.groupSimulationId ?? 'new'}
@@ -343,14 +428,14 @@ export function SimulationListPage() {
           >
             <div className="grid gap-1.5">
               <Label htmlFor="simulation-name" className="text-slate-700">
-                Group Simulation Name
+                Group simulation name
               </Label>
               <Input
                 id="simulation-name"
                 name="name"
                 required
                 defaultValue={editing?.groupSimulationName ?? ''}
-                placeholder="e.g. Customer Onboarding"
+                placeholder="e.g. Customer onboarding"
               />
             </div>
             <div className="grid gap-1.5">
@@ -369,25 +454,20 @@ export function SimulationListPage() {
               <>
                 <div className="grid gap-1.5">
                   <Label htmlFor="sim-name" className="text-slate-700">
-                    Initial Simulation Name
+                    Initial simulation name
                   </Label>
                   <Input
                     id="sim-name"
                     name="simulationName"
                     required
-                    placeholder="e.g. Main Flow"
+                    placeholder="e.g. Main flow"
                   />
                 </div>
                 <div className="grid gap-1.5">
                   <Label htmlFor="channel-name" className="text-slate-700">
-                    Channel
+                    Channel Name
                   </Label>
-                  <Input
-                    id="channel-name"
-                    name="channelName"
-                    defaultValue="chat"
-                    placeholder="chat"
-                  />
+                  <Input id="channel-name" name="channelName" />
                 </div>
                 <div className="grid gap-1.5">
                   <Label htmlFor="duration" className="text-slate-700">
@@ -403,21 +483,19 @@ export function SimulationListPage() {
                 </div>
               </>
             )}
-
             <div className="mt-2 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setFormGroup(null)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={create.isPending || update.isPending}>
                 <Save className="h-4 w-4" />{' '}
-                {editing ? 'Save Changes' : create.isPending ? 'Creating…' : 'Create Simulation'}
+                {editing ? 'Save changes' : create.isPending ? 'Creating...' : 'Create simulation'}
               </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Group Confirmation */}
       <Dialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => {
@@ -432,7 +510,6 @@ export function SimulationListPage() {
             This permanently deletes “{deleteTarget?.groupSimulationName}” and removes it from the
             studio. This cannot be undone.
           </DialogDescription>
-
           <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)}>
               Cancel
@@ -445,7 +522,7 @@ export function SimulationListPage() {
               className="border-0 bg-red-600 text-white hover:bg-red-700"
             >
               <Trash2 className="h-3.5 w-3.5" />{' '}
-              {remove.isPending ? 'Deleting…' : 'Delete simulation'}
+              {remove.isPending ? 'Deleting...' : 'Delete simulation'}
             </Button>
           </div>
         </DialogContent>

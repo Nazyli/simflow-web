@@ -100,9 +100,9 @@ function DocumentationNav({
       <nav aria-label="Documentation sections">
         {filteredSections.map((section) => (
           <section key={section.id} className="mb-6 last:mb-0">
-            <h2 className="mb-2 flex items-center justify-between px-3 text-[0.68rem] font-bold tracking-[0.16em] text-slate-400 uppercase">
+            <h2 className="mb-2 flex items-center justify-between px-3 text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">
               <span>{section.label}</span>
-              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.62rem] tracking-normal text-slate-400">
+              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-xs tracking-normal text-slate-400">
                 {section.entries.length}
               </span>
             </h2>
@@ -116,7 +116,7 @@ function DocumentationNav({
                     to={`/documentation/${item.slug}`}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'instant' })}
                     className={({ isActive }) =>
-                      `group flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-[0.8rem] leading-tight transition-colors ${
+                      `group flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-sm leading-tight transition-colors ${
                         isActive
                           ? 'bg-violet-100 font-semibold text-violet-800'
                           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -129,7 +129,7 @@ function DocumentationNav({
                         <HighlightedText text={item.title} query={query} />
                       </span>
                       {result.snippet && (
-                        <span className="mt-1 block truncate text-[0.68rem] font-normal text-slate-400">
+                        <span className="mt-1 block truncate text-xs font-normal text-slate-400">
                           <HighlightedText text={result.snippet} query={query} />
                         </span>
                       )}
@@ -345,7 +345,7 @@ export function DocumentationPage() {
   if (!entry) return <Navigate to="/documentation/00-index" replace />
 
   return (
-    <PageFrame mode="reference" density="comfortable" className="documentation-page">
+    <PageFrame mode="reference" density="compact" className="documentation-page">
       <PageHeader title="Documentation" />
 
       <details className="rounded-lg border border-slate-200 bg-white p-3 lg:hidden">
@@ -381,7 +381,7 @@ export function DocumentationPage() {
           )}
           {state.status === 'error' && <ErrorState message={state.message} />}
           {state.status === 'ready' && (
-            <SurfaceSection className="rounded-xl border border-slate-200 bg-white p-6 max-[620px]:rounded-lg max-[620px]:p-4">
+            <SurfaceSection className="rounded-sm border border-slate-200 bg-white p-6 max-[620px]:rounded-lg max-[620px]:p-4">
               <DocumentationArticle html={renderMarkdown(state.markdown)} />
             </SurfaceSection>
           )}

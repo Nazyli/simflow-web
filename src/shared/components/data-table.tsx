@@ -120,8 +120,8 @@ export function DataTable<T extends { id: string }>({
         )}
       </div>
       <div className="min-w-0">
-        <Table className="min-w-max">
-          <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:bg-slate-50 [&_th]:text-xs [&_th]:font-bold [&_th]:tracking-[0.06em] [&_th]:uppercase">
+        <Table className="min-w-max text-xs">
+          <TableHeader className="[&_th]:sticky [&_th]:top-0 [&_th]:z-1 [&_th]:h-8 [&_th]:bg-slate-50 [&_th]:px-1.5 [&_th]:text-[11px] [&_th]:font-semibold [&_th]:tracking-normal">
             <TableRow>
               {selectable && (
                 <TableHead className="w-9">
@@ -155,7 +155,7 @@ export function DataTable<T extends { id: string }>({
                           : { id: column.id, desc: false },
                       )
                     }
-                    className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-xs font-bold tracking-[0.06em] text-slate-500 uppercase transition hover:text-violet-600"
+                    className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[11px] font-semibold tracking-normal text-slate-500 transition hover:text-violet-600"
                   >
                     {column.header}
                     {sort?.id === column.id ? (sort.desc ? ' ↓' : ' ↑') : ''}
@@ -177,7 +177,7 @@ export function DataTable<T extends { id: string }>({
                   </TableCell>
                 )}
                 {shownColumns.map((column) => (
-                  <TableCell key={column.id} className="text-sm text-slate-700">
+                  <TableCell key={column.id} className="px-1.5 py-1.5 text-xs text-slate-700">
                     {column.cell(row)}
                   </TableCell>
                 ))}

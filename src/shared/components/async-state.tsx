@@ -77,7 +77,7 @@ export function EmptyState({
       animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       className="grid justify-items-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white p-12 text-center text-slate-400"
     >
-      <span className="grid size-10 place-items-center rounded-xl bg-violet-100 text-violet-600">
+      <span className="grid size-10 place-items-center rounded-sm bg-violet-100 text-violet-600">
         <Inbox size={22} />
       </span>
       <strong className="text-sm text-slate-700">{title}</strong>

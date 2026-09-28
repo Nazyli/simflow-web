@@ -17,7 +17,7 @@ test('Studio uses the shared edge-to-edge workbench frame', () => {
   )
   assert.match(
     content,
-    /<PageFrame\s+mode="workbench"\s+edgeToEdge\s+className="studio-app-container/,
+    /<PageFrame\s+mode="workbench"\s+edgeToEdge\s+className="studio-app-container[^\n]*space-y-0/,
   )
   assert.match(content, /studio-main-workspace[^\n]*min-h-0[^\n]*min-w-0/)
   assert.match(content, /studio-canvas-area[^\n]*min-h-0[^\n]*min-w-0/)
@@ -45,6 +45,15 @@ test('workflow edge labels use tighter padding and translucent backgrounds', () 
   assert.match(
     styles,
     /\.history-edge-label--participant \{[^}]*background: rgba\(255, 255, 255, 0\.78\);/,
+  )
+})
+
+test('visual group surfaces stay translucent so graph edges remain visible underneath', () => {
+  const node = source('features/simulation_studio/visual-groups/simulation-visual-group-node.tsx')
+
+  assert.match(
+    node,
+    /visual-group-node h-full w-full overflow-visible rounded-sm border-2 bg-white\/60 shadow-sm/,
   )
 })
 
@@ -91,7 +100,8 @@ test('Studio canvas toolbar and node search use compact control sizing', () => {
   const command = source('components/ui/command.tsx')
   const nodeSearch = source('components/ui/node-search.tsx')
 
-  assert.match(page, /floating-canvas-toolbar[^\n]*gap-0\.5[^\n]*p-0\.5/)
+  assert.match(page, /absolute top-3 right-4 left-3[^\n]*flex items-start justify-between/)
+  assert.match(page, /floating-canvas-toolbar[^\n]*pointer-events-auto[^\n]*gap-0\.5[^\n]*p-0\.5/)
   assert.equal((page.match(/h-\[22px\] w-\[22px\][^\n]*p-0\.5/g) ?? []).length, 5)
   assert.equal(
     (
@@ -106,8 +116,14 @@ test('Studio canvas toolbar and node search use compact control sizing', () => {
     /h-\[22px\] cursor-pointer rounded-md border border-\[#DBE3EC\] bg-white px-1 text-\[10px\]/,
   )
   assert.equal((page.match(/min-h-\[22px\] items-center[^\n]*text-\[10px\]/g) ?? []).length, 2)
-  assert.match(page, /max-\[760px\]:h-11 max-\[760px\]:w-11/)
-  assert.match(page, /max-\[760px\]:min-h-11/)
+  assert.match(page, /max-\[760px\]:h-6 max-\[760px\]:w-6/)
+  assert.match(page, /max-\[760px\]:min-h-6/)
+  assert.match(page, /<NodeSearch\s+position="top-right"/)
+  assert.match(page, /panelClassName="!static !m-0 pointer-events-auto shrink-0/)
+  assert.match(page, /max-\[760px\]:w-\[7\.5rem\]/)
+  assert.match(page, /max-\[430px\]:w-full/)
+  assert.match(page, /max-\[430px\]:flex-col/)
+  assert.match(history, /<NodeSearch\s+position="top-right"[\s\S]*className="mr-2 /)
   assert.match(command, /flex h-9 w-full rounded-md bg-transparent py-2 text-xs/)
   assert.match(command, /max-\[760px\]:h-11/)
   assert.match(nodeSearch, /\[&_\[cmdk-input\]\]:h-7/)
@@ -116,8 +132,9 @@ test('Studio canvas toolbar and node search use compact control sizing', () => {
   assert.match(nodeSearch, /\[&_\[cmdk-item\]\]:py-0\.5/)
   assert.match(nodeSearch, /\[&_\[cmdk-input\]\]:text-\[0\.6875rem\]/)
   assert.match(nodeSearch, /\[&_\[cmdk-item\]\]:text-\[0\.6875rem\]/)
-  assert.match(nodeSearch, /max-\[760px\]:\[&_\[cmdk-item\]\]:min-h-11/)
-  assert.match(nodeSearch, /text-\[10px\] leading-3/)
+  assert.match(nodeSearch, /max-\[760px\]:\[&_\[cmdk-item\]\]:min-h-6/)
+  assert.match(nodeSearch, /max-\[760px\]:\[&_\[cmdk-input\]\]:h-6/)
+  assert.match(nodeSearch, /text-xs leading-4/)
   assert.equal(
     (
       `${page}\n${history}`.match(
@@ -137,12 +154,12 @@ test('Studio and History Flow share compact canvas controls and zoom panel sizin
   assert.match(styles, /\.graph \.react-flow__controls-button \{\s*width: 24px;\s*height: 24px;/)
   assert.match(
     styles,
-    /\.graph \.react-flow__controls-button[\s\S]*?@media \(max-width: 760px\)[\s\S]*?width: 44px;\s*height: 44px;/,
+    /\.graph \.react-flow__controls-button[\s\S]*?@media \(max-width: 760px\)[\s\S]*?width: 24px;\s*height: 24px;/,
   )
-  assert.match(page, /flex h-7 items-center gap-1 rounded-md border border-slate-300/)
+  assert.match(page, /flex h-6 items-center gap-1 rounded-md border border-slate-300/)
   assert.match(
     history,
-    /inline-flex h-7 items-center justify-center rounded-lg border border-slate-200/,
+    /inline-flex h-6 items-center justify-center rounded-lg border border-slate-200/,
   )
   assert.equal((`${page}\n${history}`.match(/className="w-14 sm:w-18 lg:w-24"/g) ?? []).length, 2)
   assert.equal(
@@ -151,11 +168,37 @@ test('Studio and History Flow share compact canvas controls and zoom panel sizin
   )
 })
 
+test('Studio and History minimaps pan their owning flow viewport without enabling zoom', () => {
+  const page = source('features/simulation_studio/simulation-studio-page.tsx')
+  const history = source('features/history/participant-flow-view.tsx')
+  const minimap = (content) => content.match(/<MiniMap[\s\S]*?\/>/g) ?? []
+
+  assert.equal(minimap(page).length, 1)
+  assert.equal(minimap(history).length, 1)
+  assert.match(minimap(page)[0], /\bpannable\b/)
+  assert.match(minimap(history)[0], /\bpannable\b/)
+  assert.doesNotMatch(minimap(page)[0], /\bzoomable\b/)
+  assert.doesNotMatch(minimap(history)[0], /\bzoomable\b/)
+})
+
 test('Studio right sidebar uses a narrower desktop width and compact mobile overlay', () => {
   const page = source('features/simulation_studio/simulation-studio-page.tsx')
 
   assert.match(page, /rightSidebarOpen \? 'w-\[min\(16rem,28vw\)\] max-w-\[280px\] min-w-\[240px\]/)
   assert.match(page, /max-\[1100px\]:w-\[min\(16rem,calc\(100vw-1\.5rem\)\)\]/)
+})
+
+test('Studio versions panel uses a dense list hierarchy', () => {
+  const page = source('features/simulation_studio/simulation-studio-page.tsx')
+
+  assert.match(page, /<div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-2">/)
+  assert.match(
+    page,
+    /<h3 className="text-\[10px\] font-semibold tracking-\[0\.06em\] text-slate-500 uppercase">\s+Versions/,
+  )
+  assert.match(page, /className=\{`cursor-pointer rounded border px-2 py-1\.5 transition-colors/)
+  assert.match(page, /<span className="min-w-0 truncate">\{version\.simulationName\}<\/span>/)
+  assert.match(page, /className="mt-0\.5 truncate text-\[10px\] leading-4 text-slate-500"/)
 })
 
 test('Studio prevents two narrow sidebar overlays from being open together', () => {
@@ -230,7 +273,7 @@ test('Node configuration header keeps its title left and centers the type badge 
   assert.match(header, /flex min-w-0 items-center gap-2/)
   assert.match(header, /h-3\.5 w-3\.5 shrink-0/)
   assert.match(header, /text-xs font-semibold text-slate-900/)
-  assert.match(header, /max-w-36 truncate[^"]*text-xs/)
+  assert.match(header, /max-w-28 truncate[^"]*text-\[10px\][^"]*font-semibold/)
 })
 
 test('Node configuration fields and actions use compact local sizing', () => {

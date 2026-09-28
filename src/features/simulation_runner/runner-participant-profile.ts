@@ -1,5 +1,5 @@
 export const PARTICIPANT_GENDERS = ['Male', 'Female'] as const
-export const PARTICIPANT_LANGUAGES = ['Bahasa Indonesia', 'Bahasa Inggris'] as const
+export const PARTICIPANT_LANGUAGES = ['Bahasa Indonesia', 'English'] as const
 
 export type ParticipantGender = (typeof PARTICIPANT_GENDERS)[number]
 export type ParticipantLanguage = (typeof PARTICIPANT_LANGUAGES)[number]

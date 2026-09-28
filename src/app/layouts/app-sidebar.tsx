@@ -125,7 +125,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
               <span className="grid size-7 shrink-0 place-items-center rounded-md bg-[#9929EA] text-white">
                 <Bot size={15} strokeWidth={2.2} />
               </span>
-              <span className="group-data-[collapsible=icon]:hidden">SimFlow</span>
+              <span className="group-data-[collapsible=icon]:hidden">Simulation Builder</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -134,7 +134,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
       <SidebarContent className="gap-0 overflow-x-hidden">
         <SidebarGroup className="px-2 py-3">
           <SidebarGroupLabel className="px-2 text-xs font-semibold tracking-[0.08em] text-slate-400 uppercase">
-            Workspace
+            Build & operate
           </SidebarGroupLabel>
           <SidebarMenu className="gap-0.5">{primaryItems.map(renderItem)}</SidebarMenu>
         </SidebarGroup>
@@ -143,7 +143,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
 
         <SidebarGroup className="px-2 py-3">
           <SidebarGroupLabel className="px-2 text-xs font-semibold tracking-[0.08em] text-slate-400 uppercase">
-            Resources
+            Reference
           </SidebarGroupLabel>
           <SidebarMenu className="gap-0.5">{resourceItems.map(renderItem)}</SidebarMenu>
         </SidebarGroup>

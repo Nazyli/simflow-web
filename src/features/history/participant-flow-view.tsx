@@ -94,7 +94,7 @@ function ZoomSliderPanel() {
   const clamped = Math.min(STUDIO_ZOOM_SLIDER_MAX, Math.max(STUDIO_ZOOM_SLIDER_MIN, percent))
   return (
     <div
-      className="absolute bottom-3 left-[72px] z-10 flex h-7 items-center gap-1 rounded-md border border-[#C6D2DF] bg-white px-1.5 py-0.5 text-slate-700 shadow-sm sm:px-2"
+      className="absolute bottom-3 left-[72px] z-10 flex h-6 items-center gap-1 rounded-md border border-[#C6D2DF] bg-white px-1.5 py-0.5 text-slate-700 shadow-sm sm:px-2"
       aria-label="Zoom slider"
     >
       <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">
@@ -502,7 +502,7 @@ export function ParticipantFlowCanvas({
           <select
             value={edgePathType}
             onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
-            className="ml-auto h-7 cursor-pointer rounded-lg border border-slate-200 bg-white px-1.5 text-[11px] font-semibold text-slate-600 transition-colors outline-none hover:bg-slate-50"
+            className="ml-auto h-6 cursor-pointer rounded-lg border border-slate-200 bg-white px-1.5 text-[11px] font-semibold text-slate-600 transition-colors outline-none hover:bg-slate-50"
             title="Edge path style"
           >
             <option value="default">Bezier</option>
@@ -512,7 +512,7 @@ export function ParticipantFlowCanvas({
           </select>
           <button
             type="button"
-            className="inline-flex h-7 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-slate-600 transition-colors hover:bg-slate-50"
+            className="inline-flex h-6 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-slate-600 transition-colors hover:bg-slate-50"
             onClick={() => flowInstance?.fitView({ padding: 0.2, duration: 240 })}
             title="Fit view"
             aria-label="Fit view"
@@ -521,7 +521,7 @@ export function ParticipantFlowCanvas({
           </button>
           <button
             type="button"
-            className={`inline-flex h-7 items-center justify-center rounded-lg border px-2 transition-colors ${showMiniMap ? 'border-purple-200 bg-purple-50 text-purple-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+            className={`inline-flex h-6 items-center justify-center rounded-lg border px-2 transition-colors ${showMiniMap ? 'border-purple-200 bg-purple-50 text-purple-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
             onClick={() => setShowMiniMap((v) => !v)}
             title="Toggle minimap"
             aria-label="Toggle minimap"
@@ -580,11 +580,13 @@ export function ParticipantFlowCanvas({
                   className="border-slate-200 bg-white fill-current text-slate-700 shadow-md"
                 />
                 <ZoomSliderPanel />
-                {showMiniMap && <MiniMap className="border-slate-200 bg-white shadow-md" />}
+                {showMiniMap && (
+                  <MiniMap pannable className="border-slate-200 bg-white shadow-md" />
+                )}
                 <NodeSearch
-                  position="top-left"
+                  position="top-right"
                   placeholder="Search nodes... ⌘K"
-                  className="ml-2 w-[min(15rem,calc(100vw-1.5rem))] shadow-lg md:min-w-[15rem]"
+                  className="mr-2 w-[min(15rem,calc(100vw-1.5rem))] shadow-lg md:min-w-[15rem]"
                 />
                 <ParticipantFocusViewport focusNodeId={view.focusNodeId} nodeCount={nodes.length} />
                 <PathTravelingDot path={combinedPath} color={PATH_COLOR} />

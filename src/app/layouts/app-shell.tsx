@@ -11,10 +11,10 @@ function Breadcrumb() {
   const title = pageNames[basePath] ?? 'Studio'
   return (
     <nav
-      className="flex items-center gap-1.5 overflow-hidden text-[11px] whitespace-nowrap text-slate-400 max-[620px]:mr-auto max-[620px]:max-w-[180px]"
+      className="flex items-center gap-1.5 overflow-hidden text-xs whitespace-nowrap text-slate-400 max-[620px]:mr-auto max-[620px]:max-w-[220px]"
       aria-label="Breadcrumb"
     >
-      <span>SimFlow</span>
+      <span>Simulation Builder</span>
       <span>/</span>
       <strong className="font-semibold text-slate-600">{title}</strong>
       {segments.length > 1 && (

@@ -43,7 +43,7 @@ export function SettingsPage() {
       <SurfaceSection
         title="Reset demo data"
         description="Re-run migrations and seed all demo simulations."
-        className="rounded-xl border border-slate-200 bg-white p-6 max-[620px]:rounded-lg max-[620px]:p-4"
+        className="rounded-sm border border-slate-200 bg-white p-6 max-[620px]:rounded-lg max-[620px]:p-4"
       >
         <div className="mb-5 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />

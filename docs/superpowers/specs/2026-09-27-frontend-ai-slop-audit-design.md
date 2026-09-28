@@ -1,13 +1,13 @@
 # Frontend AI-Slop Audit & Copy Reduction Spec
 
 **Date:** 2026-09-27  
-**Status:** Implemented; automated frontend checks clean, browser QA remains  
+**Status:** Implemented; automated checks clean, second visual audit and targeted polish complete
 **Scope:** `simflow-web` frontend only  
 **Backend:** Read-only review; no backend code or contract changes are included
 
 ## Tujuan
 
-Membuat frontend SimFlow terasa seperti tool operasional yang dirancang dengan sengaja,
+Membuat frontend Simulation Builder terasa seperti tool operasional yang dirancang dengan sengaja,
 bukan kumpulan template UI yang dirakit cepat. Spec ini menyimpan hasil audit repository
 untuk iterasi perbaikan berikutnya: sinyal AI slop, wording yang berlebihan, konsistensi
 visual, aksesibilitas, responsivitas, dan urutan implementasi.
@@ -53,6 +53,68 @@ implementasi yang tersebar.
 - `npm run build`: **passed**.
 - `npm run lint`: **passed** setelah formatting seluruh frontend dan perbaikan warning
   oxlint pada hook/export yang relevan.
+
+## Audit kedua — 2026-09-28
+
+### Kesimpulan
+
+Frontend ini sudah tidak terlihat seperti AI-generated scaffold yang belum dirapikan:
+starter Vite sudah hilang, controls sudah compact, copy utama lebih spesifik, dan graph/call
+visuals punya alasan produk. Namun kesan yang masih muncul adalah **generic shadcn dashboard
+yang diberi warna ungu**, bukan product UI yang identitasnya lahir dari workflow engine.
+Perbaikannya sekarang lebih banyak menyangkut karakter, responsive QA, dan konsistensi product
+language daripada cleanup besar.
+
+### Evidence visual/runtime
+
+- Preview browser pada viewport sekitar 485px menunjukkan Runner masih memakai dua kolom karena
+  `.runner-entry-grid` baru stack pada `max-width: 480px`. Hasilnya form participant menjadi
+  sangat sempit, label terpotong/terbungkus, dan selection panel mendominasi layar. Ini adalah
+  bug responsive nyata dan sinyal bahwa layout belum diuji pada breakpoint yang realistis.
+- Browser title, shell, sidebar, dan dokumentasi sekarang konsisten memakai `Simulation Builder`.
+- Label sidebar yang terlalu generik sudah diganti menjadi `Build & operate` dan `Reference`.
+- Halaman daftar Studio sekarang memakai registry list full-width dengan divider, status, jumlah
+  simulation, dan aksi per baris; pola white-card grid generik sudah dihapus.
+- Font Plus Jakarta Sans sudah konsisten dan compact; masalahnya bukan font yang buruk, melainkan
+  hampir semua hierarchy memakai keluarga dan treatment yang sama. Identitas teknis workflow
+  sebaiknya dibawa oleh metadata node, port, execution ID, dan state—not by adding another
+  decorative display font.
+
+### Sinyal yang masih perlu dipoles
+
+- **P0 responsive:** selesai; Runner sekarang menumpuk pada breakpoint 760px agar aman pada tablet
+  kecil dan mobile lebar.
+- **P1 brand language:** selesai; seluruh UI user-facing memakai nama resmi `Simulation Builder`.
+- **P1 product-specific hierarchy:** selesai; landing list Studio menjadi compact workflow registry.
+- **P1 labels:** selesai untuk shell; label utama memakai `Build & operate` dan `Reference`.
+- **P2 micro-copy:** selesai pada area audit utama; label keputusan dinaikkan ke `text-xs`, sementara
+  nilai teknis tetap boleh compact bila masih sekunder.
+- **Documentation typography:** selesai; halaman referensi sekarang memakai density compact, body
+  artikel `14px` dengan line-height `1.6`, heading dan spacing yang lebih rapat, tanpa mengorbankan
+  readability atau table overflow behavior.
+- **Operational table typography:** selesai; shared `DataTable` sekarang memakai header 11px
+  semibold tanpa uppercase/tracking lebar, body cell 12px, dan row/header height yang lebih rapat.
+- **Mobile canvas toolbar:** selesai; Studio floating toolbar dan kontrol React Flow pada Studio/
+  History tidak lagi membesar ke 44px pada breakpoint 760px. Utility controls, node search, dan
+  flow toolbar actions memakai 24px agar toolbar tetap compact dan tidak mengambil ruang graph;
+  generic command dialog dan kontrol form di luar canvas tidak ikut diubah.
+- **Node search placement:** selesai; pencarian node sekarang berada di pojok kanan atas canvas.
+  Studio menempatkan toolbar graph dan search dalam satu alignment wrapper sehingga margin atasnya
+  sama. Pada viewport sangat sempit wrapper berubah menjadi kolom; History tetap mengikuti tepi kanan
+  area flow.
+- **P2 recovery copy:** pola `Unable to...` dan `No ... yet` masih tersebar. Sebagian valid, tetapi
+  setiap empty/error state sebaiknya menjawab apa yang terjadi dan tindakan berikutnya.
+
+### Hal yang bukan AI slop dan sebaiknya dipertahankan
+
+- Rounded-full pada React Flow handles, slider, avatar/status primitives, dan indicator yang memang
+  membutuhkan bentuk pill.
+- Shadow pada dialog/popover/focus/selected state dan blur pada audio visualizer; ini memiliki
+  fungsi interaction/runtime, bukan dekorasi default.
+- Raw colors pada Mermaid node diagrams dan audio shader; itu adalah visual encoding/renderer,
+  bukan inkonsistensi surface UI.
+- Compact controls `h-7`/`h-8`, semantic color tokens, reduced-motion fallback, dan route-level
+  lazy loading karena semuanya mendukung tool operasional yang padat.
 
 ## Temuan prioritas
 
@@ -142,6 +204,9 @@ Rencana copy: `N simulations ready.` atau, bila tetap singular-aware, `1 simulat
 - Menetapkan kontrol bersama yang lebih compact: default button `h-8`, input shared `h-8`, body
   default `14px`, label operasional `12px`, dan mempertahankan hit area mobile `44px` untuk
   kontrol yang membutuhkan touch target besar.
+- Mengecualikan utility canvas yang padat dari inflasi mobile 44px: toolbar Studio dan React Flow
+  controls memakai 24px pada lebar <=760px agar tidak membungkus atau mendominasi viewport. Ini
+  sengaja scoped; aksi utama, input, dan kontrol operasional tetap mengikuti target sentuh mobile.
 - Menghapus nama/class gradient palsu dan glow dekoratif pada history/graph; efek status runtime
   tetap dipertahankan dan semua motion shared menghormati `prefers-reduced-motion`.
 - Memperbaiki `ErrorState`, wording Runner/Settings/Documentation, mixed-language copy chat,
@@ -152,7 +217,7 @@ Rencana copy: `N simulations ready.` atau, bila tetap singular-aware, `1 simulat
 - Menambahkan regression tests pada `tests/page-density.test.mjs` dan memperbarui kontrak visual
   Studio yang memang berubah.
 
-## Sisa pekerjaan yang masih membutuhkan QA manual
+## Hasil pass kedua dan QA manual
 
 - Formatting legacy pada seluruh frontend sudah dirapikan setelah user meminta repository
   frontend bersih. Perubahan formatting bersifat mekanis; lint dan Prettier sekarang lolos.
@@ -162,8 +227,9 @@ Rencana copy: `N simulations ready.` atau, bila tetap singular-aware, `1 simulat
 - Detector Impeccable masih memberi advisory untuk font/radius/color yang sudah ditetapkan oleh
   `DESIGN.md`, dan beberapa metadata teknis 10–11px yang valid. Warning kontras pada call/history
   perlu visual QA browser pada data runtime nyata.
-- QA browser responsif pada 360px, 768px, 1024px, dan desktop lebar tetap diperlukan sebagai
-  follow-up manual.
+- QA browser pada 485px sudah mengonfirmasi Runner tidak lagi terjepit karena panel ditumpuk pada
+  breakpoint 760px. QA data runtime nyata pada 360px, 768px, 1024px, dan desktop lebar tetap
+  direkomendasikan sebagai follow-up sebelum release.
 
 ### P1 — Konsolidasi visual dan UX
 
@@ -361,7 +427,8 @@ regression, atau surface dekoratif yang kembali masuk tanpa alasan produk.
 - [x] Table sort/selection dapat dipahami screen reader.
 - [x] Dokumentasi/diagram tidak membebani initial bundle tanpa kebutuhan.
 - [x] `npm test`, `npm run build`, dan `npm run lint` diverifikasi ulang setelah implementasi.
-- [ ] QA browser responsif dan kontras pada data runtime nyata.
+- [x] QA browser responsif pada viewport sempit untuk regression breakpoint Runner.
+- [ ] QA browser kontras dan overflow pada data runtime nyata di semua route utama.
 
 ## Out of scope
 

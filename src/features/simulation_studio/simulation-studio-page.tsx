@@ -143,7 +143,7 @@ function ZoomSliderPanel() {
 
   return (
     <div
-      className="absolute bottom-3 left-[72px] z-10 flex h-7 items-center gap-1 rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-slate-700 shadow-sm sm:px-2"
+      className="absolute bottom-3 left-[72px] z-10 flex h-6 items-center gap-1 rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-slate-700 shadow-sm sm:px-2"
       aria-label="Zoom slider"
     >
       <span className="hidden text-[10px] font-bold tracking-widest text-slate-500 lg:inline">
@@ -1678,7 +1678,7 @@ export function SimulationStudioPage() {
     <PageFrame
       mode="workbench"
       edgeToEdge
-      className="studio-app-container flex h-[calc(100vh-64px)] min-h-0 min-w-0 flex-col overflow-hidden text-slate-800"
+      className="studio-app-container flex h-[calc(100vh-64px)] min-h-0 min-w-0 flex-col space-y-0 overflow-hidden text-slate-800"
     >
       {/* Studio Header Bar */}
       <header className="studio-top-header z-20 flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-1 sm:px-4">
@@ -1981,91 +1981,6 @@ export function SimulationStudioPage() {
 
         {/* Center Canvas Area */}
         <section className="studio-canvas-area relative flex min-h-0 min-w-0 flex-1 flex-col bg-[#F6F8FB]">
-          {/* Compact canvas toolbar */}
-          <div className="floating-canvas-toolbar absolute top-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-0.5 rounded-md border border-[#C6D2DF] bg-white p-0.5 shadow-sm">
-            <div className="flex items-center gap-0.5 border-r border-slate-200 px-0.5">
-              <button
-                type="button"
-                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
-                aria-label="Zoom Out"
-                onClick={() => flowInstance?.zoomOut()}
-                title="Zoom Out"
-              >
-                <Minus size={11} />
-              </button>
-              <button
-                type="button"
-                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
-                aria-label="Zoom In"
-                onClick={() => flowInstance?.zoomIn()}
-                title="Zoom In"
-              >
-                <Plus size={11} />
-              </button>
-              <button
-                type="button"
-                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
-                aria-label="Fit View"
-                onClick={() => flowInstance?.fitView()}
-                title="Fit Canvas View"
-              >
-                <Maximize size={11} />
-              </button>
-              <button
-                type="button"
-                className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11"
-                aria-label="Auto layout"
-                onClick={applyAutoLayout}
-                disabled={!simulationId || !apiNodes.length}
-                title="Arrange nodes automatically"
-              >
-                <Layers size={11} />
-              </button>
-              <button
-                type="button"
-                className="inline-flex min-h-[22px] items-center justify-center gap-1 rounded-md px-1 py-0.5 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:min-h-11"
-                onClick={createGroupFromSelection}
-                disabled={isLocked || selectedWorkflowNodeIds.length < 2}
-                title="Group selected workflow nodes"
-              >
-                <Layers size={11} /> Group
-              </button>
-            </div>
-
-            <div className="flex items-center gap-0.5 pl-0.5">
-              <select
-                value={edgePathType}
-                onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
-                className="h-[22px] cursor-pointer rounded-md border border-[#DBE3EC] bg-white px-1 text-[10px] text-slate-600 transition-colors outline-none hover:bg-slate-50 max-[760px]:h-11"
-                title="Edge path style"
-              >
-                <option value="default">Bezier</option>
-                <option value="straight">Straight</option>
-                <option value="step">Step</option>
-                <option value="smoothstep">Smooth</option>
-              </select>
-
-              <button
-                type="button"
-                className={`inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-11 max-[760px]:w-11 ${showMiniMap ? 'bg-[#F5E7FF] text-[#5B148F]' : 'text-slate-600 hover:bg-slate-100'}`}
-                onClick={() => setShowMiniMap((curr) => !curr)}
-                title="Toggle Minimap"
-              >
-                <MapPin size={11} />
-              </button>
-
-              <button
-                type="button"
-                className={`inline-flex min-h-[22px] items-center justify-center gap-1 rounded-md px-1 py-0.5 text-[10px] font-medium text-emerald-800 transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:min-h-11 ${validationRequested ? 'bg-emerald-50' : 'hover:bg-slate-100'}`}
-                onClick={validateGraph}
-                disabled={validating || !simulationId}
-                title="Validate Graph Structure"
-              >
-                <ClipboardCheck size={11} /> {validating ? 'Validating…' : 'Validate'}
-              </button>
-            </div>
-          </div>
-
           {/* Graph Validation Floating Drawer */}
           {validationRequested && (
             <div
@@ -2268,18 +2183,106 @@ export function SimulationStudioPage() {
               defaultViewport={{ x: 0, y: 0, zoom: 1 }}
               fitView={false}
             >
+              <div className="pointer-events-none absolute top-3 right-4 left-3 z-10 flex items-start justify-between gap-1 max-[430px]:flex-col">
+                {/* Compact canvas toolbar and node search share one alignment container. */}
+                <div className="floating-canvas-toolbar pointer-events-auto flex max-w-full flex-wrap items-center gap-0.5 rounded-md border border-[#C6D2DF] bg-white p-0.5 shadow-sm">
+                  <div className="flex items-center gap-0.5 border-r border-slate-200 px-0.5">
+                    <button
+                      type="button"
+                      className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-6 max-[760px]:w-6"
+                      aria-label="Zoom Out"
+                      onClick={() => flowInstance?.zoomOut()}
+                      title="Zoom Out"
+                    >
+                      <Minus size={11} />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-6 max-[760px]:w-6"
+                      aria-label="Zoom In"
+                      onClick={() => flowInstance?.zoomIn()}
+                      title="Zoom In"
+                    >
+                      <Plus size={11} />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-6 max-[760px]:w-6"
+                      aria-label="Fit View"
+                      onClick={() => flowInstance?.fitView()}
+                      title="Fit Canvas View"
+                    >
+                      <Maximize size={11} />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-6 max-[760px]:w-6"
+                      aria-label="Auto layout"
+                      onClick={applyAutoLayout}
+                      disabled={!simulationId || !apiNodes.length}
+                      title="Arrange nodes automatically"
+                    >
+                      <Layers size={11} />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex min-h-[22px] items-center justify-center gap-1 rounded-md px-1 py-0.5 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:min-h-6"
+                      onClick={createGroupFromSelection}
+                      disabled={isLocked || selectedWorkflowNodeIds.length < 2}
+                      title="Group selected workflow nodes"
+                    >
+                      <Layers size={11} /> Group
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-0.5 pl-0.5">
+                    <select
+                      value={edgePathType}
+                      onChange={(e) => setEdgePathType(e.target.value as EdgePathType)}
+                      className="h-[22px] cursor-pointer rounded-md border border-[#DBE3EC] bg-white px-1 text-[10px] text-slate-600 transition-colors outline-none hover:bg-slate-50 max-[760px]:h-6"
+                      title="Edge path style"
+                    >
+                      <option value="default">Bezier</option>
+                      <option value="straight">Straight</option>
+                      <option value="step">Step</option>
+                      <option value="smoothstep">Smooth</option>
+                    </select>
+
+                    <button
+                      type="button"
+                      className={`inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-6 max-[760px]:w-6 ${showMiniMap ? 'bg-[#F5E7FF] text-[#5B148F]' : 'text-slate-600 hover:bg-slate-100'}`}
+                      onClick={() => setShowMiniMap((curr) => !curr)}
+                      title="Toggle Minimap"
+                    >
+                      <MapPin size={11} />
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`inline-flex min-h-[22px] items-center justify-center gap-1 rounded-md px-1 py-0.5 text-[10px] font-medium text-emerald-800 transition-colors disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:min-h-6 ${validationRequested ? 'bg-emerald-50' : 'hover:bg-slate-100'}`}
+                      onClick={validateGraph}
+                      disabled={validating || !simulationId}
+                      title="Validate Graph Structure"
+                    >
+                      <ClipboardCheck size={11} /> {validating ? 'Validating…' : 'Validate'}
+                    </button>
+                  </div>
+                </div>
+                <NodeSearch
+                  position="top-right"
+                  placeholder="Search nodes... ⌘K"
+                  panelClassName="!static !m-0 pointer-events-auto shrink-0 max-[430px]:w-full"
+                  className="!m-0 w-[min(15rem,calc(100vw-1.5rem))] shadow-lg max-[760px]:w-[7.5rem] max-[430px]:w-full md:min-w-[15rem]"
+                  style={{ margin: 0 } as React.CSSProperties}
+                />
+              </div>
               <Background color="#cbd5e1" gap={20} size={1} />
               <Controls className="border-slate-200 bg-white fill-current text-slate-700 shadow-md" />
               <ZoomSliderPanel />
               <MiniMap
+                pannable
                 className="border-slate-200 bg-white shadow-md"
                 maskColor="rgba(241, 245, 249, 0.7)"
-              />
-              <NodeSearch
-                position="top-left"
-                placeholder="Search nodes... ⌘K"
-                className="!m-0 w-[min(15rem,calc(100vw-1.5rem))] shadow-lg md:min-w-[15rem]"
-                style={{ top: '56px', left: '16px', margin: 0 } as React.CSSProperties}
               />
               <StartNodeViewport
                 simulationId={simulationId}
@@ -2334,7 +2337,7 @@ export function SimulationStudioPage() {
           </div>
 
           {/* Tab Contents */}
-          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-3">
+          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-2">
             {/* Inspector Tab */}
             {activeRightTab === 'inspector' && (
               <div className="space-y-4">
@@ -2375,15 +2378,15 @@ export function SimulationStudioPage() {
 
             {/* Versions Tab */}
             {activeRightTab === 'versions' && (
-              <div className="space-y-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-xs font-bold tracking-wider text-slate-500 uppercase">
-                    GroupSimulation Versions
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-[10px] font-semibold tracking-[0.06em] text-slate-500 uppercase">
+                    Versions
                   </h3>
                   {selectedGroupSimulation && (
                     <button
                       type="button"
-                      className="flex items-center gap-1 rounded-md bg-[#9929EA] px-2.5 py-1 text-xs font-medium text-white hover:bg-[#7D1FC2]"
+                      className="inline-flex min-h-7 items-center gap-1 rounded-md bg-[#9929EA] px-2 py-0.5 text-[11px] font-medium text-white hover:bg-[#7D1FC2]"
                       onClick={() => openDuplicateDialog()}
                     >
                       <Plus className="h-3 w-3" /> Duplicate
@@ -2395,30 +2398,30 @@ export function SimulationStudioPage() {
                   (versions.isPending ? (
                     <LoadingState />
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {versions.data?.map((version) => (
                         <div
                           key={version.simulationId}
-                          className={`cursor-pointer rounded-md border p-3 transition-colors ${
+                          className={`cursor-pointer rounded border px-2 py-1.5 transition-colors ${
                             version.simulationId === simulationId
                               ? 'border-[#C6D2DF] bg-[#F5E7FF]'
                               : 'border-slate-200 bg-white hover:border-slate-300'
                           }`}
                           onClick={() => navigate(`/studio/${version.simulationId}`)}
                         >
-                          <div className="mb-1 flex items-center justify-between">
-                            <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                              {version.simulationName}
+                          <div className="flex min-w-0 items-center justify-between gap-2">
+                            <span className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-slate-800">
+                              <span className="min-w-0 truncate">{version.simulationName}</span>
                               {version.isLocked && (
                                 <span
-                                  className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
+                                  className="inline-flex shrink-0 items-center gap-0.5 rounded border border-amber-200 bg-amber-50 px-1 py-px text-[9px] leading-4 font-semibold text-amber-700"
                                   title={`Used ${version.executionCount ?? 0} times`}
                                 >
-                                  <Lock className="h-3 w-3" /> Locked
+                                  <Lock className="h-2.5 w-2.5" /> Locked
                                 </span>
                               )}
                             </span>
-                            <span className="flex items-center gap-0.5">
+                            <span className="flex shrink-0 items-center gap-0.5">
                               <button
                                 type="button"
                                 aria-label="Duplicate version"
@@ -2427,9 +2430,9 @@ export function SimulationStudioPage() {
                                   event.stopPropagation()
                                   openDuplicateDialog(version)
                                 }}
-                                className="rounded-md p-1 text-purple-700 transition hover:bg-purple-50 hover:text-purple-800"
+                                className="inline-flex min-h-6 min-w-6 items-center justify-center rounded p-0.5 text-purple-700 transition hover:bg-purple-50 hover:text-purple-800"
                               >
-                                <Copy className="h-3.5 w-3.5" />
+                                <Copy className="h-3 w-3" />
                               </button>
                               <button
                                 type="button"
@@ -2439,13 +2442,13 @@ export function SimulationStudioPage() {
                                   event.stopPropagation()
                                   setdeleteSimulationTarget(version.simulationId)
                                 }}
-                                className="rounded-md p-1 text-red-700 transition hover:bg-red-50 hover:text-red-800"
+                                className="inline-flex min-h-6 min-w-6 items-center justify-center rounded p-0.5 text-red-700 transition hover:bg-red-50 hover:text-red-800"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-3 w-3" />
                               </button>
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500">
+                          <p className="mt-0.5 truncate text-[10px] leading-4 text-slate-500">
                             {version.isLocked
                               ? `Locked • Used ${version.executionCount ?? 0} times`
                               : `Created: ${new Date().toLocaleDateString()}`}

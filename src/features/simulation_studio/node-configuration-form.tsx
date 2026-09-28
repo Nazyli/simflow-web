@@ -194,7 +194,10 @@ export function NodeConfigurationForm({
           <Sliders className="text-primary h-3.5 w-3.5 shrink-0" />
           <h3 className="text-xs font-semibold text-slate-900">Node configuration</h3>
         </div>
-        <span className="max-w-36 truncate rounded-md border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-xs font-bold tracking-wider whitespace-nowrap text-violet-800 uppercase">
+        <span
+          className="max-w-28 truncate rounded border border-violet-200 bg-violet-50 px-1 py-px text-[10px] leading-4 font-semibold tracking-[0.04em] whitespace-nowrap text-violet-800 uppercase"
+          title={node.nodeType}
+        >
           {node.nodeType}
         </span>
       </div>

@@ -67,7 +67,7 @@ export function WorkflowPackageDialog({
           </div>
         ) : (
           <p className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-            Choose a valid SimFlow workflow JSON file to continue.
+            Choose a valid Simulation Builder workflow JSON file to continue.
           </p>
         )}
 

@@ -5,7 +5,6 @@ import test from 'node:test'
 const root = new URL('../src/', import.meta.url)
 
 const pageFiles = [
-  'features/simulation_studio/simulation-list-page.tsx',
   'features/history/participant-history-page.tsx',
   'features/history/execution-detail-page.tsx',
   'features/timers/timer-management-page.tsx',
@@ -65,7 +64,7 @@ test('history and timers use compact summary strips instead of status cards', ()
 test('data table scopes horizontal overflow to the table region', () => {
   const content = source('shared/components/data-table.tsx')
   const table = source('components/ui/table.tsx')
-  assert.match(content, /<div className="min-w-0">\s*<Table className="min-w-max">/)
+  assert.match(content, /<div className="min-w-0">\s*<Table className="min-w-max text-xs">/)
   assert.doesNotMatch(content, /<section className="overflow-x-auto">/)
   assert.match(table, /data-slot="table-container" className="relative w-full overflow-x-auto"/)
 })

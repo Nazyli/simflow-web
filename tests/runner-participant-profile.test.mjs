@@ -26,7 +26,7 @@ test('runner batch sends the participant profile alongside simulation ids', asyn
     simulationIds: ['simulation-1'],
     participantFullName: 'Budi Santoso',
     participantGender: 'Female',
-    participantLanguage: 'Bahasa Inggris',
+    participantLanguage: 'English',
     participantActorId: 'actor-1',
   })
 
@@ -37,12 +37,12 @@ test('runner batch sends the participant profile alongside simulation ids', asyn
     simulationIds: ['simulation-1'],
     participantFullName: 'Budi Santoso',
     participantGender: 'Female',
-    participantLanguage: 'Bahasa Inggris',
+    participantLanguage: 'English',
     participantActorId: 'actor-1',
   })
 })
 
 test('runner exposes exactly the supported gender and language choices', () => {
   assert.deepEqual(PARTICIPANT_GENDERS, ['Male', 'Female'])
-  assert.deepEqual(PARTICIPANT_LANGUAGES, ['Bahasa Indonesia', 'Bahasa Inggris'])
+  assert.deepEqual(PARTICIPANT_LANGUAGES, ['Bahasa Indonesia', 'English'])
 })

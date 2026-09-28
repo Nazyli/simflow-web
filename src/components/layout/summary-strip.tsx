@@ -37,7 +37,7 @@ export function SummaryStrip({
           key={`${index}:${item.label}`}
           className="app-summary-strip__item min-w-[112px] px-3.5 py-2.5"
         >
-          <dt className="truncate text-[0.68rem] font-semibold tracking-[0.08em] text-slate-500 uppercase">
+          <dt className="truncate text-xs font-semibold tracking-[0.08em] text-slate-500 uppercase">
             {item.label}
           </dt>
           <dd
