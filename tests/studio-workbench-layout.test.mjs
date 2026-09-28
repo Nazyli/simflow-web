@@ -33,6 +33,8 @@ test('Studio workbench avoids decorative glass framing while retaining graph con
   assert.match(page, /aria-label="Zoom slider"/)
   assert.match(page, /title="Validate Graph Structure"/)
   assert.match(page, /title="Arrange nodes automatically"/)
+  assert.match(page, /onClick=\{\(\) => setAutoLayoutConfirmOpen\(true\)\}/)
+  assert.match(page, /<DialogTitle[^>]*>[\s\S]*?Arrange nodes automatically\?[\s\S]*?<\/DialogTitle>/)
 })
 
 test('workflow edge labels use tighter padding and translucent backgrounds', () => {
@@ -106,7 +108,7 @@ test('Studio canvas toolbar and node search use compact control sizing', () => {
   assert.equal(
     (
       page.match(
-        /<Minus size=\{11\}\s*\/>|<Plus size=\{11\}\s*\/>|<Maximize size=\{11\}\s*\/>|<Layers size=\{11\}\s*\/>|<MapPin size=\{11\}\s*\/>/g,
+        /<Minus size=\{11\}\s*\/>|<Plus size=\{11\}\s*\/>|<Maximize size=\{11\}\s*\/>|<Layers size=\{11\}\s*\/>|<Workflow size=\{11\}\s*\/>|<MapPin size=\{11\}\s*\/>/g,
       ) ?? []
     ).length,
     6,

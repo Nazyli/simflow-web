@@ -1,4 +1,9 @@
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '../../components/ui/dialog'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
@@ -46,6 +51,7 @@ import {
   AlertTriangle,
   Trash2,
   MapPin,
+  Workflow,
 } from 'lucide-react'
 import {
   useCallback,
@@ -333,6 +339,7 @@ export function SimulationStudioPage() {
   const [duplicateName, setDuplicateName] = useState('')
   const [duplicateDesc, setDuplicateDesc] = useState('')
   const [workflowActionsOpen, setWorkflowActionsOpen] = useState(false)
+  const [autoLayoutConfirmOpen, setAutoLayoutConfirmOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [workflowPackage, setWorkflowPackage] = useState<WorkflowPackage | null>(null)
   const [workflowPackageFileName, setWorkflowPackageFileName] = useState<string | null>(null)
@@ -2218,11 +2225,11 @@ export function SimulationStudioPage() {
                       type="button"
                       className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-md p-0.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 max-[760px]:h-6 max-[760px]:w-6"
                       aria-label="Auto layout"
-                      onClick={applyAutoLayout}
+                      onClick={() => setAutoLayoutConfirmOpen(true)}
                       disabled={!simulationId || !apiNodes.length}
                       title="Arrange nodes automatically"
                     >
-                      <Layers size={11} />
+                      <Workflow size={11} />
                     </button>
                     <button
                       type="button"
@@ -2474,6 +2481,45 @@ export function SimulationStudioPage() {
           </div>
         </aside>
       </div>
+
+      {/* Auto Layout Confirmation */}
+      <Dialog open={autoLayoutConfirmOpen} onOpenChange={setAutoLayoutConfirmOpen}>
+        <DialogContent className="gap-5 p-5 sm:max-w-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-700">
+              <Workflow className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div className="grid gap-1.5 pt-0.5">
+              <DialogTitle className="text-base font-semibold text-slate-900">
+                Arrange nodes automatically?
+              </DialogTitle>
+              <DialogDescription>
+                This will reposition the nodes and groups on the canvas and save their new layout.
+              </DialogDescription>
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAutoLayoutConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#9929EA] text-white hover:bg-[#7D1FC2]"
+              onClick={() => {
+                setAutoLayoutConfirmOpen(false)
+                applyAutoLayout()
+              }}
+            >
+              <Workflow className="h-3.5 w-3.5" aria-hidden="true" />
+              Arrange nodes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Execution Log Confirmation */}
       <Dialog
