@@ -196,7 +196,7 @@ export function NodeConfigurationForm({
           <h3 className="text-xs font-semibold text-slate-900">Node configuration</h3>
         </div>
         <span
-          className="max-w-28 truncate rounded border border-violet-200 bg-violet-50 px-1 py-px text-[10px] leading-4 font-semibold tracking-[0.04em] whitespace-nowrap text-violet-800 uppercase"
+          className="max-w-20 truncate rounded border border-violet-200 bg-violet-50 px-1 py-0 text-[7px] leading-3 font-semibold tracking-[0.02em] whitespace-nowrap text-violet-800 uppercase"
           title={node.nodeType}
         >
           {node.nodeType}
