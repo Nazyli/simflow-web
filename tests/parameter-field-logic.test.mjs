@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   buildClassificationPreviewVariables,
+  buildPromptPreviewActorId,
   isNumericParameter,
   parseNumericParameter,
 } from '../src/features/simulation_studio/parameter-field-logic.ts'
@@ -21,5 +22,14 @@ test('builds classification preview variables from the camelCase prompt picker n
       ],
     }),
     { labels: '- Agree to call\n- Not agree to call' },
+  )
+})
+
+test('passes the selected start_call actor to prompt preview', () => {
+  assert.equal(
+    buildPromptPreviewActorId('start_call', 'prompt_id', {
+      actor_id: 'alexa-pmwm-ambj-01',
+    }),
+    'alexa-pmwm-ambj-01',
   )
 })

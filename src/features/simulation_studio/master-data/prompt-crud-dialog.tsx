@@ -49,6 +49,7 @@ export function PromptCrudDialog({
   onOpenChange,
   nodeId,
   nodeType = 'ai_classification',
+  actorId,
   previewVariables,
   onSelect,
 }: {
@@ -56,6 +57,7 @@ export function PromptCrudDialog({
   onOpenChange: (open: boolean) => void
   nodeId: string
   nodeType?: string
+  actorId?: string
   previewVariables?: Record<string, unknown>
   onSelect: (promptId: string) => void
 }) {
@@ -163,6 +165,7 @@ export function PromptCrudDialog({
             <PromptPreviewControl
               nodeType={nodeType}
               prompt={form.content}
+              actorId={actorId}
               variables={previewVariables}
               disabled={isLoadingExisting || saveMutation.isPending}
             />

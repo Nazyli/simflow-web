@@ -17,6 +17,7 @@ import { getMasterEmailByNode, type MasterEmailAttachment } from '../../shared/a
 import type { NodeDefinition } from '../../shared/types/simulation'
 import {
   buildClassificationPreviewVariables,
+  buildPromptPreviewActorId,
   isNumericParameter,
   parseNumericParameter,
   resolveParameterMultiline,
@@ -673,6 +674,7 @@ function CatalogParameterField({
         simulationId={simulationId}
         filterValue={picker.filterBy ? String(configuration[picker.filterBy] ?? '') : undefined}
         previewVariables={buildClassificationPreviewVariables(nodeType, name, configuration)}
+        previewActorId={buildPromptPreviewActorId(nodeType, name, configuration)}
         onChange={(next) => onChange(next)}
       />
     )

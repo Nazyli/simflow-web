@@ -52,6 +52,18 @@ export function buildClassificationPreviewVariables(
   return labels.length ? { labels: labels.map((label) => `- ${label}`).join('\n') } : undefined
 }
 
+export function buildPromptPreviewActorId(
+  nodeType: string,
+  parameterName: string,
+  configuration: Record<string, unknown>,
+): string | undefined {
+  if (nodeType !== 'start_call' || !['promptId', 'prompt_id'].includes(parameterName)) {
+    return undefined
+  }
+  const actorId = configuration.actor_id ?? configuration.actorId
+  return typeof actorId === 'string' && actorId.trim() ? actorId.trim() : undefined
+}
+
 export function isChatCrudEditor(picker: Pick<ParameterPicker, 'editor'> | undefined): boolean {
   return picker?.editor === 'chat_crud'
 }

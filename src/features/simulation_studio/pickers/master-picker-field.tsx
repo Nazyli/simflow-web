@@ -28,6 +28,7 @@ export function MasterPickerField({
   simulationId,
   filterValue,
   previewVariables,
+  previewActorId,
   onChange,
 }: {
   label: string
@@ -40,6 +41,7 @@ export function MasterPickerField({
   simulationId?: string | null
   filterValue?: string
   previewVariables?: Record<string, unknown>
+  previewActorId?: string
   onChange: (value: string | string[]) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -138,6 +140,7 @@ export function MasterPickerField({
           onOpenChange={setCrudOpen}
           nodeId={nodeId!}
           nodeType={nodeType}
+          actorId={previewActorId}
           previewVariables={previewVariables}
           onSelect={(promptId) => {
             onChange(promptId)
