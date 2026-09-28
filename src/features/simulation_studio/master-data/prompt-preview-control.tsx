@@ -12,9 +12,7 @@ import {
   DialogTitle,
 } from '../../../components/ui/dialog'
 import { ApiError } from '../../../shared/api/client'
-import { RICH_TEXT_CLASS, SafeHtml } from '../../../shared/safe-html'
 import { previewPrompt } from '../../../shared/api/master-data'
-import { renderMarkdown } from '../../documentation/markdown'
 
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -84,7 +82,8 @@ export function PromptPreviewControl({
             <DialogDescription>
               This is the final prompt after placeholder injection with{' '}
               {actorId ? 'the selected actor and sample runtime data' : 'sample runtime data'}. It
-              is not saved and does not call the AI provider.
+              is not saved and does not call the AI provider. Reply attachments use a sample
+              document, never participant data.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 overflow-auto px-6 py-5">
@@ -96,11 +95,10 @@ export function PromptPreviewControl({
             )}
             {previewMutation.data && (
               <>
-                <div className="max-h-[min(480px,55vh)] overflow-auto rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm selection:bg-indigo-100 [&_code]:rounded [&_code]:bg-slate-200/70 [&_code]:px-1 [&_code]:py-0.5 [&_h1]:mb-3 [&_h2]:mb-2 [&_h3]:mb-2 [&_hr]:my-4 [&_li]:my-1 [&_p]:mb-3 [&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:border [&_pre]:border-slate-200 [&_pre]:bg-white [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0">
-                  <SafeHtml
-                    html={renderMarkdown(previewMutation.data.renderedPrompt)}
-                    className={RICH_TEXT_CLASS}
-                  />
+                <div className="max-h-[min(480px,55vh)] overflow-auto rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm selection:bg-indigo-100">
+                  <div className="font-sans text-sm leading-relaxed break-words whitespace-pre-wrap text-slate-700">
+                    {previewMutation.data.renderedPrompt}
+                  </div>
                 </div>
                 {previewMutation.data.unresolvedPlaceholders.length > 0 && (
                   <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
