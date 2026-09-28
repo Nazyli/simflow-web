@@ -968,6 +968,23 @@ export function SimulationStudioPage() {
 
   const invalidNodeIds = useMemo(() => new Set<string>(), [])
   const invalidEdgeIds = useMemo(() => new Set<string>(), [])
+  const edgeValidityById = useMemo(
+    () => new Map(apiEdges.map((edge) => [edge.edgeId, edge.isValid] as const)),
+    [apiEdges],
+  )
+  const flowEdges = useMemo(
+    () =>
+      edges.map((edge) => ({
+        ...edge,
+        className:
+          invalidEdgeIds.has(edge.id) || edgeValidityById.get(edge.id) === false
+            ? 'invalid-edge'
+            : '',
+        selectable: true,
+        deletable: !isLocked,
+      })),
+    [edges, edgeValidityById, invalidEdgeIds, isLocked],
+  )
 
   const rotateNode = useCallback(
     (nodeId: string) => {
@@ -2045,6 +2062,7 @@ export function SimulationStudioPage() {
               nodesDraggable={!isLocked}
               nodesConnectable={!isLocked}
               elementsSelectable={true}
+              onlyRenderVisibleElements
               minZoom={STUDIO_MIN_ZOOM}
               maxZoom={STUDIO_MAX_ZOOM}
               nodes={nodes.map((node) => ({
@@ -2053,16 +2071,7 @@ export function SimulationStudioPage() {
                 draggable: !isLocked,
                 connectable: !isLocked,
               }))}
-              edges={edges.map((edge) => ({
-                ...edge,
-                className:
-                  invalidEdgeIds.has(edge.id) ||
-                  apiEdges.find((apiEdge) => apiEdge.edgeId === edge.id)?.isValid === false
-                    ? 'invalid-edge'
-                    : '',
-                selectable: true,
-                deletable: !isLocked,
-              }))}
+              edges={flowEdges}
               onNodesChange={handleNodesChange}
               onEdgesChange={handleEdgesChange}
               onConnect={connect}
