@@ -209,23 +209,6 @@ export function NodeConfigurationForm({
         required
         placeholder="e.g. Process Order"
       />
-      {node.inputPorts?.length ? (
-        <div className="rounded-md border border-slate-200 bg-slate-50/80 p-2">
-          <p className="text-[9px] font-bold tracking-wider text-slate-500 uppercase">
-            Input connections
-          </p>
-          <div className="mt-1.5 space-y-1">
-            {node.inputPorts.map((port) => (
-              <div key={port.id} className="flex items-center justify-between gap-2 text-[11px]">
-                <span className="font-medium text-slate-700">{port.label}</span>
-                <span className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
-                  Max connections: {port.maxConnections ?? 1}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
       {definition ? (
         Object.entries(definition.parameters)
           .filter(
