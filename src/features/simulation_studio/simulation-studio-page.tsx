@@ -121,6 +121,7 @@ import {
   PALETTE_NODE_PARAMETERS_DATA,
   PALETTE_NODE_TYPE_DATA,
   readPaletteDragParameters,
+  type NodePaletteEntry,
 } from './node-palette'
 
 const emptyNodes: ApiNode[] = []
@@ -171,6 +172,47 @@ function ZoomSliderPanel() {
       <span className="w-7 shrink-0 text-right text-[10px] font-medium text-slate-700 tabular-nums sm:w-8">
         {clamped}%
       </span>
+    </div>
+  )
+}
+
+function PaletteNodePlacementPreview({
+  entry,
+  initialPosition,
+}: {
+  entry: NodePaletteEntry
+  initialPosition: { x: number; y: number }
+}) {
+  const [position, setPosition] = useState(initialPosition)
+
+  useEffect(() => {
+    const updatePosition = (event: PointerEvent) => {
+      setPosition({ x: event.clientX, y: event.clientY })
+    }
+    document.addEventListener('pointermove', updatePosition)
+    return () => document.removeEventListener('pointermove', updatePosition)
+  }, [])
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed z-[100] w-[220px] select-none rounded-md border bg-white/90 px-2 py-1.5 opacity-80 shadow-lg"
+      style={{
+        left: position.x + 14,
+        top: position.y + 14,
+        borderColor: entry.definition.color,
+      }}
+    >
+      <div
+        className="text-right font-mono text-[10px] leading-none font-medium tracking-wide uppercase"
+        style={{ color: entry.definition.color }}
+      >
+        {entry.definition.nodeType}
+      </div>
+      <div className="mt-1 text-[13px] leading-tight font-semibold text-slate-800">
+        {entry.definition.label}
+      </div>
+      <div className="mt-1 text-[10px] text-slate-500">Click canvas to place · Esc to cancel</div>
     </div>
   )
 }
@@ -397,6 +439,10 @@ export function SimulationStudioPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const [nodeAutosaveStatus, setNodeAutosaveStatus] = useState<NodeAutosaveStatus>('saved')
+  const [pendingPalettePlacement, setPendingPalettePlacement] = useState<{
+    entry: NodePaletteEntry
+    position: { x: number; y: number }
+  } | null>(null)
 
   // Cache node positions locally so React Query refetches don't reset user-arranged layout
   const localPositions = useRef<Map<string, { x: number; y: number }>>(new Map())
@@ -1063,6 +1109,22 @@ export function SimulationStudioPage() {
     setSelectedExecutionId(null)
   }, [urlSimulationId])
 
+  useEffect(() => {
+    if (!pendingPalettePlacement) return
+
+    const cancelPlacement = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      setPendingPalettePlacement(null)
+    }
+    document.addEventListener('keydown', cancelPlacement)
+    return () => document.removeEventListener('keydown', cancelPlacement)
+  }, [pendingPalettePlacement])
+
+  useEffect(() => {
+    if (isLocked || !simulationId) setPendingPalettePlacement(null)
+  }, [isLocked, simulationId])
+
   // Automatically focus Inspector tab when node or edge is selected
   useEffect(() => {
     if (selectedNodeId || selectedEdgeId) {
@@ -1577,6 +1639,7 @@ export function SimulationStudioPage() {
     nodeType: string,
     parameters?: Record<string, unknown>,
   ) {
+    setPendingPalettePlacement(null)
     if (isLocked) {
       event.preventDefault()
       toast.error(lockedMessage)
@@ -1596,6 +1659,7 @@ export function SimulationStudioPage() {
 
   function dropPaletteNode(event: DragEvent<HTMLDivElement>) {
     event.preventDefault()
+    setPendingPalettePlacement(null)
     if (isLocked) {
       toast.error(lockedMessage)
       return
@@ -1704,6 +1768,12 @@ export function SimulationStudioPage() {
       edgeToEdge
       className="studio-app-container flex h-[calc(100vh-64px)] min-h-0 min-w-0 flex-col space-y-0 overflow-hidden text-slate-800"
     >
+      {pendingPalettePlacement && (
+        <PaletteNodePlacementPreview
+          entry={pendingPalettePlacement.entry}
+          initialPosition={pendingPalettePlacement.position}
+        />
+      )}
       {/* Studio Header Bar */}
       <header className="studio-top-header z-20 flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-3 py-1 sm:px-4">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -1902,13 +1972,13 @@ export function SimulationStudioPage() {
               <Layers className="h-3.5 w-3.5 text-purple-600" /> Node Palette
             </h2>
             <span className="rounded bg-slate-100 px-1 py-0.5 text-[9px] font-medium text-slate-500">
-              Drag & Drop
+              Click or drag
             </span>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             <p className="mb-2 text-[11px] text-slate-500">
-              Drag a node onto the canvas or click to append it.
+              Click a node, then click the canvas to place it. Drag a node to place it directly.
             </p>
 
             <div className="space-y-2">
@@ -1941,12 +2011,17 @@ export function SimulationStudioPage() {
                               onDragStart={(event) =>
                                 startPaletteDrag(event, definition.nodeType, parameters)
                               }
-                              onClick={() => {
+                              onClick={(event) => {
                                 if (isLocked) {
                                   toast.error(lockedMessage)
                                   return
                                 }
-                                if (isEditable) addGraphNode.mutate({ definition, parameters })
+                                if (isEditable) {
+                                  setPendingPalettePlacement({
+                                    entry: { definition, parameters },
+                                    position: { x: event.clientX, y: event.clientY },
+                                  })
+                                }
                               }}
                               style={{
                                 borderColor: `${definition.color}55`,
@@ -2087,6 +2162,18 @@ export function SimulationStudioPage() {
               onEdgeClick={(_, edge) => {
                 setSelectedEdgeId(edge.id)
                 setSelectedNodeId(null)
+              }}
+              onPaneClick={(event) => {
+                if (!pendingPalettePlacement || isLocked || !simulationId || !flowInstance) return
+                addGraphNode.mutate({
+                  definition: pendingPalettePlacement.entry.definition,
+                  parameters: pendingPalettePlacement.entry.parameters,
+                  position: flowInstance.screenToFlowPosition({
+                    x: event.clientX,
+                    y: event.clientY,
+                  }),
+                })
+                setPendingPalettePlacement(null)
               }}
               onNodeDragStop={(_, node) => {
                 if (isLocked) {
