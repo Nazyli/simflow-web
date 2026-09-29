@@ -1,9 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '../../components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../components/ui/dialog'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
@@ -102,7 +97,7 @@ import type {
 } from '../../shared/types/simulation'
 import { EdgeConfigurationForm, NodeConfigurationForm } from './node-configuration-form'
 import { SimulationGraphEdge } from './simulation-graph-edge'
-import { SimulationGraphNode } from './simulation-graph-node'
+import { SIMULATION_NODE_MIN_HEIGHT, SimulationGraphNode } from './simulation-graph-node'
 import { SimulationVisualGroupNode } from './visual-groups/simulation-visual-group-node'
 import { useVisualGroups } from './visual-groups/use-visual-groups'
 import {
@@ -196,7 +191,7 @@ function PaletteNodePlacementPreview({
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed z-[100] w-[220px] select-none rounded-md border bg-white/90 px-2 py-1.5 opacity-80 shadow-lg"
+      className="pointer-events-none fixed z-[100] w-[220px] rounded-md border bg-white/90 px-2 py-1.5 opacity-80 shadow-lg select-none"
       style={{
         left: position.x + 14,
         top: position.y + 14,
@@ -250,7 +245,7 @@ function StartNodeViewport({
 
     const position = flowNode.internals.positionAbsolute ?? flowNode.position
     const width = flowNode.measured?.width ?? 200
-    const height = flowNode.measured?.height ?? 90
+    const height = flowNode.measured?.height ?? SIMULATION_NODE_MIN_HEIGHT
     centeredSimulationId.current = simulationId
 
     const frame = requestAnimationFrame(() =>
@@ -342,7 +337,7 @@ function edgeToFlow(
     animated: style.animated,
     data: {
       label,
-      style,
+      style: { ...style, opacity: 0.56 },
       edgeType,
       onDelete,
       collapsedSourceRect: visualProjection?.sourceRect,
@@ -1174,7 +1169,9 @@ export function SimulationStudioPage() {
       dagreGraph.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 200, marginx: 60, marginy: 60 })
       dagreGraph.setDefaultEdgeLabel(() => ({}))
       const nodeIds = new Set(apiNodes.map((n) => n.nodeId))
-      apiNodes.forEach((node) => dagreGraph.setNode(node.nodeId, { width: 200, height: 90 }))
+      apiNodes.forEach((node) =>
+        dagreGraph.setNode(node.nodeId, { width: 200, height: SIMULATION_NODE_MIN_HEIGHT }),
+      )
       apiEdges.forEach((edge) => {
         if (!nodeIds.has(edge.sourceNodeId) || !nodeIds.has(edge.targetNodeId)) return
         dagreGraph.setEdge(edge.sourceNodeId, edge.targetNodeId)
@@ -1547,7 +1544,9 @@ export function SimulationStudioPage() {
     const layout = new dagre.graphlib.Graph()
     layout.setGraph({ rankdir: 'LR', nodesep: 130, ranksep: 200, marginx: 60, marginy: 60 })
     layout.setDefaultEdgeLabel(() => ({}))
-    apiNodes.forEach((node) => layout.setNode(node.nodeId, { width: 200, height: 90 }))
+    apiNodes.forEach((node) =>
+      layout.setNode(node.nodeId, { width: 200, height: SIMULATION_NODE_MIN_HEIGHT }),
+    )
     apiEdges.forEach((edge) => layout.setEdge(edge.sourceNodeId, edge.targetNodeId))
     dagre.layout(layout)
     const positions = new Map<string, { x: number; y: number }>()
@@ -1566,7 +1565,7 @@ export function SimulationStudioPage() {
           y: node.positionY ?? 100,
         },
         width: 200,
-        height: 90,
+        height: SIMULATION_NODE_MIN_HEIGHT,
       })),
     )
     const nextGroups = groupList.map((group) => {
@@ -2235,7 +2234,7 @@ export function SimulationStudioPage() {
                 const nodeHeight =
                   (node as Node & { measured?: { height?: number } }).measured?.height ??
                   node.height ??
-                  90
+                  SIMULATION_NODE_MIN_HEIGHT
                 if (
                   parentGroup &&
                   shouldDetachChild(
@@ -2595,11 +2594,7 @@ export function SimulationStudioPage() {
             </div>
           </div>
           <div className="flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setAutoLayoutConfirmOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setAutoLayoutConfirmOpen(false)}>
               Cancel
             </Button>
             <Button

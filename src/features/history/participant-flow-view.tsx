@@ -25,7 +25,10 @@ import { getNodeCatalog } from '../../shared/api/node-catalog'
 import { getGraph, type ApiEdge, type ApiNode } from '../../shared/api/simulations'
 import { EmptyState, LoadingState } from '../../shared/components/async-state'
 import type { NodeDefinition, VisualGroup } from '../../shared/types/simulation'
-import { SimulationGraphNode } from '../simulation_studio/simulation-graph-node'
+import {
+  SIMULATION_NODE_MIN_HEIGHT,
+  SimulationGraphNode,
+} from '../simulation_studio/simulation-graph-node'
 import { SimulationGraphEdge } from '../simulation_studio/simulation-graph-edge'
 import { SimulationVisualGroupNode } from '../simulation_studio/visual-groups/simulation-visual-group-node'
 import {
@@ -145,7 +148,7 @@ function ParticipantFocusViewport({
 
     const position = flowNode.internals.positionAbsolute ?? flowNode.position
     const width = flowNode.measured?.width ?? 200
-    const height = flowNode.measured?.height ?? 90
+    const height = flowNode.measured?.height ?? SIMULATION_NODE_MIN_HEIGHT
     focusedNodeId.current = focusNodeId
     const frame = requestAnimationFrame(() =>
       setCenter(position.x + width / 2, position.y + height / 2, {
@@ -173,7 +176,9 @@ function dagLayout(
     marginy: 60,
   })
   graph.setDefaultEdgeLabel(() => ({}))
-  apiNodes.forEach((node) => graph.setNode(node.nodeId, { width: 200, height: 90 }))
+  apiNodes.forEach((node) =>
+    graph.setNode(node.nodeId, { width: 200, height: SIMULATION_NODE_MIN_HEIGHT }),
+  )
   apiEdges.forEach((edge) => {
     if (!nodeIds.has(edge.sourceNodeId) || !nodeIds.has(edge.targetNodeId)) return
     graph.setEdge(edge.sourceNodeId, edge.targetNodeId)

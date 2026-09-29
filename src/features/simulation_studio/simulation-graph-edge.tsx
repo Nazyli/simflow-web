@@ -15,7 +15,7 @@ import { pointOnRectBoundary, type Rect } from './visual-groups/visual-group-lay
 
 type SimulationEdgeData = {
   label: string
-  style: { color: string; lineStyle: string; animated: boolean }
+  style: { color: string; lineStyle: string; animated: boolean; opacity?: number }
   emphasis?: 'participant' | 'background'
   edgeType?: EdgePathType
   onDelete?: (edgeId: string) => void
@@ -149,7 +149,11 @@ export function SimulationGraphEdge({
         style={{
           stroke,
           strokeWidth: isParticipantPath ? 2.25 : selected ? 2.5 : 1.5,
-          opacity: isBackgroundEdge ? 0.56 : 1,
+          opacity: selected
+            ? 1
+            : isBackgroundEdge
+              ? 0.56
+              : (style.opacity ?? 1),
           strokeDasharray:
             style.lineStyle === 'dashed' ? '6 4' : style.lineStyle === 'dotted' ? '2 3' : undefined,
         }}

@@ -26,6 +26,8 @@ type SimulationNodeData = {
   status?: 'active' | 'idle' | null
 }
 
+export const SIMULATION_NODE_MIN_HEIGHT = 60
+
 function inputPosition(rotation: number): Position {
   switch (((rotation % 360) + 360) % 360) {
     case 90:
@@ -68,7 +70,10 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
   const outputPos = outputPosition(rotation)
 
   const baseNodeEl = (
-    <BaseNode className="w-[220px]" style={{ borderColor: nodeData.color }}>
+    <BaseNode
+      className="w-[220px]"
+      style={{ borderColor: nodeData.color, minHeight: SIMULATION_NODE_MIN_HEIGHT }}
+    >
       {nodeData.inputPorts.map((port, index) => (
         <BaseHandle
           key={port.id}
@@ -123,7 +128,7 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
 
   return (
     <>
-      <NodeResizer isVisible={selected} minWidth={150} minHeight={72} />
+      <NodeResizer isVisible={selected} minWidth={150} minHeight={SIMULATION_NODE_MIN_HEIGHT} />
       <NodeToolbar
         isVisible={selected}
         position={Position.Top}
