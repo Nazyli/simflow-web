@@ -340,7 +340,7 @@ export function ParticipantFlowCanvas({
       style: { width: group.width, height: group.isCollapsed ? 32 : group.height },
       draggable: true,
       selectable: true,
-      zIndex: 0,
+      zIndex: 1,
       dragHandle: '.visual-group-header',
       data: {
         group,
@@ -357,6 +357,7 @@ export function ParticipantFlowCanvas({
     const flowNodes: Node[] = [...groupNodes, ...projectedWorkflowNodes]
 
     const groupById = new Map(groupsForRender.map((g) => [g.visualGroupId, g]))
+    const groupedNodeIds = new Set(groupsForRender.flatMap((group) => group.memberNodeIds))
     const projectedEdges = projectWorkflowEdges(apiEdges, groupsForRender)
 
     const flowEdges: Edge[] = projectedEdges.map((edge) => {
@@ -373,6 +374,10 @@ export function ParticipantFlowCanvas({
         id: edge.edgeId,
         type: 'simulation',
         hidden: edge.hidden,
+        zIndex:
+          groupedNodeIds.has(edge.sourceNodeId) || groupedNodeIds.has(edge.targetNodeId)
+            ? -2
+            : undefined,
         source: edge.visualSourceNodeId ?? edge.sourceNodeId,
         sourceHandle: edge.visualSourceHandleId ?? edge.sourcePortId,
         target: edge.visualTargetNodeId ?? edge.targetNodeId,

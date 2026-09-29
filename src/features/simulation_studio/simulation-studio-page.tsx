@@ -308,6 +308,7 @@ function edgeToFlow(
   sourceNode?: ApiNode,
   visualProjection?: {
     hidden?: boolean
+    zIndex?: number
     sourceRect?: Rect
     targetRect?: Rect
     sourceNodeId?: string
@@ -329,6 +330,7 @@ function edgeToFlow(
     id: edge.edgeId,
     type: 'simulation',
     hidden: visualProjection?.hidden ?? false,
+    zIndex: visualProjection?.zIndex,
     source: visualProjection?.sourceNodeId ?? edge.sourceNodeId,
     sourceHandle: visualProjection?.sourceHandleId ?? edge.sourcePortId,
     target: visualProjection?.targetNodeId ?? edge.targetNodeId,
@@ -337,7 +339,7 @@ function edgeToFlow(
     animated: style.animated,
     data: {
       label,
-      style: { ...style, opacity: 0.56 },
+      style,
       edgeType,
       onDelete,
       collapsedSourceRect: visualProjection?.sourceRect,
@@ -1240,6 +1242,7 @@ export function SimulationStudioPage() {
       },
     }))
     const visualGroupById = new Map(groupList.map((group) => [group.visualGroupId, group]))
+    const groupedNodeIds = new Set(groupList.flatMap((group) => group.memberNodeIds))
     const projectedWorkflowEdges = projectWorkflowEdges(apiEdges, groupList)
     setNodes([...visualGroupNodes, ...projectedWorkflowNodes])
     setEdges(
@@ -1255,6 +1258,10 @@ export function SimulationStudioPage() {
           sourceNode,
           {
             hidden: edge.hidden,
+            zIndex:
+              groupedNodeIds.has(edge.sourceNodeId) || groupedNodeIds.has(edge.targetNodeId)
+                ? -2
+                : undefined,
             sourceRect: sourceGroup
               ? {
                   x: sourceGroup.positionX,

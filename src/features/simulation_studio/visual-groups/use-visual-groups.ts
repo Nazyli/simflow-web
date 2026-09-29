@@ -140,7 +140,7 @@ export function useVisualGroups({
         draggable: editable,
         connectable: false,
         selectable: true,
-        zIndex: 0,
+        zIndex: 1,
         dragHandle: '.visual-group-header',
         data: {
           group,

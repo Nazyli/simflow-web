@@ -11,7 +11,7 @@ export function projectWorkflowNodes(workflowNodes: Node[], groups: VisualGroup[
 
   return workflowNodes.map((node) => {
     const group = groupByNodeId.get(node.id)
-    if (!group) return node
+    if (!group) return { ...node, zIndex: 1 }
     const parent: Rect = {
       x: group.positionX,
       y: group.positionY,
