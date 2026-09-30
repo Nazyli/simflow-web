@@ -103,7 +103,7 @@ export function AiTokenUsagePage() {
     <PageFrame mode="operations" className="ai-token-usage-page">
       <PageHeader
         title="AI Token Usage"
-        description="Monitor AI token consumption, requests, and cost across participants and simulations."
+        description="Recorded AI requests grouped by participant."
         actions={
           <Button
             type="button"
@@ -171,20 +171,8 @@ export function AiTokenUsagePage() {
           />
 
           <SurfaceSection
-            title="Usage analytics"
-            description="Time trend and distribution for the selected filters."
-          >
-            <div className="grid min-w-0 grid-cols-1 gap-x-5 gap-y-4 rounded-md border border-slate-200 bg-white px-3.5 sm:px-4 xl:grid-cols-2">
-              <UsageTrendChart data={trend} interval={interval} onIntervalChange={setInterval} />
-              <UsageComparisonChart data={simulations} dimension="simulation" />
-              <UsageCompositionChart data={composition} />
-              <UsageComparisonChart data={models} dimension="model" />
-            </div>
-          </SurfaceSection>
-
-          <SurfaceSection
-            title="Participant usage"
-            description="Participants ranked by recorded total tokens."
+            title="Usage by participant"
+            description="Select a participant ID to inspect its recorded usage."
           >
             <ParticipantUsageTable
               rows={participants}
@@ -194,6 +182,18 @@ export function AiTokenUsagePage() {
               totalItems={data.participants.totalItems}
               onPageChange={setParticipantPage}
             />
+          </SurfaceSection>
+
+          <SurfaceSection
+            title="Usage analytics"
+            description="Token trends and breakdowns for the current filters."
+          >
+            <div className="grid min-w-0 grid-cols-1 gap-x-5 gap-y-4 xl:grid-cols-2">
+              <UsageTrendChart data={trend} interval={interval} onIntervalChange={setInterval} />
+              <UsageComparisonChart data={simulations} dimension="simulation" />
+              <UsageCompositionChart data={composition} />
+              <UsageComparisonChart data={models} dimension="model" />
+            </div>
           </SurfaceSection>
         </>
       )}

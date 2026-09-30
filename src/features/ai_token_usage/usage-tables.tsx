@@ -57,18 +57,24 @@ export function ParticipantUsageTable({
       header: 'Requests',
       cell: (row) => numberCell(row.requests),
       sortValue: (row) => row.requests,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'input',
       header: 'Input tokens',
       cell: (row) => numberCell(row.inputTokens, true),
       sortValue: (row) => row.inputTokens,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'output',
       header: 'Output tokens',
       cell: (row) => numberCell(row.outputTokens, true),
       sortValue: (row) => row.outputTokens,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'total',
@@ -79,12 +85,16 @@ export function ParticipantUsageTable({
         </strong>
       ),
       sortValue: (row) => row.totalTokens,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'average',
       header: 'Avg tokens / request',
       cell: (row) => numberCell(row.averageTokensPerRequest, true),
       sortValue: (row) => row.averageTokensPerRequest,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
   ]
 
@@ -131,18 +141,24 @@ export function ModelUsageTable({ rows }: { rows: DimensionUsage[] }) {
       header: 'Requests',
       cell: (row) => numberCell(row.requests),
       sortValue: (row) => row.requests,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'input',
       header: 'Input tokens',
       cell: (row) => numberCell(row.inputTokens),
       sortValue: (row) => row.inputTokens,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'output',
       header: 'Output tokens',
       cell: (row) => numberCell(row.outputTokens),
       sortValue: (row) => row.outputTokens,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'total',
@@ -151,6 +167,8 @@ export function ModelUsageTable({ rows }: { rows: DimensionUsage[] }) {
         <strong className="font-semibold tabular-nums">{formatTokenCount(row.totalTokens)}</strong>
       ),
       sortValue: (row) => row.totalTokens,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'cost',
@@ -158,6 +176,8 @@ export function ModelUsageTable({ rows }: { rows: DimensionUsage[] }) {
       cell: (row) => (
         <span className="whitespace-nowrap tabular-nums">{costCell(row.costByCurrency)}</span>
       ),
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
   ]
   return (
@@ -235,12 +255,16 @@ export function UsageEventsTable({ rows }: { rows: UsageEvent[] }) {
       header: 'Input tokens',
       cell: (row) => numberCell(row.input_tokens),
       sortValue: (row) => row.input_tokens,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'output',
       header: 'Output tokens',
       cell: (row) => numberCell(row.output_tokens),
       sortValue: (row) => row.output_tokens,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'total',
@@ -249,6 +273,8 @@ export function UsageEventsTable({ rows }: { rows: UsageEvent[] }) {
         <strong className="font-semibold tabular-nums">{formatTokenCount(row.total_tokens)}</strong>
       ),
       sortValue: (row) => row.total_tokens,
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
     {
       id: 'cost',
@@ -258,6 +284,8 @@ export function UsageEventsTable({ rows }: { rows: UsageEvent[] }) {
           {costCell([{ currency: row.currency, amount: row.total_cost }])}
         </span>
       ),
+      headerClassName: 'text-right',
+      cellClassName: 'text-right tabular-nums',
     },
   ]
   return (

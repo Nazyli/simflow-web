@@ -56,23 +56,26 @@ export function ParticipantAiUsagePage() {
   return (
     <PageFrame mode="operations" className="ai-token-usage-page">
       <PageHeader
-        title={<span className="break-all">Participant {participantId}</span>}
-        description={
+        eyebrow={
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5">
             <Link
-              className="text-violet-700 underline decoration-violet-200 underline-offset-2"
+              className="rounded-sm text-violet-700 underline decoration-violet-200 underline-offset-2 hover:text-violet-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
               to={simulationLink}
             >
               AI Token Usage
             </Link>
             <span aria-hidden="true">/</span>
-            <span className="text-slate-500">Participant</span>
+            <span className="font-medium text-slate-600">Participant</span>
           </nav>
         }
-        actions={
-          <Button asChild type="button" variant="outline" size="sm">
-            <Link to={simulationLink}>Back to overview</Link>
-          </Button>
+        title="Participant usage"
+        metadata={
+          <span
+            className="min-w-0 font-mono text-xs break-all text-slate-700"
+            title={participantId}
+          >
+            {participantId}
+          </span>
         }
       />
 
@@ -106,6 +109,8 @@ export function ParticipantAiUsagePage() {
                 value: formatTokenCount(summary.totalTokens, true),
                 tone: 'accent',
               },
+              { label: 'Input tokens', value: formatTokenCount(data.summary.inputTokens, true) },
+              { label: 'Output tokens', value: formatTokenCount(data.summary.outputTokens, true) },
               { label: 'Total cost', value: costSummary(summary.totalCostByCurrency) },
               { label: 'Requests', value: summary.totalRequests.toLocaleString('en-US') },
               { label: 'Simulations', value: simulations.length.toLocaleString('en-US') },
@@ -114,23 +119,8 @@ export function ParticipantAiUsagePage() {
           />
 
           <SurfaceSection
-            title="Participant analytics"
-            description="Usage history and distribution for this participant."
-          >
-            <div className="grid min-w-0 grid-cols-1 gap-x-5 gap-y-4 rounded-md border border-slate-200 bg-white px-3.5 sm:px-4 xl:grid-cols-2">
-              <UsageTrendChart data={trend} interval="daily" />
-              {simulations.length <= 5 ? (
-                <SimulationShareChart data={simulations} />
-              ) : (
-                <UsageComparisonChart data={simulations} dimension="simulation" />
-              )}
-              <UsageCompositionChart data={composition} />
-            </div>
-          </SurfaceSection>
-
-          <SurfaceSection
             title="Usage by model"
-            description="Requests, token counts, provider, and recorded cost."
+            description="Requests, token counts, provider, and recorded cost by model."
           >
             <ModelUsageTable rows={models} />
           </SurfaceSection>
@@ -146,6 +136,21 @@ export function ParticipantAiUsagePage() {
               totalItems={data.events.totalItems}
               onPageChange={setEventPage}
             />
+          </SurfaceSection>
+
+          <SurfaceSection
+            title="Usage analytics"
+            description="Trends and breakdowns for this participant's recorded usage."
+          >
+            <div className="grid min-w-0 grid-cols-1 gap-x-5 gap-y-4 xl:grid-cols-2">
+              <UsageTrendChart data={trend} interval="daily" />
+              {simulations.length <= 5 ? (
+                <SimulationShareChart data={simulations} />
+              ) : (
+                <UsageComparisonChart data={simulations} dimension="simulation" />
+              )}
+              <UsageCompositionChart data={composition} />
+            </div>
           </SurfaceSection>
         </>
       )}

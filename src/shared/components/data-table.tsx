@@ -17,6 +17,8 @@ export type DataTableColumn<T> = {
   cell: (row: T) => ReactNode
   sortValue?: (row: T) => string | number
   filterValue?: (row: T) => string
+  headerClassName?: string
+  cellClassName?: string
 }
 
 export function DataTable<T extends { id: string }>({
@@ -145,6 +147,7 @@ export function DataTable<T extends { id: string }>({
               {shownColumns.map((column) => (
                 <TableHead
                   key={column.id}
+                  className={column.headerClassName}
                   aria-sort={
                     column.sortValue
                       ? sort?.id === column.id
@@ -166,7 +169,7 @@ export function DataTable<T extends { id: string }>({
                             : { id: column.id, desc: false },
                         )
                       }
-                      className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[11px] font-semibold tracking-normal text-slate-500 transition hover:text-violet-600"
+                      className={`inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[11px] font-semibold tracking-normal text-slate-500 transition hover:text-violet-600 ${column.headerClassName?.includes('text-right') ? 'w-full justify-end' : ''}`}
                     >
                       {column.header}
                       {sort?.id === column.id ? (sort.desc ? ' ↓' : ' ↑') : ''}
@@ -193,7 +196,10 @@ export function DataTable<T extends { id: string }>({
                   </TableCell>
                 )}
                 {shownColumns.map((column) => (
-                  <TableCell key={column.id} className="px-1.5 py-1.5 text-xs text-slate-700">
+                  <TableCell
+                    key={column.id}
+                    className={`px-1.5 py-1.5 text-xs text-slate-700 ${column.cellClassName ?? ''}`}
+                  >
                     {column.cell(row)}
                   </TableCell>
                 ))}
