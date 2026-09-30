@@ -36,7 +36,7 @@ for a later API client without inventing an endpoint contract.
 
 All analytics use `captured_at` for time and `total_tokens` as the total. Input,
 output, cached-input, and reasoning tokens are only used in their respective
-series/composition views. Events with `is_deleted = 1` remain included. Cost is
+series/category-comparison views. Events with `is_deleted = 1` remain included. Cost is
 read from `total_cost` and displayed with the event's `currency`; totals are
 grouped by currency rather than adding unlike currencies together. The mock
 adapter exposes loading, error, empty, and ready states so page states can be
@@ -54,9 +54,11 @@ count, distinct participants, and average tokens per request. The main
 visualization is a Recharts line chart grouped by daily, weekly, or monthly
 `captured_at`, with input, output, and total token series plus readable axis
 ticks and tooltips. Supporting visualizations are a horizontal simulation token
-bar chart, a donut of non-zero token composition categories, and a model token
-bar chart with provider context. Keep panels flat and use section boundaries
-rather than nested or oversized cards.
+bar chart, a compact comparison of the non-zero token fields, and a model token
+bar chart with provider context. Cached input and reasoning output can be
+subsets of input and output, so compare these reported fields with bars rather
+than presenting them as mutually exclusive donut slices. Keep panels flat and
+use section boundaries rather than nested or oversized cards.
 
 Below the charts, show participants aggregated by ID, sorted by total tokens
 descending by default. Columns are participant, requests, input tokens, output
@@ -70,11 +72,12 @@ empty/loading/error states.
 Show the participant ID, breadcrumb, and compact summary for tokens, cost by
 currency, requests, simulation count, and last activity. Include a selectable
 time-bucket line chart, usage-by-simulation comparison that adapts to category
-count, and non-zero token composition. Model/provider breakdown uses a dense
+count, and non-zero token field comparison. Model/provider breakdown uses a dense
 table with requests, token counts, and cost. Finish with a precise usage-event
 table containing the requested captured time, simulation, activity, node,
-service, provider, model, token, and cost fields. Sorting and pagination apply
-to both tables.
+service, provider, model, token, and cost fields. The model table shows all
+models without pagination; both tables remain filterable and sortable where the
+sort values are comparable. The usage-event table is paginated.
 
 ## Responsive and accessibility behavior
 

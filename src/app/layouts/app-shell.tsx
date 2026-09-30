@@ -21,7 +21,10 @@ function Breadcrumb() {
         <>
           <span>/</span>
           <strong className="font-semibold text-slate-600">
-            {pageNames[location.pathname] ?? segments.at(-1)}
+            {pageNames[location.pathname] ??
+              (basePath === '/ai-token-usage'
+                ? pageNames['/ai-token-usage/:participantId']
+                : segments.at(-1))}
           </strong>
         </>
       )}

@@ -1,4 +1,13 @@
-import { BookOpen, Clock3, Database, Layers, Play, Settings, Users } from 'lucide-react'
+import {
+  BookOpen,
+  ChartColumn,
+  Clock3,
+  Database,
+  Layers,
+  Play,
+  Settings,
+  Users,
+} from 'lucide-react'
 
 export const masterDataNavigation = {
   label: 'Master Data',
@@ -12,6 +21,7 @@ export const navigation = [
   { label: 'Runner', path: '/simulation', icon: Play },
   { label: 'Participant History', path: '/history', icon: Users },
   { label: 'Timers', path: '/timers', icon: Clock3 },
+  { label: 'AI Token Usage', path: '/ai-token-usage', icon: ChartColumn },
   { label: 'Documentation', path: '/documentation', icon: BookOpen },
   masterDataNavigation,
   { label: 'Settings', path: '/settings', icon: Settings },
@@ -20,4 +30,5 @@ export const navigation = [
 export const pageNames: Record<string, string> = Object.fromEntries([
   ...navigation.map(({ path, label }) => [path, label] as const),
   ['/master-data/actors', 'Actors'] as const,
+  ['/ai-token-usage/:participantId', 'Participant'] as const,
 ])

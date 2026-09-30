@@ -36,7 +36,7 @@ interface AppSidebarProps {
   items: SidebarNavItem[]
 }
 
-const primaryPaths = new Set(['/studio', '/simulation', '/history', '/timers'])
+const primaryPaths = new Set(['/studio', '/simulation', '/history', '/timers', '/ai-token-usage'])
 const resourcePaths = new Set(['/documentation', '/master-data'])
 
 function isItemActive(pathname: string, path: string) {

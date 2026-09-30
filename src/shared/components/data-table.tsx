@@ -27,6 +27,7 @@ export function DataTable<T extends { id: string }>({
   selectable = true,
   toolbarActions,
   showColumnToggle = true,
+  pagination = true,
 }: {
   rows: T[]
   columns: DataTableColumn<T>[]
@@ -35,6 +36,7 @@ export function DataTable<T extends { id: string }>({
   selectable?: boolean
   toolbarActions?: ReactNode
   showColumnToggle?: boolean
+  pagination?: boolean
 }) {
   const [filter, setFilter] = useState('')
   const [sort, setSort] = useState<{ id: string; desc: boolean } | null>(null)
@@ -64,11 +66,13 @@ export function DataTable<T extends { id: string }>({
         }),
     [rows, columns, filter, sort],
   )
-  const pages = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const slice = filtered.slice(
-    Math.min(page, pages - 1) * pageSize,
-    Math.min(page, pages - 1) * pageSize + pageSize,
-  )
+  const pages = pagination ? Math.max(1, Math.ceil(filtered.length / pageSize)) : 1
+  const slice = pagination
+    ? filtered.slice(
+        Math.min(page, pages - 1) * pageSize,
+        Math.min(page, pages - 1) * pageSize + pageSize,
+      )
+    : filtered
   function select(id: string) {
     const next = new Set(selected)
     if (next.has(id)) next.delete(id)
@@ -142,24 +146,36 @@ export function DataTable<T extends { id: string }>({
                 <TableHead
                   key={column.id}
                   aria-sort={
-                    sort?.id === column.id ? (sort.desc ? 'descending' : 'ascending') : 'none'
+                    column.sortValue
+                      ? sort?.id === column.id
+                        ? sort.desc
+                          ? 'descending'
+                          : 'ascending'
+                        : 'none'
+                      : undefined
                   }
                 >
-                  <button
-                    type="button"
-                    aria-label={`Sort by ${column.header}`}
-                    onClick={() =>
-                      setSort((current) =>
-                        current?.id === column.id
-                          ? { id: column.id, desc: !current.desc }
-                          : { id: column.id, desc: false },
-                      )
-                    }
-                    className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[11px] font-semibold tracking-normal text-slate-500 transition hover:text-violet-600"
-                  >
-                    {column.header}
-                    {sort?.id === column.id ? (sort.desc ? ' ↓' : ' ↑') : ''}
-                  </button>
+                  {column.sortValue ? (
+                    <button
+                      type="button"
+                      aria-label={`Sort by ${column.header}`}
+                      onClick={() =>
+                        setSort((current) =>
+                          current?.id === column.id
+                            ? { id: column.id, desc: !current.desc }
+                            : { id: column.id, desc: false },
+                        )
+                      }
+                      className="inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[11px] font-semibold tracking-normal text-slate-500 transition hover:text-violet-600"
+                    >
+                      {column.header}
+                      {sort?.id === column.id ? (sort.desc ? ' ↓' : ' ↑') : ''}
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold tracking-normal text-slate-500">
+                      {column.header}
+                    </span>
+                  )}
                 </TableHead>
               ))}
             </TableRow>
@@ -200,29 +216,31 @@ export function DataTable<T extends { id: string }>({
         <span>
           {filtered.length} records{selectable ? ` · ${selected.size} selected` : ''}
         </span>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            size="xs"
-            variant="outline"
-            disabled={page === 0}
-            onClick={() => setPage(page - 1)}
-          >
-            Previous
-          </Button>
-          <span>
-            Page {Math.min(page + 1, pages)} / {pages}
-          </span>
-          <Button
-            type="button"
-            size="xs"
-            variant="outline"
-            disabled={page >= pages - 1}
-            onClick={() => setPage(page + 1)}
-          >
-            Next
-          </Button>
-        </div>
+        {pagination && (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="xs"
+              variant="outline"
+              disabled={page === 0}
+              onClick={() => setPage(page - 1)}
+            >
+              Previous
+            </Button>
+            <span>
+              Page {Math.min(page + 1, pages)} / {pages}
+            </span>
+            <Button
+              type="button"
+              size="xs"
+              variant="outline"
+              disabled={page >= pages - 1}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </footer>
     </section>
   )

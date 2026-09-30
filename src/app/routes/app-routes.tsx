@@ -59,6 +59,16 @@ const TimerManagementPage = lazy(() =>
     default: module.TimerManagementPage,
   })),
 )
+const AiTokenUsagePage = lazy(() =>
+  import('../../features/ai_token_usage/ai-token-usage-page').then((module) => ({
+    default: module.AiTokenUsagePage,
+  })),
+)
+const ParticipantAiUsagePage = lazy(() =>
+  import('../../features/ai_token_usage/participant-ai-usage-page').then((module) => ({
+    default: module.ParticipantAiUsagePage,
+  })),
+)
 const ParticipantHistoryPage = lazy(() =>
   import('../../features/history/participant-history-page').then((module) => ({
     default: module.ParticipantHistoryPage,
@@ -114,6 +124,8 @@ export function AppRoutes() {
               <Route path="document" element={<DocumentChannelPage />} />
             </Route>
             <Route path="/timers" element={<TimerManagementPage />} />
+            <Route path="/ai-token-usage" element={<AiTokenUsagePage />} />
+            <Route path="/ai-token-usage/:participantId" element={<ParticipantAiUsagePage />} />
             <Route path="/master-data/actors" element={<MasterActorsPage />} />
             <Route path="/history" element={<ParticipantHistoryPage />} />
             <Route path="/history/:id" element={<ExecutionDetailPage />} />
