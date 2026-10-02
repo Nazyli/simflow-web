@@ -174,7 +174,7 @@ export function SimulationGraphNode({ id, data, selected }: NodeProps) {
                 <LogIn className="h-3 w-3 text-emerald-600" />
               </button>
               {groupPickerOpen && (
-                <div className="absolute top-full left-0 z-30 mt-1 min-w-36 rounded-md border border-[#C6D2DF] bg-white p-1 text-left shadow-sm">
+                <div className="absolute top-full left-0 z-30 mt-1 max-h-60 min-w-36 overflow-y-auto overscroll-contain rounded-md border border-[#C6D2DF] bg-white p-1 text-left shadow-sm">
                   {nodeData.availableGroups.map((group) => (
                     <button
                       key={group.visualGroupId}
